@@ -1,0 +1,25 @@
+/* Stereo Blend plugin specific styles */
+.stereo-blend-plugin-ui {
+    position: relative;
+}
+
+.stereo-blend-plugin-ui .parameter-row {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.stereo-blend-plugin-ui label {
+    width: 100px;
+    margin-right: 10px;
+}
+
+.stereo-blend-plugin-ui input[type="range"] {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.stereo-blend-plugin-ui input[type="number"] {
+    width: 70px;
+    text-align: right;
+}

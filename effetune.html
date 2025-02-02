@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EffeTune</title>
+    <link rel="stylesheet" href="effetune.css">
+</head>
+<body>
+    <div class="title-container">
+        <h1>Frieve EffeTune<span class="subtitle">Color the music, unleash your senses. Craft your own signature sound.</span></h1>
+        <a href="https://frieve-a.github.io/effetune/" class="whats-this" style="position: absolute; right: 10px; top: 5px; color: #666; text-decoration: none;">What's this app?</a>
+    </div>
+    <div class="header">
+        <div class="button-group">
+            <button class="header-button reset-button" id="resetButton">Reset Audio</button>
+        </div>
+        <div class="error-display" id="errorDisplay">Loading...</div>
+    </div>
+
+    <div class="main-container">
+        <div class="plugin-list" id="pluginList">
+            <h2>Available Effects</h2>
+            <!-- Plugin list will be populated by JavaScript -->
+        </div>
+
+        <div class="pipeline" id="pipeline">
+            <div class="pipeline-header">
+                <h2>Effect Pipeline</h2>
+                <div class="pipeline-header-right">
+                    <div class="sample-rate" id="sampleRate"></div>
+                    <button class="header-button share-button" id="shareButton">Share</button>
+                </div>
+            </div>
+            <div class="pipeline-empty" id="pipelineEmpty">
+                Drag plugins here to build your effect pipeline
+            </div>
+            <div id="pipelineList"></div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+        EffeTune version 0.01 (C) Frieve 2025
+    </div>
+</body>
+</html>

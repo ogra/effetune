@@ -1,0 +1,4 @@
+/* Simple Jitter plugin specific styles */
+.simple-jitter-plugin-ui input[type="number"] {
+    text-align: right;
+}

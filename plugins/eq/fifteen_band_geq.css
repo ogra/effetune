@@ -1,0 +1,70 @@
+/* 15Band GEQ plugin specific styles */
+.fifteen-band-geq-plugin-ui {
+    position: relative;
+}
+
+.fifteen-band-geq-plugin-ui .sliders-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.fifteen-band-geq-plugin-ui .slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 5px;
+    width: 50px; /* 固定幅を設定 */
+}
+
+.fifteen-band-geq-plugin-ui .freq-label {
+    font-size: 12px;
+    color: #fff;
+    margin-bottom: 5px;
+    white-space: nowrap;
+}
+
+.fifteen-band-geq-plugin-ui .value-display {
+    font-size: 12px;
+    color: #fff;
+    margin-top: 5px;
+    white-space: nowrap;
+    width: 50px; /* 固定幅を設定 */
+    text-align: center; /* 中央揃え */
+}
+
+.fifteen-band-geq-plugin-ui .vertical-slider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 20px;
+    height: 200px;
+    margin: 0;
+    padding: 0;
+}
+
+.fifteen-band-geq-plugin-ui canvas {
+    margin: 10px auto;
+    display: block;
+    background: #222;
+}
+
+.fifteen-band-geq-plugin-ui .graph-container {
+    margin-top: 20px;
+}
+
+.fifteen-band-geq-plugin-ui .eq-reset-button {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 5px 15px;
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.fifteen-band-geq-plugin-ui .eq-reset-button:hover {
+    background-color: #555;
+}

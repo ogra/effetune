@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EffeTune Plugin Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        #results {
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .warning {
+            color: #FFC107;
+        }
+        .error {
+            color: #f44336;
+            margin: 5px 0;
+            padding: 8px;
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 3px solid #f44336;
+            border-radius: 2px;
+        }
+        .error-details {
+            margin-left: 20px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .error-suggestion {
+            margin-left: 20px;
+            font-size: 0.9em;
+            color: #81c784;
+            margin-top: 4px;
+        }
+        .test-group {
+            margin: 10px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            border-left: 4px solid #03A9F4;
+        }
+        .test-group h3 {
+            margin-top: 0;
+            color: #03A9F4;
+        }
+    </style>
+</head>
+<body>
+    <h1>EffeTune Plugin Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import { PluginManager } from '../js/plugin-manager.js';
+        import { loadScript, loadCSS } from '../js/script-loader.js';
+
+        // Customized plugin manager
+        class TestPluginManager extends PluginManager {
+            async loadPlugins() {
+                try {
+                    // Load plugins from parent directory
+                    const response = await fetch('../plugins/plugins.txt');
+                    const text = await response.text();
+                    
+                    // Parse plugins.txt
+                    const categories = {};
+                    const pluginDefinitions = new Map();
+                    let currentSection = null;
+
+                    // First load the base plugin class
+                    await loadScript('../plugins/plugin-base.js');
+
+                    text.split('\n').forEach(line => {
+                        line = line.trim();
+                        if (!line || line.startsWith('#')) return;
+
+                        if (line === '[categories]') {
+                            currentSection = 'categories';
+                        } else if (line === '[plugins]') {
+                            currentSection = 'plugins';
+                        } else if (currentSection === 'categories') {
+                            const [name, description] = line.split(':').map(s => s.trim());
+                            categories[name] = {
+                                description,
+                                plugins: []
+                            };
+                        } else if (currentSection === 'plugins') {
+                            const [path, info] = line.split(':').map(s => s.trim());
+                            const [displayName, category, className, hasCSS] = info.split('|').map(s => s.trim());
+                            pluginDefinitions.set(displayName, {
+                                path: `../plugins/${path}`,
+                                category,
+                                className,
+                                hasCSS: hasCSS === 'css'
+                            });
+                            categories[category].plugins.push(displayName);
+                        }
+                    });
+
+                    // Group plugins by category for parallel loading
+                    const categoryPlugins = {};
+                    for (const [displayName, {path, category, hasCSS}] of pluginDefinitions) {
+                        if (!categoryPlugins[category]) {
+                            categoryPlugins[category] = [];
+                        }
+                        categoryPlugins[category].push({displayName, path, hasCSS});
+                    }
+
+                    // Load plugins in parallel by category
+                    const loadCategory = async (plugins) => {
+                        const loadPromises = plugins.flatMap(({displayName, path, hasCSS}) => {
+                            const promises = [
+                                loadScript(`${path}.js`).catch(error => {
+                                    throw new Error(`Failed to load plugin script for ${displayName}: ${error.message}`);
+                                })
+                            ];
+                            
+                            if (hasCSS) {
+                                promises.push(
+                                    loadCSS(`${path}.css`).catch(error => {
+                                        throw new Error(`Failed to load CSS for ${displayName}: ${error.message}`);
+                                    })
+                                );
+                            }
+                            return promises;
+                        });
+                        
+                        await Promise.all(loadPromises);
+                    };
+
+                    // Load categories in parallel
+                    await Promise.all(
+                        Object.values(categoryPlugins).map(plugins => loadCategory(plugins))
+                    );
+
+                    // Initialize plugin classes mapping
+                    for (const [displayName, {className}] of pluginDefinitions) {
+                        if (!window[className]) {
+                            console.error(`Plugin class ${className} not found`);
+                            continue;
+                        }
+                        this.pluginClasses[displayName] = window[className];
+                    }
+
+                    // Store categories
+                    this.effectCategories = categories;
+
+                    console.log('Loaded plugin classes:', Object.keys(this.pluginClasses));
+                    console.log('Available categories:', categories);
+
+                    return {
+                        pluginClasses: this.pluginClasses,
+                        effectCategories: this.effectCategories
+                    };
+                } catch (error) {
+                    console.error('Error loading plugins:', error);
+                    throw error;
+                }
+            }
+        }
+
+        const results = document.getElementById('results');
+
+        function log(message, type = 'normal') {
+            const div = document.createElement('div');
+            div.textContent = message;
+            div.className = type;
+            results.appendChild(div);
+        }
+
+        async function testPlugin(plugin) {
+            const testGroup = document.createElement('div');
+            testGroup.className = 'test-group';
+            
+            const title = document.createElement('h3');
+            title.textContent = `Testing ${plugin.constructor.name}`;
+            testGroup.appendChild(title);
+            results.appendChild(testGroup);
+
+            const groupLog = (message, type = 'normal') => {
+                const div = document.createElement('div');
+                div.textContent = message;
+                div.className = type;
+                testGroup.appendChild(div);
+            };
+
+            try {
+                // Test 1: Constructor implementation
+                if (!plugin.id) {
+                    groupLog('❌ Missing plugin ID', 'error');
+                    groupLog('Cause: Plugin ID is not properly set in the constructor', 'error-details');
+                    groupLog('Solution: Call super() in the constructor and ensure plugin ID is properly set', 'error-suggestion');
+                } else {
+                    groupLog('✓ Plugin ID exists', 'success');
+                }
+
+                // Test 2: Parameter management
+                const initialParams = plugin.getParameters();
+                if (!initialParams || typeof initialParams !== 'object') {
+                    groupLog('❌ getParameters() not properly implemented', 'error');
+                    groupLog('Cause: getParameters() method is not properly implemented or not returning an object', 'error-details');
+                    groupLog('Solution: Implement getParameters() method to return an object containing required parameters', 'error-suggestion');
+                } else if (!initialParams.type || !initialParams.hasOwnProperty('enabled')) {
+                    groupLog('⚠️ getParameters() missing required fields', 'warning');
+                    groupLog('Cause: Required fields (type, enabled) are missing', 'error-details');
+                    groupLog('Solution: Add type and enabled fields to getParameters() return value', 'error-suggestion');
+                } else {
+                    groupLog('✓ Parameter management implemented correctly', 'success');
+                }
+
+                // Test 3: UI Creation
+                const ui = plugin.createUI();
+                if (!ui || !(ui instanceof HTMLElement)) {
+                    groupLog('❌ createUI() not returning HTMLElement', 'error');
+                    groupLog('Cause: createUI() method is not returning an HTMLElement', 'error-details');
+                    groupLog('Solution: Modify createUI() method to create and return a DOM element', 'error-suggestion');
+                } else {
+                    groupLog('✓ UI creation implemented correctly', 'success');
+                }
+
+                // Test 4: Enabled state handling
+                plugin.enabled = false;
+                const disabledParams = plugin.getParameters();
+                if (disabledParams.enabled !== false) {
+                    groupLog('⚠️ Enabled state not properly reflected in parameters', 'warning');
+                    groupLog('Cause: Enabled state is not properly reflected in parameters', 'error-details');
+                    groupLog('Solution: Ensure getParameters() correctly returns the current enabled state', 'error-suggestion');
+                } else {
+                    groupLog('✓ Enabled state handling works correctly', 'success');
+                }
+
+                // Test 5: Parameter handling
+                try {
+                    // Test setEnabled method
+                    plugin.setEnabled(false);
+                    let params = plugin.getParameters();
+                    if (params.enabled === false) {
+                        groupLog('✓ setEnabled method works correctly', 'success');
+                    } else {
+                        groupLog('❌ setEnabled method not working', 'error');
+                        groupLog('Cause: setEnabled() method is not working correctly', 'error-details');
+                        groupLog('Solution: Update plugin state in setEnabled() method and call updateParameters()', 'error-suggestion');
+                    }
+
+                    // Test setParameters implementation
+                    if (plugin.setParameters.toString().includes('throw new Error')) {
+                        groupLog('❌ setParameters not implemented', 'error');
+                        groupLog('Cause: setParameters() method is not implemented', 'error-details');
+                        groupLog('Solution: Implement setParameters() method with parameter validation and setting', 'error-suggestion');
+                    } else {
+                        groupLog('✓ setParameters implemented', 'success');
+                    }
+
+                    // Test parameter update notification
+                    const originalUpdateParameters = plugin.updateParameters;
+                    let updateCalled = false;
+                    plugin.updateParameters = () => {
+                        updateCalled = true;
+                    };
+                    
+                    plugin.setEnabled(true);
+                    if (updateCalled) {
+                        groupLog('✓ Parameter changes trigger updates', 'success');
+                    } else {
+                        groupLog('⚠️ Parameter changes might not trigger updates', 'warning');
+                        groupLog('Cause: updateParameters() might not be called when parameters change', 'error-details');
+                        groupLog('Solution: Always call updateParameters() when modifying parameters', 'error-suggestion');
+                    }
+                    
+                    // Restore original method
+                    plugin.updateParameters = originalUpdateParameters;
+                    
+                } catch (error) {
+                    groupLog(`❌ Parameter handling test failed: ${error.message}`, 'error');
+                }
+
+            } catch (error) {
+                groupLog(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function runTests() {
+            try {
+                log('Starting plugin tests...', 'normal');
+                
+                const manager = new TestPluginManager();
+                const { pluginClasses } = await manager.loadPlugins();
+                
+                log(`Loaded ${Object.keys(pluginClasses).length} plugins`, 'success');
+                
+                for (const [name, PluginClass] of Object.entries(pluginClasses)) {
+                    const plugin = manager.createPlugin(name);
+                    await testPlugin(plugin);
+                }
+                
+                log('All tests completed', 'success');
+                
+            } catch (error) {
+                log(`Error during test execution: ${error.message}`, 'error');
+            }
+        }
+
+        // Start tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
