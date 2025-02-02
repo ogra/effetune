@@ -1,0 +1,10 @@
+/* DC Offset plugin */
+.dc-offset-plugin-ui {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dc-offset-plugin-ui input[type="range"] {
+    flex-grow: 1;
+}

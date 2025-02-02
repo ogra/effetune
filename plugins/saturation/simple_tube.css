@@ -1,0 +1,28 @@
+/* Simple Tube plugin specific styles */
+.simple-tube-plugin-ui {
+    position: relative;
+}
+
+.simple-tube-plugin-ui canvas {
+    margin: 10px auto;
+    display: block;
+}
+
+.simple-tube-plugin-ui .graph-label {
+    position: absolute;
+    color: #888;
+    font-size: 12px;
+}
+
+.simple-tube-plugin-ui .graph-label.in {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.simple-tube-plugin-ui .graph-label.out {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: left center;
+}

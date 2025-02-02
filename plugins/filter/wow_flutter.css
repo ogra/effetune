@@ -1,0 +1,8 @@
+/* Wow Flutter plugin specific styles */
+.wow-flutter-plugin-ui {
+    position: relative;
+}
+
+.wow-flutter-plugin-ui label {
+    min-width: 140px;
+}

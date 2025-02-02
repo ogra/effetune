@@ -1,0 +1,41 @@
+# Categories definition
+# Categories are sorted alphabetically
+[categories]
+Analyzer: Analysis tools
+Basics: Basic audio effects
+Dynamics: Dynamic range effects
+EQ: Equalization effects
+Filter: Time-based filter effects
+Lo-Fi: Lo-Fi audio effects
+Others: Other audio tools and generators
+Reverb: Reverberation effects
+Saturation: Saturation and distortion effects
+Spatial: Spatial audio effects
+
+# Plugin definitions
+# format: path: Display Name | Category | Class Name | Has CSS (optional)
+# Plugins are sorted by category, then alphabetically by path
+[plugins]
+analyzer/level_meter: Level Meter | Analyzer | LevelMeterPlugin | css
+analyzer/spectrum_analyzer: Spectrum Analyzer | Analyzer | SpectrumAnalyzerPlugin | css
+analyzer/spectrogram: Spectrogram | Analyzer | SpectrogramPlugin | css
+basics/dc_offset: DC Offset | Basics | DCOffsetPlugin | css
+basics/polarity_inversion: Polarity Inversion | Basics | PolarityInversionPlugin | css
+basics/stereo_balance: Stereo Balance | Basics | StereoBalancePlugin
+basics/volume: Volume | Basics | VolumePlugin
+eq/fifteen_band_geq: 15Band GEQ | EQ | FifteenBandGEQPlugin | css
+eq/five_band_peq: 5Band PEQ | EQ | FiveBandPEQPlugin | css
+eq/narrow_range: Narrow Range | EQ | NarrowRangePlugin | css
+eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
+filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
+saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
+saturation/saturation: Saturation | Saturation | SaturationPlugin | css
+spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin | css
+lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
+lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
+lofi/simple_jitter: Simple Jitter | Lo-Fi | SimpleJitterPlugin | css
+reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
+dynamics/compressor: Compressor | Dynamics | CompressorPlugin | css
+dynamics/gate: Gate | Dynamics | GatePlugin | css
+dynamics/multiband_compressor: Multiband Compressor | Dynamics | MultibandCompressorPlugin | css
+others/oscillator: Oscillator | Others | OscillatorPlugin | css

@@ -1,0 +1,27 @@
+/* Narrow Range plugin specific styles */
+.narrow-range-plugin-ui {
+    position: relative;
+}
+
+.narrow-range-plugin-ui canvas {
+    margin: 10px auto;
+    display: block;
+    background: #222;
+}
+
+.narrow-range-plugin-ui label {
+    min-width: 100px;
+}
+
+.narrow-range-plugin-ui .radio-group {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.narrow-range-plugin-ui .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #ccc;
+}
