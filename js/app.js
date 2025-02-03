@@ -11,6 +11,9 @@ class App {
 
     async initialize() {
         try {
+            // Show loading spinner
+            this.uiManager.showLoadingSpinner();
+
             // Load plugins
             await this.pluginManager.loadPlugins();
 
@@ -62,8 +65,9 @@ class App {
             this.uiManager.updatePipelineUI();
             await this.audioManager.rebuildPipeline();
 
-            // Clear loading message
+            // Clear loading message and hide spinner
             this.uiManager.clearError();
+            this.uiManager.hideLoadingSpinner();
 
             // Auto-resume audio context when page gains focus
             document.addEventListener('visibilitychange', () => {

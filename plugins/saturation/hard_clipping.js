@@ -1,40 +1,85 @@
 class HardClippingPlugin extends PluginBase {
     constructor() {
         super('Hard Clipping', 'Digital hard clipping effect with threshold and mode control');
-        this.th = -18;    // th: Threshold (formerly threshold) - Range: -60-0 dB
-        this.md = 'both'; // md: Mode (formerly mode) - 'both', 'positive', 'negative'
+        this.th = -18;    // th: Threshold (-60 to 0 dB)
+        this.md = 'both'; // md: Mode ('both', 'positive', 'negative')
 
-        // Register processor function
+        // Register processor function with 4x oversampling and additional one-pole IIR smoothing
         this.registerProcessor(`
             if (!parameters.enabled) return data;
             
-            // Convert threshold from dB to linear amplitude
-            // Map shortened parameter names to their original names for clarity
+            // Pre-calculate constants for efficiency
             const { 
-                th: threshold,  // th: Threshold (formerly threshold)
-                md: mode,       // md: Mode (formerly mode)
-                channelCount, blockSize 
+                th: threshold,  // th: Threshold (-60 to 0 dB)
+                md: mode,       // md: Mode ('both', 'positive', 'negative')
+                channelCount, 
+                blockSize 
             } = parameters;
-            
             const thresholdLinear = Math.pow(10, threshold / 20);
+            const OS = 4; // Oversampling factor
             
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    const sample = data[offset + i];
-                    
-                    // Apply clipping based on mode
+            // Allocate oversampling buffers per channel in context if needed
+            if (!context.osBuffer || context.osBuffer.length !== channelCount || context.osBuffer[0].length !== OS * blockSize) {
+                context.osBuffer = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ch++) {
+                    context.osBuffer[ch] = new Float32Array(OS * blockSize);
+                }
+            }
+            // Allocate one-pole filter state per channel if not existing
+            if (!context.lpPrev || context.lpPrev.length !== channelCount) {
+                context.lpPrev = new Array(channelCount).fill(0);
+            }
+            // Smoothing factor for one-pole IIR filter (tweak between 0 (no smoothing) and 1)
+            const lpCoeff = 0.3;
+            
+            // Process each channel
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                const os = context.osBuffer[ch];
+                
+                // Upsample: linear interpolation to OS times more samples
+                for (let j = 0; j < blockSize; j++) {
+                    const x0 = data[offset + j];
+                    const x1 = (j < blockSize - 1) ? data[offset + j + 1] : x0;
+                    const delta = x1 - x0;
+                    os[OS * j]     = x0;
+                    os[OS * j + 1] = x0 + 0.25 * delta;
+                    os[OS * j + 2] = x0 + 0.5  * delta;
+                    os[OS * j + 3] = x0 + 0.75 * delta;
+                }
+                
+                // Apply hard clipping on the oversampled signal
+                for (let i = 0; i < OS * blockSize; i++) {
+                    let s = os[i];
                     if (mode === 'both') {
-                        if (sample > thresholdLinear) {
-                            data[offset + i] = thresholdLinear;
-                        } else if (sample < -thresholdLinear) {
-                            data[offset + i] = -thresholdLinear;
+                        if (s > thresholdLinear) {
+                            s = thresholdLinear;
+                        } else if (s < -thresholdLinear) {
+                            s = -thresholdLinear;
                         }
-                    } else if (mode === 'positive' && sample > thresholdLinear) {
-                        data[offset + i] = thresholdLinear;
-                    } else if (mode === 'negative' && sample < -thresholdLinear) {
-                        data[offset + i] = -thresholdLinear;
+                    } else if (mode === 'positive' && s > thresholdLinear) {
+                        s = thresholdLinear;
+                    } else if (mode === 'negative' && s < -thresholdLinear) {
+                        s = -thresholdLinear;
                     }
+                    os[i] = s;
+                }
+                
+                // Downsample: apply a simple FIR low-pass filter and decimate by factor OS
+                // FIR filter coefficients: [0.125, 0.375, 0.375, 0.125]
+                for (let j = 0; j < blockSize; j++) {
+                    const base = OS * j;
+                    const w0 = os[base];
+                    const w1 = os[base + 1];
+                    const w2 = os[base + 2];
+                    const w3 = os[base + 3];
+                    let firOut = w0 * 0.125 + w1 * 0.375 + w2 * 0.375 + w3 * 0.125;
+                    
+                    // Additional one-pole IIR low-pass filter for further aliasing reduction
+                    const filtered = lpCoeff * firOut + (1 - lpCoeff) * context.lpPrev[ch];
+                    context.lpPrev[ch] = filtered;
+                    
+                    data[offset + j] = filtered;
                 }
             }
             return data;
@@ -98,7 +143,7 @@ class HardClippingPlugin extends PluginBase {
         ctx.lineWidth = 1;
         
         // Vertical grid lines
-        for (let x = 0; x <= width; x += width/4) {
+        for (let x = 0; x <= width; x += width / 4) {
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
@@ -106,7 +151,7 @@ class HardClippingPlugin extends PluginBase {
         }
         
         // Horizontal grid lines
-        for (let y = 0; y <= height; y += height/4) {
+        for (let y = 0; y <= height; y += height / 4) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
@@ -119,12 +164,12 @@ class HardClippingPlugin extends PluginBase {
         ctx.textAlign = 'center';
         
         // Draw "in" label at bottom
-        ctx.fillText('in', width/2, height - 5);
+        ctx.fillText('in', width / 2, height - 5);
         
         // Draw "out" label on left side, rotated
         ctx.save();
-        ctx.translate(20, height/2);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(20, height / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('out', 0, 0);
         ctx.restore();
 
@@ -132,7 +177,6 @@ class HardClippingPlugin extends PluginBase {
         ctx.fillStyle = '#666';
         ctx.font = '20px Arial';
 
-        // Draw -6dB labels
         // Input axis labels
         ctx.fillText('-6dB', width * 0.25, height - 5);  // Left
         ctx.fillText('-6dB', width * 0.75, height - 5);  // Right
@@ -140,13 +184,13 @@ class HardClippingPlugin extends PluginBase {
         // Output axis labels
         ctx.save();
         ctx.translate(20, height * 0.25);
-        ctx.rotate(-Math.PI/2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('-6dB', 0, 0);  // Top
         ctx.restore();
 
         ctx.save();
         ctx.translate(20, height * 0.75);
-        ctx.rotate(-Math.PI/2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('-6dB', 0, 0);  // Bottom
         ctx.restore();
 
@@ -283,5 +327,5 @@ class HardClippingPlugin extends PluginBase {
     }
 }
 
-// Register the plugin
+// Register the plugin globally
 window.HardClippingPlugin = HardClippingPlugin;

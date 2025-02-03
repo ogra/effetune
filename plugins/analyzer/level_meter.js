@@ -10,6 +10,8 @@ class LevelMeterPlugin extends PluginBase {
         this.PEAK_HOLD_TIME = 1.0; // seconds
         this.FALL_RATE = 20; // dB per second
         this.lastProcessTime = performance.now() / 1000;
+        this.lastMeterUpdateTime = 0;
+        this.METER_UPDATE_INTERVAL = 16; // Match with plugin-base.js
 
         // Register processor function that measures audio levels
         this.registerProcessor(`
@@ -117,6 +119,7 @@ class LevelMeterPlugin extends PluginBase {
         }
 
         // Update overload state
+        const wasOverloaded = this.ol;
         const maxPeak = Math.max(...message.measurements.channels.map(ch => ch.peak));
         if (maxPeak > 1.0) {
             this.ol = true;
@@ -125,7 +128,10 @@ class LevelMeterPlugin extends PluginBase {
             this.ol = false;
         }
 
-        this.updateParameters();
+        // Only update parameters when overload state changes
+        if (this.ol !== wasOverloaded) {
+            this.updateParameters();
+        }
         return audioBuffer;
     }
 
@@ -205,10 +211,18 @@ class LevelMeterPlugin extends PluginBase {
     // Start animation loop
     startAnimation() {
         const animate = () => {
-            this.updateMeter();
+            if (!this.enabled) {
+                return;
+            }
+            
+            const currentTime = performance.now();
+            if (currentTime - this.lastMeterUpdateTime >= this.METER_UPDATE_INTERVAL) {
+                this.updateMeter();
+                this.lastMeterUpdateTime = currentTime;
+            }
             this.animationFrameId = requestAnimationFrame(animate);
         };
-        animate();
+        this.animationFrameId = requestAnimationFrame(animate);
     }
 
     // Clean up animation when plugin is disabled/removed
@@ -226,8 +240,6 @@ class LevelMeterPlugin extends PluginBase {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-        // Ensure we have the latest parameters
-        this.updateParameters();
 
         // Draw each channel
         for (let channel = 0; channel < this.lv.length; channel++) {

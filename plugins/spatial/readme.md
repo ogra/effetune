@@ -8,21 +8,21 @@ A collection of plugins that enhance how music sounds in your headphones or spea
 
 ## Stereo Blend
 
-An effect that provides precise control over the stereo width of your music. It can narrow the stereo field for a more focused sound, preserve the original stereo image, or enhance the stereo separation for a more spacious experience.
+An effect that helps achieve a more natural sound field by adjusting the stereo width of your music. It's particularly useful for headphone listening, where it can reduce the exaggerated stereo separation that often occurs with headphones, making the listening experience more natural and less fatiguing. It can also enhance the stereo image for speaker listening when needed.
 
 ### Listening Enhancement Guide
-- Stereo Width Control:
-  - Reduce stereo width for more focused, mono-compatible sound
-  - Maintain original stereo image
-  - Enhance stereo separation for wider soundstage
-- Spatial Enhancement:
-  - Makes the music feel more three-dimensional
-  - Creates a sense of space around your head
-  - Helps you better locate instruments in the mix
-- Mixing and Mastering:
-  - Check mono compatibility
-  - Enhance stereo effects
-  - Control stereo image width
+- Headphone Optimization:
+  - Reduce stereo width (60-90%) for more natural, speaker-like presentation
+  - Minimize listening fatigue from excessive stereo separation
+  - Create a more realistic front-focused soundstage
+- Speaker Enhancement:
+  - Maintain original stereo image (100%) for accurate reproduction
+  - Subtle enhancement (110-130%) for wider soundstage when needed
+  - Careful adjustment to maintain natural sound field
+- Sound Field Control:
+  - Focus on natural, realistic presentation
+  - Avoid excessive width that could sound artificial
+  - Optimize for your specific listening environment
 
 ### Parameters
 - **Stereo** - Controls the stereo width (0-200%)
@@ -33,58 +33,57 @@ An effect that provides precise control over the stereo width of your music. It 
 
 ### Recommended Settings for Different Listening Scenarios
 
-1. Mono Compatibility Check
-   - Stereo: 0%
-   - Effect: Complete mono summing
-   - Perfect for: Checking how your mix sounds in mono
+1. Headphone Listening (Natural)
+   - Stereo: 60-90%
+   - Effect: Reduced stereo separation
+   - Perfect for: Long listening sessions, reducing fatigue
 
-2. Natural Stereo
+2. Speaker Listening (Reference)
    - Stereo: 100%
    - Effect: Original stereo image
-   - Perfect for: Reference listening
+   - Perfect for: Accurate reproduction
 
-3. Enhanced Stereo
-   - Stereo: 120-150%
-   - Effect: Wider, more spacious sound
-   - Perfect for: Creating an immersive experience
+3. Speaker Enhancement
+   - Stereo: 110-130%
+   - Effect: Subtle width enhancement
+   - Perfect for: Rooms with close speaker placement
 
-### Music Style Enhancement Guide
+### Music Style Optimization Guide
 
 - Classical Music
-  - Setting: 90-110%
-  - Effect: Maintains natural hall acoustics
-  - Benefit: Preserves the natural recording space
+  - Headphones: 70-80%
+  - Speakers: 100%
+  - Benefit: Natural concert hall perspective
 
-- Rock and Pop
-  - Setting: 110-130%
-  - Effect: Enhanced stereo separation
-  - Benefit: More impactful stereo effects
+- Jazz & Acoustic
+  - Headphones: 80-90%
+  - Speakers: 100-110%
+  - Benefit: Intimate, realistic ensemble sound
+
+- Rock & Pop
+  - Headphones: 85-95%
+  - Speakers: 100-120%
+  - Benefit: Balanced impact without artificial width
 
 - Electronic Music
-  - Setting: 130-170%
-  - Effect: Wide, expansive soundstage
-  - Benefit: Dramatic stereo enhancement
-
-- Jazz
-  - Setting: 100-120%
-  - Effect: Subtle width enhancement
-  - Benefit: Natural ensemble sound with slight enhancement
+  - Headphones: 90-100%
+  - Speakers: 100-130%
+  - Benefit: Controlled spaciousness while maintaining focus
 
 ### Quick Start Guide
 
-1. Start with Natural Stereo
-   - Set Stereo to 100%
-   - This is your reference point
-   - Listen to the original stereo image
+1. Choose Your Listening Setup
+   - Identify whether you're using headphones or speakers
+   - This determines your starting point for adjustment
 
-2. Explore Width Control
-   - Reduce below 100% to narrow the stereo field
-   - Increase above 100% to enhance stereo separation
-   - Find your preferred balance
+2. Start with Conservative Settings
+   - Headphones: Begin at 80%
+   - Speakers: Begin at 100%
+   - Listen for natural sound placement
 
-3. Genre-Specific Adjustment
-   - Use moderate settings for acoustic music
-   - Try wider settings for electronic music
-   - Adjust based on the source material and your preference
+3. Fine-tune for Your Music
+   - Make small adjustments (5-10% at a time)
+   - Focus on achieving natural sound field
+   - Pay attention to listening comfort
 
-Remember: The goal is to enhance your music listening experience while maintaining a natural sound. Trust your ears and adjust until it sounds best to you!
+Remember: The goal is to achieve a natural, comfortable listening experience that reduces fatigue and maintains the intended musical presentation. Avoid extreme settings that might sound impressive at first but become fatiguing over time.

@@ -19,29 +19,31 @@ class FifteenBandGEQPlugin extends PluginBase {
 
     static processorFunction = `
         if (!parameters.enabled) return data;
-        
+        const NUM_BANDS = 15;
         const { channelCount, blockSize } = parameters;
         
-        // Initialize filter states in context if not exists
+        // Initialize context if not exists
         if (!context.initialized) {
-            context.filterStates = {};
-            for (let i = 0; i < 15; i++) {
-                // Each band needs 4 states for a biquad filter
-                // b0-b14: Band 0-14 filter states
-                context.filterStates['b' + i] = {
+            // Use arrays indexed by band number for faster access instead of object properties
+            context.filterStates = new Array(NUM_BANDS);
+            context.coefficients = new Array(NUM_BANDS);
+            context.previousGains = new Array(NUM_BANDS).fill(0);
+            for (let i = 0; i < NUM_BANDS; i++) {
+                context.filterStates[i] = {
                     x1: new Array(channelCount).fill(0),
                     x2: new Array(channelCount).fill(0),
                     y1: new Array(channelCount).fill(0),
                     y2: new Array(channelCount).fill(0)
                 };
+                context.coefficients[i] = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 };
             }
             context.initialized = true;
         }
-
-        // Reset filter states if channel count changes
-        if (context.filterStates.b0.x1.length !== channelCount) {
-            for (let i = 0; i < 15; i++) {
-                context.filterStates['b' + i] = {
+        
+        // Reset states if channel count changes
+        if (context.filterStates[0].x1.length !== channelCount) {
+            for (let i = 0; i < NUM_BANDS; i++) {
+                context.filterStates[i] = {
                     x1: new Array(channelCount).fill(0),
                     x2: new Array(channelCount).fill(0),
                     y1: new Array(channelCount).fill(0),
@@ -49,61 +51,82 @@ class FifteenBandGEQPlugin extends PluginBase {
                 };
             }
         }
-
-        // Band frequencies
+        
         const frequencies = [25, 40, 63, 100, 160, 250, 400, 630, 1000, 1600, 2500, 4000, 6300, 10000, 16000];
-        const Q = 2.1; // Q factor for all bands
-
+        const Q = 2.1;
+        const TWO_PI = 2 * Math.PI;
+        
+        // Update coefficients only if gains have changed
+        for (let i = 0; i < NUM_BANDS; i++) {
+            const currentGain = parameters['b' + i];
+            if (currentGain !== context.previousGains[i]) {
+                const linearGain = Math.pow(10, currentGain / 20);
+                const freq = frequencies[i];
+                const w0 = TWO_PI * freq / sampleRate;
+                
+                // Optimize trigonometric calculations
+                const sinw0 = Math.sin(w0);
+                const cosw0 = Math.cos(w0);
+                const alpha = sinw0 / (2 * Q);
+                
+                // Calculate coefficients once
+                const sqrtGain = Math.sqrt(linearGain);
+                const alphaTimesA = alpha * sqrtGain;
+                const alphaOverA = alpha / sqrtGain;
+                
+                const a0 = 1 + alphaOverA;
+                const a1 = -2 * cosw0;
+                const a2 = 1 - alphaOverA;
+                const b0 = 1 + alphaTimesA;
+                const b1 = a1;
+                const b2 = 1 - alphaTimesA;
+                
+                // Store normalized coefficients
+                const coef = context.coefficients[i];
+                coef.b0 = b0 / a0;
+                coef.b1 = b1 / a0;
+                coef.b2 = b2 / a0;
+                coef.a1 = a1 / a0;
+                coef.a2 = a2 / a0;
+                
+                context.previousGains[i] = currentGain;
+            }
+        }
+        
         // Process each band
-        for (let bandIndex = 0; bandIndex < 15; bandIndex++) {
-            // Map shortened parameter names to their original names for clarity
-            const gain = Math.pow(10, parameters['b' + bandIndex] / 20); // Convert dB to linear gain
-            const freq = frequencies[bandIndex];
+        for (let bandIndex = 0; bandIndex < NUM_BANDS; bandIndex++) {
+            // Skip processing if gain is effectively zero
+            if (Math.abs(parameters['b' + bandIndex]) < 0.01) continue;
             
-            // Calculate filter coefficients
-            const w0 = 2 * Math.PI * freq / sampleRate;
-            const alpha = Math.sin(w0) / (2 * Q);
-            const cosw0 = Math.cos(w0);
-            
-            // Peaking EQ filter coefficients
-            const A = Math.sqrt(gain);
-            
-            const b0 = 1 + alpha * A;
-            const b1 = -2 * cosw0;
-            const b2 = 1 - alpha * A;
-            const a0 = 1 + alpha / A;
-            const a1 = -2 * cosw0;
-            const a2 = 1 - alpha / A;
-            
-            // Normalize coefficients
-            const norm_b0 = b0 / a0;
-            const norm_b1 = b1 / a0;
-            const norm_b2 = b2 / a0;
-            const norm_a1 = a1 / a0;
-            const norm_a2 = a2 / a0;
-            
-            const states = context.filterStates['b' + bandIndex];
+            const states = context.filterStates[bandIndex];
+            const coef = context.coefficients[bandIndex];
             
             // Process each channel
             for (let ch = 0; ch < channelCount; ch++) {
                 const offset = ch * blockSize;
+                // Load channel state into local variables to reduce repeated property lookups
+                let x1 = states.x1[ch];
+                let x2 = states.x2[ch];
+                let y1 = states.y1[ch];
+                let y2 = states.y2[ch];
                 
-                // Process samples
+                // Process each sample in the block
                 for (let i = 0; i < blockSize; i++) {
-                    const x0 = data[offset + i];
-                    
-                    // Apply biquad filter
-                    const y0 = norm_b0 * x0 + norm_b1 * states.x1[ch] + norm_b2 * states.x2[ch] -
-                              norm_a1 * states.y1[ch] - norm_a2 * states.y2[ch];
-                    
-                    // Update filter states
-                    states.x2[ch] = states.x1[ch];
-                    states.x1[ch] = x0;
-                    states.y2[ch] = states.y1[ch];
-                    states.y1[ch] = y0;
-                    
+                    const sample = data[offset + i];
+                    const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
+                    // Update local states
+                    x2 = x1;
+                    x1 = sample;
+                    y2 = y1;
+                    y1 = y0;
                     data[offset + i] = y0;
                 }
+                
+                // Store back updated states for this channel
+                states.x1[ch] = x1;
+                states.x2[ch] = x2;
+                states.y1[ch] = y1;
+                states.y2[ch] = y2;
             }
         }
         
@@ -323,13 +346,16 @@ class FifteenBandGEQPlugin extends PluginBase {
             const freq = Math.pow(10, Math.log10(20) + (i / width) * (Math.log10(20000) - Math.log10(20)));
             let totalResponse = 0;
 
-            // Calculate response from all bands
-            FifteenBandGEQPlugin.BANDS.forEach((band, index) => {
-                const bandFreq = band.freq;
+            // Calculate response from non-zero gain bands only
+            for (let index = 0; index < FifteenBandGEQPlugin.BANDS.length; index++) {
                 const gain = this['b' + index];
+                // Skip calculation if gain is effectively zero
+                if (Math.abs(gain) < 0.01) continue;
+                
+                const bandFreq = FifteenBandGEQPlugin.BANDS[index].freq;
                 const bandResponse = gain * Math.exp(-Math.pow(Math.log(freq/bandFreq), 2) / (2 * Math.pow(0.5, 2)));
                 totalResponse += bandResponse;
-            });
+            }
 
             const y = height * (1 - (totalResponse + 24) / 48);
             if (i === 0) {
