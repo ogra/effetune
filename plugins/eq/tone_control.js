@@ -5,19 +5,20 @@ class ToneControlPlugin extends PluginBase {
         const { bs, md, tr, channelCount, blockSize } = parameters;
         
         // Initialize filter states in context if not exists
+        // Filter states for second-order filters for bass, mid, and treble (x1, x2, y1, y2)
         if (!context.initialized) {
             context.filterStates = {
-                // Bass filter states (Low-shelf, 100Hz, Q=0.7)
+                // Bass filter states (low-shelf)
                 bass1: new Array(channelCount).fill(0),
                 bass2: new Array(channelCount).fill(0),
                 bass3: new Array(channelCount).fill(0),
                 bass4: new Array(channelCount).fill(0),
-                // Mid filter states (Peaking, 1kHz, Q=1.0)
+                // Mid filter states (peaking)
                 mid1: new Array(channelCount).fill(0),
                 mid2: new Array(channelCount).fill(0),
                 mid3: new Array(channelCount).fill(0),
                 mid4: new Array(channelCount).fill(0),
-                // Treble filter states (High-shelf, 10kHz, Q=0.7)
+                // Treble filter states (high-shelf)
                 treble1: new Array(channelCount).fill(0),
                 treble2: new Array(channelCount).fill(0),
                 treble3: new Array(channelCount).fill(0),
@@ -34,103 +35,103 @@ class ToneControlPlugin extends PluginBase {
         }
 
         const filterStates = context.filterStates;
+        const sr = sampleRate; // Local sample rate
+
+        // --- Low Shelf filter coefficient calculation ---
+        // fc = 100Hz, using S=1 for shelving filter
+        let A = Math.pow(10, bs / 40); // A = 10^(bs/40)
+        let omega = 2 * Math.PI * 100 / sr;
+        let cosw = Math.cos(omega);
+        let sinw = Math.sin(omega);
+        // For shelving filter, alpha = sin(omega)/2 * sqrt(2) with S=1
+        let alpha = sinw / 2 * Math.sqrt(2);
+        let bassB0 = A * ((A + 1) - (A - 1) * cosw + 2 * Math.sqrt(A) * alpha);
+        let bassB1 = 2 * A * ((A - 1) - (A + 1) * cosw);
+        let bassB2 = A * ((A + 1) - (A - 1) * cosw - 2 * Math.sqrt(A) * alpha);
+        let bassA0 = (A + 1) + (A - 1) * cosw + 2 * Math.sqrt(A) * alpha;
+        let bassA1 = -2 * ((A - 1) + (A + 1) * cosw);
+        let bassA2 = (A + 1) + (A - 1) * cosw - 2 * Math.sqrt(A) * alpha;
+        // Normalize coefficients
+        bassB0 /= bassA0; bassB1 /= bassA0; bassB2 /= bassA0;
+        bassA1 /= bassA0; bassA2 /= bassA0;
         
-        // Convert dB to linear gain
-        const bassGain = Math.pow(10, bs / 20);
-        const midGain = Math.pow(10, md / 20);
-        const trebleGain = Math.pow(10, tr / 20);
+        // --- Mid filter coefficient calculation (Peaking) ---
+        // fc = 1000Hz, Q = 0.7
+        A = Math.pow(10, md / 40);
+        omega = 2 * Math.PI * 1000 / sr;
+        cosw = Math.cos(omega);
+        sinw = Math.sin(omega);
+        let Q = 0.7; // Q value for mid band is set to 0.7
+        alpha = sinw / (2 * Q);
+        let midB0 = 1 + alpha * A;
+        let midB1 = -2 * cosw;
+        let midB2 = 1 - alpha * A;
+        let midA0 = 1 + alpha / A;
+        let midA1 = -2 * cosw;
+        let midA2 = 1 - alpha / A;
+        midB0 /= midA0; midB1 /= midA0; midB2 /= midA0;
+        midA1 /= midA0; midA2 /= midA0;
         
-        // Calculate normalized frequencies and Q factors
-        const bassW0 = 2 * Math.PI * 100 / sampleRate;
-        const midW0 = 2 * Math.PI * 1000 / sampleRate;
-        const trebleW0 = 2 * Math.PI * 10000 / sampleRate;
+        // --- High Shelf filter coefficient calculation ---
+        // fc = 10000Hz, using S=1 for shelving filter
+        A = Math.pow(10, tr / 40);
+        omega = 2 * Math.PI * 10000 / sr;
+        cosw = Math.cos(omega);
+        sinw = Math.sin(omega);
+        alpha = sinw / 2 * Math.sqrt(2);
+        let trebleB0 = A * ((A + 1) + (A - 1) * cosw + 2 * Math.sqrt(A) * alpha);
+        let trebleB1 = -2 * A * ((A - 1) + (A + 1) * cosw);
+        let trebleB2 = A * ((A + 1) + (A - 1) * cosw - 2 * Math.sqrt(A) * alpha);
+        let trebleA0 = (A + 1) - (A - 1) * cosw + 2 * Math.sqrt(A) * alpha;
+        let trebleA1 = 2 * ((A - 1) - (A + 1) * cosw);
+        let trebleA2 = (A + 1) - (A - 1) * cosw - 2 * Math.sqrt(A) * alpha;
+        trebleB0 /= trebleA0; trebleB1 /= trebleA0; trebleB2 /= trebleA0;
+        trebleA1 /= trebleA0; trebleA2 /= trebleA0;
         
-        const bassQ = 0.7;
-        const midQ = 1.0;
-        const trebleQ = 0.7;
-        
-        // Calculate intermediate values
-        const bassAlpha = Math.sin(bassW0) / (2 * bassQ);
-        const midAlpha = Math.sin(midW0) / (2 * midQ);
-        const trebleAlpha = Math.sin(trebleW0) / (2 * trebleQ);
-        
-        const bassCosW0 = Math.cos(bassW0);
-        const midCosW0 = Math.cos(midW0);
-        const trebleCosW0 = Math.cos(trebleW0);
-        
-        // Bass (Low-shelf) coefficients
-        const bassA = Math.sqrt(bassGain);
-        const bassAp1 = bassA + 1;
-        const bassAm1 = bassA - 1;
-        const bassB0 = bassA * (bassAp1 - bassAm1 * bassCosW0 + 2 * Math.sqrt(bassA) * bassAlpha);
-        const bassB1 = 2 * bassA * (bassAm1 - bassAp1 * bassCosW0);
-        const bassB2 = bassA * (bassAp1 - bassAm1 * bassCosW0 - 2 * Math.sqrt(bassA) * bassAlpha);
-        const bassA0 = bassAp1 + bassAm1 * bassCosW0 + 2 * Math.sqrt(bassA) * bassAlpha;
-        const bassA1 = -2 * (bassAm1 + bassAp1 * bassCosW0);
-        const bassA2 = bassAp1 + bassAm1 * bassCosW0 - 2 * Math.sqrt(bassA) * bassAlpha;
-        
-        // Mid (Peaking) coefficients
-        const midA0 = 1 + midAlpha / midGain;
-        const midA1 = -2 * midCosW0;
-        const midA2 = 1 - midAlpha / midGain;
-        const midB0 = 1 + midAlpha * midGain;
-        const midB1 = -2 * midCosW0;
-        const midB2 = 1 - midAlpha * midGain;
-        
-        // Treble (High-shelf) coefficients
-        const trebleA = Math.sqrt(trebleGain);
-        const trebleAp1 = trebleA + 1;
-        const trebleAm1 = trebleA - 1;
-        const trebleB0 = trebleA * (trebleAp1 + trebleAm1 * trebleCosW0 + 2 * Math.sqrt(trebleA) * trebleAlpha);
-        const trebleB1 = -2 * trebleA * (trebleAm1 + trebleAp1 * trebleCosW0);
-        const trebleB2 = trebleA * (trebleAp1 + trebleAm1 * trebleCosW0 - 2 * Math.sqrt(trebleA) * trebleAlpha);
-        const trebleA0 = trebleAp1 - trebleAm1 * trebleCosW0 + 2 * Math.sqrt(trebleA) * trebleAlpha;
-        const trebleA1 = 2 * (trebleAm1 - trebleAp1 * trebleCosW0);
-        const trebleA2 = trebleAp1 - trebleAm1 * trebleCosW0 - 2 * Math.sqrt(trebleA) * trebleAlpha;
-        
-        // Process each channel
+        // --- Process each sample per channel using cascade of filters ---
         for (let ch = 0; ch < channelCount; ch++) {
             const offset = ch * blockSize;
-            
-            // Process samples
             for (let i = 0; i < blockSize; i++) {
-                let sample = data[offset + i];
+                let x = data[offset + i];
+                let y = x;
                 
-                // Bass filter
-                let x0 = sample;
-                let y0 = (bassB0 * x0 + bassB1 * filterStates.bass1[ch] + bassB2 * filterStates.bass2[ch] -
-                         bassA1 * filterStates.bass3[ch] - bassA2 * filterStates.bass4[ch]) / bassA0;
+                // Process Bass filter (Low Shelf)
+                if (Math.abs(bs) > 1e-6) {
+                    let x0 = y;
+                    let y0 = bassB0 * x0 + bassB1 * filterStates.bass1[ch] + bassB2 * filterStates.bass2[ch]
+                             - bassA1 * filterStates.bass3[ch] - bassA2 * filterStates.bass4[ch];
+                    filterStates.bass2[ch] = filterStates.bass1[ch];
+                    filterStates.bass1[ch] = x0;
+                    filterStates.bass4[ch] = filterStates.bass3[ch];
+                    filterStates.bass3[ch] = y0;
+                    y = y0;
+                }
                 
-                filterStates.bass2[ch] = filterStates.bass1[ch];
-                filterStates.bass1[ch] = x0;
-                filterStates.bass4[ch] = filterStates.bass3[ch];
-                filterStates.bass3[ch] = y0;
+                // Process Mid filter (Peaking)
+                if (Math.abs(md) > 1e-6) {
+                    let x0 = y;
+                    let y0 = midB0 * x0 + midB1 * filterStates.mid1[ch] + midB2 * filterStates.mid2[ch]
+                             - midA1 * filterStates.mid3[ch] - midA2 * filterStates.mid4[ch];
+                    filterStates.mid2[ch] = filterStates.mid1[ch];
+                    filterStates.mid1[ch] = x0;
+                    filterStates.mid4[ch] = filterStates.mid3[ch];
+                    filterStates.mid3[ch] = y0;
+                    y = y0;
+                }
                 
-                sample = y0;
+                // Process Treble filter (High Shelf)
+                if (Math.abs(tr) > 1e-6) {
+                    let x0 = y;
+                    let y0 = trebleB0 * x0 + trebleB1 * filterStates.treble1[ch] + trebleB2 * filterStates.treble2[ch]
+                             - trebleA1 * filterStates.treble3[ch] - trebleA2 * filterStates.treble4[ch];
+                    filterStates.treble2[ch] = filterStates.treble1[ch];
+                    filterStates.treble1[ch] = x0;
+                    filterStates.treble4[ch] = filterStates.treble3[ch];
+                    filterStates.treble3[ch] = y0;
+                    y = y0;
+                }
                 
-                // Mid filter
-                x0 = sample;
-                y0 = (midB0 * x0 + midB1 * filterStates.mid1[ch] + midB2 * filterStates.mid2[ch] -
-                      midA1 * filterStates.mid3[ch] - midA2 * filterStates.mid4[ch]) / midA0;
-                
-                filterStates.mid2[ch] = filterStates.mid1[ch];
-                filterStates.mid1[ch] = x0;
-                filterStates.mid4[ch] = filterStates.mid3[ch];
-                filterStates.mid3[ch] = y0;
-                
-                sample = y0;
-                
-                // Treble filter
-                x0 = sample;
-                y0 = (trebleB0 * x0 + trebleB1 * filterStates.treble1[ch] + trebleB2 * filterStates.treble2[ch] -
-                      trebleA1 * filterStates.treble3[ch] - trebleA2 * filterStates.treble4[ch]) / trebleA0;
-                
-                filterStates.treble2[ch] = filterStates.treble1[ch];
-                filterStates.treble1[ch] = x0;
-                filterStates.treble4[ch] = filterStates.treble3[ch];
-                filterStates.treble3[ch] = y0;
-                
-                data[offset + i] = y0;
+                data[offset + i] = y;
             }
         }
         
@@ -144,6 +145,7 @@ class ToneControlPlugin extends PluginBase {
         this.bs = 0;
         this.md = 0;
         this.tr = 0;
+        this.enabled = true;
         
         // Register processor function
         this.registerProcessor(ToneControlPlugin.processorFunction);
@@ -165,7 +167,7 @@ class ToneControlPlugin extends PluginBase {
         this.updateParameters();
     }
 
-    // Reset all parameters to default values
+    // Reset all parameters to defaults
     reset() {
         this.setBass(0);
         this.setMid(0);
@@ -336,7 +338,7 @@ class ToneControlPlugin extends PluginBase {
         });
         graphContainer.appendChild(resetButton);
 
-        // Add all elements to container
+        // Append all elements to container
         container.appendChild(bassRow);
         container.appendChild(midRow);
         container.appendChild(trebleRow);
@@ -352,15 +354,15 @@ class ToneControlPlugin extends PluginBase {
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
+        const sr = 44100; // Standard sample rate
 
         // Clear canvas
         ctx.clearRect(0, 0, width, height);
 
-        // Draw grid
+        // Draw grid (vertical: frequency, horizontal: dB)
         ctx.strokeStyle = '#444';
         ctx.lineWidth = 1;
 
-        // Vertical grid lines (frequency)
         const freqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
         freqs.forEach(freq => {
             const x = width * (Math.log10(freq) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20));
@@ -368,17 +370,14 @@ class ToneControlPlugin extends PluginBase {
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
             ctx.stroke();
-
-            // Frequency labels (hide 20Hz and 20kHz)
             if (freq !== 20 && freq !== 20000) {
                 ctx.fillStyle = '#666';
                 ctx.font = '20px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(freq >= 1000 ? `${freq/1000}k` : freq, x, height - 40);
+                ctx.fillText(freq >= 1000 ? (freq/1000) + 'k' : freq, x, height - 40);
             }
         });
 
-        // Horizontal grid lines (dB)
         const dBs = [-24, -18, -12, -6, 0, 6, 12, 18, 24];
         dBs.forEach(db => {
             const y = height * (1 - (db + 24) / 48);
@@ -386,13 +385,11 @@ class ToneControlPlugin extends PluginBase {
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
             ctx.stroke();
-
-            // dB labels (hide ±24dB)
             if (db !== -24 && db !== 24) {
                 ctx.fillStyle = '#666';
                 ctx.font = '20px Arial';
                 ctx.textAlign = 'right';
-                ctx.fillText(`${db}dB`, 80, y + 6);
+                ctx.fillText(db + 'dB', 80, y + 6);
             }
         });
 
@@ -400,58 +397,101 @@ class ToneControlPlugin extends PluginBase {
         ctx.fillStyle = '#fff';
         ctx.font = '24px Arial';
         ctx.textAlign = 'center';
-        
-        // Draw "Frequency (Hz)" label
         ctx.fillText('Frequency (Hz)', width/2, height - 5);
-        
-        // Draw "Level (dB)" label
         ctx.save();
         ctx.translate(20, height/2);
         ctx.rotate(-Math.PI/2);
         ctx.fillText('Level (dB)', 0, 0);
         ctx.restore();
 
-        // Draw frequency response
+        // Draw frequency response curve
         ctx.beginPath();
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
 
+        // Helper function: compute second-order IIR frequency response using z-transform
+        function computeResponse(b0, b1, b2, a1, a2, w) {
+            const cosw = Math.cos(w), sinw = Math.sin(w);
+            // z^-1 = cos(w) - j*sin(w), z^-2 = cos(2w) - j*sin(2w)
+            const numRe = b0 + b1 * cosw + b2 * Math.cos(2*w);
+            const numIm = 0 - b1 * sinw - b2 * Math.sin(2*w);
+            const denRe = 1 + a1 * cosw + a2 * Math.cos(2*w);
+            const denIm = 0 - a1 * sinw - a2 * Math.sin(2*w);
+            const numMag = Math.sqrt(numRe*numRe + numIm*numIm);
+            const denMag = Math.sqrt(denRe*denRe + denIm*denIm);
+            return numMag / denMag;
+        }
+        
         for (let i = 0; i < width; i++) {
-            const freq = Math.pow(10, Math.log10(20) + (i / width) * (Math.log10(20000) - Math.log10(20)));
+            // Map frequency logarithmically from 20Hz to 20kHz
+            const freq = Math.pow(10, Math.log10(20) + (i/width)*(Math.log10(20000)-Math.log10(20)));
+            const w = 2 * Math.PI * freq / sr;
             
-            // Calculate individual filter responses
-            let bassResponse = 0;
-            let midResponse = 0;
-            let trebleResponse = 0;
+            // Low Shelf response
+            let A_b = Math.pow(10, this.bs / 40);
+            let omega_b = 2 * Math.PI * 100 / sr;
+            let cosw_b = Math.cos(omega_b);
+            let sinw_b = Math.sin(omega_b);
+            let alpha_b = sinw_b / 2 * Math.sqrt(2);
+            let b0_b = A_b * ((A_b + 1) - (A_b - 1)*cosw_b + 2*Math.sqrt(A_b)*alpha_b);
+            let b1_b = 2 * A_b * ((A_b - 1) - (A_b + 1)*cosw_b);
+            let b2_b = A_b * ((A_b + 1) - (A_b - 1)*cosw_b - 2*Math.sqrt(A_b)*alpha_b);
+            let a0_b = (A_b + 1) + (A_b - 1)*cosw_b + 2*Math.sqrt(A_b)*alpha_b;
+            let a1_b = -2 * ((A_b - 1) + (A_b + 1)*cosw_b);
+            let a2_b = (A_b + 1) + (A_b - 1)*cosw_b - 2*Math.sqrt(A_b)*alpha_b;
+            b0_b /= a0_b; b1_b /= a0_b; b2_b /= a0_b;
+            a1_b /= a0_b; a2_b /= a0_b;
+            const H_b = (this.bs !== 0) ? computeResponse(b0_b, b1_b, b2_b, a1_b, a2_b, w) : 1;
             
-            // Bass response (low-shelf)
-            const bassOmega = freq / 100;
-            bassResponse = this.bs * (1 / (1 + Math.pow(bassOmega, 2)));
+            // Mid Peaking response with Q = 0.7
+            let A_m = Math.pow(10, this.md / 40);
+            let omega_m = 2 * Math.PI * 1000 / sr;
+            let cosw_m = Math.cos(omega_m);
+            let sinw_m = Math.sin(omega_m);
+            // Set Q to 0.7 for mid band
+            let Q_m = 0.7;
+            let alpha_m = sinw_m / (2 * Q_m);
+            let b0_m = 1 + alpha_m * A_m;
+            let b1_m = -2 * cosw_m;
+            let b2_m = 1 - alpha_m * A_m;
+            let a0_m = 1 + alpha_m / A_m;
+            let a1_m = -2 * cosw_m;
+            let a2_m = 1 - alpha_m / A_m;
+            b0_m /= a0_m; b1_m /= a0_m; b2_m /= a0_m;
+            a1_m /= a0_m; a2_m /= a0_m;
+            const H_m = (this.md !== 0) ? computeResponse(b0_m, b1_m, b2_m, a1_m, a2_m, w) : 1;
             
-            // Mid response (peaking)
-            const midOmega = freq / 1000;
-            const midBandwidth = 1.4;
-            midResponse = this.md * Math.exp(-Math.pow(Math.log(midOmega), 2) / (2 * Math.pow(midBandwidth, 2)));
+            // High Shelf response
+            let A_t = Math.pow(10, this.tr / 40);
+            let omega_t = 2 * Math.PI * 10000 / sr;
+            let cosw_t = Math.cos(omega_t);
+            let sinw_t = Math.sin(omega_t);
+            let alpha_t = sinw_t / 2 * Math.sqrt(2);
+            let b0_t = A_t * ((A_t + 1) + (A_t - 1)*cosw_t + 2*Math.sqrt(A_t)*alpha_t);
+            let b1_t = -2 * A_t * ((A_t - 1) + (A_t + 1)*cosw_t);
+            let b2_t = A_t * ((A_t + 1) + (A_t - 1)*cosw_t - 2*Math.sqrt(A_t)*alpha_t);
+            let a0_t = (A_t + 1) - (A_t - 1)*cosw_t + 2*Math.sqrt(A_t)*alpha_t;
+            let a1_t = 2 * ((A_t - 1) - (A_t + 1)*cosw_t);
+            let a2_t = (A_t + 1) - (A_t - 1)*cosw_t - 2*Math.sqrt(A_t)*alpha_t;
+            b0_t /= a0_t; b1_t /= a0_t; b2_t /= a0_t;
+            a1_t /= a0_t; a2_t /= a0_t;
+            const H_t = (this.tr !== 0) ? computeResponse(b0_t, b1_t, b2_t, a1_t, a2_t, w) : 1;
             
-            // Treble response (high-shelf)
-            const trebleOmega = freq / 10000;
-            trebleResponse = this.tr * (1 / (1 + Math.pow(trebleOmega, -2)));
+            const H_total = H_b * H_m * H_t;
+            const dB = 20 * Math.log10(H_total);
+            const yPos = height * (1 - (dB + 24) / 48);
             
-            // Combine responses
-            const totalResponse = bassResponse + midResponse + trebleResponse;
-            
-            const y = height * (1 - (totalResponse + 24) / 48);
             if (i === 0) {
-                ctx.moveTo(i, y);
+                ctx.moveTo(i, yPos);
             } else {
-                ctx.lineTo(i, y);
+                ctx.lineTo(i, yPos);
             }
         }
         ctx.stroke();
     }
 }
 
-// Register plugin
+// Register plugin in browser environment
 if (typeof window !== 'undefined') {
     window.ToneControlPlugin = ToneControlPlugin;
 }

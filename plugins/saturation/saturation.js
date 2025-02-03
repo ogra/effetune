@@ -1,38 +1,74 @@
 class SaturationPlugin extends PluginBase {
     constructor() {
         super('Saturation', 'Saturation effect with drive and bias control');
-        this.dr = 1.5;   // dr: Drive (formerly drive) - Range: 0.0-10.0
-        this.bs = 0.1;   // bs: Bias (formerly bias) - Range: -0.3-0.3
-        this.mx = 100;   // mx: Mix (formerly mix) - Range: 0-100%
-        this.gn = -2;    // gn: Gain (formerly gain) - Range: -18-+18 dB
+        this.dr = 1.5;   // dr: Drive (0.0-10.0)
+        this.bs = 0.1;   // bs: Bias (-0.3 to 0.3)
+        this.mx = 100;   // mx: Mix (0-100%)
+        this.gn = -2;    // gn: Gain (-18 to +18 dB)
 
-        // Register processor function
+        // Register processor function with 4x oversampling to reduce aliasing
         this.registerProcessor(`
             if (!parameters.enabled) return data;
-            
-            // Pre-calculate all constants for efficiency
-            // Map shortened parameter names to their original names for clarity
+
+            // Pre-calculate constants for efficiency
             const { 
-                dr: drive,   // dr: Drive (formerly drive)
-                bs: bias,    // bs: Bias (formerly bias)
-                mx: mix,     // mx: Mix (formerly mix)
-                gn: gain,    // gn: Gain (formerly gain)
-                channelCount, blockSize 
+                dr: drive,   // Drive (0.0-10.0)
+                bs: bias,    // Bias (-0.3 to 0.3)
+                mx: mix,     // Mix (0-100%)
+                gn: gain,    // Gain (-18 to +18 dB)
+                channelCount, 
+                blockSize 
             } = parameters;
             
             const mixRatio = mix / 100;
             const gainLinear = Math.pow(10, gain / 20);
             const biasOffset = Math.tanh(drive * bias);
-            const dryMix = 1 - mixRatio;
+
+            // Oversampling factor
+            const OS = 4;
+
+            // Allocate oversampling buffers per channel in the context if needed
+            if (!context.osBuffer || context.osBuffer.length !== channelCount || context.osBuffer[0].length !== (OS * blockSize)) {
+                context.osBuffer = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ch++) {
+                    context.osBuffer[ch] = new Float32Array(OS * blockSize);
+                }
+            }
             
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    const x = data[offset + i];
-                    // Tube waveshaping
-                    const wet = Math.tanh(drive * (x + bias)) - biasOffset;
-                    // Mix dry/wet and apply gain
-                    data[offset + i] = (x * dryMix + wet * mixRatio) * gainLinear;
+            // Process each channel
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                const os = context.osBuffer[ch];
+
+                // Upsample: linear interpolation to OS times more samples
+                for (let j = 0; j < blockSize; j++) {
+                    const x0 = data[offset + j];
+                    const x1 = (j < blockSize - 1) ? data[offset + j + 1] : x0;
+                    const delta = x1 - x0;
+                    os[OS * j]     = x0;
+                    os[OS * j + 1] = x0 + 0.25 * delta;
+                    os[OS * j + 2] = x0 + 0.5  * delta;
+                    os[OS * j + 3] = x0 + 0.75 * delta;
+                }
+
+                // Apply non-linear saturation on oversampled signal
+                for (let i = 0; i < OS * blockSize; i++) {
+                    // Tube waveshaping with bias compensation
+                    os[i] = Math.tanh(drive * (os[i] + bias)) - biasOffset;
+                }
+
+                // Downsample: apply a simple FIR low-pass filter and decimate by factor OS
+                // FIR filter coefficients: [0.125, 0.375, 0.375, 0.125]
+                for (let j = 0; j < blockSize; j++) {
+                    const base = OS * j;
+                    const w0 = os[base];
+                    const w1 = os[base + 1];
+                    const w2 = os[base + 2];
+                    const w3 = os[base + 3];
+                    const wet = (w0 * 0.125 + w1 * 0.375 + w2 * 0.375 + w3 * 0.125);
+                    
+                    // Mix dry/wet signals and apply output gain
+                    data[offset + j] = (data[offset + j] * (1 - mixRatio) + wet * mixRatio) * gainLinear;
                 }
             }
             return data;
@@ -84,7 +120,7 @@ class SaturationPlugin extends PluginBase {
         this.setParameters({ mx: value });
     }
 
-    // Set output gain (-18-+18 dB)
+    // Set output gain (-18 to +18 dB)
     setGn(value) {
         this.setParameters({ gn: value });
     }
@@ -116,7 +152,7 @@ class SaturationPlugin extends PluginBase {
         ctx.lineWidth = 1;
         
         // Vertical grid lines
-        for (let x = 0; x <= width; x += width/4) {
+        for (let x = 0; x <= width; x += width / 4) {
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
@@ -124,7 +160,7 @@ class SaturationPlugin extends PluginBase {
         }
         
         // Horizontal grid lines
-        for (let y = 0; y <= height; y += height/4) {
+        for (let y = 0; y <= height; y += height / 4) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
@@ -137,12 +173,12 @@ class SaturationPlugin extends PluginBase {
         ctx.textAlign = 'center';
         
         // Draw "in" label at bottom
-        ctx.fillText('in', width/2, height - 5);
+        ctx.fillText('in', width / 2, height - 5);
         
         // Draw "out" label on left side, rotated
         ctx.save();
-        ctx.translate(20, height/2);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(20, height / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('out', 0, 0);
         ctx.restore();
 
@@ -150,7 +186,6 @@ class SaturationPlugin extends PluginBase {
         ctx.fillStyle = '#666';
         ctx.font = '20px Arial';
 
-        // Draw -6dB labels
         // Input axis labels
         ctx.fillText('-6dB', width * 0.25, height - 5);  // Left
         ctx.fillText('-6dB', width * 0.75, height - 5);  // Right
@@ -158,13 +193,13 @@ class SaturationPlugin extends PluginBase {
         // Output axis labels
         ctx.save();
         ctx.translate(20, height * 0.25);
-        ctx.rotate(-Math.PI/2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('-6dB', 0, 0);  // Top
         ctx.restore();
 
         ctx.save();
         ctx.translate(20, height * 0.75);
-        ctx.rotate(-Math.PI/2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('-6dB', 0, 0);  // Bottom
         ctx.restore();
 
@@ -353,5 +388,5 @@ class SaturationPlugin extends PluginBase {
     }
 }
 
-// Register the plugin
+// Register the plugin globally
 window.SaturationPlugin = SaturationPlugin;

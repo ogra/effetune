@@ -1,9 +1,13 @@
 class StereoBlendPlugin extends PluginBase {
     constructor() {
-        super('Stereo Blend', 'Stereo width control effect');
+        super('Stereo Blend', 'Stereo width control for natural sound field adjustment');
         
         // Initialize parameters
-        this.stereo = 100;  // stereo: Stereo width (0-200%) - Default: 100%
+        this.stereo = 60;  // stereo: Stereo width (0-200%)
+        // Common use cases:
+        // - 60-90%: Reduce stereo width for more natural headphone listening
+        // - 100%: Original stereo image (neutral)
+        // - 110-130%: Enhance stereo separation for speaker listening
 
         // Register the audio processing function
         this.registerProcessor(`
@@ -21,7 +25,11 @@ class StereoBlendPlugin extends PluginBase {
             tempBuffer.set(data);
 
             // Calculate stereo width factor (-1 to 1)
-            // 0% -> -1 (full inverse), 100% -> 0 (original), 200% -> 1 (full width)
+            // 0%: Full mono
+            // 60-90%: Reduced width for headphone listening (more natural soundstage)
+            // 100%: Original stereo image
+            // 110-130%: Enhanced stereo for speaker listening
+            // 200%: Maximum stereo width (use with caution)
             const widthFactor = (stereo - 100) / 100;
 
             const rightOffset = blockSize;

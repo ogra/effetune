@@ -6,9 +6,9 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.dr = -96;
         this.pt = 10;
         this.ch = 'All';
-        const fftSize = Math.pow(2, this.pt);
-        this.spectrum = new Float32Array(fftSize / 2).fill(-144);
-        this.peaks = new Float32Array(fftSize / 2).fill(-144);
+        const fftSize = 1 << this.pt; // Using bit shift for power of 2
+        this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
+        this.peaks = new Float32Array(fftSize >> 1).fill(-144);
         this.lastProcessTime = performance.now() / 1000;
         this.sampleRate = 48000;
 
@@ -16,19 +16,16 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.real = new Float32Array(fftSize);
         this.imag = new Float32Array(fftSize);
         this.window = new Float32Array(fftSize);
-        
-        // Initialize sin/cos tables for FFT
         this.sinTable = new Float32Array(fftSize);
         this.cosTable = new Float32Array(fftSize);
-        for (let i = 0; i < fftSize; i++) {
-            const angle = -2 * Math.PI * i / fftSize;
-            this.sinTable[i] = Math.sin(angle);
-            this.cosTable[i] = Math.cos(angle);
-        }
 
-        // Initialize Hann window
+        // Combined loop: Initialize sin/cos tables for FFT and Hann window
+        const factor = 2 * Math.PI / fftSize;
         for (let i = 0; i < fftSize; i++) {
-            this.window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / fftSize));
+            const t = factor * i;
+            this.sinTable[i] = -Math.sin(t); // sin(-t)
+            this.cosTable[i] = Math.cos(t);
+            this.window[i] = 0.5 * (1 - Math.cos(t));
         }
 
         // Store event listeners for cleanup
@@ -44,7 +41,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         result.set(data);
 
         const { channelCount, blockSize, pt, ch } = parameters;
-        const fftSize = Math.pow(2, pt);
+        const fftSize = 1 << pt; // Using bit shift for power of 2
         
         // Initialize context if needed
         if (!context.initialized || context.fftSize !== fftSize || context.buffer?.length !== channelCount) {
@@ -54,7 +51,10 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             }
             
             // Create new buffers
-            context.buffer = new Array(channelCount).fill().map(() => new Float32Array(fftSize));
+            context.buffer = new Array(channelCount);
+            for (let i = 0; i < channelCount; i++) {
+                context.buffer[i] = new Float32Array(fftSize);
+            }
             context.bufferPosition = 0;
             context.fftSize = fftSize;
             context.initialized = true;
@@ -66,11 +66,14 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             for (let ch = 0; ch < channelCount; ch++) {
                 context.buffer[ch][context.bufferPosition] = data[ch * blockSize + i];
             }
-            context.bufferPosition = (context.bufferPosition + 1) % fftSize;
+            context.bufferPosition++;
+            if (context.bufferPosition >= fftSize) {
+                context.bufferPosition -= fftSize;
+            }
         }
 
         // Send buffer to UI every half FFT size
-        if (context.bufferPosition % (fftSize / 2) === 0) {
+        if (context.bufferPosition % (fftSize >> 1) === 0) {
             // Create measurements object with buffer copy to prevent reference holding
             result.measurements = {
                 buffer: context.buffer.map(buf => Float32Array.from(buf)),
@@ -97,7 +100,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         }
 
         // FFT
-        for (let stage = 1, size = 2; size <= n; stage++, size *= 2) {
+        for (let stage = 1, size = 2; size <= n; stage++, size <<= 1) {
             const halfSize = size >> 1;
             const shift = this.pt - stage;
             
@@ -110,10 +113,10 @@ class SpectrumAnalyzerPlugin extends PluginBase {
                     const tr = real[j + halfSize] * cos - imag[j + halfSize] * sin;
                     const ti = real[j + halfSize] * sin + imag[j + halfSize] * cos;
                     
-                    real[j + halfSize] = (real[j] - tr) / 2;
-                    imag[j + halfSize] = (imag[j] - ti) / 2;
-                    real[j] = (real[j] + tr) / 2;
-                    imag[j] = (imag[j] + ti) / 2;
+                    real[j + halfSize] = (real[j] - tr) * 0.5;
+                    imag[j + halfSize] = (imag[j] - ti) * 0.5;
+                    real[j] = (real[j] + tr) * 0.5;
+                    imag[j] = (imag[j] + ti) * 0.5;
                 }
             }
         }
@@ -136,38 +139,30 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     setPoints(value) {
-        const newPoints = Math.max(8, Math.min(13, typeof value === 'number' ? value : parseFloat(value)));
+        // Set maximum value to 11
+        const newPoints = Math.max(8, Math.min(11, typeof value === 'number' ? value : parseFloat(value)));
         if (newPoints === this.pt) return;
-
-        const fftSize = Math.pow(2, newPoints);
-
-        // Create new arrays first
-        const newSpectrum = new Float32Array(fftSize / 2).fill(-144);
-        const newPeaks = new Float32Array(fftSize / 2).fill(-144);
-        const newReal = new Float32Array(fftSize);
-        const newImag = new Float32Array(fftSize);
-        const newWindow = new Float32Array(fftSize);
-        const newSinTable = new Float32Array(fftSize);
-        const newCosTable = new Float32Array(fftSize);
+        const fftSize = 1 << newPoints;
+        
+        // Create new arrays
+        this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
+        this.peaks = new Float32Array(fftSize >> 1).fill(-144);
+        this.real = new Float32Array(fftSize);
+        this.imag = new Float32Array(fftSize);
+        this.window = new Float32Array(fftSize);
+        this.sinTable = new Float32Array(fftSize);
+        this.cosTable = new Float32Array(fftSize);
 
         // Initialize tables
+        const factor = 2 * Math.PI / fftSize;
         for (let i = 0; i < fftSize; i++) {
-            const angle = -2 * Math.PI * i / fftSize;
-            newSinTable[i] = Math.sin(angle);
-            newCosTable[i] = Math.cos(angle);
-            newWindow[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / fftSize));
+            const t = factor * i;
+            this.sinTable[i] = -Math.sin(t);
+            this.cosTable[i] = Math.cos(t);
+            this.window[i] = 0.5 * (1 - Math.cos(t));
         }
 
-        // Update all references atomically
         this.pt = newPoints;
-        this.spectrum = newSpectrum;
-        this.peaks = newPeaks;
-        this.real = newReal;
-        this.imag = newImag;
-        this.window = newWindow;
-        this.sinTable = newSinTable;
-        this.cosTable = newCosTable;
-
         // Reset time tracking to ensure proper peak decay
         this.lastProcessTime = performance.now() / 1000;
         
@@ -225,7 +220,8 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             return audioBuffer;
         }
 
-        const fftSize = Math.pow(2, this.pt);
+        const fftSize = 1 << this.pt;
+        const halfFft = fftSize >> 1;
         const bufferPosition = message.measurements.bufferPosition;
         const [bufferL, bufferR] = message.measurements.buffer;
 
@@ -234,10 +230,9 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.imag.fill(0);
 
         // Copy and window the time domain data
+        let pos = bufferPosition;
         for (let i = 0; i < fftSize; i++) {
-            const pos = (bufferPosition + i) % fftSize;
             let sample = 0;
-            
             if (this.ch === 'All') {
                 sample = (bufferL[pos] + bufferR[pos]) / Math.SQRT2;
             } else if (this.ch === 'Left') {
@@ -245,32 +240,28 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             } else {
                 sample = bufferR[pos];
             }
-            
             this.real[i] = sample * this.window[i];
+            pos++;
+            if (pos >= fftSize) pos = 0;
         }
 
         // Perform FFT
         this.fft(this.real, this.imag);
 
+        // Precompute constant corrections
+        const windowPowerCorrection = 10 * Math.log10(8 / 3);
+        const singleSideCorrection = 10 * Math.log10(2);
+        const totalCorrection = windowPowerCorrection + singleSideCorrection;
+
         // Calculate magnitude spectrum
-        for (let i = 0; i < fftSize / 2; i++) {
+        for (let i = 0; i < halfFft; i++) {
             // Calculate raw power
             const rawPower = this.real[i] * this.real[i] + this.imag[i] * this.imag[i];
-            
-            // Apply corrections:
-            // 1. FFT scaling correction: +20*log10(N) to compensate for 1/N^2 in power
-            // 2. Time window normalization: -20*log10(N) to normalize window length
-            // 3. Hann window power correction: +10*log10(8/3)
-            // 4. Single-sided spectrum correction: +10*log10(2)
-            const fftSizeCorrection = 20 * Math.log10(fftSize) - 20 * Math.log10(fftSize); // Cancels out
-            const windowPowerCorrection = 10 * Math.log10(8/3);
-            const singleSideCorrection = 10 * Math.log10(2);
-            const totalCorrection = fftSizeCorrection + windowPowerCorrection + singleSideCorrection;
             
             // Convert to dB with corrections
             const db = 10 * Math.log10(rawPower + 1e-24) + totalCorrection;
             // Clamp spectrum values between -144 and 0 dB
-            this.spectrum[i] = Math.max(-144, Math.min(0, db));
+            this.spectrum[i] = db < -144 ? -144 : db > 0 ? 0 : db;
         }
 
         // Validate and update peaks
@@ -278,32 +269,25 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const deltaTime = currentTime - this.lastProcessTime;
         const decay = 20 * deltaTime; // 20dB/sec decay rate
 
-        // Ensure peaks array is valid and has correct length
-        if (!this.peaks || this.peaks.length !== fftSize / 2) {
-            this.peaks = new Float32Array(fftSize / 2).fill(-144);
+        if (!this.peaks || this.peaks.length !== halfFft) {
+            this.peaks = new Float32Array(halfFft).fill(-144);
         }
 
-        // Update peaks with bounds checking and value clamping
-        for (let i = 0; i < fftSize / 2; i++) {
-            // Ensure current peak value is valid
+        for (let i = 0; i < halfFft; i++) {
             if (isNaN(this.peaks[i]) || this.peaks[i] < -144 || this.peaks[i] > 0) {
                 this.peaks[i] = -144;
             }
-            
-            // Calculate new peak value with proper bounds
             const decayedPeak = this.peaks[i] - decay;
-            const newPeak = Math.max(this.spectrum[i], decayedPeak);
-            
-            // Clamp the peak value to valid range
-            this.peaks[i] = Math.max(-144, Math.min(0, newPeak));
+            const newPeak = this.spectrum[i] > decayedPeak ? this.spectrum[i] : decayedPeak;
+            this.peaks[i] = newPeak < -144 ? -144 : newPeak > 0 ? 0 : newPeak;
         }
         
         this.lastProcessTime = currentTime;
 
-        if (message.measurements.sampleRate) {
+        if (message.measurements.sampleRate && this.sampleRate !== message.measurements.sampleRate) {
             this.sampleRate = message.measurements.sampleRate;
+            this.updateParameters();
         }
-        this.updateParameters();
         
         return audioBuffer;
     }
@@ -361,14 +345,14 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
         const pointsValue = document.createElement('input');
         pointsValue.type = 'number';
-        pointsValue.value = Math.pow(2, this.pt);
+        pointsValue.value = 1 << this.pt;
         pointsValue.step = 1;
-        pointsValue.min = Math.pow(2, 8);
-        pointsValue.max = Math.pow(2, 11);
+        pointsValue.min = 1 << 8;
+        pointsValue.max = 1 << 11;
 
         const pointsHandler = (e) => {
             const value = parseInt(e.target.value);
-            pointsValue.value = Math.pow(2, value);
+            pointsValue.value = 1 << value;
             this.setPoints(value);
         };
         pointsSlider.addEventListener('input', pointsHandler);
@@ -398,8 +382,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             
             const radioHandler = (e) => {
                 if (e.target.checked) {
-                    const value = e.target.value;
-                    this.setChannel(value);
+                    this.setChannel(e.target.value);
                 }
             };
             radio.addEventListener('change', radioHandler);
@@ -442,7 +425,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             dbRangeSlider.value = defaultDBRange;
             dbRangeValue.value = defaultDBRange;
             pointsSlider.value = defaultPoints;
-            pointsValue.value = Math.pow(2, defaultPoints);
+            pointsValue.value = 1 << defaultPoints;
             channelRadios.forEach(label => {
                 const radio = label.querySelector('input');
                 radio.checked = radio.value === defaultChannel;
@@ -472,25 +455,19 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     startAnimation() {
-        // Cancel any existing animation
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-
-        // Start new animation loop
         const animate = () => {
             if (!this.canvas) return;
-            
             this.drawGraph();
             this.animationFrameId = requestAnimationFrame(animate);
         };
-        
         this.animationFrameId = requestAnimationFrame(animate);
     }
 
     cleanup() {
-        // Reset time tracking only
         this.lastProcessTime = performance.now() / 1000;
     }
 
@@ -523,7 +500,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
                 ctx.fillStyle = '#666';
                 ctx.font = '24px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(freq >= 1000 ? `${freq/1000}k` : freq, x, height - 80);
+                ctx.fillText(freq >= 1000 ? `${freq / 1000}k` : freq, x, height - 80);
             }
         });
 
@@ -553,30 +530,22 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         ctx.fillStyle = '#fff';
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        
-        // Draw "Frequency (Hz)" label
-        ctx.fillText('Frequency (Hz)', width/2, height - 10);
-        
-        // Draw "Level (dB)" label
+        ctx.fillText('Frequency (Hz)', width / 2, height - 10);
         ctx.save();
-        ctx.translate(40, height/2);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(40, height / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('Level (dB)', 0, 0);
         ctx.restore();
 
         // Always draw spectrum
-        const fftSize = Math.pow(2, this.pt);
-        const binCount = fftSize / 2;
-
-        // Group FFT bins by x-coordinate and find max levels
-        const xToLevels = new Map(); // x-coordinate to [spectrum, peak] mapping
+        const fftSize = 1 << this.pt;
+        const binCount = fftSize >> 1;
+        const xToLevels = new Map();
         
         for (let i = 0; i < binCount; i++) {
-            const freq = (i * this.sampleRate/2) / (fftSize / 2);
+            const freq = (i * this.sampleRate / 2) / binCount;
             if (freq > 40000) continue;
-
             const x = Math.round(width * (Math.log10(Math.max(freq, 20)) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20)));
-            // Clamp both spectrum and peak levels between dr and 0 dB
             const spectrumLevel = Math.min(0, Math.max(this.dr, this.spectrum[i]));
             const peakLevel = Math.min(0, Math.max(this.dr, this.peaks[i]));
 
@@ -595,14 +564,12 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         ctx.beginPath();
         ctx.strokeStyle = '#008800';
         ctx.lineWidth = 4;
-
-        let isFirst = true;
-        for (const [x, [spectrumLevel, _]] of xToLevels) {
+        let first = true;
+        for (const [x, [spectrumLevel]] of xToLevels) {
             const y = height * (spectrumLevel / this.dr);
-            
-            if (isFirst) {
+            if (first) {
                 ctx.moveTo(x, y);
-                isFirst = false;
+                first = false;
             } else {
                 ctx.lineTo(x, y);
             }
@@ -613,14 +580,12 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         ctx.beginPath();
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
-
-        isFirst = true;
-        for (const [x, [_, peakLevel]] of xToLevels) {
+        first = true;
+        for (const [x, [, peakLevel]] of xToLevels) {
             const y = height * (peakLevel / this.dr);
-            
-            if (isFirst) {
+            if (first) {
                 ctx.moveTo(x, y);
-                isFirst = false;
+                first = false;
             } else {
                 ctx.lineTo(x, y);
             }

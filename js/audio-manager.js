@@ -11,7 +11,7 @@ export class AudioManager {
         try {
             // Create audio context if not exists
             if (!this.audioContext) {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
             }
 
             // Load audio worklet with absolute path

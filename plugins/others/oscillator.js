@@ -20,8 +20,8 @@ class OscillatorPlugin extends PluginBase {
             const volume = Math.pow(10, parameters.vl / 20); // Convert dB to linear gain
             const panning = parameters.pn;
             const waveform = parameters.wf;
-            // Get actual sample rate from context
-            const sampleRate = context.sampleRate || 44100;
+            // Get actual sample rate from parameters
+            const sampleRate = parameters.sampleRate;
             const phaseIncrement = (2 * Math.PI * frequency) / sampleRate;
 
             // Generate samples first to ensure phase consistency across channels
