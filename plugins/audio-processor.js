@@ -29,7 +29,25 @@ class PluginProcessor extends AudioWorkletProcessor {
     }
 
     registerPluginProcessor(pluginType, processorFunction) {
-        this.pluginProcessors.set(pluginType, processorFunction);
+        const compiledFunction = new Function('context', 'data', 'parameters', 'time', 
+            `with (context) { 
+                try {
+                    if (parameters.channelCount < 1) {
+                        console.error('Invalid channel count');
+                        return data;
+                    }
+                    if (data.length !== parameters.channelCount * parameters.blockSize) {
+                        console.error('Buffer size mismatch');
+                        return data;
+                    }
+                    ${processorFunction}
+                } catch (error) {
+                    console.error('Error in processor function:', error);
+                    return data;
+                }
+            }`
+        );
+        this.pluginProcessors.set(pluginType, compiledFunction);
     }
 
     updatePlugins(pluginConfigs) {
@@ -130,24 +148,11 @@ class PluginProcessor extends AudioWorkletProcessor {
                     combinedBuffer.set(buffer, i * params.blockSize);
                 });
 
-                const result = new Function('context', 'data', 'parameters', 'time', 
-                    `with (context) { 
-                        try {
-                            if (parameters.channelCount < 1) {
-                                console.error('Invalid channel count');
-                                return data;
-                            }
-                            if (data.length !== parameters.channelCount * parameters.blockSize) {
-                                console.error('Buffer size mismatch');
-                                return data;
-                            }
-                            ${processor}
-                        } catch (error) {
-                            console.error('Error in processor function:', error);
-                            return data;
-                        }
-                    }`
-                ).call(null, context, combinedBuffer, params, time);
+                // If registered processor exists, use it
+                // Otherwise return input unchanged (process function will be handled by registerProcessor if overridden)
+                const result = this.pluginProcessors.has(plugin.type) ?
+                    processor.call(null, context, combinedBuffer, params, time) :
+                    combinedBuffer;
 
                 // Update individual channel buffers from the result
                 if (result && result.length === combinedBuffer.length) {

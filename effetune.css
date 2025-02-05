@@ -6,8 +6,16 @@
 
 /* Header with subtitle */
 h1 {
-    display: block;
+    display: flex;
+    align-items: center;
     margin: 0;
+    gap: 8px;
+}
+
+.title-icon {
+    height: 1em;
+    width: auto;
+    vertical-align: middle;
 }
 
 .subtitle-container {
@@ -29,14 +37,25 @@ body {
     font-family: Arial, sans-serif;
     font-size: 14px;
     max-width: 1424px;
+    width: calc(100vw - 60px);
     margin: 0 auto;
-    padding: 20px 20px 20px;
+    padding: 20px;
+    margin-left: max(30px, calc((100vw - 1584px) / 2));
+    margin-right: max(30px, calc((100vw - 1584px) / 2));
     background-color: #1e1e1e;
     color: #ffffff;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+}
+
+/* Override user-select for input elements */
+input {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
 }
 
 .header-button {
@@ -70,41 +89,67 @@ body {
 .main-container {
     display: flex;
     gap: 20px;
-    min-height: calc(100vh - 100px);
+    min-height: calc(100vh - 150px);
 }
 
 /* Plugin list */
 .plugin-list {
-    width: 250px;
+    width: 260px;
     background-color: #2d2d2d;
     border-radius: 4px;
     padding: 20px;
+    position: relative;
+    min-height: 200px; /* Ensure minimum height for spinner positioning */
 }
 
-.plugin-list h2 {
-    margin-top: 0;
+.plugin-list-header {
+    display: flex;
+    align-items: center;
     padding-bottom: 10px;
     border-bottom: 1px solid #3d3d3d;
+    height: 33px;
+}
+
+.plugin-list-header h2 {
+    margin: 0;
+    margin-top: 0;
+}
+
+.plugin-list-content {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 20px;
+    padding-top: 10px;
 }
 
 .plugin-category {
     margin: 20px 0;
+    display: contents;
 }
 
 .plugin-category:first-of-type {
     margin-top: 0;
 }
 
-.plugin-category h3 {
-    margin: 0 0 10px 0;
+.plugin-list-content h3 {
+    margin-top: 8px;
     color: #888;
     font-size: 14px;
     font-weight: normal;
 }
 
+.plugin-category-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .plugin-item {
-    padding: 10px;
-    margin: 10px 0;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 2px 0;
     background-color: #3d3d3d;
     border-radius: 4px;
     cursor: move;
@@ -145,8 +190,8 @@ body {
 .loading-spinner {
     display: none;
     position: absolute;
-    top: calc(50% - 25px);  /* 50% - half of spinner height */
-    left: calc(50% - 25px); /* 50% - half of spinner width */
+    top: calc(50% - 25px);
+    left: calc(50% - 25px);
     width: 50px;
     height: 50px;
     border: 5px solid #3d3d3d;
@@ -154,16 +199,6 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     z-index: 1000;
-}
-
-/* Plugin list needs relative positioning for absolute spinner positioning */
-.plugin-list {
-    width: 250px;
-    background-color: #2d2d2d;
-    border-radius: 4px;
-    padding: 20px;
-    position: relative;
-    min-height: 200px; /* Ensure minimum height for spinner positioning */
 }
 
 /* Pipeline */
@@ -180,8 +215,8 @@ body {
 .drag-message {
     display: none;
     position: absolute;
-    top: 20px;  /* Align with pipeline header */
-    left: 180px;  /* Position after "Effect Pipeline" text */
+    top: 20px;
+    left: 180px;
     background-color: rgba(61, 61, 61, 0.9);
     padding: 8px 12px;
     border-radius: 4px;
@@ -204,7 +239,6 @@ body {
 
 .pipeline-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding-bottom: 10px;
     border-bottom: 1px solid #3d3d3d;
@@ -212,6 +246,8 @@ body {
 
 .pipeline-header h2 {
     margin: 0;
+    margin-top: 0;
+    margin-right: auto;
 }
 
 .pipeline-header-right {
@@ -231,17 +267,29 @@ body {
     padding: 40px;
 }
 
+/* Pipeline Item Styles */
 .pipeline-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     padding: 10px;
     margin: 10px 0;
     background-color: #3d3d3d;
     border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.pipeline-item.selected {
+    background-color: #4d4d4d;
 }
 
 .pipeline-item.dragging {
     opacity: 0.5;
+}
+
+.pipeline-item-header {
+    display: flex;
+    align-items: center;
+    width: calc(100% - 10px);;
 }
 
 .handle {
@@ -256,18 +304,22 @@ body {
 }
 
 .toggle-button {
-    margin: 0 10px;
-    padding: 4px 8px;
-    background-color: #00aa00;
-    border: none;
-    color: #ffffff;
-    cursor: pointer;
+    padding: 2px 8px;
+    margin-right: 8px;
+    border: 1px solid #606060;
     border-radius: 4px;
-    transition: background-color 0.2s;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
 }
 
 .toggle-button.off {
-    background-color: #666666;
+    background-color: #808080
+}
+
+.toggle-button.master-toggle {
+    margin-left: 8px;
 }
 
 .plugin-name {
@@ -276,59 +328,37 @@ body {
     font-size: 16px;
 }
 
-.help-button {
-    padding: 4px 8px;
-    background-color: #4d4d4d;
-    border: 1px solid #5d5d5d;
-    color: #4a9eff;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-right: 5px;
-}
-
-.help-button:hover {
-    background-color: #5d5d5d;
-}
-
+/* Button Styles */
+.help-button,
 .delete-button {
     padding: 4px 8px;
     background-color: #4d4d4d;
     border: 1px solid #5d5d5d;
-    color: #ff6b6b;
     cursor: pointer;
     border-radius: 4px;
 }
 
+.help-button {
+    color: #4a9eff;
+    margin-right: 5px;
+}
+
+.delete-button {
+    color: #ff6b6b;
+}
+
+.help-button:hover,
 .delete-button:hover {
     background-color: #5d5d5d;
 }
 
 /* Plugin UI */
-.pipeline-item {
-    flex-direction: column;
-}
-
-.pipeline-item-header {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-
-input {
-    user-select: text;
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-}
-
 .plugin-ui {
     padding: 10px;
     margin-top: 2px;
-    background-color: #3d3d3d;
     border-radius: 4px;
     display: none;
-    width: calc(100% - 20px); /* Adjust for padding */
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -336,7 +366,7 @@ input {
     display: block;
 }
 
-/* Plugin parameter UI - General style for all plugin parameters */
+/* Plugin parameter UI */
 .plugin-parameter-ui {
     display: flex;
     flex-direction: column;
@@ -366,7 +396,7 @@ input {
     min-width: 80px;
 }
 
-/* Plugin error display styles */
+/* Error Display */
 .plugin-error {
     background-color: rgba(244, 67, 54, 0.1);
     border-left: 3px solid #f44336;

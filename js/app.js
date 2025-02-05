@@ -14,33 +14,43 @@ class App {
             // Show loading spinner
             this.uiManager.showLoadingSpinner();
 
-            // Load plugins
+            // Load plugins first
             await this.pluginManager.loadPlugins();
 
-            // Initialize UI components
+            // Initialize UI components (non-blocking)
             this.uiManager.initPluginList();
             this.uiManager.initDragAndDrop();
 
-            // Start audio after plugins are loaded
+            // Initialize audio after plugins are loaded
             await this.audioManager.initAudio();
             this.uiManager.initAudio();
 
             // Initialize pipeline
             const savedState = this.uiManager.parsePipelineState();
+            const plugins = [];
             
             if (savedState) {
                 // Restore pipeline from URL
-                for (const pluginState of savedState) {
-                    console.log('Creating plugin from state:', pluginState);
+                plugins.push(...savedState.map(pluginState => {
                     const plugin = this.pluginManager.createPlugin(pluginState.name);
                     plugin.enabled = pluginState.enabled;
                     
-                    // Restore parameters
-                    plugin.setSerializedParameters(pluginState.parameters);
-                    
+                    // Restore parameters efficiently
+                    if (plugin.setSerializedParameters) {
+                        plugin.setSerializedParameters(pluginState.parameters);
+                    } else if (plugin.setParameters) {
+                        plugin.setParameters({
+                            ...pluginState.parameters,
+                            enabled: pluginState.enabled
+                        });
+                    } else if (plugin.parameters) {
+                        Object.assign(plugin.parameters, pluginState.parameters);
+                    }
+
+                    plugin.updateParameters();
                     this.uiManager.expandedPlugins.add(plugin);
-                    this.audioManager.pipeline.push(plugin);
-                }
+                    return plugin;
+                }));
             } else {
                 // Initialize default plugins
                 const defaultPlugins = [
@@ -48,26 +58,29 @@ class App {
                     { name: 'Level Meter' }
                 ];
                 
-                for (const pluginConfig of defaultPlugins) {
-                    const plugin = this.pluginManager.createPlugin(pluginConfig.name);
-                    if (pluginConfig.config) {
-                        if (pluginConfig.config.volume !== undefined) {
-                            plugin.setVl(pluginConfig.config.volume);
-                        }
+                plugins.push(...defaultPlugins.map(config => {
+                    const plugin = this.pluginManager.createPlugin(config.name);
+                    if (config.config?.volume !== undefined) {
+                        plugin.setVl(config.config.volume);
                     }
                     this.uiManager.expandedPlugins.add(plugin);
-                    this.audioManager.pipeline.push(plugin);
-                }
-                // Update URL with default pipeline state
-                this.uiManager.updateURL();
+                    return plugin;
+                }));
             }
             
-            this.uiManager.updatePipelineUI();
-            await this.audioManager.rebuildPipeline();
-
-            // Clear loading message and hide spinner
-            this.uiManager.clearError();
-            this.uiManager.hideLoadingSpinner();
+            // Update pipeline and UI in parallel
+            await Promise.all([
+                (async () => {
+                    this.audioManager.pipeline = plugins;
+                    await this.audioManager.rebuildPipeline();
+                })(),
+                (async () => {
+                    this.uiManager.updatePipelineUI();
+                    this.uiManager.updateURL();
+                    this.uiManager.clearError();
+                    this.uiManager.hideLoadingSpinner();
+                })()
+            ]);
 
             // Auto-resume audio context when page gains focus
             document.addEventListener('visibilitychange', () => {

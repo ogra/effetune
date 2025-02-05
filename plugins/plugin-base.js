@@ -72,13 +72,20 @@ class PluginBase {
         // Default implementation does nothing
     }
 
+    // Default process function - can be overridden by subclasses
+    process(context, data, parameters, time) {
+        // Default implementation returns input unchanged
+        return data;
+    }
+
     // Register processor function with the audio worklet
     registerProcessor(processorFunction) {
         if (window.workletNode) {
             window.workletNode.port.postMessage({
                 type: 'registerProcessor',
                 pluginType: this.constructor.name,
-                processor: processorFunction.toString()
+                processor: processorFunction.toString(),
+                process: this.process.toString()
             });
         }
     }
@@ -118,8 +125,7 @@ class PluginBase {
     // Get serializable parameters for URL state with deep copy support
     getSerializableParameters() {
         const params = this.getParameters();
-        const { type, enabled, ...otherParams } = params;
-
+        
         // Deep copy function to handle nested objects and arrays
         const deepCopy = (obj) => {
             if (obj === null || typeof obj !== 'object') {
@@ -139,13 +145,13 @@ class PluginBase {
             return copy;
         };
 
-        // Create a deep copy of parameters
-        const serializedParams = deepCopy(otherParams);
+        // Create a deep copy of all parameters
+        const serializedParams = deepCopy(params);
 
-        return {
-            id: this.id,
-            ...serializedParams
-        };
+        // Remove internal properties that shouldn't be serialized
+        const { type, id, ...cleanParams } = serializedParams;
+
+        return cleanParams;
     }
 
     // Set parameters from serialized state

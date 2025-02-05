@@ -15,89 +15,83 @@ export class PluginManager {
 
     async loadPlugins() {
         try {
-            // Load plugins.txt
-            const response = await fetch('plugins/plugins.txt');
-            const text = await response.text();
+            console.time('load-resources');
             
-            // Parse plugins.txt
-            const categories = {};
-            const pluginDefinitions = new Map();
-            let currentSection = null;
+            // First load and parse plugins.txt to know what to load
+            const pluginsText = await fetch('plugins/plugins.txt').then(r => r.text());
+            const { categories, pluginDefinitions } = this.parsePluginsDefinition(pluginsText);
 
-            // First load the base plugin class
-            await loadScript('plugins/plugin-base.js');
-
-            text.split('\n').forEach(line => {
-                line = line.trim();
-                if (!line || line.startsWith('#')) return;
-
-                if (line === '[categories]') {
-                    currentSection = 'categories';
-                } else if (line === '[plugins]') {
-                    currentSection = 'plugins';
-                } else if (currentSection === 'categories') {
-                    const [name, description] = line.split(':').map(s => s.trim());
-                    categories[name] = {
-                        description,
-                        plugins: []
-                    };
-                } else if (currentSection === 'plugins') {
-                    const [path, info] = line.split(':').map(s => s.trim());
-                    const [displayName, category, className, hasCSS] = info.split('|').map(s => s.trim());
-                    pluginDefinitions.set(displayName, {
-                        path: `plugins/${path}`,
-                        category,
-                        className,
-                        hasCSS: hasCSS === 'css'
-                    });
-                    categories[category].plugins.push(displayName);
-                }
-            });
-
-            // Group plugins by category for parallel loading
-            const categoryPlugins = {};
-            for (const [displayName, {path, category, hasCSS}] of pluginDefinitions) {
-                if (!categoryPlugins[category]) {
-                    categoryPlugins[category] = [];
-                }
-                categoryPlugins[category].push({displayName, path, hasCSS});
+            // Collect all resource URLs
+            const jsUrls = ['plugins/plugin-base.js'];
+            const cssUrls = [];
+            for (const {path, hasCSS} of pluginDefinitions.values()) {
+                jsUrls.push(`${path}.js`);
+                if (hasCSS) cssUrls.push(`${path}.css`);
             }
 
-            // Load plugins in parallel by category
-            const loadCategory = async (plugins) => {
-                const loadPromises = plugins.flatMap(({displayName, path, hasCSS}) => {
-                    const promises = [
-                        loadScript(`${path}.js`).catch(error => {
-                            throw new Error(`Failed to load plugin script for ${displayName}: ${error.message}`);
+            // Load all resources in parallel
+            const [jsContents, cssContents] = await Promise.all([
+                // Load all JS files
+                Promise.all(jsUrls.map(url => 
+                    fetch(url)
+                        .then(r => r.text())
+                        .catch(error => {
+                            console.error(`Failed to load JS: ${url}`, error);
+                            return '';
                         })
-                    ];
-                    
-                    if (hasCSS) {
-                        promises.push(
-                            loadCSS(`${path}.css`).catch(error => {
-                                throw new Error(`Failed to load CSS for ${displayName}: ${error.message}`);
-                            })
-                        );
-                    }
-                    return promises;
-                });
-                
-                await Promise.all(loadPromises);
-            };
+                )),
+                // Load all CSS files
+                Promise.all(cssUrls.map(url => 
+                    fetch(url)
+                        .then(r => r.text())
+                        .catch(error => {
+                            console.error(`Failed to load CSS: ${url}`, error);
+                            return '';
+                        })
+                ))
+            ]);
 
-            // Load categories in parallel
+            // Create and load bundles
+            const jsBlob = new Blob([jsContents.join('\n')], { type: 'text/javascript' });
+            const cssBlob = new Blob([cssContents.join('\n')], { type: 'text/css' });
+
+            // Load bundles in parallel
+            await Promise.all([
+                new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = URL.createObjectURL(jsBlob);
+                    script.onload = () => {
+                        URL.revokeObjectURL(script.src);
+                        resolve();
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                }),
+                cssUrls.length > 0 ? new Promise((resolve, reject) => {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = URL.createObjectURL(cssBlob);
+                    link.onload = () => {
+                        URL.revokeObjectURL(link.href);
+                        resolve();
+                    };
+                    link.onerror = reject;
+                    document.head.appendChild(link);
+                }) : Promise.resolve()
+            ]);
+
+            console.timeEnd('load-resources');
+
+            // Initialize plugins in parallel
             await Promise.all(
-                Object.values(categoryPlugins).map(plugins => loadCategory(plugins))
+                Array.from(pluginDefinitions.entries()).map(async ([displayName, {className}]) => {
+                    if (!window[className]) {
+                        console.error(`Plugin class ${className} not found`);
+                        return;
+                    }
+                    this.pluginClasses[displayName] = window[className];
+                })
             );
-
-            // Initialize plugin classes mapping
-            for (const [displayName, {className}] of pluginDefinitions) {
-                if (!window[className]) {
-                    console.error(`Plugin class ${className} not found`);
-                    continue;
-                }
-                this.pluginClasses[displayName] = window[className];
-            }
 
             // Store categories
             this.effectCategories = categories;
@@ -113,5 +107,40 @@ export class PluginManager {
             console.error('Error loading plugins:', error);
             throw error;
         }
+    }
+
+    parsePluginsDefinition(text) {
+        const categories = {};
+        const pluginDefinitions = new Map();
+        let currentSection = null;
+
+        text.split('\n').forEach(line => {
+            line = line.trim();
+            if (!line || line.startsWith('#')) return;
+
+            if (line === '[categories]') {
+                currentSection = 'categories';
+            } else if (line === '[plugins]') {
+                currentSection = 'plugins';
+            } else if (currentSection === 'categories') {
+                const [name, description] = line.split(':').map(s => s.trim());
+                categories[name] = {
+                    description,
+                    plugins: []
+                };
+            } else if (currentSection === 'plugins') {
+                const [path, info] = line.split(':').map(s => s.trim());
+                const [displayName, category, className, hasCSS] = info.split('|').map(s => s.trim());
+                pluginDefinitions.set(displayName, {
+                    path: `plugins/${path}`,
+                    category,
+                    className,
+                    hasCSS: hasCSS === 'css'
+                });
+                categories[category].plugins.push(displayName);
+            }
+        });
+
+        return { categories, pluginDefinitions };
     }
 }
