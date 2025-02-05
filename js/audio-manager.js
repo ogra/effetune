@@ -5,6 +5,7 @@ export class AudioManager {
         this.sourceNode = null;
         this.workletNode = null;
         this.pipeline = [];
+        this.masterBypass = false;
     }
 
     async initAudio() {
@@ -66,8 +67,8 @@ export class AudioManager {
             this.workletNode.disconnect();
         }
 
-        // If pipeline is empty, connect source directly to destination
-        if (this.pipeline.length === 0) {
+        // If pipeline is empty or master bypass is enabled, connect source directly to destination
+        if (this.pipeline.length === 0 || this.masterBypass) {
             this.sourceNode.connect(this.audioContext.destination);
             return;
         }
@@ -104,6 +105,11 @@ export class AudioManager {
 
     setPipeline(pipeline) {
         this.pipeline = pipeline;
+        return this.rebuildPipeline();
+    }
+
+    setMasterBypass(bypass) {
+        this.masterBypass = bypass;
         return this.rebuildPipeline();
     }
 }

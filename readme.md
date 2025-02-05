@@ -63,6 +63,22 @@ To use EffeTune with CD players, network players, or other physical sources:
 6. Use the ON/OFF button to bypass individual effects
 7. Remove plugins using the trash can icon
 
+### Plugin Selection and Keyboard Shortcuts
+
+1. Plugin Selection Methods:
+   - Click on plugin headers to select individual plugins
+   - Hold Ctrl while clicking to select multiple plugins
+   - Click on empty space in the Pipeline area to deselect all plugins
+
+2. Keyboard Shortcuts:
+   - Ctrl + A: Select all plugins in the Pipeline
+   - Ctrl + C: Copy selected plugins
+   - Ctrl + V: Paste plugins from clipboard
+   - ESC: Deselect all plugins
+
+3. Plugin Documentation:
+   - Click the ? button on any plugin to open its detailed documentation in a new tab
+
 ### Sharing Effect Chains
 
 You can share your effect chain configuration with other users:
@@ -159,6 +175,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Category | Effect | Description | Documentation |
 |----------|--------|-------------|---------------|
 | Analyzer | Level Meter | Displays audio level with peak hold | [Details](plugins/analyzer/readme.md#level-meter) |
+| Analyzer | Oscilloscope | Real-time waveform visualization | [Details](plugins/analyzer/readme.md#oscilloscope) |
 | Analyzer | Spectrogram | Displays frequency spectrum changes over time | [Details](plugins/analyzer/readme.md#spectrogram) |
 | Analyzer | Spectrum Analyzer | Real-time spectrum analysis | [Details](plugins/analyzer/readme.md#spectrum-analyzer) |
 | Basics | DC Offset | DC offset adjustment | [Details](plugins/basics/readme.md#dc-offset) |
@@ -211,6 +228,11 @@ For optimal performance with nonlinear effects, it is recommended to use EffeTun
 Want to create your own audio plugins? Check out our [Plugin Development Guide](docs/plugin-development.md).
 
 ## Version History
+
+### Version 0.30 (February 5, 2025)
+- Added plugin selection and keyboard shortcuts (Ctrl+A, Ctrl+C, Ctrl+V)
+- Added Oscilloscope plugin for real-time waveform visualization
+- Various minor improvements
 
 ### Version 0.10 (February 3, 2025)
 - Added touch operation support

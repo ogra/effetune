@@ -53,16 +53,6 @@ class LevelMeterPlugin extends PluginBase {
 
     // Set parameters
     setParameters(params) {
-        if (params.enabled !== undefined) {
-            const wasEnabled = this.enabled;
-            this.enabled = params.enabled;
-            
-            // Handle animation state based on enabled state
-            if (!wasEnabled && this.enabled) {
-                // Re-start animation if plugin was re-enabled
-                this.startAnimation();
-            }
-        }
         // Note: levels, peakLevels, and overload are read-only measurement values
         // and should not be set externally
         this.updateParameters();
@@ -211,10 +201,6 @@ class LevelMeterPlugin extends PluginBase {
     // Start animation loop
     startAnimation() {
         const animate = () => {
-            if (!this.enabled) {
-                return;
-            }
-            
             const currentTime = performance.now();
             if (currentTime - this.lastMeterUpdateTime >= this.METER_UPDATE_INTERVAL) {
                 this.updateMeter();
@@ -225,21 +211,23 @@ class LevelMeterPlugin extends PluginBase {
         this.animationFrameId = requestAnimationFrame(animate);
     }
 
-    // Clean up animation when plugin is disabled/removed
+    // Clean up resources when plugin is removed
     cleanup() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
+        // Note: Do not stop UI updates here
+        // Only clean up resources that need explicit cleanup
     }
 
     // Update meter display
     updateMeter() {
+        if (!this.foregroundCanvas) return;
+        
         const ctx = this.foregroundCanvas.getContext('2d');
         ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
+        // Skip drawing if disabled
+        if (!this.enabled) return;
 
         // Draw each channel
         for (let channel = 0; channel < this.lv.length; channel++) {
