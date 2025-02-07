@@ -40,8 +40,8 @@ body {
     width: calc(100vw - 60px);
     margin: 0 auto;
     padding: 20px;
-    margin-left: max(30px, calc((100vw - 1584px) / 2));
-    margin-right: max(30px, calc((100vw - 1584px) / 2));
+    margin-left: max(0px, calc((100vw - 1424px) / 2 - 20));
+    margin-right: max(0px, calc((100vw - 1424px) / 2 - 20));
     background-color: #1e1e1e;
     color: #ffffff;
     user-select: none;
@@ -67,6 +67,12 @@ input {
     border-radius: 4px;
 }
 
+.reset-button {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
 .header-button:hover {
     background-color: #3d3d3d;
 }
@@ -78,11 +84,10 @@ input {
 }
 
 .error-display {
-    position: absolute;
-    right: 0px;
-    top: 5px;
+    display: inline-block;
+    margin-left: 10px;
     color: #ff6b6b;
-    z-index: 1;
+    font-size: 14px;
 }
 
 /* Main layout */
@@ -119,7 +124,7 @@ input {
     display: grid;
     grid-template-columns: 64px 1fr;
     gap: 20px;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .plugin-category {
@@ -247,18 +252,49 @@ input {
 .pipeline-header h2 {
     margin: 0;
     margin-top: 0;
-    margin-right: auto;
+}
+
+.pipeline-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 10px;
 }
 
 .pipeline-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 10px 0px;
+}
+
+.preset-select {
+    padding: 4px 4px;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    color: #ffffff;
+    border-radius: 4px;
+    width: 300px;
+    margin-right: 5px;
+    height: 16px;
+}
+
+.preset-select:focus {
+    outline: none;
+    border-color: #4a9eff;
+}
+
+.pipeline-header-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
 }
 
 .sample-rate {
-    color: #888;
+    color: rgb(102, 102, 102);
     font-size: 14px;
+    font-weight: normal;
+    margin-left: 10px;
+    display: inline-block;
 }
 
 .pipeline-empty {
@@ -294,7 +330,7 @@ input {
 
 .handle {
     cursor: move;
-    padding: 15px;
+    padding: 8px 15px;
     color: #ccc;
     font-size: 18px;
 }
@@ -328,7 +364,9 @@ input {
     font-size: 16px;
 }
 
-/* Button Styles */
+
+.save-button,
+.delete-preset-button,
 .help-button,
 .delete-button {
     padding: 4px 8px;
@@ -336,15 +374,30 @@ input {
     border: 1px solid #5d5d5d;
     cursor: pointer;
     border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+.save-button,
 .help-button {
     color: #4a9eff;
     margin-right: 5px;
 }
 
+.share-button {
+    margin-left: 10px;
+}
+
+.delete-preset-button,
 .delete-button {
     color: #ff6b6b;
+}
+
+.share-button {
+    margin-left: 10px;
 }
 
 .help-button:hover,

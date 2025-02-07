@@ -11,7 +11,16 @@ export class PluginListManager {
         // Create drag message element
         this.dragMessage = document.createElement('div');
         this.dragMessage.className = 'drag-message';
-        this.dragMessage.textContent = 'Drag this effect to add it at your desired position in the Effect Pipeline';
+        this.dragMessage.style.position = 'absolute';
+        this.dragMessage.style.top = '50%';
+        this.dragMessage.style.left = '50%';
+        this.dragMessage.style.transform = 'translate(-50%, -50%)';
+        this.dragMessage.style.textAlign = 'center';
+        this.dragMessage.style.whiteSpace = 'pre';
+        this.dragMessage.style.fontSize = '16px';
+        this.dragMessage.style.lineHeight = '1.8';
+        this.dragMessage.style.maxWidth = '100%';
+        this.dragMessage.textContent = 'Drag this effect to add it at your desired position in the Effect Pipeline.\nAlternatively, you can double-click this effect to add it to the Effect Pipeline.';
         document.getElementById('pipeline').appendChild(this.dragMessage);
 
         // Create insertion indicator
@@ -71,7 +80,7 @@ export class PluginListManager {
         effectCountDiv.style.textAlign = 'center';
         effectCountDiv.style.marginTop = '10px';
         effectCountDiv.style.color = '#666';
-        effectCountDiv.style.fontSize = '12px';
+        effectCountDiv.style.fontSize = '14px';
 
         // Create content container for grid layout
         const contentContainer = document.createElement('div');
@@ -137,6 +146,55 @@ export class PluginListManager {
         // Mouse events
         item.addEventListener('mousedown', () => {
             this.dragMessage.style.display = 'block';
+        });
+
+        // Handle double click to add plugin to pipeline
+        item.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Create a new instance of the plugin
+            const newPlugin = this.pluginManager.createPlugin(plugin.name);
+            if (!newPlugin) return;
+
+            // Get pipeline manager from UI manager
+            const pipelineManager = window.uiManager.pipelineManager;
+            if (!pipelineManager) return;
+
+            // Calculate insertion position:
+            // - If plugins are selected, insert before the first selected plugin
+            // - If no plugins are selected, append to the end of pipeline
+            let insertIndex;
+            if (pipelineManager.selectedPlugins.size > 0) {
+                insertIndex = Math.min(...Array.from(pipelineManager.selectedPlugins)
+                    .map(plugin => pipelineManager.audioManager.pipeline.indexOf(plugin)));
+            } else {
+                insertIndex = pipelineManager.audioManager.pipeline.length;
+            }
+
+            // Add the new plugin at calculated position
+            pipelineManager.audioManager.pipeline.splice(insertIndex, 0, newPlugin);
+            pipelineManager.expandedPlugins.add(newPlugin);
+
+            // Update selection to only include the new plugin
+            pipelineManager.selectedPlugins.clear();
+            pipelineManager.selectedPlugins.add(newPlugin);
+            pipelineManager.updateSelectionClasses();
+
+            // Refresh UI state
+            pipelineManager.updatePipelineUI();
+            pipelineManager.audioManager.rebuildPipeline();
+            pipelineManager.updateURL();
+
+            // Auto-scroll to show newly added plugin if it was appended at the end
+            if (insertIndex === pipelineManager.audioManager.pipeline.length - 1) {
+                requestAnimationFrame(() => {
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                });
+            }
         });
 
         item.addEventListener('mouseup', () => {

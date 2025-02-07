@@ -55,8 +55,8 @@ class PluginProcessor extends AudioWorkletProcessor {
         // Initialize fade states for new plugins
         this.plugins.forEach(plugin => {
             // Initialize fade states
-            if (!this.fadeStates.has(plugin.type)) {
-                this.fadeStates.set(plugin.type, {
+            if (!this.fadeStates.has(plugin.id)) {
+                this.fadeStates.set(plugin.id, {
                     prevValue: null,
                     targetValue: null,
                     startTime: 0
@@ -65,10 +65,19 @@ class PluginProcessor extends AudioWorkletProcessor {
         });
     }
 
-    getFadeValue(pluginType, currentValue, time) {
-        const fadeState = this.fadeStates.get(pluginType);
+    getFadeValue(pluginId, currentValue, time) {
+        const fadeState = this.fadeStates.get(pluginId);
         
         // Initialize fade if needed
+        if (!fadeState) {
+            this.fadeStates.set(pluginId, {
+                prevValue: currentValue,
+                targetValue: currentValue,
+                startTime: time
+            });
+            return currentValue;
+        }
+        
         if (fadeState.prevValue === null) {
             fadeState.prevValue = currentValue;
             fadeState.targetValue = currentValue;
@@ -116,8 +125,17 @@ class PluginProcessor extends AudioWorkletProcessor {
                     getChannelData: (channelIndex) => {
                         return channelIndex < tempBuffers.length ? tempBuffers[channelIndex] : null;
                     },
-                    getFadeValue: (type, value, time) => {
-                        const fadeState = this.fadeStates.get(type);
+                    getFadeValue: (pluginId, value, time) => {
+                        const fadeState = this.fadeStates.get(pluginId);
+                        if (!fadeState) {
+                            this.fadeStates.set(pluginId, {
+                                prevValue: value,
+                                targetValue: value,
+                                startTime: time
+                            });
+                            return value;
+                        }
+                        
                         if (fadeState.prevValue === null) {
                             fadeState.prevValue = value;
                             fadeState.targetValue = value;

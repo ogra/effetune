@@ -10,11 +10,175 @@ export class PipelineManager {
         this.pipelineList = document.getElementById('pipelineList');
         this.pipelineEmpty = document.getElementById('pipelineEmpty');
         
+        // Preset UI elements
+        this.presetSelect = document.getElementById('presetSelect');
+        this.savePresetButton = document.getElementById('savePresetButton');
+        this.deletePresetButton = document.getElementById('deletePresetButton');
+        
         // Initialize keyboard events
         this.initKeyboardEvents();
         
         // Create master toggle button
         this.createMasterToggle();
+        
+        // Initialize preset management
+        this.initPresetManagement();
+    }
+
+    initPresetManagement() {
+        // Load presets from local storage
+        this.loadPresetList();
+        
+        // Save preset button
+        this.savePresetButton.addEventListener('click', () => {
+            const name = this.presetSelect.value.trim();
+            if (name) {
+                this.savePreset(name);
+            }
+        });
+        
+        // Delete preset button
+        this.deletePresetButton.addEventListener('click', () => {
+            const name = this.presetSelect.value.trim();
+            if (name && this.getPresets()[name] && confirm('Delete this preset?')) {
+                this.deletePreset(name);
+            }
+        });
+        
+        // Preset selection change
+        this.presetSelect.addEventListener('change', (e) => {
+            const name = e.target.value.trim();
+            const presets = this.getPresets();
+            if (presets[name]) {
+                this.loadPreset(name);
+                // Ensure datalist is up to date
+                this.loadPresetList();
+            }
+        });
+    }
+
+    loadPresetList() {
+        // Get datalist element
+        const datalist = document.getElementById('presetList');
+        if (!datalist) return;
+        
+        // Get current value
+        const currentValue = this.presetSelect.value;
+        
+        // Clear existing options
+        datalist.innerHTML = '';
+        
+        // Get presets from local storage
+        const presets = this.getPresets();
+        
+        // Add preset options
+        Object.keys(presets).forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            datalist.appendChild(option);
+        });
+        
+        // Restore current value
+        this.presetSelect.value = currentValue;
+    }
+
+    getPresets() {
+        const presetsJson = localStorage.getItem('effetune_presets');
+        return presetsJson ? JSON.parse(presetsJson) : {};
+    }
+
+    savePreset(name) {
+        const presets = this.getPresets();
+        
+        // Create preset data
+        const presetData = {
+            plugins: this.audioManager.pipeline.map(plugin => {
+                const params = plugin.getSerializableParameters ?
+                    plugin.getSerializableParameters() : {};
+                const { id, ...cleanParams } = params;
+                return {
+                    ...cleanParams,
+                    nm: plugin.name,
+                    en: plugin.enabled
+                };
+            })
+        };
+        
+        // Save to local storage
+        presets[name] = presetData;
+        localStorage.setItem('effetune_presets', JSON.stringify(presets));
+        
+        // Update UI
+        this.loadPresetList();
+        this.presetSelect.value = name;
+        
+        if (window.uiManager) {
+            window.uiManager.setError(`Preset "${name}" saved!`);
+            setTimeout(() => window.uiManager.clearError(), 2000);
+        }
+    }
+
+    loadPreset(name) {
+        const presets = this.getPresets();
+        const preset = presets[name];
+        
+        if (!preset) return;
+        
+        // Clear current pipeline and expanded plugins
+        this.audioManager.pipeline.length = 0;
+        this.expandedPlugins.clear();
+        
+        // Load plugins
+        preset.plugins.forEach(state => {
+            const plugin = this.pluginManager.createPlugin(state.nm);
+            if (plugin) {
+                plugin.enabled = state.en;
+                const { nm, en, ...params } = state;
+                if (plugin.setParameters) {
+                    plugin.setParameters(params);
+                }
+                this.audioManager.pipeline.push(plugin);
+                // Expand all plugins
+                this.expandedPlugins.add(plugin);
+            }
+        });
+        
+        
+        // Update UI
+        this.updatePipelineUI();
+        this.audioManager.rebuildPipeline();
+        this.updateURL();
+        
+        // Update preset list to ensure all presets are available
+        this.loadPresetList();
+        
+        // Ensure master bypass is OFF after loading preset
+        this.enabled = true;
+        this.audioManager.setMasterBypass(false);
+        const masterToggle = document.querySelector('.toggle-button.master-toggle');
+        if (masterToggle) {
+            masterToggle.classList.remove('off');
+        }
+        
+        if (window.uiManager) {
+            window.uiManager.setError(`Preset "${name}" loaded!`);
+            setTimeout(() => window.uiManager.clearError(), 2000);
+        }
+    }
+
+    deletePreset(name) {
+        const presets = this.getPresets();
+        delete presets[name];
+        localStorage.setItem('effetune_presets', JSON.stringify(presets));
+        
+        // Update UI
+        this.loadPresetList();
+        this.presetSelect.value = '';
+        
+        if (window.uiManager) {
+            window.uiManager.setError(`Preset "${name}" deleted!`);
+            setTimeout(() => window.uiManager.clearError(), 2000);
+        }
     }
 
     initKeyboardEvents() {
@@ -58,6 +222,12 @@ export class PipelineManager {
                         });
                 }
             } else if (e.key === 'Escape') {
+                // Clear preset select text if it's focused
+                if (document.activeElement === this.presetSelect) {
+                    this.presetSelect.value = '';
+                    return;
+                }
+                
                 this.selectedPlugins.clear();
                 // Update only the selection state classes
                 this.pipelineList.querySelectorAll('.pipeline-item').forEach(item => {
@@ -252,12 +422,12 @@ export class PipelineManager {
                 .find(([_, {plugins}]) => plugins.includes(plugin.name))?.[0];
             
             if (category) {
-                const baseUrl = '';
                 const anchor = plugin.name.toLowerCase()
                     .replace(/[^\w\s-]/g, '')
                     .replace(/\s+/g, '-');
-                const path = `plugins/${category.toLowerCase()}/#${anchor}`;
-                window.open(baseUrl + path, '_blank');
+                const path = `/plugins/${category.toLowerCase()}.html#${anchor}`;
+                const localizedPath = this.getLocalizedDocPath(path);
+                window.open(localizedPath, '_blank');
             }
             
             if (!e.ctrlKey && !e.metaKey) {
@@ -271,7 +441,7 @@ export class PipelineManager {
         // Delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-button';
-        deleteBtn.textContent = '🗑';
+        deleteBtn.textContent = '✖';
         deleteBtn.onclick = (e) => {
             if (!e.ctrlKey && !e.metaKey) {
                 this.selectedPlugins.clear();
