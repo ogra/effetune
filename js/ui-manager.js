@@ -175,11 +175,17 @@ export class UIManager {
 
     getLocalizedDocPath(basePath) {
         // If basePath is '/readme.md', convert it to root directory
-        const processedPath = basePath === '/readme.md' ? '/' : basePath;
-        if (this.userLanguage) {
-            return `/docs/i18n/${this.userLanguage}${processedPath}`;
+        if (basePath === '/readme.md') {
+            if (this.userLanguage) {
+                return `/effetune/docs/i18n/${this.userLanguage}/`;
+            }
+            return `/effetune/`;
         }
-        return `/docs${processedPath}`;
+        
+        if (this.userLanguage) {
+            return `/effetune/docs/i18n/${this.userLanguage}${basePath}`;
+        }
+        return `/effetune/docs${basePath}`;
     }
 
     initWhatsThisLink() {
