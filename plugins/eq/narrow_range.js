@@ -138,7 +138,7 @@ class NarrowRangePlugin extends PluginBase {
       this.hs = intSlope === -12 ? -12 : -6;
     }
     if (params.lf !== undefined)
-      this.lf = Math.max(1000, Math.min(20000, typeof params.lf === 'number' ? params.lf : parseFloat(params.lf)));
+      this.lf = Math.max(200, Math.min(20000, typeof params.lf === 'number' ? params.lf : parseFloat(params.lf)));
     if (params.ls !== undefined) {
       const intSlope = typeof params.ls === 'number' ? params.ls : parseInt(params.ls);
       this.ls = intSlope === -12 ? -12 : -6;
@@ -170,14 +170,14 @@ class NarrowRangePlugin extends PluginBase {
       numberInput.value = value;
       slider.addEventListener('input', e => {
         onInput(parseFloat(e.target.value));
-        numberInput.value = onInput === this.setHf ? this.hf : this.lf;
+        numberInput.value = labelText.includes('HPF') ? this.hf : this.lf;
         this.drawGraph(canvas);
       });
       numberInput.addEventListener('input', e => {
         onInput(parseFloat(e.target.value) || 0);
-        slider.value = onInput === this.setHf ? this.hf : this.lf;
+        slider.value = labelText.includes('HPF') ? this.hf : this.lf;
         this.drawGraph(canvas);
-        e.target.value = onInput === this.setHf ? this.hf : this.lf;
+        e.target.value = labelText.includes('HPF') ? this.hf : this.lf;
       });
       row.appendChild(label);
       row.appendChild(slider);
@@ -211,7 +211,7 @@ class NarrowRangePlugin extends PluginBase {
     // Create HPF and LPF parameter rows
     const hpfRow = createRow('HPF Freq (Hz):', 20, 1000, 1, this.hf, v => this.setHf(v));
     hpfRow.appendChild(createRadioGroup(`hpf-slope-${this.id}`, this.hs, v => this.setHs(v)));
-    const lpfRow = createRow('LPF Freq (Hz):', 1000, 20000, 100, this.lf, v => this.setLf(v));
+    const lpfRow = createRow('LPF Freq (Hz):', 200, 20000, 100, this.lf, v => this.setLf(v));
     lpfRow.appendChild(createRadioGroup(`lpf-slope-${this.id}`, this.ls, v => this.setLs(v)));
 
     // Create graph container and canvas

@@ -1,8 +1,12 @@
-# Frieve EffeTune
+# Frieve EffeTune <img src="images/icon.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
+
+[[中文 (简体)](docs/i18n/zh/readme.md)] [[Español](docs/i18n/es/readme.md)] [[हिन्दी](docs/i18n/hi/readme.md)] [[العربية](docs/i18n/ar/readme.md)] [[Português](docs/i18n/pt/readme.md)] [[Русский](docs/i18n/ru/readme.md)] [[日本語](docs/i18n/ja/readme.md)] [[한국어](docs/i18n/ko/readme.md)] [[Français](docs/i18n/fr/readme.md)]
 
 [Open App](https://frieve-a.github.io/effetune/effetune.html)
 
 A web-based real-time audio effect processor designed for audio enthusiasts to enhance their music listening experience. EffeTune allows you to process any audio source through various high-quality effects, enabling you to customize and perfect your listening experience in real-time.
+
+[![Screenshot](images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
 
 ## Concept
 
@@ -62,6 +66,27 @@ To use EffeTune with CD players, network players, or other physical sources:
 5. Click a plugin's name to expand/collapse its settings
 6. Use the ON/OFF button to bypass individual effects
 7. Remove plugins using the trash can icon
+
+### Using Presets
+
+1. Save Your Effect Chain:
+   - Set up your desired effect chain and parameters
+   - Enter a name in the preset input field
+   - Click the Save button to store your preset
+
+2. Load a Preset:
+   - Type or select a preset name from the dropdown list
+   - The preset will be loaded automatically
+   - All plugins and their settings will be restored
+
+3. Delete a Preset:
+   - Select the preset you want to remove
+   - Click the Delete button
+   - Confirm the deletion when prompted
+
+4. Preset Information:
+   - Each preset stores your complete effect chain configuration
+   - Includes plugin order, parameters, and states
 
 ### Plugin Selection and Keyboard Shortcuts
 
@@ -139,7 +164,7 @@ Here are some popular effect combinations to enhance your listening experience:
 
 ### Common Setup Issues
 1. No Audio Input
-   - Check input device selection in EffeTune
+   - Check input device selection in browser
    - Verify browser microphone permissions
    - Ensure audio is playing from your source
 
@@ -165,7 +190,7 @@ Q. Can I save my favorite effect combinations?
 A. Yes! Use the "Share" button to generate a URL that contains your entire effect chain configuration. Bookmark this URL to save your settings.
 
 Q. How do I achieve the best sound quality?
-A. Use 96kHz sample rate when possible, start with subtle effect settings, and build your chain gradually. Monitor levels to avoid distortion.
+A. Use sample rates of 96kHz or higher when possible, start with subtle effect settings, and build your chain gradually. Monitor levels to avoid distortion.
 
 Q. Will this work with any audio source?
 A. Yes, EffeTune can process any audio playing through your selected input device, including streaming services, local files, and physical media.
@@ -174,30 +199,30 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 
 | Category | Effect | Description | Documentation |
 |----------|--------|-------------|---------------|
-| Analyzer | Level Meter | Displays audio level with peak hold | [Details](plugins/analyzer/readme.md#level-meter) |
-| Analyzer | Oscilloscope | Real-time waveform visualization | [Details](plugins/analyzer/readme.md#oscilloscope) |
-| Analyzer | Spectrogram | Displays frequency spectrum changes over time | [Details](plugins/analyzer/readme.md#spectrogram) |
-| Analyzer | Spectrum Analyzer | Real-time spectrum analysis | [Details](plugins/analyzer/readme.md#spectrum-analyzer) |
-| Basics | DC Offset | DC offset adjustment | [Details](plugins/basics/readme.md#dc-offset) |
-| Basics | Polarity Inversion | Signal polarity inversion | [Details](plugins/basics/readme.md#polarity-inversion) |
-| Basics | Stereo Balance | Stereo channel balance control | [Details](plugins/basics/readme.md#stereo-balance) |
-| Basics | Volume | Basic volume control | [Details](plugins/basics/readme.md#volume) |
-| Dynamics | Compressor | Dynamic range compression with threshold, ratio, and knee control | [Details](plugins/dynamics/readme.md#compressor) |
-| Dynamics | Gate | Noise gate with threshold, ratio, and knee control for noise reduction | [Details](plugins/dynamics/readme.md#gate) |
-| Dynamics | Multiband Compressor | Professional 5-band dynamics processor with FM radio-style sound shaping | [Details](plugins/dynamics/readme.md#multiband-compressor) |
-| EQ | 15Band GEQ | 15-band graphic equalizer | [Details](plugins/eq/readme.md#15band-geq) |
-| EQ | 5Band PEQ | Professional parametric equalizer with 5 fully configurable bands | [Details](plugins/eq/readme.md#5band-peq) |
-| EQ | Narrow Range | High-pass and low-pass filter combination | [Details](plugins/eq/readme.md#narrow-range) |
-| EQ | Tone Control | Three-band tone control | [Details](plugins/eq/readme.md#tone-control) |
-| Filter | Wow Flutter | Time-based modulation effect | [Details](plugins/filter/readme.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | Bit depth reduction and zero-order hold effect | [Details](plugins/lofi/readme.md#bit-crusher) |
-| Lo-Fi | Noise Blender | Noise generation and mixing | [Details](plugins/lofi/readme.md#noise-blender) |
-| Lo-Fi | Simple Jitter | Digital jitter simulation | [Details](plugins/lofi/readme.md#simple-jitter) |
-| Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](plugins/reverb/readme.md#rs-reverb) |
-| Saturation | Hard Clipping | Digital hard clipping effect | [Details](plugins/saturation/readme.md#hard-clipping) |
-| Saturation | Saturation | Saturation effect | [Details](plugins/saturation/readme.md#saturation) |
-| Spatial | Stereo Blend | Stereo width control effect | [Details](plugins/spatial/readme.md#stereo-blend) |
-| Others | Oscillator | Multi-waveform audio signal generator | [Details](plugins/others/readme.md#oscillator) |
+| Analyzer | Level Meter | Displays audio level with peak hold | [Details](docs/plugins/analyzer.md#level-meter) |
+| Analyzer | Oscilloscope | Real-time waveform visualization | [Details](docs/plugins/analyzer.md#oscilloscope) |
+| Analyzer | Spectrogram | Displays frequency spectrum changes over time | [Details](docs/plugins/analyzer.md#spectrogram) |
+| Analyzer | Spectrum Analyzer | Real-time spectrum analysis | [Details](docs/plugins/analyzer.md#spectrum-analyzer) |
+| Basics | DC Offset | DC offset adjustment | [Details](docs/plugins/basics.md#dc-offset) |
+| Basics | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
+| Basics | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |
+| Basics | Volume | Basic volume control | [Details](docs/plugins/basics.md#volume) |
+| Dynamics | Compressor | Dynamic range compression with threshold, ratio, and knee control | [Details](docs/plugins/dynamics.md#compressor) |
+| Dynamics | Gate | Noise gate with threshold, ratio, and knee control for noise reduction | [Details](docs/plugins/dynamics.md#gate) |
+| Dynamics | Multiband Compressor | Professional 5-band dynamics processor with FM radio-style sound shaping | [Details](docs/plugins/dynamics.md#multiband-compressor) |
+| EQ | 15Band GEQ | 15-band graphic equalizer | [Details](docs/plugins/eq.md#15band-geq) |
+| EQ | 5Band PEQ | Professional parametric equalizer with 5 fully configurable bands | [Details](docs/plugins/eq.md#5band-peq) |
+| EQ | Narrow Range | High-pass and low-pass filter combination | [Details](docs/plugins/eq.md#narrow-range) |
+| EQ | Tone Control | Three-band tone control | [Details](docs/plugins/eq.md#tone-control) |
+| Filter | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/filter.md#wow-flutter) |
+| Lo-Fi | Bit Crusher | Bit depth reduction and zero-order hold effect | [Details](docs/plugins/lofi.md#bit-crusher) |
+| Lo-Fi | Noise Blender | Noise generation and mixing | [Details](docs/plugins/lofi.md#noise-blender) |
+| Lo-Fi | Simple Jitter | Digital jitter simulation | [Details](docs/plugins/lofi.md#simple-jitter) |
+| Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
+| Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
+| Spatial | Stereo Blend | Stereo width control effect | [Details](docs/plugins/spatial.md#stereo-blend) |
+| Others | Oscillator | Multi-waveform audio signal generator | [Details](docs/plugins/others.md#oscillator) |
 
 ## Technical Information
 
@@ -229,7 +254,13 @@ Want to create your own audio plugins? Check out our [Plugin Development Guide](
 
 ## Version History
 
+### Version 0.50 (February 7, 2025)
+- Added preset functionality for saving and loading effect chain configurations
+- Our usage documentation is now available in the following languages: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, and Français.
+- Various minor improvements
+
 ### Version 0.30 (February 5, 2025)
+- Improved processing efficiency
 - Added plugin selection and keyboard shortcuts (Ctrl+A, Ctrl+C, Ctrl+V)
 - Added Oscilloscope plugin for real-time waveform visualization
 - Various minor improvements

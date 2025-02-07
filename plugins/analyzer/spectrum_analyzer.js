@@ -4,7 +4,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         // Initialize parameters
         this.dr = -96;
-        this.pt = 10;
+        this.pt = 12;
         this.ch = 'All';
         const fftSize = 1 << this.pt; // Using bit shift for power of 2
         this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
@@ -140,7 +140,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
     setPoints(value) {
         // Set maximum value to 11
-        const newPoints = Math.max(8, Math.min(11, typeof value === 'number' ? value : parseFloat(value)));
+        const newPoints = Math.max(8, Math.min(14, typeof value === 'number' ? value : parseFloat(value)));
         if (newPoints === this.pt) return;
         const fftSize = 1 << newPoints;
         
@@ -339,7 +339,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const pointsSlider = document.createElement('input');
         pointsSlider.type = 'range';
         pointsSlider.min = 8;
-        pointsSlider.max = 11;
+        pointsSlider.max = 14;
         pointsSlider.step = 1;
         pointsSlider.value = this.pt;
 
@@ -348,7 +348,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         pointsValue.value = 1 << this.pt;
         pointsValue.step = 1;
         pointsValue.min = 1 << 8;
-        pointsValue.max = 1 << 11;
+        pointsValue.max = 1 << 14;
 
         const pointsHandler = (e) => {
             const value = parseInt(e.target.value);

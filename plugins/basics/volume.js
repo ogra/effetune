@@ -13,7 +13,7 @@ class VolumePlugin extends PluginBase {
             } = parameters;
             
             const gain = Math.pow(10, volume / 20);
-            const currentGain = getFadeValue(parameters.type, gain, time);
+            const currentGain = getFadeValue(parameters.id, gain, time);
             
             for (let ch = 0; ch < parameters.channelCount; ch++) {
                 const offset = ch * parameters.blockSize;

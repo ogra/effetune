@@ -19,6 +19,10 @@ export class UIManager {
         this.pipelineEmpty = document.getElementById('pipelineEmpty');
         this.sampleRate = document.getElementById('sampleRate');
 
+        // Initialize supported languages
+        this.supportedLanguages = ['ar', 'es', 'fr', 'hi', 'ja', 'ko', 'pt', 'ru', 'zh'];
+        this.userLanguage = this.determineUserLanguage();
+
         // Initialize managers
         this.pluginListManager = new PluginListManager(pluginManager);
         this.pipelineManager = new PipelineManager(audioManager, pluginManager, this.expandedPlugins, this.pluginListManager);
@@ -27,7 +31,9 @@ export class UIManager {
         // Make UIManager instance globally available for URL updates
         window.uiManager = this;
 
-        // Initialize share button
+        // Initialize UI elements
+        this.initWhatsThisLink();
+        this.initPipelineManager();
         this.shareButton.addEventListener('click', () => {
             const state = this.getPipelineState();
             const newURL = new URL(window.location.href);
@@ -152,5 +158,56 @@ export class UIManager {
         if (this.audioManager.audioContext) {
             this.sampleRate.textContent = `${this.audioManager.audioContext.sampleRate} Hz`;
         }
+    }
+
+    determineUserLanguage() {
+        // Get browser language (e.g., 'ja', 'en-US', 'fr')
+        const browserLang = navigator.language.split('-')[0];
+        
+        // Check if browser language is supported
+        if (this.supportedLanguages.includes(browserLang)) {
+            return browserLang;
+        }
+        
+        // Default to English (use default docs) if language is not supported
+        return null;
+    }
+
+    getLocalizedDocPath(basePath) {
+        // If basePath is '/readme.md', convert it to root directory
+        const processedPath = basePath === '/readme.md' ? '/' : basePath;
+        if (this.userLanguage) {
+            return `/docs/i18n/${this.userLanguage}${processedPath}`;
+        }
+        return `/docs${processedPath}`;
+    }
+
+    initWhatsThisLink() {
+        const whatsThisLink = document.querySelector('.whats-this');
+        if (whatsThisLink) {
+            whatsThisLink.href = this.getLocalizedDocPath('/readme.md');
+        }
+    }
+
+    initPipelineManager() {
+        // Pass the getLocalizedDocPath method to PipelineManager
+        this.pipelineManager.getLocalizedDocPath = this.getLocalizedDocPath.bind(this);
+    }
+
+    initShareButton() {
+        this.shareButton.addEventListener('click', () => {
+            const state = this.getPipelineState();
+            const newURL = new URL(window.location.href);
+            newURL.searchParams.set('p', state);
+            navigator.clipboard.writeText(newURL.toString())
+                .then(() => {
+                    this.setError('URL copied to clipboard!');
+                    setTimeout(() => this.clearError(), 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy URL:', err);
+                    this.setError('Failed to copy URL to clipboard');
+                });
+        });
     }
 }

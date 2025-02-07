@@ -798,7 +798,7 @@ Use this tool during development to ensure your plugin follows the required impl
 
 The audio processing function has access to these utility functions:
 
-- `getFadeValue(type, value, time)`: Smooth parameter changes to prevent audio clicks
+- `getFadeValue(id, value, time)`: Smooth parameter changes to prevent audio clicks. Uses plugin ID to maintain independent fade states for each plugin instance
 - `getChannelData(channelIndex)`: Get individual channel data if needed
 
 ## Plugin Categories
@@ -807,9 +807,12 @@ Plugins are organized into categories defined in `plugins/plugins.txt`:
 
 - `Analyzer`: Analysis tools (level meters, spectrum analyzers, etc.)
 - `Basics`: Basic audio effects (volume, balance, DC offset, etc.)
+- `Dynamics`: Dynamic range processors (compressors, gates, etc.)
 - `EQ`: Equalization effects (filters, frequency shaping)
 - `Filter`: Time-based filter effects (modulation, wow flutter)
 - `Lo-Fi`: Lo-Fi audio effects (bit crushing, jitter)
+- `Others`: Miscellaneous effects (oscillators, etc.)
+- `Reverb`: Reverberation effects (room simulation, etc.)
 - `Saturation`: Saturation and distortion effects
 - `Spatial`: Spatial audio effects (stereo field processing)
 
