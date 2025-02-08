@@ -23,10 +23,6 @@ class PluginProcessor extends AudioWorkletProcessor {
         this.combinedBuffer = null;
         this.lastChannelCount = 0;
         
-        // Parameter interpolation
-        this.parameterUpdates = new Map();
-        this.INTERPOLATION_STEPS = 64; // Number of steps for parameter interpolation
-
         // Message handler for plugin updates and processor registration
         this.port.onmessage = (event) => {
             if (event.data.type === 'updatePlugin') {
@@ -65,34 +61,8 @@ class PluginProcessor extends AudioWorkletProcessor {
         // Find existing plugin
         const index = this.plugins.findIndex(p => p.id === pluginConfig.id);
         if (index !== -1) {
-            const currentPlugin = this.plugins[index];
-            const update = {
-                plugin: pluginConfig,
-                currentStep: 0,
-                interpolatedParams: {}
-            };
-
-            // Initialize interpolation for each parameter
-            for (const [key, targetValue] of Object.entries(pluginConfig.parameters)) {
-                const currentValue = currentPlugin.parameters[key];
-                if (typeof targetValue === 'number' && typeof currentValue === 'number') {
-                    update.interpolatedParams[key] = {
-                        start: currentValue,
-                        end: targetValue,
-                        step: (targetValue - currentValue) / this.INTERPOLATION_STEPS
-                    };
-                } else {
-                    // For non-numeric parameters, use direct update
-                    update.interpolatedParams[key] = {
-                        start: targetValue,
-                        end: targetValue,
-                        step: 0
-                    };
-                }
-            }
-
-            // Store update information
-            this.parameterUpdates.set(pluginConfig.id, update);
+            // Directly update all parameters without interpolation
+            this.plugins[index] = pluginConfig;
         }
     }
 
@@ -201,39 +171,14 @@ class PluginProcessor extends AudioWorkletProcessor {
                 // Find plugin index for parameter updates
                 const pluginIndex = this.plugins.findIndex(p => p.id === plugin.id);
                 
-                // Get current interpolated parameters
-                let params = {
+                // Use current parameters directly without interpolation
+                const params = {
+                    ...plugin.parameters,
                     id: plugin.id,
                     channelCount: channelCount,
                     blockSize: this.blockSize,
                     sampleRate: sampleRate
                 };
-
-                // Apply parameter interpolation if update is in progress
-                const update = this.parameterUpdates.get(plugin.id);
-                if (update && update.currentStep < this.INTERPOLATION_STEPS) {
-                    // Calculate interpolated values for all parameters
-                    for (const [key, interpolation] of Object.entries(update.interpolatedParams)) {
-                        params[key] = interpolation.start + (interpolation.step * update.currentStep);
-                    }
-                    update.currentStep++;
-
-                    // When interpolation is complete, apply final values and remove update
-                    if (update.currentStep >= this.INTERPOLATION_STEPS) {
-                        this.plugins[pluginIndex] = update.plugin;
-                        this.parameterUpdates.delete(plugin.id);
-                        params = {
-                            ...update.plugin.parameters,
-                            ...params
-                        };
-                    }
-                } else {
-                    // No active update, use current parameters
-                    params = {
-                        ...plugin.parameters,
-                        ...params
-                    };
-                }
 
                 // Process audio with interpolated parameters
                 const result = processor.call(null, context, this.combinedBuffer, params, time);

@@ -336,9 +336,18 @@ class MultibandCompressorPlugin extends PluginBase {
         }
       });
       graphNeedsUpdate = true;
-    } else if (params.band !== undefined && params.band < 5) {
+    } else if (params.band !== undefined) {
+      // Check if band index is valid
+      if (params.band >= this.bands.length) {
+        console.warn(`Invalid band index: ${params.band}`);
+        return;
+      }
       // Update a single band parameter if provided
       const band = this.bands[params.band];
+      if (!band) {
+        console.warn(`Band ${params.band} is undefined`);
+        return;
+      }
       if (params.t !== undefined) { band.t = Math.max(-60, Math.min(0, params.t)); graphNeedsUpdate = true; }
       if (params.r !== undefined) { band.r = Math.max(1, Math.min(20, params.r)); graphNeedsUpdate = true; }
       if (params.a !== undefined) band.a = Math.max(0.1, Math.min(100, params.a));
@@ -387,7 +396,19 @@ class MultibandCompressorPlugin extends PluginBase {
   }
 
   updateTransferGraphs() {
-    if (!this.canvas) return;
+    // Find container element
+    const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
+    if (!container) return;  // Exit if container is not in DOM
+
+    // Cache DOM query result to minimize reflows, scoped to this instance
+    const canvases = Array.from(container.querySelectorAll('.band-graph canvas'));
+    if (!canvases.length) return;  // Exit if no canvases found
+
+    // Update canvas reference if needed
+    if (!this.canvas || !document.contains(this.canvas)) {
+      this.canvas = container.querySelector('.band-graph.active canvas');
+      if (!this.canvas) return;  // Exit if active canvas not found
+    }
 
     // Cached constants for drawing
     const DB_POINTS = [-48, -36, -24, -12];
@@ -396,10 +417,6 @@ class MultibandCompressorPlugin extends PluginBase {
     const CURVE_COLOR = '#0f0';
     const METER_COLOR = '#008000';
 
-    // Cache DOM query result to minimize reflows
-    const canvases = Array.from(document.querySelectorAll('.band-graph canvas'));
-    if (!canvases.length) return;
-
     const graphContexts = canvases.map(canvas => ({
       ctx: canvas.getContext('2d'),
       width: canvas.width,
@@ -407,8 +424,19 @@ class MultibandCompressorPlugin extends PluginBase {
     }));
 
     graphContexts.forEach((graph, bandIndex) => {
+      // Check if band index is within valid range
+      if (bandIndex >= this.bands.length) {
+        console.warn(`Invalid band index: ${bandIndex}`);
+        return;
+      }
       const { ctx, width, height } = graph;
       const band = this.bands[bandIndex];
+      
+      // Skip processing if band is undefined
+      if (!band) {
+        console.warn(`Band ${bandIndex} is undefined`);
+        return;
+      }
 
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -491,7 +519,10 @@ class MultibandCompressorPlugin extends PluginBase {
 
   createUI() {
     const container = document.createElement('div');
+    // Add unique instance identifier
+    this.instanceId = `multiband-compressor-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     container.className = 'multiband-compressor-plugin-ui';
+    container.setAttribute('data-instance-id', this.instanceId);
 
     // Frequency sliders UI
     const freqContainer = document.createElement('div');
@@ -550,24 +581,34 @@ class MultibandCompressorPlugin extends PluginBase {
     const bandContents = document.createElement('div');
     bandContents.className = 'band-contents';
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < this.bands.length; i++) {
       const tab = document.createElement('button');
       tab.className = `band-tab ${i === 0 ? 'active' : ''}`;
       tab.textContent = `Band ${i + 1}`;
+      // Add instance ID to elements
+      tab.setAttribute('data-instance-id', this.instanceId);
+      
       tab.onclick = () => {
-        document.querySelectorAll('.band-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.band-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.band-graph').forEach(g => g.classList.remove('active'));
+        if (i >= this.bands.length) {
+          console.warn(`Invalid band index: ${i}`);
+          return;
+        }
+        const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
+        container.querySelectorAll('.band-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.band-content').forEach(c => c.classList.remove('active'));
+        container.querySelectorAll('.band-graph').forEach(g => g.classList.remove('active'));
         tab.classList.add('active');
         content.classList.add('active');
-        document.querySelector(`.band-graph:nth-child(${i + 1})`).classList.add('active');
+        container.querySelector(`.band-graph:nth-child(${i + 1})`).classList.add('active');
         this.selectedBand = i;
         this.updateTransferGraphs();
       };
       bandTabs.appendChild(tab);
 
+      // Generate band content
       const content = document.createElement('div');
       content.className = `band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
+      content.setAttribute('data-instance-id', this.instanceId);
 
       const createControl = (label, min, max, step, value, setter) => {
         const row = document.createElement('div');
@@ -619,9 +660,11 @@ class MultibandCompressorPlugin extends PluginBase {
     // Gain reduction graphs UI
     const graphsContainer = document.createElement('div');
     graphsContainer.className = 'gain-reduction-graphs';
-    for (let i = 0; i < 5; i++) {
+    // Generate graphs based on number of bands
+    for (let i = 0; i < this.bands.length; i++) {
       const graphDiv = document.createElement('div');
       graphDiv.className = `band-graph ${i === 0 ? 'active' : ''}`;
+      graphDiv.setAttribute('data-instance-id', this.instanceId);
       const canvas = document.createElement('canvas');
       canvas.width = 320;
       canvas.height = 320;
@@ -648,6 +691,12 @@ class MultibandCompressorPlugin extends PluginBase {
   startAnimation() {
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
     const animate = () => {
+      // Check if container still exists in DOM
+      const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
+      if (!container) {
+        this.cleanup();  // Stop animation if container is removed
+        return;
+      }
       this.updateTransferGraphs();
       this.animationFrameId = requestAnimationFrame(animate);
     };
@@ -655,8 +704,11 @@ class MultibandCompressorPlugin extends PluginBase {
   }
 
   cleanup() {
-    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-    this.animationFrameId = null;
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+    this.canvas = null;  // Clear canvas reference
     this.bands.forEach(band => band.gr = 0);
     this.lastProcessTime = performance.now() / 1000;
   }
