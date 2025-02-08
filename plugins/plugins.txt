@@ -31,6 +31,7 @@ eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
 filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
 saturation/saturation: Saturation | Saturation | SaturationPlugin | css
+spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
 spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin | css
 lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
 lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
