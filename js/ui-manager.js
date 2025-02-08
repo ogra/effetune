@@ -147,10 +147,25 @@ export class UIManager {
     }
 
     updateURL() {
+        // Get current state
         const state = this.getPipelineState();
         const newURL = new URL(window.location.href);
         newURL.searchParams.set('p', state);
-        window.history.replaceState({}, '', newURL);
+        
+        // Clear any existing timeout
+        if (this._updateURLTimeout) {
+            clearTimeout(this._updateURLTimeout);
+        }
+        
+        // Store the latest URL to ensure it gets applied
+        this._latestURL = newURL;
+        
+        // Set a new timeout
+        this._updateURLTimeout = setTimeout(() => {
+            // Apply the latest URL
+            window.history.replaceState({}, '', this._latestURL);
+            this._updateURLTimeout = null;
+        }, 100); // Throttle to once every 100ms
     }
 
     // Call this method after audio context is initialized

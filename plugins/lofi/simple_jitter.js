@@ -52,11 +52,10 @@ class SimpleJitterPlugin extends PluginBase {
 
                 // Process each channel
                 for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const channelData = getChannelData(ch);
                     const buffer = context.sampleBuffer[ch];
 
-                    // Store input sample in buffer
-                    const inputSample = channelData[i];
+                    // Store input sample in buffer from interleaved data
+                    const inputSample = data[ch * parameters.blockSize + i];
                     buffer[context.sampleBufferPos] = inputSample;
 
                     // Apply linear interpolation

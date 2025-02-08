@@ -128,7 +128,7 @@ window.MyPlugin = MyPlugin;
   * 您在 getParameters() 中定义的自定义参数
 - `time`:当前音频上下文时间
 
-必须以相同的交错格式返回处理后的音频数据。如果需要访问单个通道数据,可以使用上下文的 `getChannelData(channelIndex)`。始终首先检查启用状态,如果禁用则返回未修改的数据。如果需要,初始化上下文状态(如滤波器状态、缓冲区)。
+必须以相同的交错格式返回处理后的音频数据。始终首先检查启用状态,如果禁用则返回未修改的数据。如果需要,初始化上下文状态(如滤波器状态、缓冲区)。
 
 示例:
 ```javascript
@@ -798,7 +798,6 @@ http://localhost:8000/dev/effetune_test.html
 音频处理函数可以访问以下工具函数:
 
 - `getFadeValue(id, value, time)`:平滑参数变化以防止音频咔嗒声。使用插件ID为每个插件实例维护独立的淡入淡出状态
-- `getChannelData(channelIndex)`:在需要时获取单个通道数据
 
 ## 插件类别
 

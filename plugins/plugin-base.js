@@ -92,18 +92,16 @@ class PluginBase {
 
     // Update plugin parameters
     updateParameters() {
-        if (window.workletNode && window.pipeline) {
+        if (window.workletNode) {
+            // Send only the parameters of the current plugin
             window.workletNode.port.postMessage({
-                type: 'updatePlugins',
-                plugins: window.pipeline.map(plugin => {
-                    const params = plugin.getParameters();
-                    return {
-                        id: plugin.id,
-                        type: plugin.constructor.name,
-                        enabled: plugin.enabled,
-                        parameters: params
-                    };
-                })
+                type: 'updatePlugin',
+                plugin: {
+                    id: this.id,
+                    type: this.constructor.name,
+                    enabled: this.enabled,
+                    parameters: this.getParameters()
+                }
             });
             
             // Update URL when parameters change

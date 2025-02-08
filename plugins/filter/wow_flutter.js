@@ -67,11 +67,11 @@ class WowFlutterPlugin extends PluginBase {
 
                 // Process each channel with the same phase
                 for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const channelData = getChannelData(ch);
                     const buffer = context.sampleBuffer[ch];
+                    const offset = ch * parameters.blockSize;
 
                     // Store input sample in buffer
-                    const inputSample = channelData[i];
+                    const inputSample = data[offset + i];
                     buffer[context.sampleBufferPos] = inputSample;
 
                     // Apply interpolation
@@ -80,7 +80,7 @@ class WowFlutterPlugin extends PluginBase {
                     const interpolatedSample = sample1 + delayPosFrac * (sample2 - sample1);
 
                     // Write to output
-                    data[ch * parameters.blockSize + i] = interpolatedSample;
+                    data[offset + i] = interpolatedSample;
                 }
 
                 // Update buffer position
