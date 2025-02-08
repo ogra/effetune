@@ -20,10 +20,14 @@ class FiveBandPEQPlugin extends PluginBase {
 
   // AudioWorklet processor function (internal processing)
   static processorFunction = `
+    // Define bypass threshold: treat gain values with absolute value below this as zero
+    const bypassThreshold = 0.01;
+
+    // Return data unchanged if plugin is disabled
     if (!parameters.enabled) return data;
-    
+
     const { channelCount, blockSize, sampleRate } = parameters;
-    
+
     // Initialize filter states if not exists
     if (!context.initialized) {
       context.filterStates = {};
@@ -37,7 +41,7 @@ class FiveBandPEQPlugin extends PluginBase {
       }
       context.initialized = true;
     }
-    
+
     // Reset filter states if channel count changes
     if (context.filterStates.b0.x1.length !== channelCount) {
       for (let i = 0; i < 5; i++) {
@@ -49,39 +53,39 @@ class FiveBandPEQPlugin extends PluginBase {
         };
       }
     }
-    
-    // Process each band
+
+    // Process each band sequentially
     for (let bandIndex = 0; bandIndex < 5; bandIndex++) {
+      // Retrieve parameters for this band
       const gainDb = parameters['g' + bandIndex];
       const type = parameters['t' + bandIndex];
       const freq = parameters['f' + bandIndex];
       // For shelving filters, use a fixed Q (0.7); otherwise use provided Q.
       const Q = (type === 'ls' || type === 'hs') ? 0.7 : parameters['q' + bandIndex];
-      
-      // Calculate gain directly as 10^(dB/40)
-      const gain = Math.pow(10, gainDb / 40);
+
+      // Bypass this band if gain is effectively zero and not a pass filter
+      if (Math.abs(gainDb) < bypassThreshold && type !== 'lp' && type !== 'hp' && type !== 'bp') {
+        continue;
+      }
+
+      // Calculate gain factor: 10^(dB/40)
+      const A = Math.pow(10, gainDb / 40);
       const w0 = 2 * Math.PI * freq / sampleRate;
       let alpha = Math.sin(w0) / (2 * Q);
       const cosw0 = Math.cos(w0);
-      // Previously used Math.sqrt(gain) but here we use gain directly
-      const A = gain;
-      
+
       let b0, b1, b2, a0, a1, a2;
-      
+
       switch (type) {
         case 'pk': { // Peaking EQ
-          if (Math.abs(gainDb) < 1e-3) {
-            b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-          } else {
-            const alpha_A = alpha * A;
-            const alpha_div_A = alpha / A;
-            b0 = 1 + alpha_A;
-            b1 = -2 * cosw0;
-            b2 = 1 - alpha_A;
-            a0 = 1 + alpha_div_A;
-            a1 = -2 * cosw0;
-            a2 = 1 - alpha_div_A;
-          }
+          const alpha_A = alpha * A;
+          const alpha_div_A = alpha / A;
+          b0 = 1 + alpha_A;
+          b1 = -2 * cosw0;
+          b2 = 1 - alpha_A;
+          a0 = 1 + alpha_div_A;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha_div_A;
           break;
         }
         case 'lp': { // Low Pass
@@ -103,31 +107,23 @@ class FiveBandPEQPlugin extends PluginBase {
           break;
         }
         case 'ls': { // Low Shelf
-          if (Math.abs(gainDb) < 1e-3) {
-            b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-          } else {
-            const shelfAlpha = 2 * Math.sqrt(A) * alpha;
-            b0 = A * ((A + 1) - (A - 1) * cosw0 + shelfAlpha);
-            b1 = 2 * A * ((A - 1) - (A + 1) * cosw0);
-            b2 = A * ((A + 1) - (A - 1) * cosw0 - shelfAlpha);
-            a0 = (A + 1) + (A - 1) * cosw0 + shelfAlpha;
-            a1 = -2 * ((A - 1) + (A + 1) * cosw0);
-            a2 = (A + 1) + (A - 1) * cosw0 - shelfAlpha;
-          }
+          const shelfAlpha = 2 * Math.sqrt(A) * alpha;
+          b0 = A * ((A + 1) - (A - 1) * cosw0 + shelfAlpha);
+          b1 = 2 * A * ((A - 1) - (A + 1) * cosw0);
+          b2 = A * ((A + 1) - (A - 1) * cosw0 - shelfAlpha);
+          a0 = (A + 1) + (A - 1) * cosw0 + shelfAlpha;
+          a1 = -2 * ((A - 1) + (A + 1) * cosw0);
+          a2 = (A + 1) + (A - 1) * cosw0 - shelfAlpha;
           break;
         }
         case 'hs': { // High Shelf
-          if (Math.abs(gainDb) < 1e-3) {
-            b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-          } else {
-            const shelfAlpha = 2 * Math.sqrt(A) * alpha;
-            b0 = A * ((A + 1) + (A - 1) * cosw0 + shelfAlpha);
-            b1 = -2 * A * ((A - 1) + (A + 1) * cosw0);
-            b2 = A * ((A + 1) + (A - 1) * cosw0 - shelfAlpha);
-            a0 = (A + 1) - (A - 1) * cosw0 + shelfAlpha;
-            a1 = 2 * ((A - 1) - (A + 1) * cosw0);
-            a2 = (A + 1) - (A - 1) * cosw0 - shelfAlpha;
-          }
+          const shelfAlpha = 2 * Math.sqrt(A) * alpha;
+          b0 = A * ((A + 1) + (A - 1) * cosw0 + shelfAlpha);
+          b1 = -2 * A * ((A - 1) + (A + 1) * cosw0);
+          b2 = A * ((A + 1) + (A - 1) * cosw0 - shelfAlpha);
+          a0 = (A + 1) - (A - 1) * cosw0 + shelfAlpha;
+          a1 = 2 * ((A - 1) - (A + 1) * cosw0);
+          a2 = (A + 1) - (A - 1) * cosw0 - shelfAlpha;
           break;
         }
         case 'bp': { // Band Pass
@@ -139,25 +135,34 @@ class FiveBandPEQPlugin extends PluginBase {
           a2 = 1 - alpha;
           break;
         }
+        default: {
+          // Unknown filter type: bypass this band
+          continue;
+        }
       }
-      
-      // Normalize coefficients
+
+      // Prevent division by zero in normalization
+      if (Math.abs(a0) < 1e-6) {
+        a0 = 1e-6;
+      }
+
+      // Normalize filter coefficients
       const norm_b0 = b0 / a0;
       const norm_b1 = b1 / a0;
       const norm_b2 = b2 / a0;
       const norm_a1 = a1 / a0;
       const norm_a2 = a2 / a0;
-      
+
       const states = context.filterStates['b' + bandIndex];
-      
-      // Process each channel
+
+      // Process each channel sample-by-sample
       for (let ch = 0; ch < channelCount; ch++) {
         const offset = ch * blockSize;
         for (let i = 0; i < blockSize; i++) {
           const x0 = data[offset + i];
           const y0 = norm_b0 * x0 + norm_b1 * states.x1[ch] + norm_b2 * states.x2[ch] -
                      norm_a1 * states.y1[ch] - norm_a2 * states.y2[ch];
-          // Update states
+          // Update filter state for channel ch
           states.x2[ch] = states.x1[ch];
           states.x1[ch] = x0;
           states.y2[ch] = states.y1[ch];
@@ -166,7 +171,7 @@ class FiveBandPEQPlugin extends PluginBase {
         }
       }
     }
-    
+
     return data;
   `;
 
@@ -176,10 +181,6 @@ class FiveBandPEQPlugin extends PluginBase {
     // Internal sample rate (default 48000Hz)
     this._sampleRate = 48000;
 
-    // Throttle state
-    this.lastThrottleTime = 0;
-    this.rafId = null;
-
     // Initialize band parameters
     for (let i = 0; i < 5; i++) {
       this['f' + i] = FiveBandPEQPlugin.BANDS[i].freq;
@@ -188,34 +189,11 @@ class FiveBandPEQPlugin extends PluginBase {
       this['t' + i] = 'pk';   // Filter type: default is peaking
     }
 
-    // Register the processor function
+    // Register the processor function immediately
     this.registerProcessor(FiveBandPEQPlugin.processorFunction);
   }
 
-  // Throttle updates using requestAnimationFrame
-  throttle(func, delay) {
-    const now = Date.now();
-    if (now - this.lastThrottleTime >= delay) {
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-      }
-      this.rafId = requestAnimationFrame(() => {
-        func();
-        this.lastThrottleTime = now;
-        this.rafId = null;
-      });
-    }
-  }
-
-  // Convert frequency to internal value
-  freqToInternal(freq) {
-    return Math.round(Math.log2(freq / 20) * 200);
-  }
-  internalToFreq(value) {
-    return Math.round(20 * Math.pow(2, value / 200));
-  }
-
-  // Set band parameters
+  // Set band parameters and update immediately
   setBand(index, freq, gain, Q, type) {
     if (freq !== undefined) this['f' + index] = freq;
     if (gain !== undefined) this['g' + index] = Math.max(-18, Math.min(18, gain));
@@ -226,6 +204,7 @@ class FiveBandPEQPlugin extends PluginBase {
         this['q' + index] = 0.7;
       }
     }
+    // Immediately update parameters
     this.updateParameters();
   }
 
@@ -361,11 +340,10 @@ class FiveBandPEQPlugin extends PluginBase {
         y = Math.max(0, Math.min(1, y));
         const freq = Math.max(20, Math.min(20000, this.xToFreq(x * 100)));
         const gain = Math.max(-18, Math.min(18, this.yToGain(y * 100)));
-        this.throttle(() => {
-          this.setBand(i, freq, gain);
-          this.updateMarkers();
-          this.updateResponse();
-        }, 17);
+        // Directly update parameters without throttling
+        this.setBand(i, freq, gain);
+        this.updateMarkers();
+        this.updateResponse();
       });
 
       document.addEventListener('mouseup', () => {
@@ -408,11 +386,10 @@ class FiveBandPEQPlugin extends PluginBase {
         y = Math.max(0, Math.min(1, y));
         const freq = Math.max(20, Math.min(20000, this.xToFreq(x * 100)));
         const gain = Math.max(-18, Math.min(18, this.yToGain(y * 100)));
-        this.throttle(() => {
-          this.setBand(i, freq, gain);
-          this.updateMarkers();
-          this.updateResponse();
-        }, 17);
+        // Direct update without throttling
+        this.setBand(i, freq, gain);
+        this.updateMarkers();
+        this.updateResponse();
       });
 
       marker.addEventListener('touchend', () => {
@@ -542,6 +519,7 @@ class FiveBandPEQPlugin extends PluginBase {
     this.responseSvg = responseSvg;
     this.markers = markers;
 
+    // Update markers and response immediately after UI creation
     setTimeout(() => {
       this.updateMarkers();
       this.updateResponse();
@@ -599,11 +577,12 @@ class FiveBandPEQPlugin extends PluginBase {
     const A = Math.pow(10, bandGain / 40);
     let b0, b1, b2, a0, a1, a2;
     
-    switch (bandType) {
-      case 'pk': {
-        if (Math.abs(bandGain) < 1e-3) {
-          b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-        } else {
+    if (Math.abs(bandGain) < 0.01 && bandType !== 'lp' && bandType !== 'hp' && bandType !== 'bp') {
+      // Bypass if gain is nearly zero and not a pass filter
+      b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
+    } else {
+      switch (bandType) {
+        case 'pk': {
           const alpha_A = alpha * A;
           const alpha_div_A = alpha / A;
           b0 = 1 + alpha_A;
@@ -612,31 +591,27 @@ class FiveBandPEQPlugin extends PluginBase {
           a0 = 1 + alpha_div_A;
           a1 = -2 * cosw0;
           a2 = 1 - alpha_div_A;
+          break;
         }
-        break;
-      }
-      case 'lp': {
-        b0 = (1 - cosw0) / 2;
-        b1 = 1 - cosw0;
-        b2 = (1 - cosw0) / 2;
-        a0 = 1 + alpha;
-        a1 = -2 * cosw0;
-        a2 = 1 - alpha;
-        break;
-      }
-      case 'hp': {
-        b0 = (1 + cosw0) / 2;
-        b1 = -(1 + cosw0);
-        b2 = (1 + cosw0) / 2;
-        a0 = 1 + alpha;
-        a1 = -2 * cosw0;
-        a2 = 1 - alpha;
-        break;
-      }
-      case 'ls': {
-        if (Math.abs(bandGain) < 1e-3) {
-          b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-        } else {
+        case 'lp': {
+          b0 = (1 - cosw0) / 2;
+          b1 = 1 - cosw0;
+          b2 = (1 - cosw0) / 2;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
+          break;
+        }
+        case 'hp': {
+          b0 = (1 + cosw0) / 2;
+          b1 = -(1 + cosw0);
+          b2 = (1 + cosw0) / 2;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
+          break;
+        }
+        case 'ls': {
           const shelfAlpha = 2 * Math.sqrt(A) * alpha;
           b0 = A * ((A + 1) - (A - 1) * cosw0 + shelfAlpha);
           b1 = 2 * A * ((A - 1) - (A + 1) * cosw0);
@@ -644,13 +619,9 @@ class FiveBandPEQPlugin extends PluginBase {
           a0 = (A + 1) + (A - 1) * cosw0 + shelfAlpha;
           a1 = -2 * ((A - 1) + (A + 1) * cosw0);
           a2 = (A + 1) + (A - 1) * cosw0 - shelfAlpha;
+          break;
         }
-        break;
-      }
-      case 'hs': {
-        if (Math.abs(bandGain) < 1e-3) {
-          b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
-        } else {
+        case 'hs': {
           const shelfAlpha = 2 * Math.sqrt(A) * alpha;
           b0 = A * ((A + 1) + (A - 1) * cosw0 + shelfAlpha);
           b1 = -2 * A * ((A - 1) + (A + 1) * cosw0);
@@ -658,20 +629,20 @@ class FiveBandPEQPlugin extends PluginBase {
           a0 = (A + 1) - (A - 1) * cosw0 + shelfAlpha;
           a1 = 2 * ((A - 1) - (A + 1) * cosw0);
           a2 = (A + 1) - (A - 1) * cosw0 - shelfAlpha;
+          break;
         }
-        break;
+        case 'bp': {
+          b0 = alpha;
+          b1 = 0;
+          b2 = -alpha;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
+          break;
+        }
+        default:
+          return 0;
       }
-      case 'bp': {
-        b0 = alpha;
-        b1 = 0;
-        b2 = -alpha;
-        a0 = 1 + alpha;
-        a1 = -2 * cosw0;
-        a2 = 1 - alpha;
-        break;
-      }
-      default:
-        return 0;
     }
     
     // Evaluate the response on the unit circle using z-transform
@@ -715,7 +686,8 @@ class FiveBandPEQPlugin extends PluginBase {
         const bandGain = this['g' + band];
         const bandQ = this['q' + band];
         const bandType = this['t' + band];
-        if ((bandType === 'pk' || bandType === 'ls' || bandType === 'hs') && Math.abs(bandGain) < 1e-3) {
+        // Skip bypassed bands (except pass filters)
+        if (Math.abs(bandGain) < 0.01 && bandType !== 'lp' && bandType !== 'hp' && bandType !== 'bp') {
           continue;
         }
         totalResponse += this.calculateBandResponse(freq, bandFreq, bandGain, bandQ, bandType);
