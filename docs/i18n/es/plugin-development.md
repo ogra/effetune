@@ -129,7 +129,6 @@ La función de procesamiento de audio se ejecuta en el contexto de Audio Worklet
 - `time`: Tiempo actual del contexto de audio
 
 Debe retornar los datos de audio procesados en el mismo formato entrelazado.
-Usa `getChannelData(channelIndex)` del contexto para acceder a datos de canales individuales si es necesario.
 Siempre verifica el estado habilitado primero y retorna datos sin modificar si está deshabilitado.
 Inicializa el estado del contexto si es necesario (por ejemplo, estados de filtros, buffers).
 
@@ -802,7 +801,6 @@ Usa esta herramienta durante el desarrollo para asegurar que tu plugin sigue las
 La función de procesamiento de audio tiene acceso a estas funciones de utilidad:
 
 - `getFadeValue(id, value, time)`: Suavizar cambios de parámetros para prevenir clics de audio. Usa el ID del plugin para mantener estados de transición independientes para cada instancia del plugin
-- `getChannelData(channelIndex)`: Obtener datos de canal individual si es necesario
 
 ## Categorías de Plugins
 

@@ -130,7 +130,6 @@ window.MyPlugin = MyPlugin;
     * Your custom parameters as defined in getParameters()
   - `time`: Current audio context time
 - Must return the processed audio data in the same interleaved format
-- Use `getChannelData(channelIndex)` from context to access individual channel data if needed
 - Always check enabled state first and return unmodified data if disabled
 - Initialize context state if needed (e.g., filter states, buffers)
 - Example:
@@ -799,7 +798,6 @@ Use this tool during development to ensure your plugin follows the required impl
 The audio processing function has access to these utility functions:
 
 - `getFadeValue(id, value, time)`: Smooth parameter changes to prevent audio clicks. Uses plugin ID to maintain independent fade states for each plugin instance
-- `getChannelData(channelIndex)`: Get individual channel data if needed
 
 ## Plugin Categories
 

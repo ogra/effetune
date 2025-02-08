@@ -252,6 +252,10 @@ Para un rendimiento óptimo con efectos no lineales, se recomienda usar EffeTune
 
 ## Historial de Versiones
 
+### Versión 1.00 (8 de febrero de 2025)
+- Mejorada eficiencia de procesamiento
+- Varias mejoras menores
+
 ### Versión 0.50 (7 de febrero de 2025)
 - Agregada funcionalidad de presets para guardar y cargar configuraciones de cadena de efectos
 - Nuestra documentación de uso ahora está disponible en los siguientes idiomas: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, y Français

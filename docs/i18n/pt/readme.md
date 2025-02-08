@@ -231,6 +231,10 @@ Quer criar seus próprios plugins de áudio? Confira nosso [Guia de Desenvolvime
 
 ## Histórico de Versões
 
+### Versão 1.00 (8 de Fevereiro de 2025)
+- Eficiência de processamento melhorada
+- Várias melhorias menores
+
 ### Versão 0.50 (7 de Fevereiro de 2025)
 - Nossa documentação de uso agora está disponível nos seguintes idiomas: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, e Français
 - Várias melhorias menores

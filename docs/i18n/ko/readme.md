@@ -252,6 +252,10 @@ Frieve EffeTune은 Google Chrome에서 테스트되고 검증되었습니다. �
 
 ## Version History
 
+### Version 1.00 (February 8, 2025)
+- 처리 효율성 향상
+- 다양한 사소한 개선
+
 ### Version 0.50 (February 7, 2025)
 - 이펙트 체인 설정을 저장하고 불러올 수 있는 프리셋 기능 추가
 - 사용 설명서가 이제 다음 언어로 제공됩니다: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, 및 Français

@@ -8,19 +8,30 @@ class PluginProcessor extends AudioWorkletProcessor {
         super();
         this.plugins = [];
         this.fadeStates = new Map();
-        this.FADE_DURATION = 0.005; // 5ms fade
+        this.FADE_DURATION = 0.010; // 10ms fade for smoother transitions
         this.currentFrame = 0;
         this.pluginProcessors = new Map();
-        this.pluginContexts = new Map(); // Holds context for each plugin
+        this.pluginContexts = new Map();
         
-        // Message control additions
+        // Message control
         this.lastMessageTime = 0;
-        this.messageQueue = new Map(); // Queue for each plugin
-        this.MESSAGE_INTERVAL = 16; // Minimum message interval (ms)
+        this.messageQueue = new Map();
+        this.MESSAGE_INTERVAL = 16;
+
+        // Buffer management
+        this.blockSize = 128;
+        this.combinedBuffer = null;
+        this.lastChannelCount = 0;
+        
+        // Parameter interpolation
+        this.parameterUpdates = new Map();
+        this.INTERPOLATION_STEPS = 64; // Number of steps for parameter interpolation
 
         // Message handler for plugin updates and processor registration
         this.port.onmessage = (event) => {
-            if (event.data.type === 'updatePlugins') {
+            if (event.data.type === 'updatePlugin') {
+                this.updatePlugin(event.data.plugin);
+            } else if (event.data.type === 'updatePlugins') {
                 this.updatePlugins(event.data.plugins);
             } else if (event.data.type === 'registerProcessor') {
                 this.registerPluginProcessor(event.data.pluginType, event.data.processor);
@@ -29,8 +40,8 @@ class PluginProcessor extends AudioWorkletProcessor {
     }
 
     registerPluginProcessor(pluginType, processorFunction) {
-        const compiledFunction = new Function('context', 'data', 'parameters', 'time', 
-            `with (context) { 
+        const compiledFunction = new Function('context', 'data', 'parameters', 'time',
+            `with (context) {
                 try {
                     if (parameters.channelCount < 1) {
                         console.error('Invalid channel count');
@@ -48,6 +59,41 @@ class PluginProcessor extends AudioWorkletProcessor {
             }`
         );
         this.pluginProcessors.set(pluginType, compiledFunction);
+    }
+
+    updatePlugin(pluginConfig) {
+        // Find existing plugin
+        const index = this.plugins.findIndex(p => p.id === pluginConfig.id);
+        if (index !== -1) {
+            const currentPlugin = this.plugins[index];
+            const update = {
+                plugin: pluginConfig,
+                currentStep: 0,
+                interpolatedParams: {}
+            };
+
+            // Initialize interpolation for each parameter
+            for (const [key, targetValue] of Object.entries(pluginConfig.parameters)) {
+                const currentValue = currentPlugin.parameters[key];
+                if (typeof targetValue === 'number' && typeof currentValue === 'number') {
+                    update.interpolatedParams[key] = {
+                        start: currentValue,
+                        end: targetValue,
+                        step: (targetValue - currentValue) / this.INTERPOLATION_STEPS
+                    };
+                } else {
+                    // For non-numeric parameters, use direct update
+                    update.interpolatedParams[key] = {
+                        start: targetValue,
+                        end: targetValue,
+                        step: 0
+                    };
+                }
+            }
+
+            // Store update information
+            this.parameterUpdates.set(pluginConfig.id, update);
+        }
     }
 
     updatePlugins(pluginConfigs) {
@@ -96,16 +142,38 @@ class PluginProcessor extends AudioWorkletProcessor {
         const input = inputs[0];
         const output = outputs[0];
 
-        if (!input || !output) return true;
+        if (!input) {
+            console.warn('Audio processor: Input is missing');
+            return true;
+        }
+        if (!output) {
+            console.warn('Audio processor: Output is missing');
+            return true;
+        }
+        if (!input[0]) {
+            console.warn('Audio processor: Input channel data is missing');
+            return true;
+        }
 
+        // Update block size based on input buffer
+        this.blockSize = input[0].length;
+        
         const time = this.currentFrame / sampleRate;
-        this.currentFrame += 128; // Standard WebAudio block size
+        this.currentFrame += this.blockSize;
 
-        // Create temporary buffers for each channel and copy input
-        const tempBuffers = Array.from(input).map(channel => {
-            const buffer = new Float32Array(128);
-            buffer.set(channel);
-            return buffer;
+        // Get channel count and check if buffer needs to be reallocated
+        const channelCount = input.length;
+        const requiredSize = this.blockSize * channelCount;
+        
+        if (!this.combinedBuffer || this.lastChannelCount !== channelCount || this.combinedBuffer.length !== requiredSize) {
+            // Reallocate buffer only when needed
+            this.combinedBuffer = new Float32Array(requiredSize);
+            this.lastChannelCount = channelCount;
+        }
+        
+        // Copy input data to combined buffer
+        input.forEach((channel, i) => {
+            this.combinedBuffer.set(channel, i * this.blockSize);
         });
 
         // Process through all plugins in order
@@ -122,61 +190,57 @@ class PluginProcessor extends AudioWorkletProcessor {
                     ...pluginContext, // Spread existing context
                     fadeStates: this.fadeStates,
                     port: this.port,
-                    getChannelData: (channelIndex) => {
-                        return channelIndex < tempBuffers.length ? tempBuffers[channelIndex] : null;
-                    },
                     getFadeValue: (pluginId, value, time) => {
-                        const fadeState = this.fadeStates.get(pluginId);
-                        if (!fadeState) {
-                            this.fadeStates.set(pluginId, {
-                                prevValue: value,
-                                targetValue: value,
-                                startTime: time
-                            });
-                            return value;
-                        }
-                        
-                        if (fadeState.prevValue === null) {
-                            fadeState.prevValue = value;
-                            fadeState.targetValue = value;
-                        } else if (fadeState.targetValue !== value) {
-                            fadeState.prevValue = fadeState.targetValue;
-                            fadeState.targetValue = value;
-                            fadeState.startTime = time;
-                        }
-                        const fadeProgress = Math.min(1, (time - fadeState.startTime) / 0.005);
-                        return fadeState.prevValue + (fadeState.targetValue - fadeState.prevValue) * fadeProgress;
+                        return this.getFadeValue(pluginId, value, time);
                     }
                 };
 
                 // Save context after plugin processing
                 this.pluginContexts.set(plugin.id, context);
 
-                const params = { 
-                    ...plugin.parameters,
+                // Find plugin index for parameter updates
+                const pluginIndex = this.plugins.findIndex(p => p.id === plugin.id);
+                
+                // Get current interpolated parameters
+                let params = {
                     id: plugin.id,
-                    channelCount: tempBuffers.length,
-                    blockSize: 128,
+                    channelCount: channelCount,
+                    blockSize: this.blockSize,
                     sampleRate: sampleRate
                 };
-                
-                // Create a combined buffer containing all channels
-                const combinedBuffer = new Float32Array(params.blockSize * params.channelCount);
-                tempBuffers.forEach((buffer, i) => {
-                    combinedBuffer.set(buffer, i * params.blockSize);
-                });
 
-                // If registered processor exists, use it
-                // Otherwise return input unchanged (process function will be handled by registerProcessor if overridden)
-                const result = this.pluginProcessors.has(plugin.type) ?
-                    processor.call(null, context, combinedBuffer, params, time) :
-                    combinedBuffer;
-
-                // Update individual channel buffers from the result
-                if (result && result.length === combinedBuffer.length) {
-                    for (let channel = 0; channel < tempBuffers.length; channel++) {
-                        tempBuffers[channel].set(result.subarray(channel * 128, (channel + 1) * 128));
+                // Apply parameter interpolation if update is in progress
+                const update = this.parameterUpdates.get(plugin.id);
+                if (update && update.currentStep < this.INTERPOLATION_STEPS) {
+                    // Calculate interpolated values for all parameters
+                    for (const [key, interpolation] of Object.entries(update.interpolatedParams)) {
+                        params[key] = interpolation.start + (interpolation.step * update.currentStep);
                     }
+                    update.currentStep++;
+
+                    // When interpolation is complete, apply final values and remove update
+                    if (update.currentStep >= this.INTERPOLATION_STEPS) {
+                        this.plugins[pluginIndex] = update.plugin;
+                        this.parameterUpdates.delete(plugin.id);
+                        params = {
+                            ...update.plugin.parameters,
+                            ...params
+                        };
+                    }
+                } else {
+                    // No active update, use current parameters
+                    params = {
+                        ...plugin.parameters,
+                        ...params
+                    };
+                }
+
+                // Process audio with interpolated parameters
+                const result = processor.call(null, context, this.combinedBuffer, params, time);
+
+                // Update combined buffer with the result if valid
+                if (result && result.length === this.combinedBuffer.length) {
+                    this.combinedBuffer.set(result);
                 }
 
                 // Message sending control
@@ -212,8 +276,8 @@ class PluginProcessor extends AudioWorkletProcessor {
 
         // Copy final result to output
         output.forEach((channel, i) => {
-            if (i < tempBuffers.length) {
-                channel.set(tempBuffers[i]);
+            if (i < channelCount) {
+                channel.set(this.combinedBuffer.subarray(i * this.blockSize, (i + 1) * this.blockSize));
             }
         });
 

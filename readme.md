@@ -254,6 +254,10 @@ Want to create your own audio plugins? Check out our [Plugin Development Guide](
 
 ## Version History
 
+### Version 1.00 (February 8, 2025)
+- Improved processing efficiency
+- Various minor improvements
+
 ### Version 0.50 (February 7, 2025)
 - Added preset functionality for saving and loading effect chain configurations
 - Our usage documentation is now available in the following languages: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, and Français.
