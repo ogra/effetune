@@ -1,11 +1,15 @@
 export class AudioManager {
-    constructor() {
+    constructor(pipelineManager) {
         this.audioContext = null;
         this.stream = null;
         this.sourceNode = null;
         this.workletNode = null;
         this.pipeline = [];
         this.masterBypass = false;
+        this.offlineContext = null;
+        this.offlineWorkletNode = null;
+        this.pipelineManager = pipelineManager;
+        this.isOfflineProcessing = false;
     }
 
     async initAudio() {
@@ -111,5 +115,279 @@ export class AudioManager {
     setMasterBypass(bypass) {
         this.masterBypass = bypass;
         return this.rebuildPipeline();
+    }
+
+    // File processing methods
+    async processAudioFile(file, progressCallback = null) {
+        this.isOfflineProcessing = true;
+        try {
+            // Read file as ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+            // Skip processing if no plugins or all disabled
+            const activePlugins = this.pipeline.filter(plugin => plugin.enabled);
+            if (activePlugins.length === 0) {
+                return this.encodeWAV(audioBuffer);
+            }
+
+            // Process audio directly without worklet
+            // Create offline context for final rendering
+            this.offlineContext = new OfflineAudioContext({
+                numberOfChannels: audioBuffer.numberOfChannels,
+                length: audioBuffer.length,
+                sampleRate: audioBuffer.sampleRate
+            });
+
+            // Process audio in chunks
+            const BLOCK_SIZE = 128;
+            const channelCount = audioBuffer.numberOfChannels;
+            const totalSamples = audioBuffer.length;
+            const processedBuffer = this.offlineContext.createBuffer(
+                channelCount,
+                totalSamples,
+                audioBuffer.sampleRate
+            );
+
+            // Create processing context
+            const pluginContexts = new Map();
+            const createContext = (pluginId) => {
+                if (!pluginContexts.has(pluginId)) {
+                    pluginContexts.set(pluginId, {
+                        sampleRate: audioBuffer.sampleRate,
+                        currentTime: 0,
+                        initialized: false,
+                        fadeStates: new Map(),
+                        getFadeValue: (id, currentValue, time) => {
+                            const FADE_DURATION = 0.010; // 10ms fade
+                            const context = pluginContexts.get(pluginId);
+                            const fadeState = context.fadeStates.get(id);
+                            
+                            if (!fadeState) {
+                                context.fadeStates.set(id, {
+                                    prevValue: currentValue,
+                                    targetValue: currentValue,
+                                    startTime: time
+                                });
+                                return currentValue;
+                            }
+                            
+                            if (fadeState.prevValue === null) {
+                                fadeState.prevValue = currentValue;
+                                fadeState.targetValue = currentValue;
+                            } else if (fadeState.targetValue !== currentValue) {
+                                fadeState.prevValue = fadeState.targetValue;
+                                fadeState.targetValue = currentValue;
+                                fadeState.startTime = time;
+                            }
+
+                            const fadeProgress = Math.min(1, (time - fadeState.startTime) / FADE_DURATION);
+                            return fadeState.prevValue + (fadeState.targetValue - fadeState.prevValue) * fadeProgress;
+                        }
+                    });
+                }
+                return pluginContexts.get(pluginId);
+            };
+
+            let lastProgressUpdate = 0;
+            const PROGRESS_UPDATE_INTERVAL = 16; // 60fps
+
+            // Process in blocks
+            for (let offset = 0; offset < totalSamples; offset += BLOCK_SIZE) {
+                const blockSize = Math.min(BLOCK_SIZE, totalSamples - offset);
+                const inputBlock = new Float32Array(blockSize * channelCount);
+
+                // Interleave channels: [L0,L1,...,L127,R0,R1,...,R127]
+                for (let ch = 0; ch < channelCount; ch++) {
+                    const channelData = audioBuffer.getChannelData(ch);
+                    const blockOffset = ch * blockSize;
+                    for (let i = 0; i < blockSize; i++) {
+                        inputBlock[blockOffset + i] = channelData[offset + i];
+                    }
+                }
+
+                // Process through plugin chain
+                let processedBlock = new Float32Array(inputBlock);
+                for (const plugin of activePlugins) {
+                    if (!plugin.enabled) continue;
+
+                    // Create plugin parameters with correct channel count
+                    const parameters = {
+                        ...plugin.getParameters(),
+                        channelCount: channelCount,
+                        blockSize: blockSize,
+                        sampleRate: audioBuffer.sampleRate,
+                        initialized: pluginContexts.has(plugin.id)
+                    };
+
+                    try {
+                        // Get or create plugin-specific context
+                        const pluginContext = createContext(plugin.id);
+                        pluginContext.currentTime = offset / audioBuffer.sampleRate;
+
+                        // Ensure processedBlock is a Float32Array
+                        if (!(processedBlock instanceof Float32Array)) {
+                            processedBlock = new Float32Array(processedBlock);
+                        }
+                        
+                        // Execute processor with plugin-specific context
+                        const result = plugin.executeProcessor(
+                            pluginContext,
+                            processedBlock,
+                            parameters,
+                            pluginContext.currentTime
+                        );
+
+                        // Validate processor output
+                        if (!result) {
+                            throw new Error('Plugin returned null or undefined');
+                        }
+                        if (!(result instanceof Float32Array)) {
+                            throw new Error('Plugin must return Float32Array');
+                        }
+                        if (result.length !== blockSize * channelCount) {
+                            throw new Error('Plugin returned invalid block size');
+                        }
+
+                        processedBlock = result;
+                    } catch (error) {
+                        // On error, pass through original block
+                        processedBlock = inputBlock;
+                    }
+                }
+
+                // De-interleave channels back to the processed buffer
+                for (let ch = 0; ch < channelCount; ch++) {
+                    const channelData = processedBuffer.getChannelData(ch);
+                    const blockOffset = ch * blockSize;
+                    for (let i = 0; i < blockSize; i++) {
+                        channelData[offset + i] = processedBlock[blockOffset + i];
+                    }
+                }
+
+                // Update progress with throttling
+                const currentTime = performance.now();
+                if (currentTime - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL) {
+                    const progress = Math.round((offset + blockSize) / totalSamples * 100);
+                    if (progressCallback) {
+                        await new Promise(resolve => requestAnimationFrame(() => {
+                            progressCallback(progress);
+                            resolve();
+                        }));
+                    }
+                    lastProgressUpdate = currentTime;
+                }
+
+                // Allow UI updates between blocks
+                if (offset % (BLOCK_SIZE * 8) === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+
+            // Create source node and connect for final rendering
+            const sourceNode = this.offlineContext.createBufferSource();
+            sourceNode.buffer = processedBuffer;
+            sourceNode.connect(this.offlineContext.destination);
+
+            try {
+                // Start rendering
+                sourceNode.start();
+                const renderedBuffer = await this.offlineContext.startRendering();
+
+                // Verify the rendered buffer
+                if (!renderedBuffer || renderedBuffer.length === 0) {
+                    throw new Error('Rendering produced empty buffer');
+                }
+
+                // Update progress to 100%
+                if (progressCallback) {
+                    await new Promise(resolve => requestAnimationFrame(() => {
+                        progressCallback(100);
+                        resolve();
+                    }));
+                }
+
+                // Encode to WAV
+                return this.encodeWAV(renderedBuffer);
+            } catch (error) {
+                throw new Error(`Processing failed: ${error.message}`);
+            } finally {
+                // Clean up
+                sourceNode.disconnect();
+                if (this.offlineWorkletNode) {
+                    this.offlineWorkletNode.disconnect();
+                    this.offlineWorkletNode = null;
+                }
+                this.offlineContext = null;
+            }
+        } catch (error) {
+            throw new Error(`File processing error: ${error.message}`);
+        } finally {
+            this.isOfflineProcessing = false;
+        }
+    }
+
+    encodeWAV(audioBuffer) {
+        // WAV file format constants - FourCC in correct byte order
+        const writeString = (view, offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        const format = 1; // PCM
+        const numChannels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const bitsPerSample = 16;
+        const bytesPerSample = bitsPerSample / 8;
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+        const samples = audioBuffer.length;
+        const dataSize = samples * blockAlign;
+        const fileSize = 36 + dataSize;
+
+        // Create buffer for WAV file
+        const buffer = new ArrayBuffer(44 + dataSize);
+        const view = new DataView(buffer);
+
+        // Write WAV header
+        let offset = 0;
+
+        // RIFF chunk descriptor
+        writeString(view, offset, 'RIFF'); offset += 4;
+        view.setUint32(offset, fileSize, true); offset += 4;
+        writeString(view, offset, 'WAVE'); offset += 4;
+
+        // fmt sub-chunk
+        writeString(view, offset, 'fmt '); offset += 4;
+        view.setUint32(offset, 16, true); offset += 4; // Subchunk1Size (16 for PCM)
+        view.setUint16(offset, format, true); offset += 2;
+        view.setUint16(offset, numChannels, true); offset += 2;
+        view.setUint32(offset, sampleRate, true); offset += 4;
+        view.setUint32(offset, byteRate, true); offset += 4;
+        view.setUint16(offset, blockAlign, true); offset += 2;
+        view.setUint16(offset, bitsPerSample, true); offset += 2;
+
+        // data sub-chunk
+        writeString(view, offset, 'data'); offset += 4;
+        view.setUint32(offset, dataSize, true); offset += 4;
+
+        // Write audio data
+        const channels = [];
+        for (let i = 0; i < numChannels; i++) {
+            channels.push(audioBuffer.getChannelData(i));
+        }
+
+        let index = 0;
+        const volume = 0x7FFF; // Maximum value for 16-bit
+        for (let i = 0; i < samples; i++) {
+            for (let channel = 0; channel < numChannels; channel++) {
+                const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+                view.setInt16(offset + index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                index += 2;
+            }
+        }
+
+        return new Blob([buffer], { type: 'audio/wav' });
     }
 }

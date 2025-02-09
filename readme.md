@@ -21,6 +21,7 @@ No audiophile myths, Just pure science.
 - Expandable plugin system with categorized effects
 - Live audio visualization
 - Audio pipeline that can be modified in real-time
+- Offline audio file processing with current effect chain
 
 ## Setup Guide
 
@@ -103,6 +104,22 @@ To use EffeTune with CD players, network players, or other physical sources:
 
 3. Plugin Documentation:
    - Click the ? button on any plugin to open its detailed documentation in a new tab
+
+### Processing Audio Files
+
+1. File Drop Area:
+   - A dedicated drop area is always visible below the Effect Pipeline
+   - Supports single or multiple audio files
+   - Files are processed using the current Pipeline settings
+   - All processing is done at the Pipeline's sample rate
+
+2. Processing Status:
+   - Progress bar shows current processing status
+   - Processing time depends on file size and effect chain complexity
+
+3. Download Options:
+   - Single files are downloaded as WAV format
+   - Multiple files are automatically packaged in a ZIP file
 
 ### Sharing Effect Chains
 
@@ -254,6 +271,10 @@ For optimal performance with nonlinear effects, it is recommended to use EffeTun
 Want to create your own audio plugins? Check out our [Plugin Development Guide](docs/plugin-development.md).
 
 ## Version History
+
+### Version 1.10 (February 9, 2025)
+- Added audio file processing functionality
+- Various minor improvements
 
 ### Version 1.00 (February 8, 2025)
 - Improved processing efficiency

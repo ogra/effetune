@@ -4,9 +4,15 @@ import { UIManager } from './ui-manager.js';
 
 class App {
     constructor() {
+        // Initialize core components
         this.pluginManager = new PluginManager();
         this.audioManager = new AudioManager();
+        
+        // Initialize UI components
         this.uiManager = new UIManager(this.pluginManager, this.audioManager);
+        
+        // Set pipeline manager reference in audio manager
+        this.audioManager.pipelineManager = this.uiManager.pipelineManager;
     }
 
     async initialize() {

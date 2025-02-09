@@ -34,20 +34,7 @@ export class UIManager {
         // Initialize UI elements
         this.initWhatsThisLink();
         this.initPipelineManager();
-        this.shareButton.addEventListener('click', () => {
-            const state = this.getPipelineState();
-            const newURL = new URL(window.location.href);
-            newURL.searchParams.set('p', state);
-            navigator.clipboard.writeText(newURL.toString())
-                .then(() => {
-                    this.setError('URL copied to clipboard!');
-                    setTimeout(() => this.clearError(), 2000);
-                })
-                .catch(err => {
-                    console.error('Failed to copy URL:', err);
-                    this.setError('Failed to copy URL to clipboard');
-                });
-        });
+        this.initShareButton();
     }
 
     // Delegate to PluginListManager
@@ -231,4 +218,5 @@ export class UIManager {
                 });
         });
     }
+
 }

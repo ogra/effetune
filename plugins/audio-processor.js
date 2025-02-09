@@ -23,11 +23,15 @@ class PluginProcessor extends AudioWorkletProcessor {
         this.combinedBuffer = null;
         this.lastChannelCount = 0;
         
+        // Offline processing flag
+        this.isOfflineProcessing = false;
+        
         // Message handler for plugin updates and processor registration
         this.port.onmessage = (event) => {
             if (event.data.type === 'updatePlugin') {
                 this.updatePlugin(event.data.plugin);
             } else if (event.data.type === 'updatePlugins') {
+                this.isOfflineProcessing = event.data.isOfflineProcessing || false;
                 this.updatePlugins(event.data.plugins);
             } else if (event.data.type === 'registerProcessor') {
                 this.registerPluginProcessor(event.data.pluginType, event.data.processor);
