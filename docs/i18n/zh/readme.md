@@ -219,6 +219,7 @@ A. 是的,EffeTune 可以处理通过选定输入设备播放的任何音频,包
 | Reverb | RS Reverb | 具有自然扩散的随机散射混响 | [详情](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | 数字硬限幅效果 | [详情](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | 饱和效果 | [详情](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5段频带立体声平衡控制 | [详情](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | 立体声宽度控制效果 | [详情](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | 多波形音频信号发生器 | [详情](plugins/others.md#oscillator) |
 

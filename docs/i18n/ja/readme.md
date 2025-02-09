@@ -219,6 +219,7 @@ A. はい、選択した入力デバイスを通じて再生される音声で�
 | Reverb | RS Reverb | 自然な拡散を持つランダムスキャッタリングリバーブ | [詳細](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | デジタルハードクリッピングエフェクト | [詳細](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | サチュレーションエフェクト | [詳細](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5バンド周波数帯域別ステレオバランス制御 | [詳細](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | ステレオ幅制御エフェクト | [詳細](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | マルチ波形オーディオ信号ジェネレーター | [詳細](plugins/others.md#oscillator) |
 

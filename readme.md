@@ -221,6 +221,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5-band frequency-dependent stereo balance control | [Details](docs/plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Stereo width control effect | [Details](docs/plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | Multi-waveform audio signal generator | [Details](docs/plugins/others.md#oscillator) |
 

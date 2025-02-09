@@ -4,7 +4,111 @@ A collection of plugins that enhance how music sounds in your headphones or spea
 
 ## Plugin List
 
+- [Multiband Balance](#multiband-balance) - 5-band frequency-dependent stereo balance control
 - [Stereo Blend](#stereo-blend) - Controls stereo width from mono to enhanced stereo
+
+## Multiband Balance
+
+A sophisticated spatial processor that divides the audio into five frequency bands and allows independent stereo balance control of each band. This plugin enables precise control over the stereo image across the frequency spectrum, offering creative possibilities for sound design and mixing, as well as corrective applications for problematic stereo recordings.
+
+### Key Features
+- 5-band frequency-dependent stereo balance control
+- High-quality Linkwitz-Riley crossover filters
+- Linear balance control for precise stereo adjustment
+- Independent processing of left and right channels
+- Click-free parameter changes with automatic fade handling
+
+### Parameters
+
+#### Crossover Frequencies
+- **Freq 1** (20-500 Hz): Separates low and low-mid bands
+- **Freq 2** (100-2000 Hz): Separates low-mid and mid bands
+- **Freq 3** (500-8000 Hz): Separates mid and high-mid bands
+- **Freq 4** (1000-20000 Hz): Separates high-mid and high bands
+
+#### Band Controls
+Each band has independent balance control:
+- **Band 1 Bal.** (-100% to +100%): Controls stereo balance of low frequencies
+- **Band 2 Bal.** (-100% to +100%): Controls stereo balance of low-mid frequencies
+- **Band 3 Bal.** (-100% to +100%): Controls stereo balance of mid frequencies
+- **Band 4 Bal.** (-100% to +100%): Controls stereo balance of high-mid frequencies
+- **Band 5 Bal.** (-100% to +100%): Controls stereo balance of high frequencies
+
+### Recommended Settings
+
+1. Natural Stereo Enhancement
+   - Low Band (20-100 Hz): 0% (centered)
+   - Low-Mid (100-500 Hz): ±20%
+   - Mid (500-2000 Hz): ±40%
+   - High-Mid (2000-8000 Hz): ±60%
+   - High (8000+ Hz): ±80%
+   - Effect: Creates a graduated stereo spread that widens with frequency
+
+2. Focused Mix
+   - Low Band: 0%
+   - Low-Mid: ±10%
+   - Mid: ±30%
+   - High-Mid: ±20%
+   - High: ±40%
+   - Effect: Maintains central focus while adding subtle width
+
+3. Immersive Soundscape
+   - Low Band: 0%
+   - Low-Mid: ±40%
+   - Mid: ±60%
+   - High-Mid: ±80%
+   - High: ±100%
+   - Effect: Creates an enveloping sound field with anchored bass
+
+### Application Guide
+
+1. Mix Enhancement
+   - Keep low frequencies (below 100 Hz) centered for stable bass
+   - Gradually increase stereo width with frequency
+   - Use moderate settings (±30-50%) for natural enhancement
+   - Monitor in mono to check for phase issues
+
+2. Problem Solving
+   - Correct phase issues in specific frequency ranges
+   - Tighten unfocused bass by centering low frequencies
+   - Reduce harsh stereo artifacts in high frequencies
+   - Fix poorly recorded stereo tracks
+
+3. Creative Sound Design
+   - Create frequency-dependent movement
+   - Design unique spatial effects
+   - Build immersive soundscapes
+   - Enhance specific instruments or elements
+
+4. Stereo Field Adjustment
+   - Fine-tune stereo balance per frequency band
+   - Correct uneven stereo distribution
+   - Enhance stereo separation where needed
+   - Maintain mono compatibility
+
+### Quick Start Guide
+
+1. Initial Setup
+   - Start with all bands centered (0%)
+   - Set crossover frequencies to standard points:
+     * Freq 1: 100 Hz
+     * Freq 2: 500 Hz
+     * Freq 3: 2000 Hz
+     * Freq 4: 8000 Hz
+
+2. Basic Enhancement
+   - Keep Band 1 (low) centered
+   - Make small adjustments to higher bands
+   - Listen for changes in spatial image
+   - Check mono compatibility
+
+3. Fine-tuning
+   - Adjust crossover points to match your material
+   - Make gradual changes to band positions
+   - Listen for unwanted artifacts
+   - Compare with bypass for perspective
+
+Remember: The Multiband Balance is a powerful tool that requires careful adjustment. Start with subtle settings and increase complexity as needed. Always check your adjustments in both stereo and mono to ensure compatibility.
 
 ## Stereo Blend
 

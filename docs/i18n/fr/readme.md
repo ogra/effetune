@@ -219,6 +219,7 @@ R. Oui, EffeTune peut traiter tout audio jouant à travers votre périphérique 
 | Reverb | RS Reverb | Réverbération à dispersion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Effet d'écrêtage numérique dur | [Détails](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | Effet de saturation | [Détails](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | Contrôle de balance stéréo 5 bandes dépendant de la fréquence | [Détails](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Effet de contrôle de largeur stéréo | [Détails](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | Générateur de signal audio multi-forme d'onde | [Détails](plugins/others.md#oscillator) |
 

@@ -4,7 +4,111 @@ Uma coleção de plugins que aprimoram como a música soa em seus fones de ouvid
 
 ## Lista de Plugins
 
+- [Multiband Balance](#multiband-balance) - Controle de balanço estéreo dependente de frequência de 5 bandas
 - [Stereo Blend](#stereo-blend) - Controla a largura estéreo de mono a estéreo aprimorado
+
+## Multiband Balance
+
+Um processador espacial sofisticado que divide o áudio em cinco bandas de frequência e permite o controle de balanço estéreo independente de cada banda. Este plugin oferece controle preciso sobre a imagem estéreo em todo o espectro de frequências, proporcionando possibilidades criativas para design de som e mixagem, bem como aplicações corretivas para gravações estéreo problemáticas.
+
+### Características Principais
+- Controle de balanço estéreo dependente de frequência de 5 bandas
+- Filtros crossover Linkwitz-Riley de alta qualidade
+- Controle de balanço linear para ajuste estéreo preciso
+- Processamento independente dos canais esquerdo e direito
+- Mudanças de parâmetros sem cliques com tratamento automático de fade
+
+### Parâmetros
+
+#### Frequências de Crossover
+- **Freq 1** (20-500 Hz): Separa bandas baixas e médio-baixas
+- **Freq 2** (100-2000 Hz): Separa bandas médio-baixas e médias
+- **Freq 3** (500-8000 Hz): Separa bandas médias e médio-altas
+- **Freq 4** (1000-20000 Hz): Separa bandas médio-altas e altas
+
+#### Controles de Banda
+Cada banda tem controle de balanço independente:
+- **Band 1 Bal.** (-100% a +100%): Controla balanço estéreo de frequências baixas
+- **Band 2 Bal.** (-100% a +100%): Controla balanço estéreo de frequências médio-baixas
+- **Band 3 Bal.** (-100% a +100%): Controla balanço estéreo de frequências médias
+- **Band 4 Bal.** (-100% a +100%): Controla balanço estéreo de frequências médio-altas
+- **Band 5 Bal.** (-100% a +100%): Controla balanço estéreo de frequências altas
+
+### Configurações Recomendadas
+
+1. Aprimoramento Estéreo Natural
+   - Banda Baixa (20-100 Hz): 0% (centralizado)
+   - Médio-Baixa (100-500 Hz): ±20%
+   - Média (500-2000 Hz): ±40%
+   - Médio-Alta (2000-8000 Hz): ±60%
+   - Alta (8000+ Hz): ±80%
+   - Efeito: Cria uma expansão estéreo graduada que aumenta com a frequência
+
+2. Mix Focado
+   - Banda Baixa: 0%
+   - Médio-Baixa: ±10%
+   - Média: ±30%
+   - Médio-Alta: ±20%
+   - Alta: ±40%
+   - Efeito: Mantém foco central enquanto adiciona largura sutil
+
+3. Paisagem Sonora Imersiva
+   - Banda Baixa: 0%
+   - Médio-Baixa: ±40%
+   - Média: ±60%
+   - Médio-Alta: ±80%
+   - Alta: ±100%
+   - Efeito: Cria um campo sonoro envolvente com graves ancorados
+
+### Guia de Aplicação
+
+1. Aprimoramento de Mix
+   - Mantenha frequências baixas (abaixo de 100 Hz) centralizadas para graves estáveis
+   - Aumente gradualmente a largura estéreo com a frequência
+   - Use configurações moderadas (±30-50%) para aprimoramento natural
+   - Monitore em mono para verificar problemas de fase
+
+2. Solução de Problemas
+   - Corrija problemas de fase em faixas de frequência específicas
+   - Aperte graves desfocados centralizando frequências baixas
+   - Reduza artefatos estéreo ásperos em altas frequências
+   - Conserte faixas estéreo mal gravadas
+
+3. Design de Som Criativo
+   - Crie movimento dependente de frequência
+   - Projete efeitos espaciais únicos
+   - Construa paisagens sonoras imersivas
+   - Aprimore instrumentos ou elementos específicos
+
+4. Ajuste do Campo Estéreo
+   - Ajuste fino do balanço estéreo por banda de frequência
+   - Correção de distribuição estéreo desigual
+   - Aprimoramento da separação estéreo onde necessário
+   - Manutenção da compatibilidade mono
+
+### Guia de Início Rápido
+
+1. Configuração Inicial
+   - Comece com todas as bandas centralizadas (0%)
+   - Defina frequências de crossover em pontos padrão:
+     * Freq 1: 100 Hz
+     * Freq 2: 500 Hz
+     * Freq 3: 2000 Hz
+     * Freq 4: 8000 Hz
+
+2. Aprimoramento Básico
+   - Mantenha Band 1 (graves) centralizada
+   - Faça pequenos ajustes nas bandas mais altas
+   - Ouça mudanças na imagem espacial
+   - Verifique compatibilidade mono
+
+3. Ajuste Fino
+   - Ajuste pontos de crossover para corresponder ao seu material
+   - Faça mudanças graduais nas posições das bandas
+   - Ouça artefatos indesejados
+   - Compare com bypass para perspectiva
+
+Lembre-se: O Multiband Balance é uma ferramenta poderosa que requer ajuste cuidadoso. Comece com configurações sutis e aumente a complexidade conforme necessário. Sempre verifique seus ajustes tanto em estéreo quanto em mono para garantir compatibilidade.
 
 ## Stereo Blend
 
