@@ -16,6 +16,10 @@ class PluginBase {
         this.lastUpdateTime = 0;
         this.UPDATE_INTERVAL = 16; // Minimum update interval (ms)
         this.pendingUpdate = null;
+
+        // Store processor function string and compiled function
+        this.processorString = null;
+        this.compiledFunction = null;
         
         // Try to setup message handler immediately if workletNode exists
         if (window.workletNode) {
@@ -78,15 +82,91 @@ class PluginBase {
         return data;
     }
 
-    // Register processor function with the audio worklet
+    // Register processor function with the audio worklet and store for offline processing
     registerProcessor(processorFunction) {
+        // Store processor string for offline processing
+        this.processorString = processorFunction.toString();
+
+        // Create compiled function with enhanced error handling
+        try {
+            this.compiledFunction = new Function('context', 'data', 'parameters', 'time',
+                `with (context) {
+                    try {
+                        // Validate input parameters
+                        if (!parameters || !parameters.channelCount || !parameters.blockSize) {
+                            throw new Error('Invalid parameters');
+                        }
+                        if (parameters.channelCount < 1) {
+                            throw new Error('Invalid channel count');
+                        }
+                        if (!data || !data.length) {
+                            throw new Error('Invalid input data');
+                        }
+                        if (data.length !== parameters.channelCount * parameters.blockSize) {
+                            throw new Error('Buffer size mismatch');
+                        }
+
+                        // Execute processor function
+                        const result = (function() {
+                            ${this.processorString}
+                        })();
+
+                        // Validate result
+                        if (!result) {
+                            throw new Error('Processor returned no result');
+                        }
+                        if (!(result instanceof Float32Array)) {
+                            throw new Error('Processor must return Float32Array');
+                        }
+                        if (result.length !== data.length) {
+                            throw new Error('Result length mismatch');
+                        }
+
+                        return result;
+                    } catch (error) {
+                        console.error('Processor error:', {
+                            type: '${this.constructor.name}',
+                            error: error.message,
+                            parameters: parameters
+                        });
+                        return data;
+                    }
+                }`
+            );
+        } catch (error) {
+            console.error('Failed to compile processor:', {
+                type: this.constructor.name,
+                error: error.message
+            });
+            this.compiledFunction = null;
+        }
+
+        // Register with audio worklet if available
         if (window.workletNode) {
             window.workletNode.port.postMessage({
                 type: 'registerProcessor',
                 pluginType: this.constructor.name,
-                processor: processorFunction.toString(),
+                processor: this.processorString,
                 process: this.process.toString()
             });
+        }
+    }
+
+    // Execute processor function for offline processing
+    executeProcessor(context, data, parameters, time) {
+        if (!this.compiledFunction) {
+            console.warn('No compiled function available for plugin:', this.name);
+            return data;
+        }
+
+        try {
+            return this.compiledFunction.call(null, context, data, parameters, time);
+        } catch (error) {
+            console.error('Failed to execute processor:', {
+                type: this.constructor.name,
+                error: error.message
+            });
+            return data;
         }
     }
 

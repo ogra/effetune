@@ -651,9 +651,126 @@ export class PipelineManager {
     initDragAndDrop() {
         const pipelineElement = document.getElementById('pipeline');
 
+        // Create file drop area
+        // Create file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'audio/*';
+        fileInput.multiple = true;
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+
+        // Create drop area
+        const dropArea = document.createElement('div');
+        dropArea.className = 'file-drop-area';
+        dropArea.innerHTML = `
+            <div class="drop-message">
+                <span>Drop audio file here to process with current effects</span>
+                <span class="or-text">or</span>
+                <span class="select-files">specify files to process</span>
+            </div>
+            <div class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+                <div class="progress-text">Processing...</div>
+            </div>
+        `;
+
+        // Add click handler for file selection
+        const selectFiles = dropArea.querySelector('.select-files');
+        selectFiles.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle selected files
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
+            if (files.length === 0) {
+                window.uiManager.setError('Please select audio files');
+                return;
+            }
+
+            // Show progress UI
+            this.showProgress();
+
+            try {
+                // Process multiple files
+                const processedFiles = [];
+                const totalFiles = files.length;
+
+                // Process each file
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = files[i];
+                    try {
+                        // Create progress callback for this file
+                        const progressCallback = (percent) => {
+                            const totalPercent = (i + percent / 100) / totalFiles * 100;
+                            this.progressBar.style.width = `${Math.round(totalPercent)}%`;
+                            this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                        };
+
+                        // Process the file with progress updates
+                        const blob = await this.audioManager.processAudioFile(file, progressCallback);
+                        const processedName = this.getProcessedFileName(file.name);
+                        processedFiles.push({
+                            blob,
+                            name: processedName
+                        });
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
+                    }
+                }
+
+                // Set progress to 100%
+                this.progressBar.style.width = '100%';
+                this.setProgressText('Processing complete');
+
+                // Create zip if multiple files were processed
+                if (processedFiles.length > 0) {
+                    if (processedFiles.length === 1) {
+                        this.showDownloadLink(processedFiles[0].blob, files[0].name);
+                    } else {
+                        this.setProgressText('Creating zip file...');
+                        const zip = new JSZip();
+                        processedFiles.forEach(({blob, name}) => {
+                            zip.file(name, blob);
+                        });
+                        const zipBlob = await zip.generateAsync({type: 'blob'});
+                        this.showDownloadLink(zipBlob, 'processed_audio.zip', true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing files:', error);
+                window.uiManager.setError('Failed to process audio files: ' + error.message);
+            } finally {
+                this.hideProgress();
+                // Reset file input
+                fileInput.value = '';
+            }
+        });
+
+        // Create download container
+        const downloadContainer = document.createElement('div');
+        downloadContainer.className = 'download-container';
+        downloadContainer.style.display = 'none';
+
+        // Add to pipeline container
+        pipelineElement.appendChild(dropArea);
+        pipelineElement.appendChild(downloadContainer);
+
+        // Store references
+        this.dropArea = dropArea;
+        this.downloadContainer = downloadContainer;
+        this.progressContainer = dropArea.querySelector('.progress-container');
+        this.progressBar = dropArea.querySelector('.progress');
+        this.progressText = dropArea.querySelector('.progress-text');
+
+        // Handle plugin drag and drop
         pipelineElement.addEventListener('click', (e) => {
             const pipelineHeader = pipelineElement.querySelector('.pipeline-header');
-            if (e.target === pipelineElement || 
+            if (e.target === pipelineElement ||
                 e.target === this.pipelineList ||
                 e.target === pipelineHeader ||
                 pipelineHeader.contains(e.target)) {
@@ -662,23 +779,148 @@ export class PipelineManager {
             }
         });
         
+        // Handle plugin drag over
         pipelineElement.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (e.dataTransfer) {
+            // Skip insertion indicator update if dragging a file
+            if (e.dataTransfer && !e.dataTransfer.types.includes('Files')) {
                 e.dataTransfer.dropEffect = 'move';
+                this.pluginListManager.updateInsertionIndicator(e.clientY);
+            } else {
+                // Hide insertion indicator when dragging files
+                this.pluginListManager.getInsertionIndicator().style.display = 'none';
             }
-            this.pluginListManager.updateInsertionIndicator(e.clientY);
         });
 
+        // Handle plugin drag leave
         pipelineElement.addEventListener('dragleave', (e) => {
             if (!pipelineElement.contains(e.relatedTarget)) {
                 this.pluginListManager.getInsertionIndicator().style.display = 'none';
             }
         });
 
+        // Handle file drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                // Only prevent default if it's a file being dragged
+                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, false);
+            
+            document.body.addEventListener(eventName, (e) => {
+                // Only prevent default if it's a file being dragged
+                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, false);
+        });
+
+        // Handle file drag enter/leave visual feedback
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                    dropArea.classList.add('drag-active');
+                }
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                    dropArea.classList.remove('drag-active');
+                }
+            }, false);
+        });
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', async (e) => {
+            // Check if this is a file drop
+            if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) {
+                return;
+            }
+
+            // Ensure insertion indicator is hidden for file drops
+            this.pluginListManager.getInsertionIndicator().style.display = 'none';
+
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('audio/'));
+            if (files.length === 0) {
+                window.uiManager.setError('Please drop audio files');
+                return;
+            }
+
+            // Show progress UI
+            this.showProgress();
+
+            try {
+                // Process multiple files
+                const processedFiles = [];
+                const totalFiles = files.length;
+
+                // Process each file
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = files[i];
+                    try {
+                        // Create progress callback for this file
+                        const progressCallback = (percent) => {
+                            const totalPercent = (i + percent / 100) / totalFiles * 100;
+                            this.progressBar.style.width = `${Math.round(totalPercent)}%`;
+                            this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                        };
+
+                        // Process the file with progress updates
+                        const blob = await this.audioManager.processAudioFile(file, progressCallback);
+                        const processedName = this.getProcessedFileName(file.name);
+                        processedFiles.push({
+                            blob,
+                            name: processedName
+                        });
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
+                    }
+                }
+
+                // Set progress to 100%
+                this.progressBar.style.width = '100%';
+                this.setProgressText('Processing complete');
+
+                // Create zip if multiple files were processed
+                if (processedFiles.length > 0) {
+                    if (processedFiles.length === 1) {
+                        this.showDownloadLink(processedFiles[0].blob, files[0].name);
+                    } else {
+                        this.setProgressText('Creating zip file...');
+                        const zip = new JSZip();
+                        processedFiles.forEach(({blob, name}) => {
+                            zip.file(name, blob);
+                        });
+                        const zipBlob = await zip.generateAsync({type: 'blob'});
+                        this.showDownloadLink(zipBlob, 'processed_audio.zip', true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing files:', error);
+                window.uiManager.setError('Failed to process audio files: ' + error.message);
+            } finally {
+                this.hideProgress();
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+
+        // Handle dropped plugins
         pipelineElement.addEventListener('drop', (e) => {
+            // Skip if this is a file drop
+            if (e.dataTransfer.types.includes('Files')) {
+                return;
+            }
+            
             e.preventDefault();
 
+            // Check for plugin reordering
             const sourceIndex = e.dataTransfer.getData('application/x-pipeline-index');
             if (sourceIndex !== '') {
                 const parsedSourceIndex = parseInt(sourceIndex);
@@ -740,6 +982,53 @@ export class PipelineManager {
                     this.updatePipelineUI();
                 });
             }
+        });
+    }
+
+    showProgress() {
+        this.progressContainer.style.display = 'block';
+        this.downloadContainer.style.display = 'none';
+        this.progressBar.style.width = '0%';
+    }
+
+    hideProgress() {
+        this.progressContainer.style.display = 'none';
+    }
+
+    setProgressText(text) {
+        this.progressText.textContent = text;
+    }
+
+    getProcessedFileName(originalName) {
+        return originalName.replace(/\.[^/.]+$/, '') + '_effetuned.wav';
+    }
+
+    showDownloadLink(blob, originalName, isZip = false) {
+        // Create filename based on type
+        const filename = isZip ? originalName : this.getProcessedFileName(originalName);
+
+        // Clear previous download links
+        this.downloadContainer.innerHTML = '';
+
+        // Create download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = filename;
+        downloadLink.className = 'download-link';
+        downloadLink.innerHTML = `
+            <span class="download-icon">⭳</span>
+            Download ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
+        `;
+
+        // Add to container
+        this.downloadContainer.appendChild(downloadLink);
+        this.downloadContainer.style.display = 'block';
+
+        // Clean up object URL when downloaded
+        downloadLink.addEventListener('click', () => {
+            setTimeout(() => {
+                URL.revokeObjectURL(downloadLink.href);
+            }, 100);
         });
     }
 

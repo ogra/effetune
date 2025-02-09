@@ -19,6 +19,7 @@ Pas de mythes audiophiles, juste de la science pure.
 - Système de plugins extensible avec effets catégorisés
 - Visualisation audio en direct
 - Pipeline audio modifiable en temps réel
+- Traitement de fichiers audio hors ligne en utilisant la chaîne d'effets actuelle
 
 ## Guide d'Installation
 
@@ -101,6 +102,22 @@ Pour utiliser EffeTune avec des lecteurs CD, lecteurs réseau ou autres sources 
 
 3. Documentation des Plugins :
    - Cliquez sur le bouton ? sur n'importe quel plugin pour ouvrir sa documentation détaillée dans un nouvel onglet
+
+### Traitement des Fichiers Audio
+
+1. Zone de Dépôt de Fichiers :
+    - Une zone dédiée toujours visible sous le Pipeline d'Effets
+    - Supporte les fichiers audio uniques ou multiples
+    - Les fichiers sont traités avec la configuration actuelle du Pipeline
+    - Tout le traitement est effectué au taux d'échantillonnage du Pipeline
+
+2. État du Traitement :
+    - La barre de progression affiche l'état actuel du traitement
+    - Le temps de traitement dépend de la taille du fichier et de la complexité de la chaîne d'effets
+
+3. Options de Téléchargement :
+    - Les fichiers uniques sont téléchargés au format WAV
+    - Les fichiers multiples sont automatiquement empaquetés dans un fichier ZIP
 
 ### Partage de Chaînes d'Effets
 
@@ -252,6 +269,10 @@ Pour des performances optimales avec les effets non linéaires, il est recommand
 Vous voulez créer vos propres plugins audio ? Consultez notre [Guide de Développement de Plugins](../../docs/plugin-development.md).
 
 ## Historique des Versions
+
+### Version 1.10 (9 février 2025)
+- Ajout de la fonctionnalité de traitement de fichiers audio
+- Diverses améliorations mineures
 
 ### Version 1.00 (8 février 2025)
 - Amélioration de l'efficacité du traitement
