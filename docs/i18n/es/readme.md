@@ -219,6 +219,7 @@ R. Sí, EffeTune puede procesar cualquier audio que se reproduzca a través de t
 | Reverb | RS Reverb | Reverberación de dispersión aleatoria con difusión natural | [Detalles](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Efecto de recorte duro digital | [Detalles](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | Efecto de saturación | [Detalles](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | Control de balance estéreo de 5 bandas dependiente de frecuencia | [Detalles](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Efecto de control de ancho estéreo | [Detalles](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | Generador de señal de audio multi-forma de onda | [Detalles](plugins/others.md#oscillator) |
 

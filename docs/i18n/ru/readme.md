@@ -219,6 +219,7 @@ A. Да, EffeTune может обрабатывать любое аудио, в�
 | Reverb | RS Reverb | Реверберация со случайным рассеиванием и естественной диффузией | [Details](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Эффект цифрового жесткого клиппинга | [Details](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | Эффект насыщения | [Details](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5-полосное частотно-зависимое управление стерео балансом | [Details](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Эффект управления стерео шириной | [Details](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | Многоволновой генератор аудиосигнала | [Details](plugins/others.md#oscillator) |
 

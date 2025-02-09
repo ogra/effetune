@@ -198,6 +198,7 @@
 | Reverb | RS Reverb | صدى تشتت عشوائي مع انتشار طبيعي | [تفاصيل](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | تأثير قطع رقمي حاد | [تفاصيل](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | تأثير تشبع | [تفاصيل](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | تحكم في توازن الستيريو خماسي النطاقات معتمد على التردد | [تفاصيل](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | تأثير تحكم في عرض الستيريو | [تفاصيل](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | مولد إشارات صوتية متعدد الموجات | [تفاصيل](plugins/others.md#oscillator) |
 

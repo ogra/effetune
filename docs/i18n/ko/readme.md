@@ -219,6 +219,7 @@ A. 네, EffeTune은 스트리밍 서비스, 로컬 파일, 물리적 미디어�
 | Reverb | RS Reverb | 자연스러운 디퓨전이 있는 랜덤 스캐터링 리버브 | [Details](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | 디지털 하드 클리핑 이펙트 | [Details](plugins/saturation.md#hard-clipping) |
 | Saturation | Saturation | 새츄레이션 이펙트 | [Details](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5밴드 주파수 대역별 스테레오 밸런스 제어 | [Details](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | 스테레오 폭 제어 이펙트 | [Details](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | 다중 파형 오디오 신호 제너레이터 | [Details](plugins/others.md#oscillator) |
 
