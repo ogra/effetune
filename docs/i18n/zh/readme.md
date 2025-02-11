@@ -216,28 +216,29 @@ A. 是的,EffeTune 可以处理通过选定输入设备播放的任何音频,包
 |----------|--------|-------------|---------------|
 | Analyzer | Level Meter | 显示带峰值保持的音频电平 | [详情](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | 实时波形可视化 | [详情](plugins/analyzer.md#oscilloscope) |
-| Analyzer | Spectrogram | 显示频谱随时间变化 | [详情](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | 可视化立体声平衡和声音移动 | [详情](plugins/analyzer.md#stereo-meter) |
+| Analyzer | Spectrogram | 显示频谱随时间的变化 | [详情](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | 可视化立体声平衡和声音动态 | [详情](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | 实时频谱分析 | [详情](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | 直流偏移调整 | [详情](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | 信号极性反转 | [详情](plugins/basics.md#polarity-inversion) |
-| Basics | Stereo Balance | 立体声声道平衡控制 | [详情](plugins/basics.md#stereo-balance) |
+| Basics | Stereo Balance | 立体声通道平衡控制 | [详情](plugins/basics.md#stereo-balance) |
 | Basics | Volume | 基本音量控制 | [详情](plugins/basics.md#volume) |
-| Dynamics | Compressor | 带阈值、比率和拐点控制的动态范围压缩 | [详情](plugins/dynamics.md#compressor) |
-| Dynamics | Gate | 带阈值、比率和拐点控制的噪声门,用于降噪 | [详情](plugins/dynamics.md#gate) |
-| Dynamics | Multiband Compressor | 专业的 5 段动态处理器,具有 FM 广播风格的音色塑造 | [详情](plugins/dynamics.md#multiband-compressor) |
-| EQ | 15Band GEQ | 15 段图形均衡器 | [详情](plugins/eq.md#15band-geq) |
-| EQ | 5Band PEQ | 带 5 个完全可配置段的专业参数均衡器 | [详情](plugins/eq.md#5band-peq) |
+| Dynamics | Compressor | 具有阈值、比例和拐点控制的动态范围压缩 | [详情](plugins/dynamics.md#compressor) |
+| Dynamics | Gate | 带有阈值、比例和拐点控制的噪声门，用于降噪 | [详情](plugins/dynamics.md#gate) |
+| Dynamics | Multiband Compressor | 专业的5频段动态处理器，具有调频广播风格的音效塑形 | [详情](plugins/dynamics.md#multiband-compressor) |
+| EQ | 15Band GEQ | 15频段图形均衡器 | [详情](plugins/eq.md#15band-geq) |
+| EQ | 5Band PEQ | 专业参数均衡器，具有5个可完全配置的频段 | [详情](plugins/eq.md#5band-peq) |
 | EQ | Narrow Range | 高通和低通滤波器组合 | [详情](plugins/eq.md#narrow-range) |
-| EQ | Tone Control | 三段音调控制 | [详情](plugins/eq.md#tone-control) |
+| EQ | Tone Control | 三频段音调控制 | [详情](plugins/eq.md#tone-control) |
 | Filter | Wow Flutter | 基于时间的调制效果 | [详情](plugins/filter.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | 位深缩减和零阶保持效果 | [详情](plugins/lofi.md#bit-crusher) |
-| Lo-Fi | Noise Blender | 噪声生成和混合 | [详情](plugins/lofi.md#noise-blender) |
+| Lo-Fi | Bit Crusher | 降低位深和零阶保持效果 | [详情](plugins/lofi.md#bit-crusher) |
+| Lo-Fi | Noise Blender | 噪声生成与混合 | [详情](plugins/lofi.md#noise-blender) |
 | Lo-Fi | Simple Jitter | 数字抖动模拟 | [详情](plugins/lofi.md#simple-jitter) |
-| Reverb | RS Reverb | 具有自然扩散的随机散射混响 | [详情](plugins/reverb.md#rs-reverb) |
-| Saturation | Hard Clipping | 数字硬限幅效果 | [详情](plugins/saturation.md#hard-clipping) |
+| Reverb | RS Reverb | 随机散射混响，具有自然扩散效果 | [详情](plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | 数字硬剪裁效果 | [详情](plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | 3频段饱和效果，实现基于频率的精确温暖感 | [详情](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | 饱和效果 | [详情](plugins/saturation.md#saturation) |
-| Spatial | Multiband Balance | 5段频带立体声平衡控制 | [详情](plugins/spatial.md#multiband-balance) |
+| Spatial | Multiband Balance | 5频段基于频率的立体声平衡控制 | [详情](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | 立体声宽度控制效果 | [详情](plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | 多波形音频信号发生器 | [详情](plugins/others.md#oscillator) |
 
@@ -272,7 +273,7 @@ Frieve EffeTune 已在 Google Chrome 上测试和验证。应用需要支持以�
 ## 版本历史
 
 ### Version 1.20(2025年2月11日)
-- 添加了一些新效果
+- 添加了一些新的音频效果器
 - 各种细节改进
 
 ### Version 1.10(2025年2月9日)

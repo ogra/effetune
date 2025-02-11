@@ -214,32 +214,33 @@ A. はい、選択した入力デバイスを通じて再生される音声で�
 
 | カテゴリー | エフェクト | 説明 | ドキュメント |
 |----------|--------|-------------|---------------|
-| Analyzer | Level Meter | ピークホールド付きオーディオレベル表示 | [詳細](plugins/analyzer.md#level-meter) |
-| Analyzer | Oscilloscope | リアルタイム波形表示 | [詳細](plugins/analyzer.md#oscilloscope) |
-| Analyzer | Spectrogram | 周波数スペクトルの時間変化表示 | [詳細](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | ステレオバランスとサウンドの動きを視覚化 | [詳細](plugins/analyzer.md#stereo-meter) |
-| Analyzer | Spectrum Analyzer | リアルタイムスペクトル分析 | [詳細](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Level Meter | ピークホールド付きのオーディオレベルを表示 | [詳細](plugins/analyzer.md#level-meter) |
+| Analyzer | Oscilloscope | リアルタイムの波形表示 | [詳細](plugins/analyzer.md#oscilloscope) |
+| Analyzer | Spectrogram | 時間経過による周波数スペクトルの変化を表示 | [詳細](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | ステレオバランスとサウンドの動きを可視化 | [詳細](plugins/analyzer.md#stereo-meter) |
+| Analyzer | Spectrum Analyzer | リアルタイムのスペクトラム解析 | [詳細](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | DCオフセット調整 | [詳細](plugins/basics.md#dc-offset) |
-| Basics | Polarity Inversion | 信号極性反転 | [詳細](plugins/basics.md#polarity-inversion) |
+| Basics | Polarity Inversion | 信号の極性反転 | [詳細](plugins/basics.md#polarity-inversion) |
 | Basics | Stereo Balance | ステレオチャンネルバランス制御 | [詳細](plugins/basics.md#stereo-balance) |
-| Basics | Volume | 基本的な音量制御 | [詳細](plugins/basics.md#volume) |
-| Dynamics | Compressor | スレッショルド、レシオ、ニー制御付きダイナミックレンジ圧縮 | [詳細](plugins/dynamics.md#compressor) |
+| Basics | Volume | 基本的なボリュームコントロール | [詳細](plugins/basics.md#volume) |
+| Dynamics | Compressor | スレッショルド、レシオ、ニー制御によるダイナミックレンジ圧縮 | [詳細](plugins/dynamics.md#compressor) |
 | Dynamics | Gate | ノイズ低減のためのスレッショルド、レシオ、ニー制御付きノイズゲート | [詳細](plugins/dynamics.md#gate) |
-| Dynamics | Multiband Compressor | FMラジオ風のサウンドシェイピングが可能なプロフェッショナルな5バンドダイナミクスプロセッサー | [詳細](plugins/dynamics.md#multiband-compressor) |
+| Dynamics | Multiband Compressor | FMラジオ風サウンドシェイピングを備えたプロフェッショナルな5バンドダイナミクスプロセッサー | [詳細](plugins/dynamics.md#multiband-compressor) |
 | EQ | 15Band GEQ | 15バンドグラフィックイコライザー | [詳細](plugins/eq.md#15band-geq) |
-| EQ | 5Band PEQ | 5つの完全設定可能なバンドを持つプロフェッショナルなパラメトリックイコライザー | [詳細](plugins/eq.md#5band-peq) |
-| EQ | Narrow Range | ハイパスとローパスフィルターの組み合わせ | [詳細](plugins/eq.md#narrow-range) |
+| EQ | 5Band PEQ | 5バンド完全に設定可能なプロフェッショナルパラメトリックイコライザー | [詳細](plugins/eq.md#5band-peq) |
+| EQ | Narrow Range | ハイパスおよびローパスフィルターの組み合わせ | [詳細](plugins/eq.md#narrow-range) |
 | EQ | Tone Control | 3バンドトーンコントロール | [詳細](plugins/eq.md#tone-control) |
-| Filter | Wow Flutter | 時間ベースのモジュレーションエフェクト | [詳細](plugins/filter.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | ビット深度削減とゼロ次ホールドエフェクト | [詳細](plugins/lofi.md#bit-crusher) |
-| Lo-Fi | Noise Blender | ノイズ生成とミキシング | [詳細](plugins/lofi.md#noise-blender) |
-| Lo-Fi | Simple Jitter | デジタルジッター再現 | [詳細](plugins/lofi.md#simple-jitter) |
-| Reverb | RS Reverb | 自然な拡散を持つランダムスキャッタリングリバーブ | [詳細](plugins/reverb.md#rs-reverb) |
-| Saturation | Hard Clipping | デジタルハードクリッピングエフェクト | [詳細](plugins/saturation.md#hard-clipping) |
-| Saturation | Saturation | サチュレーションエフェクト | [詳細](plugins/saturation.md#saturation) |
-| Spatial | Multiband Balance | 5バンド周波数帯域別ステレオバランス制御 | [詳細](plugins/spatial.md#multiband-balance) |
-| Spatial | Stereo Blend | ステレオ幅制御エフェクト | [詳細](plugins/spatial.md#stereo-blend) |
-| Others | Oscillator | マルチ波形オーディオ信号ジェネレーター | [詳細](plugins/others.md#oscillator) |
+| Filter | Wow Flutter | 時間ベースのモジュレーション効果 | [詳細](plugins/filter.md#wow-flutter) |
+| Lo-Fi | Bit Crusher | ビット深度の低減とゼロオーダーホールド効果 | [詳細](plugins/lofi.md#bit-crusher) |
+| Lo-Fi | Noise Blender | ノイズの生成とミキシング | [詳細](plugins/lofi.md#noise-blender) |
+| Lo-Fi | Simple Jitter | デジタルジッターシミュレーション | [詳細](plugins/lofi.md#simple-jitter) |
+| Reverb | RS Reverb | 自然な拡散を伴うランダム散乱リバーブ | [詳細](plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | デジタルハードクリッピング効果 | [詳細](plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | 正確な周波数ベースの温かみを実現する3バンドサチュレーション効果 | [詳細](plugins/saturation.md#multiband-saturation) |
+| Saturation | Saturation | サチュレーション効果 | [詳細](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | 5バンドの周波数依存ステレオバランス制御 | [詳細](plugins/spatial.md#multiband-balance) |
+| Spatial | Stereo Blend | ステレオ幅制御効果 | [詳細](plugins/spatial.md#stereo-blend) |
+| Others | Oscillator | 複数波形のオーディオ信号ジェネレーター | [詳細](plugins/others.md#oscillator) |
 
 ## 技術情報
 
