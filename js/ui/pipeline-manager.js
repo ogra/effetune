@@ -598,7 +598,8 @@ export class PipelineManager {
                     dropEvent.preventDefault = () => {};
                     dropEvent.dataTransfer = {
                         getData: (type) => type === 'application/x-pipeline-index' ? sourceIndex.toString() : '',
-                        dropEffect: 'move'
+                        dropEffect: 'move',
+                        types: []
                     };
                     
                     pipeline.dispatchEvent(dropEvent);
@@ -673,8 +674,9 @@ export class PipelineManager {
                 <div class="progress-bar">
                     <div class="progress"></div>
                 </div>
-                <div class="progress-text">Processing...</div>
-            </div>
+            <div class="progress-text">Processing...</div>
+            <button class="cancel-button">Cancel</button>
+        </div>
         `;
 
         // Add click handler for file selection
@@ -712,11 +714,17 @@ export class PipelineManager {
 
                         // Process the file with progress updates
                         const blob = await this.audioManager.processAudioFile(file, progressCallback);
-                        const processedName = this.getProcessedFileName(file.name);
-                        processedFiles.push({
-                            blob,
-                            name: processedName
-                        });
+                        if (blob) {
+                            const processedName = this.getProcessedFileName(file.name);
+                            processedFiles.push({
+                                blob,
+                                name: processedName
+                            });
+                        } else {
+                            // Processing was cancelled
+                            this.setProgressText('Processing canceled');
+                            return;
+                        }
                     } catch (error) {
                         console.error('Error processing file:', error);
                         window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
@@ -783,7 +791,7 @@ export class PipelineManager {
         pipelineElement.addEventListener('dragover', (e) => {
             e.preventDefault();
             // Skip insertion indicator update if dragging a file
-            if (e.dataTransfer && !e.dataTransfer.types.includes('Files')) {
+            if (e.dataTransfer && e.dataTransfer.types && !e.dataTransfer.types.includes('Files')) {
                 e.dataTransfer.dropEffect = 'move';
                 this.pluginListManager.updateInsertionIndicator(e.clientY);
             } else {
@@ -803,7 +811,7 @@ export class PipelineManager {
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, (e) => {
                 // Only prevent default if it's a file being dragged
-                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -811,7 +819,7 @@ export class PipelineManager {
             
             document.body.addEventListener(eventName, (e) => {
                 // Only prevent default if it's a file being dragged
-                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -821,7 +829,7 @@ export class PipelineManager {
         // Handle file drag enter/leave visual feedback
         ['dragenter', 'dragover'].forEach(eventName => {
             dropArea.addEventListener(eventName, (e) => {
-                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                     dropArea.classList.add('drag-active');
                 }
             }, false);
@@ -829,18 +837,18 @@ export class PipelineManager {
 
         ['dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, (e) => {
-                if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                     dropArea.classList.remove('drag-active');
                 }
             }, false);
         });
 
-        // Handle dropped files
-        dropArea.addEventListener('drop', async (e) => {
-            // Check if this is a file drop
-            if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) {
-                return;
-            }
+            // Handle dropped files
+            dropArea.addEventListener('drop', async (e) => {
+                // Check if this is a file drop
+                if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) {
+                    return;
+                }
 
             // Ensure insertion indicator is hidden for file drops
             this.pluginListManager.getInsertionIndicator().style.display = 'none';
@@ -872,11 +880,17 @@ export class PipelineManager {
 
                         // Process the file with progress updates
                         const blob = await this.audioManager.processAudioFile(file, progressCallback);
-                        const processedName = this.getProcessedFileName(file.name);
-                        processedFiles.push({
-                            blob,
-                            name: processedName
-                        });
+                        if (blob) {
+                            const processedName = this.getProcessedFileName(file.name);
+                            processedFiles.push({
+                                blob,
+                                name: processedName
+                            });
+                        } else {
+                            // Processing was cancelled
+                            this.setProgressText('Processing canceled');
+                            return;
+                        }
                     } catch (error) {
                         console.error('Error processing file:', error);
                         window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
@@ -914,7 +928,7 @@ export class PipelineManager {
         // Handle dropped plugins
         pipelineElement.addEventListener('drop', (e) => {
             // Skip if this is a file drop
-            if (e.dataTransfer.types.includes('Files')) {
+            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 return;
             }
             
@@ -989,6 +1003,16 @@ export class PipelineManager {
         this.progressContainer.style.display = 'block';
         this.downloadContainer.style.display = 'none';
         this.progressBar.style.width = '0%';
+        
+        // Add cancel button handler
+        const cancelButton = this.progressContainer.querySelector('.cancel-button');
+        cancelButton.onclick = () => {
+            if (this.audioManager.isOfflineProcessing) {
+                this.audioManager.isCancelled = true;
+                this.hideProgress();
+                this.setProgressText('Processing canceled');
+            }
+        };
     }
 
     hideProgress() {

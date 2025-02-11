@@ -4,19 +4,98 @@ Una colección de plugins que ayudan a equilibrar las partes fuertes y suaves de
 
 ## Lista de Plugins
 
+- [Brickwall Limiter](#brickwall-limiter) - Control transparente de picos para una escucha segura y cómoda
 - [Compressor](#compressor) - Equilibra automáticamente los niveles de volumen para una escucha más cómoda
 - [Gate](#gate) - Reduce el ruido de fondo no deseado atenuando señales por debajo de un umbral
 - [Multiband Compressor](#multiband-compressor) - Procesador de dinámica profesional de 5 bandas con modelado de sonido estilo radio FM
 
-## Compressor
+## Brickwall Limiter
 
-Un efecto que gestiona automáticamente las diferencias de volumen en tu música reduciendo suavemente los sonidos fuertes y mejorando los suaves. Esto crea una experiencia de escucha más equilibrada y agradable al suavizar cambios repentinos de volumen que podrían ser molestos o incómodos.
+Un limitador de picos de alta calidad que asegura que tu música nunca exceda un nivel específico, previniendo la saturación digital mientras mantiene la calidad natural del sonido. Perfecto para proteger tu sistema de audio y asegurar niveles de escucha cómodos sin comprometer la dinámica de la música.
 
 ### Guía de Mejora de Escucha
 - Música Clásica:
-  - Hace que los crescendos orquestales dramáticos sean más cómodos de escuchar
-  - Equilibra la diferencia entre pasajes suaves y fuertes del piano
-  - Ayuda a escuchar detalles suaves incluso en secciones potentes
+  - Disfruta de forma segura los crescendos orquestales completos
+  - Mantiene la dinámica natural de las piezas de piano
+  - Protege contra picos inesperados en grabaciones en vivo
+- Música Pop/Rock:
+  - Mantiene un volumen consistente durante pasajes intensos
+  - Disfruta de música dinámica a cualquier nivel de escucha
+  - Previene la distorsión en secciones con mucho bajo
+- Música Electrónica:
+  - Controla los picos de sintetizador de forma transparente
+  - Mantiene el impacto mientras previene la sobrecarga
+  - Mantiene los drops de bajo potentes pero controlados
+
+### Parámetros
+- **Input Gain** (-18dB a +18dB)
+  - Ajusta el nivel que entra al limitador
+  - Aumenta para impulsar más el limitador
+  - Disminuye si escuchas demasiada limitación
+  - Valor predeterminado 0dB
+
+- **Threshold** (-24dB a 0dB)
+  - Establece el nivel máximo de picos
+  - Valores más bajos proporcionan más margen de seguridad
+  - Valores más altos preservan más dinámica
+  - Comienza en -3dB para protección suave
+
+- **Release Time** (10ms a 500ms)
+  - Qué tan rápido se libera la limitación
+  - Tiempos más rápidos mantienen más dinámica
+  - Tiempos más lentos para sonido más suave
+  - Prueba con 100ms como punto de partida
+
+- **Lookahead** (0ms a 10ms)
+  - Permite al limitador anticipar los picos
+  - Valores más altos para limitación más transparente
+  - Valores más bajos para menos latencia
+  - 3ms es un buen equilibrio
+
+- **Margin** (-1.000dB a 0.000dB)
+  - Ajuste fino del umbral efectivo
+  - Proporciona margen de seguridad adicional
+  - Valor predeterminado -1.000dB funciona bien para la mayoría del material
+  - Ajusta para control preciso de picos
+
+- **Oversampling** (1x, 2x, 4x, 8x)
+  - Valores más altos para limitación más limpia
+  - Valores más bajos para menos uso de CPU
+  - 4x es un buen equilibrio entre calidad y rendimiento
+
+### Visualización
+- Medición de reducción de ganancia en tiempo real
+- Indicación clara del nivel de threshold
+- Ajuste interactivo de parámetros
+- Monitoreo de nivel de picos
+
+### Ajustes Recomendados
+
+#### Protección Transparente
+- Input Gain: 0dB
+- Threshold: -3dB
+- Release: 100ms
+- Lookahead: 3ms
+- Margin: -1.000dB
+- Oversampling: 4x
+
+#### Máxima Seguridad
+- Input Gain: -6dB
+- Threshold: -6dB
+- Release: 50ms
+- Lookahead: 5ms
+- Margin: -1.000dB
+- Oversampling: 8x
+
+#### Dinámica Natural
+- Input Gain: 0dB
+- Threshold: -1.5dB
+- Release: 200ms
+- Lookahead: 2ms
+- Margin: -0.500dB
+- Oversampling: 4x
+
+## Compressor
 - Música Pop/Rock:
   - Crea una experiencia de escucha más cómoda durante secciones intensas
   - Hace que las voces sean más claras y fáciles de entender

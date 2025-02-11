@@ -219,6 +219,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Analyzer | Level Meter | Displays audio level with peak hold | [Details](docs/plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | Real-time waveform visualization | [Details](docs/plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | Displays frequency spectrum changes over time | [Details](docs/plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | Visualizes stereo balance and sound movement | [Details](docs/plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | Real-time spectrum analysis | [Details](docs/plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | DC offset adjustment | [Details](docs/plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
@@ -237,6 +238,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Lo-Fi | Simple Jitter | Digital jitter simulation | [Details](docs/plugins/lofi.md#simple-jitter) |
 | Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | 3-band saturation effect for precise frequency-based warmth | [Details](docs/plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
 | Spatial | Multiband Balance | 5-band frequency-dependent stereo balance control | [Details](docs/plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Stereo width control effect | [Details](docs/plugins/spatial.md#stereo-blend) |
@@ -271,6 +273,10 @@ For optimal performance with nonlinear effects, it is recommended to use EffeTun
 Want to create your own audio plugins? Check out our [Plugin Development Guide](docs/plugin-development.md).
 
 ## Version History
+
+### Version 1.20 (February 11, 2025)
+- Added some new effects
+- Various minor improvements
 
 ### Version 1.10 (February 9, 2025)
 - Added audio file processing functionality

@@ -4,9 +4,96 @@ Une collection de plugins qui aident à équilibrer les parties fortes et douces
 
 ## Plugin List
 
+- [Brickwall Limiter](#brickwall-limiter) - Contrôle transparent des crêtes pour une écoute sûre et confortable
 - [Compressor](#compressor) - Équilibre automatiquement les niveaux de volume pour une écoute plus confortable
 - [Gate](#gate) - Réduit les bruits de fond indésirables en atténuant les signaux sous un seuil
 - [Multiband Compressor](#multiband-compressor) - Processeur de dynamique professionnel à 5 bandes avec mise en forme du son style radio FM
+
+## Brickwall Limiter
+
+Un limiteur de crêtes de haute qualité qui garantit que votre musique ne dépasse jamais un niveau spécifié, évitant l'écrêtage numérique tout en maintenant une qualité sonore naturelle. Parfait pour protéger votre système audio et assurer des niveaux d'écoute confortables sans compromettre la dynamique de la musique.
+
+### Guide d'Amélioration de l'Écoute
+- Musique Classique :
+  - Profitez en toute sécurité des crescendos orchestraux complets
+  - Maintenez la dynamique naturelle des pièces de piano
+  - Protégez contre les pics inattendus dans les enregistrements live
+- Musique Pop/Rock :
+  - Maintenez un volume constant pendant les passages intenses
+  - Profitez de la musique dynamique à n'importe quel niveau d'écoute
+  - Prévenez la distorsion dans les sections riches en basses
+- Musique Électronique :
+  - Contrôlez les pics de synthétiseur de manière transparente
+  - Maintenez l'impact tout en évitant la surcharge
+  - Gardez les drops de basse puissants mais contrôlés
+
+### Paramètres
+- **Input Gain** (-18dB à +18dB)
+  - Ajuste le niveau entrant dans le limiteur
+  - Augmentez pour pousser davantage le limiteur
+  - Diminuez si vous entendez trop de limitation
+  - Valeur par défaut 0dB
+
+- **Threshold** (-24dB à 0dB)
+  - Définit le niveau maximal des crêtes
+  - Valeurs plus basses offrent plus de marge de sécurité
+  - Valeurs plus hautes préservent plus de dynamique
+  - Commencez à -3dB pour une protection douce
+
+- **Release Time** (10ms à 500ms)
+  - Rapidité de relâchement de la limitation
+  - Temps plus rapides maintiennent plus de dynamique
+  - Temps plus lents pour un son plus doux
+  - Essayez 100ms comme point de départ
+
+- **Lookahead** (0ms à 10ms)
+  - Permet au limiteur d'anticiper les crêtes
+  - Valeurs plus hautes pour une limitation plus transparente
+  - Valeurs plus basses pour moins de latence
+  - 3ms est un bon compromis
+
+- **Margin** (-1.000dB à 0.000dB)
+  - Ajustement fin du seuil effectif
+  - Fournit une marge de sécurité supplémentaire
+  - Valeur par défaut -1.000dB convient à la plupart des matériaux
+  - Ajustez pour un contrôle précis des crêtes
+
+- **Oversampling** (1x, 2x, 4x, 8x)
+  - Valeurs plus hautes pour une limitation plus propre
+  - Valeurs plus basses pour moins d'utilisation CPU
+  - 4x est un bon compromis entre qualité et performance
+
+### Affichage Visuel
+- Mesure de réduction de gain en temps réel
+- Indication claire du niveau de seuil
+- Ajustement interactif des paramètres
+- Surveillance du niveau des crêtes
+
+### Réglages Recommandés
+
+#### Protection Transparente
+- Input Gain : 0dB
+- Threshold : -3dB
+- Release : 100ms
+- Lookahead : 3ms
+- Margin : -1.000dB
+- Oversampling : 4x
+
+#### Sécurité Maximale
+- Input Gain : -6dB
+- Threshold : -6dB
+- Release : 50ms
+- Lookahead : 5ms
+- Margin : -1.000dB
+- Oversampling : 8x
+
+#### Dynamique Naturelle
+- Input Gain : 0dB
+- Threshold : -1.5dB
+- Release : 200ms
+- Lookahead : 2ms
+- Margin : -0.500dB
+- Oversampling : 4x
 
 ## Compressor
 

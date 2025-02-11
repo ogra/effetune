@@ -8,6 +8,7 @@ A collection of plugins that let you see your music in fascinating ways. These v
 - [Oscilloscope](#oscilloscope) - Shows real-time waveform visualization
 - [Spectrogram](#spectrogram) - Creates beautiful visual patterns from your music
 - [Spectrum Analyzer](#spectrum-analyzer) - Shows the different frequencies in your music
+- [Stereo Meter](#stereo-meter) - Visualizes stereo balance and phase relationships
 
 ## Level Meter
 
@@ -131,5 +132,56 @@ Creates a real-time visual display of your music's frequencies, from deep bass t
    - Use the Level Meter to find comfortable listening volumes
    - Watch the Spectrum Analyzer dance with the music
    - Create a visual light show with the Spectrogram
+
+## Stereo Meter
+
+A fascinating visualization tool that lets you see how your music creates a sense of space through stereo sound. Watch how different instruments and sounds move between your speakers or headphones, adding an exciting visual dimension to your listening experience.
+
+### Visualization Guide
+- **Diamond Display** - The main window where the music comes to life:
+  - Center: When the sound is equally balanced
+  - Top/Bottom: When the music fills both speakers evenly
+  - Left/Right: When music comes more from one speaker
+  - Green dots dance with the current music
+  - White line traces the musical peaks
+- **Movement Bar** (Left side)
+  - Shows how your speakers work together
+  - Top (+1.0): Both speakers playing the same sound
+  - Middle (0.0): Speakers creating a nice stereo effect
+  - Bottom (-1.0): Speakers creating special effects
+- **Balance Bar** (Bottom)
+  - Shows if one speaker is louder than the other
+  - Center: Music equally loud in both speakers
+  - Left/Right: Music stronger in one speaker
+  - Numbers show how much louder in decibels (dB)
+
+### What You Can See
+- **Centered Sound**: Strong vertical movement in the middle
+- **Spacious Sound**: Activity spread wide across the display
+- **Special Effects**: Interesting patterns in the corners
+- **Speaker Balance**: Where the bottom bar points
+- **Sound Movement**: How high the left bar goes
+
+### Parameters
+- **Window Time** (10-1000 ms)
+  - Lower values: See quick musical changes
+  - Higher values: See overall sound patterns
+  - Default: 100 ms works well for most music
+
+### Enjoying Your Music
+1. **Watch Different Styles**
+   - Classical music often shows gentle, balanced patterns
+   - Electronic music might create wild, spreading designs
+   - Live recordings can show natural room movement
+
+2. **Discover Sound Qualities**
+   - See how different albums use stereo effects
+   - Notice how some songs feel wider than others
+   - Observe how instruments move between speakers
+
+3. **Enhance Your Experience**
+   - Try different headphones to see how they show stereo
+   - Compare old and new recordings of your favorite songs
+   - Watch how different listening positions change the display
 
 Remember: These tools are meant to enhance your enjoyment of music by adding a visual dimension to your listening experience. Have fun exploring and discovering new ways to see your favorite music!

@@ -4,9 +4,96 @@ Uma coleção de plugins que ajudam a equilibrar as partes altas e baixas da sua
 
 ## Lista de Plugins
 
+- [Brickwall Limiter](#brickwall-limiter) - Controle transparente de picos para uma audição segura e confortável
 - [Compressor](#compressor) - Equilibra automaticamente os níveis de volume para uma audição mais confortável
 - [Gate](#gate) - Reduz ruídos de fundo indesejados atenuando sinais abaixo de um limite
 - [Multiband Compressor](#multiband-compressor) - Processador de dinâmica profissional de 5 bandas com modelagem de som estilo rádio FM
+
+## Brickwall Limiter
+
+Um limitador de pico de alta qualidade que garante que sua música nunca exceda um nível específico, prevenindo clipagem digital enquanto mantém a qualidade natural do som. Perfeito para proteger seu sistema de áudio e garantir níveis de audição confortáveis sem comprometer a dinâmica da música.
+
+### Guia de Aprimoramento da Audição
+- Música Clássica:
+  - Aproveite com segurança os crescendos orquestrais completos
+  - Mantenha a dinâmica natural das peças de piano
+  - Proteja contra picos inesperados em gravações ao vivo
+- Música Pop/Rock:
+  - Mantenha volume consistente durante passagens intensas
+  - Aproveite música dinâmica em qualquer nível de audição
+  - Previna distorção em seções com muito grave
+- Música Eletrônica:
+  - Controle picos de sintetizador de forma transparente
+  - Mantenha o impacto enquanto previne sobrecarga
+  - Mantenha os drops de grave potentes mas controlados
+
+### Parâmetros
+- **Input Gain** (-18dB a +18dB)
+  - Ajusta o nível que entra no limitador
+  - Aumente para acionar mais o limitador
+  - Diminua se ouvir limitação em excesso
+  - Valor padrão 0dB
+
+- **Threshold** (-24dB a 0dB)
+  - Define o nível máximo de pico
+  - Valores mais baixos fornecem mais margem de segurança
+  - Valores mais altos preservam mais dinâmica
+  - Comece em -3dB para proteção suave
+
+- **Release Time** (10ms a 500ms)
+  - Rapidez com que a limitação é liberada
+  - Tempos mais rápidos mantêm mais dinâmica
+  - Tempos mais lentos para som mais suave
+  - Tente 100ms como ponto de partida
+
+- **Lookahead** (0ms a 10ms)
+  - Permite ao limitador antecipar picos
+  - Valores mais altos para limitação mais transparente
+  - Valores mais baixos para menos latência
+  - 3ms é um bom equilíbrio
+
+- **Margin** (-1.000dB a 0.000dB)
+  - Ajuste fino do limiar efetivo
+  - Fornece margem de segurança adicional
+  - Valor padrão -1.000dB funciona bem para a maioria dos materiais
+  - Ajuste para controle preciso de picos
+
+- **Oversampling** (1x, 2x, 4x, 8x)
+  - Valores mais altos para limitação mais limpa
+  - Valores mais baixos para menos uso de CPU
+  - 4x é um bom equilíbrio entre qualidade e desempenho
+
+### Display Visual
+- Medição de redução de ganho em tempo real
+- Indicação clara do nível de threshold
+- Ajuste interativo de parâmetros
+- Monitoramento de nível de pico
+
+### Configurações Recomendadas
+
+#### Proteção Transparente
+- Input Gain: 0dB
+- Threshold: -3dB
+- Release: 100ms
+- Lookahead: 3ms
+- Margin: -1.000dB
+- Oversampling: 4x
+
+#### Máxima Segurança
+- Input Gain: -6dB
+- Threshold: -6dB
+- Release: 50ms
+- Lookahead: 5ms
+- Margin: -1.000dB
+- Oversampling: 8x
+
+#### Dinâmica Natural
+- Input Gain: 0dB
+- Threshold: -1.5dB
+- Release: 200ms
+- Lookahead: 2ms
+- Margin: -0.500dB
+- Oversampling: 4x
 
 ## Compressor
 

@@ -217,6 +217,7 @@ A. 네, EffeTune은 스트리밍 서비스, 로컬 파일, 물리적 미디어�
 | Analyzer | Level Meter | 피크 홀드가 있는 오디오 레벨 표시 | [Details](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | 실시간 파형 시각화 | [Details](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | 시간에 따른 주파수 스펙트럼 변화 표시 | [Details](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | 스테레오 밸런스와 사운드 움직임 시각화 | [Details](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | 실시간 스펙트럼 분석 | [Details](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | DC 오프셋 조정 | [Details](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | 신호 극성 반전 | [Details](plugins/basics.md#polarity-inversion) |
@@ -269,6 +270,10 @@ Frieve EffeTune은 Google Chrome에서 테스트되고 검증되었습니다. �
 자신만의 오디오 플러그인을 만들고 싶으신가요? [Plugin Development Guide](../../plugin-development.md)를 확인하세요.
 
 ## Version History
+
+### Version 1.20 (February 11, 2025)
+- 새로운 오디오 이펙터를 몇 가지 추가함
+- 다양한 사소한 개선
 
 ### Version 1.10 (February 9, 2025)
 - 오디오 파일 처리 기능 추가

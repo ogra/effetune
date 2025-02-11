@@ -1,0 +1,110 @@
+/* Multiband Saturation plugin specific styles */
+.multiband-saturation-plugin-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Frequency slider area */
+.frequency-sliders {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+.frequency-slider {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.frequency-slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.frequency-slider input[type="range"] {
+    width: 100%;
+}
+
+.frequency-slider input[type="number"] {
+    width: 80px;
+    padding: 4px;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+/* Band settings area */
+.band-settings {
+    background: #2a2a2a;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.band-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 20px;
+}
+
+.band-tab {
+    padding: 8px 16px;
+    background: #333;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    color: #fff;
+}
+
+.band-tab.active {
+    background: #444;
+}
+
+.band-content {
+    display: none;
+}
+
+.band-content.active {
+    display: block;
+}
+
+/* Transfer graphs area */
+.transfer-graphs {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+.band-graph {
+    flex: 1;
+    position: relative;
+    background: #222;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.band-graph.active {
+    background: #333;
+}
+
+.band-graph canvas {
+    margin: 10px auto;
+    display: block;
+}
+
+.band-graph-label {
+    text-align: center;
+    margin-top: 5px;
+}

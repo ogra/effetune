@@ -1,0 +1,13 @@
+.stereo-meter .graph-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.stereo-meter canvas {
+  width: 480px;
+  height: 480px;
+  image-rendering: pixelated;
+}

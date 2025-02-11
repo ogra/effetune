@@ -217,6 +217,7 @@ A. はい、選択した入力デバイスを通じて再生される音声で�
 | Analyzer | Level Meter | ピークホールド付きオーディオレベル表示 | [詳細](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | リアルタイム波形表示 | [詳細](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | 周波数スペクトルの時間変化表示 | [詳細](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | ステレオバランスとサウンドの動きを視覚化 | [詳細](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | リアルタイムスペクトル分析 | [詳細](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | DCオフセット調整 | [詳細](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | 信号極性反転 | [詳細](plugins/basics.md#polarity-inversion) |
@@ -270,6 +271,10 @@ Frieve EffeTuneはGoogle Chromeでテストおよび動作確認されていま�
 
 ## バージョン履歴
 
+### バージョン1.20(2025年2月11日)
+- いくつかの新しいエフェクターを追加しました
+- その他の細かな改善
+
 ### バージョン1.10(2025年2月9日)
 - オーディオファイル処理機能の追加
 - その他の細かな改善
@@ -280,7 +285,7 @@ Frieve EffeTuneはGoogle Chromeでテストおよび動作確認されていま�
 
 ### バージョン0.50(2025年2月7日)
 - エフェクトチェーン設定の保存と読み込みを行うプリセット機能を追加
-- 使用説明書が以下の言語で利用可能になりました:中文 (简体)、Español、हिन्दी、العربية、Português、Русский、日本語、한国어、Français
+- 使用説明書が以下の言語で利用可能になりました:中文 (简体)、Español、हिन्दी、العربية、Português、Русский、日本語、한국어、Français
 - 様々な細かい改善
 
 ### バージョン0.30(2025年2月5日)

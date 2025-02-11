@@ -217,6 +217,7 @@ A. 是的,EffeTune 可以处理通过选定输入设备播放的任何音频,包
 | Analyzer | Level Meter | 显示带峰值保持的音频电平 | [详情](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | 实时波形可视化 | [详情](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | 显示频谱随时间变化 | [详情](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | 可视化立体声平衡和声音移动 | [详情](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | 实时频谱分析 | [详情](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | 直流偏移调整 | [详情](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | 信号极性反转 | [详情](plugins/basics.md#polarity-inversion) |
@@ -269,6 +270,10 @@ Frieve EffeTune 已在 Google Chrome 上测试和验证。应用需要支持以�
 想要创建自己的音频插件?查看我们的[插件开发指南](plugin-development.md)。
 
 ## 版本历史
+
+### Version 1.20(2025年2月11日)
+- 添加了一些新效果
+- 各种细节改进
 
 ### Version 1.10(2025年2月9日)
 - 添加音频文件处理功能

@@ -8,6 +8,7 @@ Une collection de plugins qui vous permettent de visualiser votre musique de man
 - [Oscilloscope](#oscilloscope) - Affiche la visualisation de la forme d'onde en temps réel
 - [Spectrogram](#spectrogram) - Crée de magnifiques motifs visuels à partir de votre musique
 - [Spectrum Analyzer](#spectrum-analyzer) - Affiche les différentes fréquences de votre musique
+- [Stereo Meter](#stereo-meter) - Visualise l'équilibre stéréo et le mouvement du son
 
 ## Level Meter
 
@@ -131,5 +132,56 @@ Crée un affichage visuel en temps réel des fréquences de votre musique, des b
    - Utilisez le Level Meter pour trouver des volumes d'écoute confortables
    - Regardez le Spectrum Analyzer danser avec la musique
    - Créez un spectacle de lumière visuel avec le Spectrogram
+
+## Stereo Meter
+
+Un outil de visualisation fascinant qui vous permet de voir comment votre musique crée une sensation d'espace à travers le son stéréo. Observez comment les différents instruments et sons se déplacent entre vos enceintes ou votre casque, ajoutant une dimension visuelle captivante à votre expérience d'écoute.
+
+### Guide de Visualisation
+- **Affichage en Diamant** - La fenêtre principale où la musique prend vie :
+  - Centre : Quand le son est parfaitement équilibré
+  - Haut/Bas : Quand la musique remplit uniformément les deux enceintes
+  - Gauche/Droite : Quand le son provient davantage d'une enceinte
+  - Les points verts dansent avec la musique actuelle
+  - La ligne blanche trace les pics musicaux
+- **Barre de Mouvement** (Côté gauche)
+  - Montre comment vos enceintes travaillent ensemble
+  - Haut (+1.0) : Les deux enceintes jouent le même son
+  - Milieu (0.0) : Les enceintes créent un bel effet stéréo
+  - Bas (-1.0) : Les enceintes créent des effets spéciaux
+- **Barre de Balance** (Bas)
+  - Indique si une enceinte est plus forte que l'autre
+  - Centre : Musique également forte dans les deux enceintes
+  - Gauche/Droite : Musique plus forte dans une enceinte
+  - Les chiffres montrent la différence en décibels (dB)
+
+### Ce Que Vous Pouvez Voir
+- **Son Centré** : Mouvement vertical fort au milieu
+- **Son Spacieux** : Activité répartie sur tout l'affichage
+- **Effets Spéciaux** : Motifs intéressants dans les coins
+- **Balance des Enceintes** : Où pointe la barre inférieure
+- **Mouvement du Son** : Hauteur de la barre gauche
+
+### Parameters
+- **Window Time** (10-1000 ms)
+  - Valeurs basses : Voir les changements musicaux rapides
+  - Valeurs hautes : Voir les motifs sonores globaux
+  - Par défaut : 100 ms convient bien à la plupart des musiques
+
+### Profiter de Votre Musique
+1. **Observez Différents Styles**
+   - La musique classique montre souvent des motifs doux et équilibrés
+   - La musique électronique peut créer des designs sauvages et expansifs
+   - Les enregistrements live peuvent montrer un mouvement naturel de la salle
+
+2. **Découvrez les Qualités Sonores**
+   - Voyez comment différents albums utilisent les effets stéréo
+   - Remarquez comment certaines chansons semblent plus larges que d'autres
+   - Observez comment les instruments se déplacent entre les enceintes
+
+3. **Améliorez Votre Expérience**
+   - Essayez différents casques pour voir comment ils restituent la stéréo
+   - Comparez les anciennes et nouvelles versions de vos chansons préférées
+   - Observez comment différentes positions d'écoute changent l'affichage
 
 N'oubliez pas : Ces outils sont conçus pour améliorer votre plaisir d'écoute en ajoutant une dimension visuelle à votre expérience musicale. Amusez-vous à explorer et à découvrir de nouvelles façons de voir votre musique préférée !
