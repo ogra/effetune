@@ -4,9 +4,97 @@ A collection of plugins that help balance the loud and quiet parts of your music
 
 ## Plugin List
 
+- [Brickwall Limiter](#brickwall-limiter) - Transparent peak control for safe and comfortable listening
 - [Compressor](#compressor) - Automatically balances volume levels for more comfortable listening
 - [Gate](#gate) - Reduces unwanted background noise by attenuating signals below a threshold
 - [Multiband Compressor](#multiband-compressor) - Professional 5-band dynamics processor with FM radio-style sound shaping
+
+## Brickwall Limiter
+
+A high-quality peak limiter that ensures your music never exceeds a specified level, preventing digital clipping while maintaining natural sound quality. Perfect for protecting your audio system and ensuring comfortable listening levels without compromising the music's dynamics.
+
+### Listening Enhancement Guide
+- Classical Music:
+  - Safely enjoy full orchestral crescendos
+  - Maintain the natural dynamics of piano pieces
+  - Protect against unexpected peaks in live recordings
+- Pop/Rock Music:
+  - Keep consistent volume during intense passages
+  - Enjoy dynamic music at any listening level
+  - Prevent distortion in bass-heavy sections
+- Electronic Music:
+  - Control synthesizer peaks transparently
+  - Maintain impact while preventing overload
+  - Keep bass drops powerful but controlled
+
+### Parameters
+
+- **Input Gain** (-18dB to +18dB)
+  - Adjusts the level going into the limiter
+  - Increase to drive the limiter harder
+  - Decrease if you hear too much limiting
+  - Default is 0dB
+
+- **Threshold** (-24dB to 0dB)
+  - Sets the maximum peak level
+  - Lower values provide more safety margin
+  - Higher values preserve more dynamics
+  - Start at -3dB for gentle protection
+
+- **Release Time** (10ms to 500ms)
+  - How quickly limiting is released
+  - Faster times maintain more dynamics
+  - Slower times for smoother sound
+  - Try 100ms as a starting point
+
+- **Lookahead** (0ms to 10ms)
+  - Allows the limiter to anticipate peaks
+  - Higher values for more transparent limiting
+  - Lower values for less latency
+  - 3ms is a good balance
+
+- **Margin** (-1.000dB to 0.000dB)
+  - Fine-tune the effective threshold
+  - Provides additional safety headroom
+  - Default -1.000dB works well for most material
+  - Adjust for precise peak control
+
+- **Oversampling** (1x, 2x, 4x, 8x)
+  - Higher values for cleaner limiting
+  - Lower values for less CPU usage
+  - 4x is a good balance of quality and performance
+
+### Visual Display
+- Real-time gain reduction metering
+- Clear threshold level indication
+- Interactive parameter adjustment
+- Peak level monitoring
+
+### Recommended Settings
+
+#### Transparent Protection
+- Input Gain: 0dB
+- Threshold: -3dB
+- Release: 100ms
+- Lookahead: 3ms
+- Margin: -1.000dB
+- Oversampling: 4x
+
+#### Maximum Safety
+- Input Gain: -6dB
+- Threshold: -6dB
+- Release: 50ms
+- Lookahead: 5ms
+- Margin: -1.000dB
+- Oversampling: 8x
+
+#### Natural Dynamics
+- Input Gain: 0dB
+- Threshold: -1.5dB
+- Release: 200ms
+- Lookahead: 2ms
+- Margin: -0.500dB
+- Oversampling: 4x
 
 ## Compressor
 

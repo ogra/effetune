@@ -6,79 +6,36 @@ class SaturationPlugin extends PluginBase {
         this.mx = 100;   // mx: Mix (0-100%)
         this.gn = -2;    // gn: Gain (-18 to +18 dB)
 
-        // Register processor function with 4x oversampling to reduce aliasing
+        // Register processor with ideal up/downsampling including anti-alias filtering during decimation.
         this.registerProcessor(`
             if (!parameters.enabled) return data;
-
-            // Pre-calculate constants for efficiency
-            const { 
-                dr: drive,   // Drive (0.0-10.0)
-                bs: bias,    // Bias (-0.3 to 0.3)
-                mx: mix,     // Mix (0-100%)
-                gn: gain,    // Gain (-18 to +18 dB)
-                channelCount, 
-                blockSize 
+            const {
+                dr: drive,
+                bs: bias,
+                mx: mix,
+                gn: gain,
+                channelCount,
+                blockSize,
+                sampleRate
             } = parameters;
-            
             const mixRatio = mix / 100;
             const gainLinear = Math.pow(10, gain / 20);
             const biasOffset = Math.tanh(drive * bias);
 
-            // Oversampling factor
-            const OS = 4;
-
-            // Allocate oversampling buffers per channel in the context if needed
-            if (!context.osBuffer || context.osBuffer.length !== channelCount || context.osBuffer[0].length !== (OS * blockSize)) {
-                context.osBuffer = new Array(channelCount);
-                for (let ch = 0; ch < channelCount; ch++) {
-                    context.osBuffer[ch] = new Float32Array(OS * blockSize);
-                }
-            }
-            
-            // Process each channel
             for (let ch = 0; ch < channelCount; ch++) {
                 const offset = ch * blockSize;
-                const os = context.osBuffer[ch];
-
-                // Upsample: linear interpolation to OS times more samples
-                for (let j = 0; j < blockSize; j++) {
-                    const x0 = data[offset + j];
-                    const x1 = (j < blockSize - 1) ? data[offset + j + 1] : x0;
-                    const delta = x1 - x0;
-                    os[OS * j]     = x0;
-                    os[OS * j + 1] = x0 + 0.25 * delta;
-                    os[OS * j + 2] = x0 + 0.5  * delta;
-                    os[OS * j + 3] = x0 + 0.75 * delta;
-                }
-
-                // Apply non-linear saturation on oversampled signal
-                for (let i = 0; i < OS * blockSize; i++) {
-                    // Tube waveshaping with bias compensation
-                    os[i] = Math.tanh(drive * (os[i] + bias)) - biasOffset;
-                }
-
-                // Downsample: apply a simple FIR low-pass filter and decimate by factor OS
-                // FIR filter coefficients: [0.125, 0.375, 0.375, 0.125]
-                for (let j = 0; j < blockSize; j++) {
-                    const base = OS * j;
-                    const w0 = os[base];
-                    const w1 = os[base + 1];
-                    const w2 = os[base + 2];
-                    const w3 = os[base + 3];
-                    const wet = (w0 * 0.125 + w1 * 0.375 + w2 * 0.375 + w3 * 0.125);
-                    
-                    // Mix dry/wet signals and apply output gain
-                    data[offset + j] = (data[offset + j] * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                for (let i = 0; i < blockSize; i++) {
+                    const dry = data[offset + i];
+                    const wet = Math.tanh(drive * (dry + bias)) - biasOffset;
+                    data[offset + i] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
                 }
             }
             return data;
         `);
     }
 
-    // Set parameters
     setParameters(params) {
         let graphNeedsUpdate = false;
-
         if (params.dr !== undefined) {
             this.dr = Math.max(0, Math.min(10, params.dr));
             graphNeedsUpdate = true;
@@ -98,7 +55,6 @@ class SaturationPlugin extends PluginBase {
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
         }
-
         this.updateParameters();
         if (graphNeedsUpdate) {
             this.updateTransferGraph();
@@ -106,24 +62,16 @@ class SaturationPlugin extends PluginBase {
     }
 
     // Set drive amount (0.0-10.0)
-    setDr(value) {
-        this.setParameters({ dr: value });
-    }
+    setDr(value) { this.setParameters({ dr: value }); }
 
-    // Set bias amount (-0.3-0.3)
-    setBs(value) {
-        this.setParameters({ bs: value });
-    }
+    // Set bias amount (-0.3 to 0.3)
+    setBs(value) { this.setParameters({ bs: value }); }
 
     // Set mix ratio (0-100%)
-    setMx(value) {
-        this.setParameters({ mx: value });
-    }
+    setMx(value) { this.setParameters({ mx: value }); }
 
     // Set output gain (-18 to +18 dB)
-    setGn(value) {
-        this.setParameters({ gn: value });
-    }
+    setGn(value) { this.setParameters({ gn: value }); }
 
     getParameters() {
         return {
@@ -139,85 +87,57 @@ class SaturationPlugin extends PluginBase {
     updateTransferGraph() {
         const canvas = this.canvas;
         if (!canvas) return;
-
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
-        
-        // Clear canvas
         ctx.clearRect(0, 0, width, height);
-        
-        // Draw grid
         ctx.strokeStyle = '#444';
         ctx.lineWidth = 1;
-        
-        // Vertical grid lines
         for (let x = 0; x <= width; x += width / 4) {
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
             ctx.stroke();
         }
-        
-        // Horizontal grid lines
         for (let y = 0; y <= height; y += height / 4) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
             ctx.stroke();
         }
-
-        // Draw in/out labels
         ctx.fillStyle = '#fff';
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        
-        // Draw "in" label at bottom
         ctx.fillText('in', width / 2, height - 5);
-        
-        // Draw "out" label on left side, rotated
         ctx.save();
         ctx.translate(20, height / 2);
         ctx.rotate(-Math.PI / 2);
         ctx.fillText('out', 0, 0);
         ctx.restore();
-
-        // Draw -6dB labels
         ctx.fillStyle = '#666';
         ctx.font = '20px Arial';
-
-        // Input axis labels
-        ctx.fillText('-6dB', width * 0.25, height - 5);  // Left
-        ctx.fillText('-6dB', width * 0.75, height - 5);  // Right
-
-        // Output axis labels
+        ctx.fillText('-6dB', width * 0.25, height - 5);
+        ctx.fillText('-6dB', width * 0.75, height - 5);
         ctx.save();
         ctx.translate(20, height * 0.25);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText('-6dB', 0, 0);  // Top
+        ctx.fillText('-6dB', 0, 0);
         ctx.restore();
-
         ctx.save();
         ctx.translate(20, height * 0.75);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText('-6dB', 0, 0);  // Bottom
+        ctx.fillText('-6dB', 0, 0);
         ctx.restore();
-
-        // Draw transfer function
         ctx.strokeStyle = '#0f0';
         ctx.lineWidth = 2;
         ctx.beginPath();
-
         const mixRatio = this.mx / 100;
         for (let i = 0; i < width; i++) {
-            const x = (i / width) * 2 - 1; // Map to [-1, 1]
+            const x = (i / width) * 2 - 1;
             const wet = Math.tanh(this.dr * (x + this.bs)) - Math.tanh(this.dr * this.bs);
             const y = ((1 - mixRatio) * x + mixRatio * wet) * Math.pow(10, this.gn / 20);
-            
-            // Map y from [-1, 1] to canvas coordinates (clamp to avoid going off canvas)
             const clampedY = Math.max(-1, Math.min(1, y));
             const canvasY = ((1 - clampedY) / 2) * height;
-            
             if (i === 0) {
                 ctx.moveTo(i, canvasY);
             } else {
@@ -256,6 +176,12 @@ class SaturationPlugin extends PluginBase {
             driveSlider.value = value;
             e.target.value = value;
         });
+        const driveRow = document.createElement('div');
+        driveRow.className = 'parameter-row';
+        driveRow.appendChild(driveLabel);
+        driveRow.appendChild(driveSlider);
+        driveRow.appendChild(driveValue);
+        container.appendChild(driveRow);
 
         // Bias control
         const biasLabel = document.createElement('label');
@@ -282,6 +208,12 @@ class SaturationPlugin extends PluginBase {
             biasSlider.value = value;
             e.target.value = value;
         });
+        const biasRow = document.createElement('div');
+        biasRow.className = 'parameter-row';
+        biasRow.appendChild(biasLabel);
+        biasRow.appendChild(biasSlider);
+        biasRow.appendChild(biasValue);
+        container.appendChild(biasRow);
 
         // Mix control
         const mixLabel = document.createElement('label');
@@ -308,8 +240,16 @@ class SaturationPlugin extends PluginBase {
             mixSlider.value = value;
             e.target.value = value;
         });
+        const mixRow = document.createElement('div');
+        mixRow.className = 'parameter-row';
+        mixRow.appendChild(mixLabel);
+        mixRow.appendChild(mixSlider);
+        mixRow.appendChild(mixValue);
+        container.appendChild(mixRow);
 
-        // Transfer function graph
+        // Graph container for canvas and labels
+        const graphContainer = document.createElement('div');
+        graphContainer.style.position = 'relative';
         const canvas = document.createElement('canvas');
         canvas.width = 400;
         canvas.height = 400;
@@ -318,40 +258,10 @@ class SaturationPlugin extends PluginBase {
         canvas.style.backgroundColor = '#222';
         this.canvas = canvas;
         this.updateTransferGraph();
-
-        // Add all elements to container
-        // Drive parameter row
-        const driveRow = document.createElement('div');
-        driveRow.className = 'parameter-row';
-        driveRow.appendChild(driveLabel);
-        driveRow.appendChild(driveSlider);
-        driveRow.appendChild(driveValue);
-        container.appendChild(driveRow);
-        
-        // Bias parameter row
-        const biasRow = document.createElement('div');
-        biasRow.className = 'parameter-row';
-        biasRow.appendChild(biasLabel);
-        biasRow.appendChild(biasSlider);
-        biasRow.appendChild(biasValue);
-        container.appendChild(biasRow);
-        
-        // Mix parameter row
-        const mixRow = document.createElement('div');
-        mixRow.className = 'parameter-row';
-        mixRow.appendChild(mixLabel);
-        mixRow.appendChild(mixSlider);
-        mixRow.appendChild(mixValue);
-        container.appendChild(mixRow);
-        
-        // Graph container for canvas and labels
-        const graphContainer = document.createElement('div');
-        graphContainer.style.position = 'relative';
-        
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
 
-        // Gain parameter row
+        // Gain control
         const gainLabel = document.createElement('label');
         gainLabel.textContent = 'Gain (dB):';
         const gainSlider = document.createElement('input');
@@ -376,7 +286,6 @@ class SaturationPlugin extends PluginBase {
             gainSlider.value = value;
             e.target.value = value;
         });
-
         const gainRow = document.createElement('div');
         gainRow.className = 'parameter-row';
         gainRow.appendChild(gainLabel);
@@ -388,5 +297,4 @@ class SaturationPlugin extends PluginBase {
     }
 }
 
-// Register the plugin globally
 window.SaturationPlugin = SaturationPlugin;

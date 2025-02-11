@@ -218,6 +218,7 @@ R. Sí, EffeTune puede procesar cualquier audio que se reproduzca a través de t
 | Analyzer | Oscilloscope | Visualización de forma de onda en tiempo real | [Detalles](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | Muestra cambios del espectro de frecuencia en el tiempo | [Detalles](plugins/analyzer.md#spectrogram) |
 | Analyzer | Spectrum Analyzer | Análisis de espectro en tiempo real | [Detalles](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Stereo Meter | Visualiza el balance estéreo y el movimiento del sonido | [Detalles](plugins/analyzer.md#stereo-meter) |
 | Basics | DC Offset | Ajuste de offset DC | [Detalles](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | Inversión de polaridad de señal | [Detalles](plugins/basics.md#polarity-inversion) |
 | Basics | Stereo Balance | Control de balance de canales estéreo | [Detalles](plugins/basics.md#stereo-balance) |
@@ -269,6 +270,10 @@ Para un rendimiento óptimo con efectos no lineales, se recomienda usar EffeTune
 ¿Quieres crear tus propios plugins de audio? Consulta nuestra [Guía de Desarrollo de Plugins](plugin-development.md).
 
 ## Historial de Versiones
+
+### Versión 1.20 (11 de febrero de 2025)
+- Se añadieron algunos nuevos procesadores de efectos de audio
+- Varias mejoras menores
 
 ### Versión 1.10 (9 de febrero de 2025)
 - Agregada funcionalidad de procesamiento de archivos de audio

@@ -196,6 +196,7 @@
 | Analyzer | Level Meter | يعرض مستوى الصوت مع تثبيت القمة | [تفاصيل](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | تصور الموجة في الوقت الفعلي | [تفاصيل](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | يعرض تغيرات طيف التردد مع الوقت | [تفاصيل](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | تصور توازن الستيريو وحركة الصوت | [تفاصيل](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | تحليل الطيف في الوقت الفعلي | [تفاصيل](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | ضبط إزاحة التيار المستمر | [تفاصيل](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | عكس قطبية الإشارة | [تفاصيل](plugins/basics.md#polarity-inversion) |
@@ -248,6 +249,10 @@
 هل تريد إنشاء إضافات الصوت الخاصة بك؟ تحقق من [دليل تطوير الإضافات](../../plugin-development.md).
 
 ## تاريخ الإصدارات
+
+### الإصدار 1.20 (11 فبراير 2025)
+- تم إضافة بعض معالجات التأثيرات الصوتية الجديدة
+- تحسينات طفيفة متعددة
 
 ### الإصدار 1.10 (9 فبراير 2025)
 - إضافة وظيفة معالجة ملفات الصوت

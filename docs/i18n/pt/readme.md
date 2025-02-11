@@ -196,6 +196,7 @@ R. Sim, o EffeTune pode processar qualquer áudio reproduzido através do seu di
 | Analyzer | Level Meter | Exibe nível de áudio com retenção de pico | [Detalhes](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | Visualização de forma de onda em tempo real | [Detalhes](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | Exibe mudanças do espectro de frequência ao longo do tempo | [Detalhes](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | Visualização de balanço estéreo e movimento do som | [Detalhes](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | Análise de espectro em tempo real | [Detalhes](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | Ajuste de offset DC | [Detalhes](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | Inversão de polaridade do sinal | [Detalhes](plugins/basics.md#polarity-inversion) |

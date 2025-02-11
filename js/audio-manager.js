@@ -10,6 +10,7 @@ export class AudioManager {
         this.offlineWorkletNode = null;
         this.pipelineManager = pipelineManager;
         this.isOfflineProcessing = false;
+        this.isCancelled = false;
     }
 
     async initAudio() {
@@ -17,6 +18,7 @@ export class AudioManager {
             // Create audio context if not exists
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+                window.audioContext = this.audioContext;  // Make audio context globally accessible
             }
 
             // Load audio worklet with absolute path
@@ -97,6 +99,7 @@ export class AudioManager {
         if (this.audioContext) {
             this.audioContext.close();
             this.audioContext = null;
+            window.audioContext = null;  // Clear global reference
         }
         if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop());
@@ -120,6 +123,7 @@ export class AudioManager {
     // File processing methods
     async processAudioFile(file, progressCallback = null) {
         this.isOfflineProcessing = true;
+        this.isCancelled = false;
         try {
             // Read file as ArrayBuffer
             const arrayBuffer = await file.arrayBuffer();
@@ -276,6 +280,11 @@ export class AudioManager {
                         }));
                     }
                     lastProgressUpdate = currentTime;
+                }
+
+                // Check for cancellation
+                if (this.isCancelled) {
+                    return null;
                 }
 
                 // Allow UI updates between blocks

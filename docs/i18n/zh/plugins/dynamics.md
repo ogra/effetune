@@ -4,9 +4,96 @@
 
 ## 插件列表
 
+- [Brickwall Limiter](#brickwall-limiter) - 透明的峰值控制,实现安全舒适的聆听体验
 - [Compressor](#compressor) - 自动平衡音量级别,实现更舒适的聆听体验
 - [Gate](#gate) - 通过衰减低于阈值的信号来减少不需要的背景噪音
 - [Multiband Compressor](#multiband-compressor) - 具有 FM 广播风格声音塑造的专业 5 段动态处理器
+
+## Brickwall Limiter
+
+一个高品质的峰值限制器,确保您的音乐永远不会超过指定的电平,在保持自然音质的同时防止数字削波。完美地保护您的音频系统并确保舒适的聆听电平,同时不损害音乐的动态范围。
+
+### 聆听增强指南
+- 古典音乐:
+  - 安全地欣赏完整的管弦乐渐强
+  - 保持钢琴作品的自然动态
+  - 防止现场录音中的意外峰值
+- 流行/摇滚音乐:
+  - 在强烈段落中保持一致的音量
+  - 在任何聆听电平都能欣赏动态音乐
+  - 防止低音密集段落中的失真
+- 电子音乐:
+  - 透明地控制合成器峰值
+  - 在防止过载的同时保持冲击力
+  - 保持低音下潜强劲但受控
+
+### 参数
+- **Input Gain** (-18dB 到 +18dB)
+  - 调节进入限制器的电平
+  - 增加以驱动限制器更强
+  - 如果听到太多限制则减少
+  - 默认为 0dB
+
+- **Threshold** (-24dB 到 0dB)
+  - 设置最大峰值电平
+  - 较低值提供更多安全余量
+  - 较高值保留更多动态
+  - 从 -3dB 开始获得温和保护
+
+- **Release Time** (10ms 到 500ms)
+  - 限制释放的速度
+  - 较快时间保持更多动态
+  - 较慢时间获得更平滑的声音
+  - 尝试以 100ms 为起点
+
+- **Lookahead** (0ms 到 10ms)
+  - 允许限制器预测峰值
+  - 较高值获得更透明的限制
+  - 较低值获得更少延迟
+  - 3ms 是个好的平衡点
+
+- **Margin** (-1.000dB 到 0.000dB)
+  - 微调有效阈值
+  - 提供额外的安全余量
+  - 默认值 -1.000dB 适用于大多数素材
+  - 调整以获得精确的峰值控制
+
+- **Oversampling** (1x, 2x, 4x, 8x)
+  - 较高值获得更清晰的限制
+  - 较低值减少 CPU 使用
+  - 4x 是质量和性能的良好平衡
+
+### 视觉显示
+- 实时增益减少计量
+- 清晰的阈值电平指示
+- 交互式参数调整
+- 峰值电平监测
+
+### 推荐设置
+
+#### 透明保护
+- Input Gain: 0dB
+- Threshold: -3dB
+- Release: 100ms
+- Lookahead: 3ms
+- Margin: -1.000dB
+- Oversampling: 4x
+
+#### 最大安全
+- Input Gain: -6dB
+- Threshold: -6dB
+- Release: 50ms
+- Lookahead: 5ms
+- Margin: -1.000dB
+- Oversampling: 8x
+
+#### 自然动态
+- Input Gain: 0dB
+- Threshold: -1.5dB
+- Release: 200ms
+- Lookahead: 2ms
+- Margin: -0.500dB
+- Oversampling: 4x
 
 ## Compressor
 

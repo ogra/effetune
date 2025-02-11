@@ -5,6 +5,7 @@ A collection of plugins that add warmth and character to your music. These effec
 ## Plugin List
 
 - [Hard Clipping](#hard-clipping) - Adds intensity and edge to the sound
+- [Multiband Saturation](#multiband-saturation) - Shape and enhance different frequency ranges independently
 - [Saturation](#saturation) - Adds warmth and richness like vintage equipment
 
 ## Hard Clipping
@@ -51,6 +52,83 @@ An effect that can add anything from subtle warmth to intense character to your 
   2. Try different Modes
   3. Combine with other effects for unique sounds
 
+## Multiband Saturation
+
+A versatile effect that lets you add warmth and character to specific frequency ranges of your music. By splitting the sound into low, mid, and high bands, you can shape each range independently for precise sound enhancement.
+
+### Listening Enhancement Guide
+- Bass Enhancement:
+  - Add warmth and punch to low frequencies
+  - Perfect for enhancing bass guitars and kick drums
+  - Create fuller, richer low end
+- Mid-Range Shaping:
+  - Bring out the body of vocals and instruments
+  - Add presence to guitars and keyboards
+  - Create clearer, more defined sound
+- High-End Sweetening:
+  - Add sparkle to cymbals and hi-hats
+  - Enhance the air and brilliance
+  - Create crisp, detailed highs
+
+### Parameters
+- **Crossover Frequencies**
+  - Freq 1 (20Hz-2kHz): Sets where low band ends and mid band begins
+  - Freq 2 (200Hz-20kHz): Sets where mid band ends and high band begins
+- **Band Controls** (for each Low, Mid, and High band):
+  - **Drive** (0.0-10.0): Controls saturation intensity
+    - Light (0.0-3.0): Subtle enhancement
+    - Medium (3.0-6.0): Notable warmth
+    - High (6.0-10.0): Strong character
+  - **Bias** (-0.3 to 0.3): Adjusts the saturation curve's symmetry
+    - Negative: Emphasizes negative peaks
+    - Zero: Symmetrical saturation
+    - Positive: Emphasizes positive peaks
+  - **Mix** (0-100%): Blends effect with original
+    - Low (0-30%): Subtle enhancement
+    - Medium (30-70%): Balanced effect
+    - High (70-100%): Strong character
+  - **Gain** (-18dB to +18dB): Adjusts band volume
+    - Use to balance the bands with each other
+    - Compensate for any volume changes
+
+### Visual Display
+- Interactive band selection tabs
+- Real-time transfer curve graph for each band
+- Clear visual feedback as you adjust settings
+
+### Music Enhancement Tips
+- For Full Mix Enhancement:
+  1. Start with gentle Drive (2.0-3.0) on all bands
+  2. Keep Bias at 0.0 for natural saturation
+  3. Set Mix around 40-50% for natural blend
+  4. Fine-tune Gain for each band
+
+- For Bass Enhancement:
+  1. Focus on Low band
+  2. Use moderate Drive (3.0-5.0)
+  3. Keep Bias neutral for consistent response
+  4. Keep Mix around 50-70%
+
+- For Vocal Enhancement:
+  1. Focus on Mid band
+  2. Use light Drive (1.0-3.0)
+  3. Keep Bias at 0.0 for natural sound
+  4. Adjust Mix to taste (30-50%)
+
+- For Adding Brightness:
+  1. Focus on High band
+  2. Use gentle Drive (1.0-2.0)
+  3. Keep Bias neutral for clean saturation
+  4. Keep Mix subtle (20-40%)
+
+### Quick Start Guide
+1. Set crossover frequencies to split your sound
+2. Start with low Drive values on all bands
+3. Keep Bias at 0.0 initially
+4. Use Mix to blend the effect naturally
+5. Fine-tune with Gain controls
+6. Trust your ears and adjust to taste!
+
 ## Saturation
 
 An effect that simulates the warm, pleasant sound of vintage tube equipment. It can add richness and character to your music, making it sound more "analog" and less "digital."
@@ -74,10 +152,10 @@ An effect that simulates the warm, pleasant sound of vintage tube equipment. It 
   - Light (0.0-3.0): Subtle analog warmth
   - Medium (3.0-6.0): Rich, vintage character
   - Strong (6.0-10.0): Bold, dramatic effect
-- **Bias** - Shapes the character of the warmth (-0.3 to 0.3)
-  - 0.0: Natural, balanced warmth
-  - Positive: Richer, fuller sound
-  - Negative: Brighter, more present sound
+- **Bias** - Adjusts the saturation curve's symmetry (-0.3 to 0.3)
+  - 0.0: Symmetrical saturation
+  - Positive: Emphasizes positive peaks
+  - Negative: Emphasizes negative peaks
 - **Mix** - Balances the effect with the original sound (0% to 100%)
   - 0-30%: Subtle enhancement
   - 30-70%: Balanced effect
@@ -95,20 +173,20 @@ An effect that simulates the warm, pleasant sound of vintage tube equipment. It 
 ### Music Enhancement Tips
 - Classical & Jazz:
   - Light Drive (1.0-2.0) for natural warmth
-  - Neutral Bias (0.0)
+  - Keep Bias at 0.0 for clean saturation
   - Low Mix (20-40%) for subtlety
 - Rock & Pop:
   - Medium Drive (3.0-5.0) for rich character
-  - Slight positive Bias (0.1)
+  - Keep Bias neutral for consistent response
   - Medium Mix (40-60%) for balance
 - Electronic:
   - Higher Drive (4.0-7.0) for bold effect
-  - Experiment with Bias
+  - Experiment with different Bias values
   - Higher Mix (60-80%) for character
 
 ### Quick Start Guide
 1. Start with low Drive for gentle warmth
-2. Adjust Mix to balance the effect
-3. Use Bias to shape the character
+2. Keep Bias at 0.0 initially
+3. Adjust Mix to balance the effect
 4. Adjust Gain if needed for proper volume
 5. Experiment and trust your ears!

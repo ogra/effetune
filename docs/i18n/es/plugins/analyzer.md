@@ -8,6 +8,7 @@ Una colección de plugins que te permiten ver tu música de formas fascinantes. 
 - [Oscilloscope](#oscilloscope) - Muestra la visualización de forma de onda en tiempo real
 - [Spectrogram](#spectrogram) - Crea hermosos patrones visuales a partir de tu música
 - [Spectrum Analyzer](#spectrum-analyzer) - Muestra las diferentes frecuencias en tu música
+- [Stereo Meter](#stereo-meter) - Visualiza el balance estéreo y el movimiento del sonido
 
 ## Level Meter
 
@@ -131,5 +132,56 @@ Crea una visualización en tiempo real de las frecuencias de tu música, desde g
    - Usa el Level Meter para encontrar volúmenes de escucha cómodos
    - Mira el Spectrum Analyzer bailar con la música
    - Crea un espectáculo de luces visual con el Spectrogram
+
+## Stereo Meter
+
+Una fascinante herramienta de visualización que te permite ver cómo tu música crea una sensación de espacio a través del sonido estéreo. Observa cómo diferentes instrumentos y sonidos se mueven entre tus altavoces o auriculares, añadiendo una emocionante dimensión visual a tu experiencia de escucha.
+
+### Guía de Visualización
+- **Pantalla de Diamante** - La ventana principal donde la música cobra vida:
+  - Centro: Cuando el sonido está perfectamente equilibrado
+  - Arriba/Abajo: Cuando la música llena ambos altavoces uniformemente
+  - Izquierda/Derecha: Cuando el sonido viene más de un altavoz
+  - Los puntos verdes bailan con la música actual
+  - La línea blanca traza los picos musicales
+- **Barra de Movimiento** (Lado izquierdo)
+  - Muestra cómo trabajan juntos tus altavoces
+  - Arriba (+1.0): Ambos altavoces reproduciendo el mismo sonido
+  - Medio (0.0): Altavoces creando un buen efecto estéreo
+  - Abajo (-1.0): Altavoces creando efectos especiales
+- **Barra de Balance** (Abajo)
+  - Muestra si un altavoz suena más fuerte que el otro
+  - Centro: Música igualmente fuerte en ambos altavoces
+  - Izquierda/Derecha: Música más fuerte en un altavoz
+  - Los números muestran cuánto más fuerte en decibelios (dB)
+
+### Lo Que Puedes Ver
+- **Sonido Centrado**: Movimiento vertical fuerte en el medio
+- **Sonido Espacioso**: Actividad extendida por toda la pantalla
+- **Efectos Especiales**: Patrones interesantes en las esquinas
+- **Balance de Altavoces**: Hacia dónde apunta la barra inferior
+- **Movimiento del Sonido**: Qué tan alta sube la barra izquierda
+
+### Parámetros
+- **Window Time** (10-1000 ms)
+  - Valores más bajos: Ver cambios musicales rápidos
+  - Valores más altos: Ver patrones de sonido generales
+  - Por defecto: 100 ms funciona bien para la mayoría de la música
+
+### Disfrutando Tu Música
+1. **Observa Diferentes Estilos**
+   - La música clásica suele mostrar patrones suaves y equilibrados
+   - La música electrónica puede crear diseños salvajes y expansivos
+   - Las grabaciones en vivo pueden mostrar movimiento natural de la sala
+
+2. **Descubre Cualidades del Sonido**
+   - Ve cómo diferentes álbumes usan efectos estéreo
+   - Nota cómo algunas canciones se sienten más amplias que otras
+   - Observa cómo los instrumentos se mueven entre altavoces
+
+3. **Mejora Tu Experiencia**
+   - Prueba diferentes auriculares para ver cómo muestran el estéreo
+   - Compara grabaciones antiguas y nuevas de tus canciones favoritas
+   - Observa cómo diferentes posiciones de escucha cambian la visualización
 
 ¡Recuerda: Estas herramientas están diseñadas para mejorar tu disfrute de la música agregando una dimensión visual a tu experiencia de escucha. ¡Diviértete explorando y descubriendo nuevas formas de ver tu música favorita!

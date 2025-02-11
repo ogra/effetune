@@ -217,6 +217,7 @@ R. Oui, EffeTune peut traiter tout audio jouant à travers votre périphérique 
 | Analyzer | Level Meter | Affiche le niveau audio avec maintien des crêtes | [Détails](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | Visualisation de forme d'onde en temps réel | [Détails](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | Affiche les changements de spectre de fréquences dans le temps | [Détails](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | Visualisation de la balance stéréo et du mouvement sonore | [Détails](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | Analyse spectrale en temps réel | [Détails](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | Ajustement du décalage DC | [Détails](plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | Inversion de polarité du signal | [Détails](plugins/basics.md#polarity-inversion) |
@@ -269,6 +270,10 @@ Pour des performances optimales avec les effets non linéaires, il est recommand
 Vous voulez créer vos propres plugins audio ? Consultez notre [Guide de Développement de Plugins](../../docs/plugin-development.md).
 
 ## Historique des Versions
+
+### Version 1.20 (11 février 2025)
+- Ajout de quelques nouveaux processeurs d'effets audio
+- Diverses améliorations mineures
 
 ### Version 1.10 (9 février 2025)
 - Ajout de la fonctionnalité de traitement de fichiers audio

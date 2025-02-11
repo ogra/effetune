@@ -173,7 +173,7 @@ class OscilloscopePlugin extends PluginBase {
     // ================================================================
     createUI() {
       const container = document.createElement('div');
-      container.className = 'plugin-parameter-ui';
+      container.className = 'oscilloscope-plugin-ui';
   
       const parametersGrid = document.createElement('div');
       parametersGrid.className = 'parameters-grid';

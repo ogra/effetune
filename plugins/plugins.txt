@@ -20,24 +20,28 @@ analyzer/level_meter: Level Meter | Analyzer | LevelMeterPlugin | css
 analyzer/oscilloscope: Oscilloscope | Analyzer | OscilloscopePlugin | css
 analyzer/spectrogram: Spectrogram | Analyzer | SpectrogramPlugin | css
 analyzer/spectrum_analyzer: Spectrum Analyzer | Analyzer | SpectrumAnalyzerPlugin | css
+analyzer/stereo_meter: Stereo Meter | Analyzer | StereoMeterPlugin | css
 basics/dc_offset: DC Offset | Basics | DCOffsetPlugin | css
 basics/polarity_inversion: Polarity Inversion | Basics | PolarityInversionPlugin | css
 basics/stereo_balance: Stereo Balance | Basics | StereoBalancePlugin
 basics/volume: Volume | Basics | VolumePlugin
+dynamics/brickwall_limiter: Brickwall Limiter | Dynamics | BrickwallLimiterPlugin | css
+dynamics/compressor: Compressor | Dynamics | CompressorPlugin | css
+dynamics/gate: Gate | Dynamics | GatePlugin | css
+dynamics/multiband_compressor: Multiband Compressor | Dynamics | MultibandCompressorPlugin | css
 eq/fifteen_band_geq: 15Band GEQ | EQ | FifteenBandGEQPlugin | css
 eq/five_band_peq: 5Band PEQ | EQ | FiveBandPEQPlugin | css
 eq/narrow_range: Narrow Range | EQ | NarrowRangePlugin | css
 eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
 filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
-saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
-saturation/saturation: Saturation | Saturation | SaturationPlugin | css
-spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
-spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin | css
 lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
 lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
 lofi/simple_jitter: Simple Jitter | Lo-Fi | SimpleJitterPlugin | css
-reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
-dynamics/compressor: Compressor | Dynamics | CompressorPlugin | css
-dynamics/gate: Gate | Dynamics | GatePlugin | css
-dynamics/multiband_compressor: Multiband Compressor | Dynamics | MultibandCompressorPlugin | css
+others/file_player: File Player | Others | FilePlayerPlugin | css
 others/oscillator: Oscillator | Others | OscillatorPlugin | css
+reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
+saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
+saturation/multiband_saturation: Multiband Saturation | Saturation | MultibandSaturationPlugin | css
+saturation/saturation: Saturation | Saturation | SaturationPlugin | css
+spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
+spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin | css
