@@ -212,34 +212,35 @@ A. Да, EffeTune может обрабатывать любое аудио, в�
 
 ## Available Effects
 
-| Category | Effect | Description | Documentation |
+| Категория | Эффект | Описание | Документация |
 |----------|--------|-------------|---------------|
-| Analyzer | Level Meter | Отображает уровень аудио с удержанием пиков | [Details](plugins/analyzer.md#level-meter) |
-| Analyzer | Oscilloscope | Визуализация волновой формы в реальном времени | [Details](plugins/analyzer.md#oscilloscope) |
-| Analyzer | Spectrogram | Отображает изменения частотного спектра во времени | [Details](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | Визуализация стерео баланса и движения звука | [Details](plugins/analyzer.md#stereo-meter) |
-| Analyzer | Spectrum Analyzer | Анализ спектра в реальном времени | [Details](plugins/analyzer.md#spectrum-analyzer) |
-| Basics | DC Offset | Регулировка смещения постоянной составляющей | [Details](plugins/basics.md#dc-offset) |
-| Basics | Polarity Inversion | Инверсия полярности сигнала | [Details](plugins/basics.md#polarity-inversion) |
-| Basics | Stereo Balance | Управление балансом стерео каналов | [Details](plugins/basics.md#stereo-balance) |
-| Basics | Volume | Базовое управление громкостью | [Details](plugins/basics.md#volume) |
-| Dynamics | Compressor | Компрессия динамического диапазона с управлением порогом, соотношением и коленом | [Details](plugins/dynamics.md#compressor) |
-| Dynamics | Gate | Шумовой гейт с управлением порогом, соотношением и коленом для шумоподавления | [Details](plugins/dynamics.md#gate) |
-| Dynamics | Multiband Compressor | Профессиональный 5-полосный процессор динамики с формированием звука в стиле FM-радио | [Details](plugins/dynamics.md#multiband-compressor) |
-| EQ | 15Band GEQ | 15-полосный графический эквалайзер | [Details](plugins/eq.md#15band-geq) |
-| EQ | 5Band PEQ | Профессиональный параметрический эквалайзер с 5 полностью настраиваемыми полосами | [Details](plugins/eq.md#5band-peq) |
-| EQ | Narrow Range | Комбинация фильтров высоких и низких частот | [Details](plugins/eq.md#narrow-range) |
-| EQ | Tone Control | Трехполосный тональный контроль | [Details](plugins/eq.md#tone-control) |
-| Filter | Wow Flutter | Эффект модуляции на основе времени | [Details](plugins/filter.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | Эффект уменьшения битовой глубины и удержания нулевого порядка | [Details](plugins/lofi.md#bit-crusher) |
-| Lo-Fi | Noise Blender | Генерация и смешивание шума | [Details](plugins/lofi.md#noise-blender) |
-| Lo-Fi | Simple Jitter | Симуляция цифрового джиттера | [Details](plugins/lofi.md#simple-jitter) |
-| Reverb | RS Reverb | Реверберация со случайным рассеиванием и естественной диффузией | [Details](plugins/reverb.md#rs-reverb) |
-| Saturation | Hard Clipping | Эффект цифрового жесткого клиппинга | [Details](plugins/saturation.md#hard-clipping) |
-| Saturation | Saturation | Эффект насыщения | [Details](plugins/saturation.md#saturation) |
-| Spatial | Multiband Balance | 5-полосное частотно-зависимое управление стерео балансом | [Details](plugins/spatial.md#multiband-balance) |
-| Spatial | Stereo Blend | Эффект управления стерео шириной | [Details](plugins/spatial.md#stereo-blend) |
-| Others | Oscillator | Многоволновой генератор аудиосигнала | [Details](plugins/others.md#oscillator) |
+| Analyzer | Level Meter | Отображает уровень аудио с удержанием пика | [Подробности](plugins/analyzer.md#level-meter) |
+| Analyzer | Oscilloscope | Визуализация формы волны в реальном времени | [Подробности](plugins/analyzer.md#oscilloscope) |
+| Analyzer | Spectrogram | Отображает изменения частотного спектра со временем | [Подробности](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | Визуализирует стереобаланс и движение звука | [Подробности](plugins/analyzer.md#stereo-meter) |
+| Analyzer | Spectrum Analyzer | Анализ спектра в реальном времени | [Подробности](plugins/analyzer.md#spectrum-analyzer) |
+| Basics | DC Offset | Регулировка смещения постоянного тока | [Подробности](plugins/basics.md#dc-offset) |
+| Basics | Polarity Inversion | Инверсия полярности сигнала | [Подробности](plugins/basics.md#polarity-inversion) |
+| Basics | Stereo Balance | Управление балансом стереоканалов | [Подробности](plugins/basics.md#stereo-balance) |
+| Basics | Volume | Базовое управление громкостью | [Подробности](plugins/basics.md#volume) |
+| Dynamics | Compressor | Сжатие динамического диапазона с управлением порогом, соотношением и мягкостью | [Подробности](plugins/dynamics.md#compressor) |
+| Dynamics | Gate | Шумовой гейт с управлением порогом, соотношением и мягкостью для снижения шума | [Подробности](plugins/dynamics.md#gate) |
+| Dynamics | Multiband Compressor | Профессиональный динамический процессор с 5 полосами и моделированием звука в стиле FM-радио | [Подробности](plugins/dynamics.md#multiband-compressor) |
+| EQ | 15Band GEQ | Графический эквалайзер на 15 полос | [Подробности](plugins/eq.md#15band-geq) |
+| EQ | 5Band PEQ | Профессиональный параметрический эквалайзер с 5 полностью настраиваемыми полосами | [Подробности](plugins/eq.md#5band-peq) |
+| EQ | Narrow Range | Комбинация фильтров верхних и нижних частот | [Подробности](plugins/eq.md#narrow-range) |
+| EQ | Tone Control | Трёхполосное управление тоном | [Подробности](plugins/eq.md#tone-control) |
+| Filter | Wow Flutter | Эффект модуляции, основанный на времени | [Подробности](plugins/filter.md#wow-flutter) |
+| Lo-Fi | Bit Crusher | Снижение битовой глубины и эффект нулевого порядка | [Подробности](plugins/lofi.md#bit-crusher) |
+| Lo-Fi | Noise Blender | Генерация и смешивание шума | [Подробности](plugins/lofi.md#noise-blender) |
+| Lo-Fi | Simple Jitter | Цифровое моделирование дрожания | [Подробности](plugins/lofi.md#simple-jitter) |
+| Reverb | RS Reverb | Реверберация с случайным рассеиванием и естественной диффузией | [Подробности](plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | Эффект цифрового жёсткого клиппинга | [Подробности](plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | Эффект сатурации на 3 полосах для точного, основанного на частоте, тёплого звучания | [Подробности](plugins/saturation.md#multiband-saturation) |
+| Saturation | Saturation | Эффект сатурации | [Подробности](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | Управление стереобалансом, зависящее от частоты, с 5 полосами | [Подробности](plugins/spatial.md#multiband-balance) |
+| Spatial | Stereo Blend | Эффект контроля стерео ширины | [Подробности](plugins/spatial.md#stereo-blend) |
+| Others | Oscillator | Генератор аудиосигнала с несколькими формами волны | [Подробности](plugins/others.md#oscillator) |
 
 ## Technical Information
 

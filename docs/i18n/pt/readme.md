@@ -193,32 +193,33 @@ R. Sim, o EffeTune pode processar qualquer áudio reproduzido através do seu di
 
 | Categoria | Efeito | Descrição | Documentação |
 |----------|--------|-------------|---------------|
-| Analyzer | Level Meter | Exibe nível de áudio com retenção de pico | [Detalhes](plugins/analyzer.md#level-meter) |
+| Analyzer | Level Meter | Exibe o nível de áudio com retenção de pico | [Detalhes](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | Visualização de forma de onda em tempo real | [Detalhes](plugins/analyzer.md#oscilloscope) |
-| Analyzer | Spectrogram | Exibe mudanças do espectro de frequência ao longo do tempo | [Detalhes](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | Visualização de balanço estéreo e movimento do som | [Detalhes](plugins/analyzer.md#stereo-meter) |
+| Analyzer | Spectrogram | Exibe as mudanças no espectro de frequência ao longo do tempo | [Detalhes](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | Visualiza o equilíbrio estéreo e o movimento do som | [Detalhes](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | Análise de espectro em tempo real | [Detalhes](plugins/analyzer.md#spectrum-analyzer) |
 | Basics | DC Offset | Ajuste de offset DC | [Detalhes](plugins/basics.md#dc-offset) |
-| Basics | Polarity Inversion | Inversão de polaridade do sinal | [Detalhes](plugins/basics.md#polarity-inversion) |
-| Basics | Stereo Balance | Controle de balanço de canais estéreo | [Detalhes](plugins/basics.md#stereo-balance) |
+| Basics | Polarity Inversion | Inversão da polaridade do sinal | [Detalhes](plugins/basics.md#polarity-inversion) |
+| Basics | Stereo Balance | Controle de equilíbrio dos canais estéreo | [Detalhes](plugins/basics.md#stereo-balance) |
 | Basics | Volume | Controle básico de volume | [Detalhes](plugins/basics.md#volume) |
-| Dynamics | Compressor | Compressão de faixa dinâmica com controle de threshold, ratio e knee | [Detalhes](plugins/dynamics.md#compressor) |
-| Dynamics | Gate | Gate de ruído com controle de threshold, ratio e knee para redução de ruído | [Detalhes](plugins/dynamics.md#gate) |
-| Dynamics | Multiband Compressor | Processador de dinâmica profissional de 5 bandas com modelagem de som estilo rádio FM | [Detalhes](plugins/dynamics.md#multiband-compressor) |
+| Dynamics | Compressor | Compressão de faixa dinâmica com controle de limiar, relação e "knee" | [Detalhes](plugins/dynamics.md#compressor) |
+| Dynamics | Gate | Porta de ruído com controle de limiar, relação e "knee" para redução de ruído | [Detalhes](plugins/dynamics.md#gate) |
+| Dynamics | Multiband Compressor | Processador dinâmico profissional de 5 bandas com modelagem de som no estilo rádio FM | [Detalhes](plugins/dynamics.md#multiband-compressor) |
 | EQ | 15Band GEQ | Equalizador gráfico de 15 bandas | [Detalhes](plugins/eq.md#15band-geq) |
 | EQ | 5Band PEQ | Equalizador paramétrico profissional com 5 bandas totalmente configuráveis | [Detalhes](plugins/eq.md#5band-peq) |
 | EQ | Narrow Range | Combinação de filtro passa-alta e passa-baixa | [Detalhes](plugins/eq.md#narrow-range) |
 | EQ | Tone Control | Controle de tom de três bandas | [Detalhes](plugins/eq.md#tone-control) |
-| Filter | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](plugins/filter.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | Redução de profundidade de bits e efeito zero-order hold | [Detalhes](plugins/lofi.md#bit-crusher) |
+| Filter | Wow Flutter | Efeito de modulação baseado no tempo | [Detalhes](plugins/filter.md#wow-flutter) |
+| Lo-Fi | Bit Crusher | Redução de profundidade de bits e efeito de retenção de ordem zero | [Detalhes](plugins/lofi.md#bit-crusher) |
 | Lo-Fi | Noise Blender | Geração e mixagem de ruído | [Detalhes](plugins/lofi.md#noise-blender) |
-| Lo-Fi | Simple Jitter | Simulação de jitter digital | [Detalhes](plugins/lofi.md#simple-jitter) |
-| Reverb | RS Reverb | Reverb de espalhamento aleatório com difusão natural | [Detalhes](plugins/reverb.md#rs-reverb) |
-| Saturation | Hard Clipping | Efeito de clipping digital | [Detalhes](plugins/saturation.md#hard-clipping) |
+| Lo-Fi | Simple Jitter | Simulação digital de jitter | [Detalhes](plugins/lofi.md#simple-jitter) |
+| Reverb | RS Reverb | Reverb de dispersão aleatória com difusão natural | [Detalhes](plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | Efeito de clipping digital agressivo | [Detalhes](plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | Efeito de saturação de 3 bandas para um aquecimento preciso baseado na frequência | [Detalhes](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | Efeito de saturação | [Detalhes](plugins/saturation.md#saturation) |
-| Spatial | Multiband Balance | Controle de balanço estéreo de 5 bandas dependente de frequência | [Detalhes](plugins/spatial.md#multiband-balance) |
+| Spatial | Multiband Balance | Controle de equilíbrio estéreo dependente da frequência em 5 bandas | [Detalhes](plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Efeito de controle de largura estéreo | [Detalhes](plugins/spatial.md#stereo-blend) |
-| Others | Oscillator | Gerador de sinal de áudio multi-forma de onda | [Detalhes](plugins/others.md#oscillator) |
+| Others | Oscillator | Gerador de sinal de áudio com múltiplas formas de onda | [Detalhes](plugins/others.md#oscillator) |
 
 ## Informações Técnicas
 
@@ -250,9 +251,13 @@ Quer criar seus próprios plugins de áudio? Confira nosso [Guia de Desenvolvime
 
 ## Histórico de Versões
 
+### Versão 1.20 (11 de Fevereiro de 2025)
+- Adicionados alguns novos processadores de efeitos de áudio
+- Várias pequenas melhorias
+
 ### Versão 1.10 (9 de Fevereiro de 2025)
 - Adicionada funcionalidade de processamento de arquivos de áudio
-- Várias melhorias menores
+- Várias pequenas melhorias
 
 ### Versão 1.00 (8 de Fevereiro de 2025)
 - Eficiência de processamento melhorada

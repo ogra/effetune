@@ -191,34 +191,35 @@
 
 ## التأثيرات المتاحة
 
-| الفئة | التأثير | الوصف | الوثائق |
+| الفئة | التأثير | الوصف | التوثيق |
 |----------|--------|-------------|---------------|
-| Analyzer | Level Meter | يعرض مستوى الصوت مع تثبيت القمة | [تفاصيل](plugins/analyzer.md#level-meter) |
-| Analyzer | Oscilloscope | تصور الموجة في الوقت الفعلي | [تفاصيل](plugins/analyzer.md#oscilloscope) |
-| Analyzer | Spectrogram | يعرض تغيرات طيف التردد مع الوقت | [تفاصيل](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | تصور توازن الستيريو وحركة الصوت | [تفاصيل](plugins/analyzer.md#stereo-meter) |
-| Analyzer | Spectrum Analyzer | تحليل الطيف في الوقت الفعلي | [تفاصيل](plugins/analyzer.md#spectrum-analyzer) |
-| Basics | DC Offset | ضبط إزاحة التيار المستمر | [تفاصيل](plugins/basics.md#dc-offset) |
-| Basics | Polarity Inversion | عكس قطبية الإشارة | [تفاصيل](plugins/basics.md#polarity-inversion) |
-| Basics | Stereo Balance | تحكم في توازن قناة الستيريو | [تفاصيل](plugins/basics.md#stereo-balance) |
-| Basics | Volume | تحكم أساسي في مستوى الصوت | [تفاصيل](plugins/basics.md#volume) |
-| Dynamics | Compressor | ضغط النطاق الديناميكي مع تحكم في العتبة والنسبة والركبة | [تفاصيل](plugins/dynamics.md#compressor) |
-| Dynamics | Gate | بوابة ضوضاء مع تحكم في العتبة والنسبة والركبة لتقليل الضوضاء | [تفاصيل](plugins/dynamics.md#gate) |
-| Dynamics | Multiband Compressor | معالج ديناميكي احترافي بخمس نطاقات مع تشكيل صوت على طراز راديو FM | [تفاصيل](plugins/dynamics.md#multiband-compressor) |
-| EQ | 15Band GEQ | معادل رسومي 15 نطاق | [تفاصيل](plugins/eq.md#15band-geq) |
-| EQ | 5Band PEQ | معادل بارامتري احترافي مع 5 نطاقات قابلة للتكوين بالكامل | [تفاصيل](plugins/eq.md#5band-peq) |
-| EQ | Narrow Range | مجموعة مرشح تمرير عالي ومنخفض | [تفاصيل](plugins/eq.md#narrow-range) |
-| EQ | Tone Control | تحكم نغمة ثلاثي النطاقات | [تفاصيل](plugins/eq.md#tone-control) |
-| Filter | Wow Flutter | تأثير تعديل قائم على الوقت | [تفاصيل](plugins/filter.md#wow-flutter) |
-| Lo-Fi | Bit Crusher | تقليل عمق البت وتأثير تثبيت الترتيب الصفري | [تفاصيل](plugins/lofi.md#bit-crusher) |
-| Lo-Fi | Noise Blender | توليد ومزج الضوضاء | [تفاصيل](plugins/lofi.md#noise-blender) |
-| Lo-Fi | Simple Jitter | محاكاة الارتعاش الرقمي | [تفاصيل](plugins/lofi.md#simple-jitter) |
-| Reverb | RS Reverb | صدى تشتت عشوائي مع انتشار طبيعي | [تفاصيل](plugins/reverb.md#rs-reverb) |
-| Saturation | Hard Clipping | تأثير قطع رقمي حاد | [تفاصيل](plugins/saturation.md#hard-clipping) |
-| Saturation | Saturation | تأثير تشبع | [تفاصيل](plugins/saturation.md#saturation) |
-| Spatial | Multiband Balance | تحكم في توازن الستيريو خماسي النطاقات معتمد على التردد | [تفاصيل](plugins/spatial.md#multiband-balance) |
-| Spatial | Stereo Blend | تأثير تحكم في عرض الستيريو | [تفاصيل](plugins/spatial.md#stereo-blend) |
-| Others | Oscillator | مولد إشارات صوتية متعدد الموجات | [تفاصيل](plugins/others.md#oscillator) |
+| Analyzer | Level Meter | يعرض مستوى الصوت مع تثبيت الذروة | [التفاصيل](plugins/analyzer.md#level-meter) |
+| Analyzer | Oscilloscope | تصوير الموجة في الوقت الحقيقي | [التفاصيل](plugins/analyzer.md#oscilloscope) |
+| Analyzer | Spectrogram | يعرض تغيرات طيف التردد مع مرور الوقت | [التفاصيل](plugins/analyzer.md#spectrogram) |
+| Analyzer | Stereo Meter | يصوّر توازن الستيريو وحركة الصوت | [التفاصيل](plugins/analyzer.md#stereo-meter) |
+| Analyzer | Spectrum Analyzer | تحليل الطيف في الوقت الحقيقي | [التفاصيل](plugins/analyzer.md#spectrum-analyzer) |
+| Basics | DC Offset | ضبط إزاحة التيار المستمر | [التفاصيل](plugins/basics.md#dc-offset) |
+| Basics | Polarity Inversion | عكس قطبية الإشارة | [التفاصيل](plugins/basics.md#polarity-inversion) |
+| Basics | Stereo Balance | تحكم في توازن القنوات الستيريو | [التفاصيل](plugins/basics.md#stereo-balance) |
+| Basics | Volume | تحكم أساسي في الحجم | [التفاصيل](plugins/basics.md#volume) |
+| Dynamics | Compressor | ضغط النطاق الديناميكي مع تحكم بالعتبة والنسبة والمنحنى | [التفاصيل](plugins/dynamics.md#compressor) |
+| Dynamics | Gate | بوابة الضوضاء مع تحكم بالعتبة والنسبة والمنحنى لتقليل الضوضاء | [التفاصيل](plugins/dynamics.md#gate) |
+| Dynamics | Multiband Compressor | معالج ديناميكيات احترافي بخمس نطاقات مع تشكيل صوت بأسلوب راديو FM | [التفاصيل](plugins/dynamics.md#multiband-compressor) |
+| EQ | 15Band GEQ | معادل رسومي بـ 15 نطاقاً | [التفاصيل](plugins/eq.md#15band-geq) |
+| EQ | 5Band PEQ | معادل بارامتري احترافي مع 5 نطاقات قابلة للتكوين بالكامل | [التفاصيل](plugins/eq.md#5band-peq) |
+| EQ | Narrow Range | مزيج من مرشحات التمرير العالي والمنخفض | [التفاصيل](plugins/eq.md#narrow-range) |
+| EQ | Tone Control | تحكم في النغمة بثلاث نطاقات | [التفاصيل](plugins/eq.md#tone-control) |
+| Filter | Wow Flutter | تأثير تعديل يعتمد على الزمن | [التفاصيل](plugins/filter.md#wow-flutter) |
+| Lo-Fi | Bit Crusher | تقليل عمق البت وتأثير التثبيت بالترتيب الصفري | [التفاصيل](plugins/lofi.md#bit-crusher) |
+| Lo-Fi | Noise Blender | توليد ومزج الضوضاء | [التفاصيل](plugins/lofi.md#noise-blender) |
+| Lo-Fi | Simple Jitter | محاكاة التذبذب الرقمي | [التفاصيل](plugins/lofi.md#simple-jitter) |
+| Reverb | RS Reverb | صدى تشتت عشوائي مع انتشار طبيعي | [التفاصيل](plugins/reverb.md#rs-reverb) |
+| Saturation | Hard Clipping | تأثير القطع الرقمي الحاد | [التفاصيل](plugins/saturation.md#hard-clipping) |
+| Saturation | Multiband Saturation | تأثير التشبع بثلاث نطاقات لدفء دقيق يعتمد على التردد | [التفاصيل](plugins/saturation.md#multiband-saturation) |
+| Saturation | Saturation | تأثير التشبع | [التفاصيل](plugins/saturation.md#saturation) |
+| Spatial | Multiband Balance | تحكم في توازن الستيريو يعتمد على التردد بـ 5 نطاقات | [التفاصيل](plugins/spatial.md#multiband-balance) |
+| Spatial | Stereo Blend | تأثير تحكم في عرض الستيريو | [التفاصيل](plugins/spatial.md#stereo-blend) |
+| Others | Oscillator | مولد إشارة صوتية متعدد الموجات | [التفاصيل](plugins/others.md#oscillator) |
 
 ## معلومات تقنية
 
