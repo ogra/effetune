@@ -37,7 +37,6 @@ filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
 lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
 lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
 lofi/simple_jitter: Simple Jitter | Lo-Fi | SimpleJitterPlugin | css
-others/file_player: File Player | Others | FilePlayerPlugin | css
 others/oscillator: Oscillator | Others | OscillatorPlugin | css
 reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
