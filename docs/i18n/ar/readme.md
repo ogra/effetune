@@ -1,10 +1,10 @@
-# Frieve EffeTune <img src="../../images/icon.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
+# Frieve EffeTune <img src="../../../images/icon_64x64.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
 
 [فتح التطبيق](https://frieve-a.github.io/effetune/effetune.html)
 
 معالج تأثيرات صوتية في الوقت الفعلي قائم على الويب مصمم لعشاق الصوت لتحسين تجربة استماعهم للموسيقى. يتيح لك EffeTune معالجة أي مصدر صوتي من خلال تأثيرات متنوعة عالية الجودة، مما يمكنك من تخصيص وإتقان تجربة الاستماع الخاصة بك في الوقت الفعلي.
 
-[![لقطة شاشة](../../images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
+[![لقطة شاشة](../../../images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
 
 ## المفهوم
 

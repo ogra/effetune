@@ -14,8 +14,9 @@ h1 {
 
 .title-icon {
     height: 1em;
-    width: auto;
+    width: 1em;
     vertical-align: middle;
+    object-fit: contain;
 }
 
 .subtitle-container {
@@ -83,11 +84,15 @@ input {
     font-size: 14px;
 }
 
-.error-display {
+.message-display {
     display: inline-block;
     margin-left: 10px;
-    color: #ff6b6b;
+    color: #4a9eff;
     font-size: 14px;
+}
+
+.message-display.error-message {
+    color: #ff6b6b;
 }
 
 /* Main layout */
@@ -355,7 +360,7 @@ input {
 }
 
 .toggle-button.master-toggle {
-    margin-left: 8px;
+    margin-left: 0px;
 }
 
 .plugin-name {

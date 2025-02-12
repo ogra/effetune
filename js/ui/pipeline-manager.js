@@ -182,8 +182,35 @@ export class PipelineManager {
     }
 
     initKeyboardEvents() {
-        // Clear selection with ESC key
+        // Handle keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Handle Ctrl+S and Ctrl+Shift+S first, regardless of focus or target
+            if (e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Focus and select preset input text
+                this.presetSelect.focus();
+                this.presetSelect.select();
+                
+                // If not Shift key and input has value, save preset
+                if (!e.shiftKey && this.presetSelect.value.trim()) {
+                    this.savePreset(this.presetSelect.value.trim());
+                }
+                return;
+            }
+
+            // Handle Escape key for preset select
+            if (e.key === 'Escape' && e.target === this.presetSelect) {
+                this.presetSelect.value = '';
+                return;
+            }
+
+            // Skip other shortcuts if focus is on an input/textarea element
+            if (e.target.matches('input, textarea')) {
+                return;
+            }
+
             if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
                 // Select all plugins
                 e.preventDefault();
@@ -217,7 +244,7 @@ export class PipelineManager {
                         .catch(err => {
                             console.error('Failed to copy settings:', err);
                             if (window.uiManager) {
-                                window.uiManager.setError('Failed to copy settings to clipboard');
+                                window.uiManager.setError('Failed to copy settings to clipboard', true);
                             }
                         });
                 }
@@ -304,14 +331,14 @@ export class PipelineManager {
                         } catch (err) {
                             console.error('Failed to paste plugin settings:', err);
                             if (window.uiManager) {
-                                window.uiManager.setError('Failed to paste plugin settings');
+                                window.uiManager.setError('Failed to paste plugin settings', true);
                             }
                         }
                     })
                     .catch(err => {
                         console.error('Failed to read clipboard:', err);
                         if (window.uiManager) {
-                            window.uiManager.setError('Failed to read clipboard');
+                            window.uiManager.setError('Failed to read clipboard', true);
                         }
                     });
             } else if (e.key === 'Delete') {
@@ -689,7 +716,7 @@ export class PipelineManager {
         fileInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
             if (files.length === 0) {
-                window.uiManager.setError('Please select audio files');
+                window.uiManager.setError('Please select audio files', true);
                 return;
             }
 
@@ -727,7 +754,7 @@ export class PipelineManager {
                         }
                     } catch (error) {
                         console.error('Error processing file:', error);
-                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
+                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
                     }
                 }
 
@@ -751,7 +778,7 @@ export class PipelineManager {
                 }
             } catch (error) {
                 console.error('Error processing files:', error);
-                window.uiManager.setError('Failed to process audio files: ' + error.message);
+                window.uiManager.setError('Failed to process audio files: ' + error.message, true);
             } finally {
                 this.hideProgress();
                 // Reset file input
@@ -855,7 +882,7 @@ export class PipelineManager {
 
             const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('audio/'));
             if (files.length === 0) {
-                window.uiManager.setError('Please drop audio files');
+                window.uiManager.setError('Please drop audio files', true);
                 return;
             }
 
@@ -893,7 +920,7 @@ export class PipelineManager {
                         }
                     } catch (error) {
                         console.error('Error processing file:', error);
-                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`);
+                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
                     }
                 }
 
@@ -917,7 +944,7 @@ export class PipelineManager {
                 }
             } catch (error) {
                 console.error('Error processing files:', error);
-                window.uiManager.setError('Failed to process audio files: ' + error.message);
+                window.uiManager.setError('Failed to process audio files: ' + error.message, true);
             } finally {
                 this.hideProgress();
             }
