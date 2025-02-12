@@ -1,4 +1,4 @@
-# Frieve EffeTune <img src="images/icon.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
+# Frieve EffeTune <img src="images/icon_64x64.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
 
 [[中文 (简体)](docs/i18n/zh/readme.md)] [[Español](docs/i18n/es/readme.md)] [[हिन्दी](docs/i18n/hi/readme.md)] [[العربية](docs/i18n/ar/readme.md)] [[Português](docs/i18n/pt/readme.md)] [[Русский](docs/i18n/ru/readme.md)] [[日本語](docs/i18n/ja/readme.md)] [[한국어](docs/i18n/ko/readme.md)] [[Français](docs/i18n/fr/readme.md)]
 
