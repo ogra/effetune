@@ -1,3 +1,4 @@
+
 class FifteenBandGEQPlugin extends PluginBase {
     static BANDS = [
         { freq: 25, name: '25 Hz' },
@@ -101,32 +102,61 @@ class FifteenBandGEQPlugin extends PluginBase {
             const states = context.filterStates[bandIndex];
             const coef = context.coefficients[bandIndex];
             
-            // Process each channel
-            for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                // Load channel state into local variables to reduce repeated property lookups
-                let x1 = states.x1[ch];
-                let x2 = states.x2[ch];
-                let y1 = states.y1[ch];
-                let y2 = states.y2[ch];
-                
-                // Process each sample in the block
-                for (let i = 0; i < blockSize; i++) {
-                    const sample = data[offset + i];
-                    const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
-                    // Update local states
-                    x2 = x1;
-                    x1 = sample;
-                    y2 = y1;
-                    y1 = y0;
-                    data[offset + i] = y0;
+            // Process based on selected channel
+            const ch = parameters.ch;
+            if (ch === 'All') {
+                // Process all channels
+                for (let ch = 0; ch < channelCount; ch++) {
+                    const offset = ch * blockSize;
+                    // Load channel state into local variables to reduce repeated property lookups
+                    let x1 = states.x1[ch];
+                    let x2 = states.x2[ch];
+                    let y1 = states.y1[ch];
+                    let y2 = states.y2[ch];
+                    
+                    // Process each sample in the block
+                    for (let i = 0; i < blockSize; i++) {
+                        const sample = data[offset + i];
+                        const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
+                        // Update local states
+                        x2 = x1;
+                        x1 = sample;
+                        y2 = y1;
+                        y1 = y0;
+                        data[offset + i] = y0;
+                    }
+                    
+                    // Store back updated states for this channel
+                    states.x1[ch] = x1;
+                    states.x2[ch] = x2;
+                    states.y1[ch] = y1;
+                    states.y2[ch] = y2;
                 }
-                
-                // Store back updated states for this channel
-                states.x1[ch] = x1;
-                states.x2[ch] = x2;
-                states.y1[ch] = y1;
-                states.y2[ch] = y2;
+            } else {
+                // Process only selected channel (Left = 0, Right = 1)
+                const targetCh = ch === 'Left' ? 0 : 1;
+                if (targetCh < channelCount) {
+                    const offset = targetCh * blockSize;
+                    let x1 = states.x1[targetCh];
+                    let x2 = states.x2[targetCh];
+                    let y1 = states.y1[targetCh];
+                    let y2 = states.y2[targetCh];
+                    
+                    for (let i = 0; i < blockSize; i++) {
+                        const sample = data[offset + i];
+                        const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
+                        x2 = x1;
+                        x1 = sample;
+                        y2 = y1;
+                        y1 = y0;
+                        data[offset + i] = y0;
+                    }
+                    
+                    states.x1[targetCh] = x1;
+                    states.x2[targetCh] = x2;
+                    states.y1[targetCh] = y1;
+                    states.y2[targetCh] = y2;
+                }
             }
         }
         
@@ -141,6 +171,9 @@ class FifteenBandGEQPlugin extends PluginBase {
             this['b' + i] = 0;  // b0-b14: Band 0-14 gains (formerly band0-band14) - Range: -12 to +12 dB
         }
         
+        // Initialize channel parameter
+        this.ch = 'All';  // 'All', 'Left', or 'Right'
+        
         this.registerProcessor(FifteenBandGEQPlugin.processorFunction);
     }
 
@@ -150,17 +183,27 @@ class FifteenBandGEQPlugin extends PluginBase {
         this.updateParameters();
     }
 
+    // Set channel
+    setChannel(value) {
+        if (['All', 'Left', 'Right'].includes(value)) {
+            this.ch = value;
+            this.updateParameters();
+        }
+    }
+
     // Reset all bands to default values
     reset() {
         for (let i = 0; i < 15; i++) {
             this.setBand(i, 0);
         }
+        this.setChannel('All');
     }
 
     getParameters() {
         const params = {
             type: this.constructor.name,
-            enabled: this.enabled
+            enabled: this.enabled,
+            ch: this.ch
         };
         
         // Add all band parameters
@@ -176,6 +219,10 @@ class FifteenBandGEQPlugin extends PluginBase {
             this.enabled = params.enabled;
         }
         
+        if (params.ch !== undefined) {
+            this.setChannel(params.ch);
+        }
+        
         // Update band parameters
         for (let i = 0; i < 15; i++) {
             if (params['b' + i] !== undefined) {
@@ -189,6 +236,38 @@ class FifteenBandGEQPlugin extends PluginBase {
     createUI() {
         const container = document.createElement('div');
         container.className = 'fifteen-band-geq-plugin-ui plugin-parameter-ui';
+
+        // Channel selector row
+        const channelRow = document.createElement('div');
+        channelRow.className = 'parameter-row';
+        
+        const channelLabel = document.createElement('label');
+        channelLabel.textContent = 'Channel:';
+        
+        const channels = ['All', 'Left', 'Right'];
+        const channelRadios = channels.map(ch => {
+            const label = document.createElement('label');
+            label.className = 'fifteen-band-geq-radio-label';
+            
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = `channel-${this.id}`;
+            radio.value = ch;
+            radio.checked = ch === this.ch;
+            
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.setChannel(e.target.value);
+                }
+            });
+            
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(ch));
+            return label;
+        });
+
+        channelRow.appendChild(channelLabel);
+        channelRadios.forEach(radio => channelRow.appendChild(radio));
 
         // Create sliders container
         const slidersContainer = document.createElement('div');
@@ -260,11 +339,17 @@ class FifteenBandGEQPlugin extends PluginBase {
                 sliders[i].value = this['b' + i];
                 valueDisplays[i].textContent = this['b' + i].toFixed(1) + ' dB';
             }
+            // Update channel radios
+            channelRadios.forEach(label => {
+                const radio = label.querySelector('input');
+                radio.checked = radio.value === 'All';
+            });
             this.drawGraph(canvas);
         });
         graphContainer.appendChild(resetButton);
 
         // Add all elements to container
+        container.appendChild(channelRow);
         container.appendChild(slidersContainer);
         container.appendChild(graphContainer);
 

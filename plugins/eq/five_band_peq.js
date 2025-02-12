@@ -155,19 +155,40 @@ class FiveBandPEQPlugin extends PluginBase {
 
       const states = context.filterStates['b' + bandIndex];
 
-      // Process each channel sample-by-sample
-      for (let ch = 0; ch < channelCount; ch++) {
-        const offset = ch * blockSize;
-        for (let i = 0; i < blockSize; i++) {
-          const x0 = data[offset + i];
-          const y0 = norm_b0 * x0 + norm_b1 * states.x1[ch] + norm_b2 * states.x2[ch] -
-                     norm_a1 * states.y1[ch] - norm_a2 * states.y2[ch];
-          // Update filter state for channel ch
-          states.x2[ch] = states.x1[ch];
-          states.x1[ch] = x0;
-          states.y2[ch] = states.y1[ch];
-          states.y1[ch] = y0;
-          data[offset + i] = y0;
+      // Process based on selected channel
+      const ch = parameters.ch;
+      if (ch === 'All') {
+        // Process all channels
+        for (let ch = 0; ch < channelCount; ch++) {
+          const offset = ch * blockSize;
+          for (let i = 0; i < blockSize; i++) {
+            const x0 = data[offset + i];
+            const y0 = norm_b0 * x0 + norm_b1 * states.x1[ch] + norm_b2 * states.x2[ch] -
+                      norm_a1 * states.y1[ch] - norm_a2 * states.y2[ch];
+            // Update filter state for channel ch
+            states.x2[ch] = states.x1[ch];
+            states.x1[ch] = x0;
+            states.y2[ch] = states.y1[ch];
+            states.y1[ch] = y0;
+            data[offset + i] = y0;
+          }
+        }
+      } else {
+        // Process only selected channel (Left = 0, Right = 1)
+        const targetCh = ch === 'Left' ? 0 : 1;
+        if (targetCh < channelCount) {
+          const offset = targetCh * blockSize;
+          for (let i = 0; i < blockSize; i++) {
+            const x0 = data[offset + i];
+            const y0 = norm_b0 * x0 + norm_b1 * states.x1[targetCh] + norm_b2 * states.x2[targetCh] -
+                      norm_a1 * states.y1[targetCh] - norm_a2 * states.y2[targetCh];
+            // Update filter state for channel ch
+            states.x2[targetCh] = states.x1[targetCh];
+            states.x1[targetCh] = x0;
+            states.y2[targetCh] = states.y1[targetCh];
+            states.y1[targetCh] = y0;
+            data[offset + i] = y0;
+          }
         }
       }
     }
@@ -189,6 +210,9 @@ class FiveBandPEQPlugin extends PluginBase {
       this['t' + i] = 'pk';   // Filter type: default is peaking
     }
 
+    // Initialize channel parameter
+    this.ch = 'All';  // 'All', 'Left', or 'Right'
+
     // Register the processor function immediately
     this.registerProcessor(FiveBandPEQPlugin.processorFunction);
   }
@@ -208,6 +232,14 @@ class FiveBandPEQPlugin extends PluginBase {
     this.updateParameters();
   }
 
+  // Set channel
+  setChannel(value) {
+    if (['All', 'Left', 'Right'].includes(value)) {
+      this.ch = value;
+      this.updateParameters();
+    }
+  }
+
   // Reset all bands to initial values
   reset() {
     for (let i = 0; i < 5; i++) {
@@ -216,11 +248,16 @@ class FiveBandPEQPlugin extends PluginBase {
       this['q' + i] = 1.0;
       this['t' + i] = 'pk';
     }
+    this.setChannel('All');
     this.updateParameters();
   }
 
   getParameters() {
-    const params = { type: this.constructor.name, enabled: this.enabled };
+    const params = { 
+      type: this.constructor.name, 
+      enabled: this.enabled,
+      ch: this.ch
+    };
     for (let i = 0; i < 5; i++) {
       params['f' + i] = this['f' + i];
       params['g' + i] = this['g' + i];
@@ -233,6 +270,7 @@ class FiveBandPEQPlugin extends PluginBase {
   setParameters(params) {
     if (params.enabled !== undefined) this.enabled = params.enabled;
     if (params.sampleRate !== undefined) this._sampleRate = params.sampleRate;
+    if (params.ch !== undefined) this.setChannel(params.ch);
     for (let i = 0; i < 5; i++) {
       if (params['f' + i] !== undefined) this['f' + i] = params['f' + i];
       if (params['g' + i] !== undefined) this['g' + i] = params['g' + i];
@@ -250,6 +288,38 @@ class FiveBandPEQPlugin extends PluginBase {
   createUI() {
     const container = document.createElement('div');
     container.className = 'five-band-peq';
+
+    // Channel selector row
+    const channelRow = document.createElement('div');
+    channelRow.className = 'parameter-row';
+    
+    const channelLabel = document.createElement('label');
+    channelLabel.textContent = 'Channel:';
+    
+    const channels = ['All', 'Left', 'Right'];
+    const channelRadios = channels.map(ch => {
+      const label = document.createElement('label');
+      label.className = 'five-band-peq-radio-label';
+      
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `channel-${this.id}`;
+      radio.value = ch;
+      radio.checked = ch === this.ch;
+      
+      radio.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.setChannel(e.target.value);
+        }
+      });
+      
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(ch));
+      return label;
+    });
+
+    channelRow.appendChild(channelLabel);
+    channelRadios.forEach(radio => channelRow.appendChild(radio));
 
     // Graph container
     const graphContainer = document.createElement('div');
@@ -512,6 +582,7 @@ class FiveBandPEQPlugin extends PluginBase {
       controlsContainer.appendChild(bandControls);
     }
 
+    container.appendChild(channelRow);
     container.appendChild(graphContainer);
     container.appendChild(controlsContainer);
 
@@ -711,11 +782,12 @@ class FiveBandPEQPlugin extends PluginBase {
     while (this.responseSvg.firstChild) {
       this.responseSvg.removeChild(this.responseSvg.firstChild);
     }
+
     this.responseSvg.appendChild(path);
   }
 }
 
-// If in a browser environment, register globally
+// Register plugin
 if (typeof window !== 'undefined') {
   window.FiveBandPEQPlugin = FiveBandPEQPlugin;
 }

@@ -1,4 +1,4 @@
-# Frieve EffeTune <img src="../../../images/icon.png" alt="EffeTune Icon" width="30" height="30" align="bottom">
+# Frieve EffeTune <img src="../../../images/icon_64x64.png" alt="EffeTune Icon" width="30" height="30" align="bottom">
 
 [एप्लिकेशन खोलें](https://frieve-a.github.io/effetune/effetune.html)
 

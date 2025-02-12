@@ -18,8 +18,9 @@ export class StateManager {
         });
     }
 
-    setError(message) {
+    setError(message, isError = false) {
         this.errorDisplay.textContent = message;
+        this.errorDisplay.classList.toggle('error-message', isError);
     }
 
     clearError() {

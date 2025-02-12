@@ -96,8 +96,13 @@ class App {
                 }
             });
 
+            // Check sample rate after initialization
+            if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
+                this.uiManager.setError(`Sample rate is too low (${this.audioManager.audioContext.sampleRate}Hz). Audio quality may be insufficient. 88.2kHz or higher is recommended.`, true);
+            }
+
         } catch (error) {
-            this.uiManager.setError(error.message);
+            this.uiManager.setError(error.message, true);
         }
     }
 }
