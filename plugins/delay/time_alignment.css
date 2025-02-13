@@ -1,0 +1,17 @@
+/* Time Alignment plugin specific styles */
+.time-alignment-plugin-ui {
+    position: relative;
+}
+
+.radio-group {
+    display: flex;
+    gap: 15px;
+}
+
+.radio-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: auto;
+    cursor: pointer;
+}
