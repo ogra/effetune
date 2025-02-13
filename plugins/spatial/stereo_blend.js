@@ -83,7 +83,7 @@ class StereoBlendPlugin extends PluginBase {
     // Create UI elements
     createUI() {
         const container = document.createElement('div');
-        container.className = 'stereo-blend-plugin-ui plugin-parameter-ui';
+        container.className = 'plugin-parameter-ui';
 
         // Stereo width parameter row
         const stereoLabel = document.createElement('label');

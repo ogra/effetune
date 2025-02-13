@@ -3,6 +3,7 @@
 [categories]
 Analyzer: Analysis tools
 Basics: Basic audio effects
+Delay: Delay effects
 Dynamics: Dynamic range effects
 EQ: Equalization effects
 Filter: Time-based filter effects
@@ -25,6 +26,7 @@ basics/dc_offset: DC Offset | Basics | DCOffsetPlugin | css
 basics/polarity_inversion: Polarity Inversion | Basics | PolarityInversionPlugin | css
 basics/stereo_balance: Stereo Balance | Basics | StereoBalancePlugin
 basics/volume: Volume | Basics | VolumePlugin
+delay/time_alignment: Time Alignment | Delay | TimeAlignmentPlugin | css
 dynamics/brickwall_limiter: Brickwall Limiter | Dynamics | BrickwallLimiterPlugin | css
 dynamics/compressor: Compressor | Dynamics | CompressorPlugin | css
 dynamics/gate: Gate | Dynamics | GatePlugin | css
