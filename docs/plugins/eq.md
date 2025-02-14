@@ -167,16 +167,16 @@ A tool that lets you focus on specific parts of the music by filtering out unwan
   - Higher values: Removes more bass
   - Lower values: Keeps more bass
   - Start with low values and adjust to taste
-- **HPF Slope** - How quickly low sounds are reduced (-6 or -12 dB/octave)
-  - -6dB: Gentle reduction
-  - -12dB: Stronger reduction
+- **HPF Slope** - How quickly low sounds are reduced (0 to -48 dB/octave)
+  - 0dB: No reduction (off)
+  - -6dB to -48dB: Increasingly stronger reduction in 6dB steps
 - **LPF Frequency** - Controls where high sounds start being reduced (200Hz to 20000Hz)
   - Lower values: Removes more highs
   - Higher values: Keeps more highs
   - Start high and adjust down as needed
-- **LPF Slope** - How quickly high sounds are reduced (-6 or -12 dB/octave)
-  - -6dB: Gentle reduction
-  - -12dB: Stronger reduction
+- **LPF Slope** - How quickly high sounds are reduced (0 to -48 dB/octave)
+  - 0dB: No reduction (off)
+  - -6dB to -48dB: Increasingly stronger reduction in 6dB steps
 - **Enabled** - Turns the effect on or off
 
 ### Visual Display

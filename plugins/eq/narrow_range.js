@@ -1,98 +1,189 @@
-// Processor function optimized for simplicity and speed
+// Processor function modified for Linkwitz–Riley–style filtering
+// This implementation supports first‑order sections for 6dB/oct and 
+// second‑order (Butterworth, Q = 1/√2) sections for 12dB/oct.
+// The filter cascade is built as follows:
+//  - If the absolute slope is 6 dB/oct, one first‑order stage is used.
+//  - If the absolute slope is 12 dB/oct, one second‑order stage is used.
+//  - If the absolute slope is an odd multiple of 6 (e.g. 18, 30, 42 dB/oct),
+//    the cascade is built as one first‑order stage followed by the appropriate
+//    number of second‑order stages.
+//  - If the absolute slope is an even multiple of 6 (e.g. 24, 36, 48 dB/oct),
+//    the cascade is built entirely from second‑order stages.
 const processorFunction = `
 if (!parameters.enabled) return data;
 
-// Map shortened parameter names for clarity
+// Map parameter names for clarity
 const { hf: hpfFreq, hs: hpfSlope, lf: lpfFreq, ls: lpfSlope, channelCount, blockSize } = parameters;
 
-// Initialize or reset filter states if needed
-if (!context.initialized || context.filterStates.hpf1.length !== channelCount) {
-  const initArray = () => new Array(channelCount).fill(0);
-  context.filterStates = {
-    // HPF states (first stage)
-    hpf1: initArray(), hpf2: initArray(), hpf3: initArray(), hpf4: initArray(),
-    // HPF states (second stage for -12dB/oct)
-    hpf5: initArray(), hpf6: initArray(), hpf7: initArray(), hpf8: initArray(),
-    // LPF states (first stage)
-    lpf1: initArray(), lpf2: initArray(), lpf3: initArray(), lpf4: initArray(),
-    // LPF states (second stage for -12dB/oct)
-    lpf5: initArray(), lpf6: initArray(), lpf7: initArray(), lpf8: initArray()
+// Helper to compute number of stages from slope value (in dB/oct)
+function computeStages(slope) {
+  const absSlope = Math.abs(slope);
+  if (absSlope === 0) return { order1: 0, order2: 0 };
+  const n = absSlope / 6;
+  if (n % 2 === 1) {
+    // Odd: one first-order stage plus (n - 1)/2 second-order stages
+    return { order1: 1, order2: (n - 1) / 2 };
+  } else {
+    // Even: all second-order stages
+    return { order1: 0, order2: n / 2 };
+  }
+}
+
+const hpfStages = computeStages(hpfSlope);
+const lpfStages = computeStages(lpfSlope);
+const hpf_order1_stages = hpfStages.order1;
+const hpf_order2_stages = hpfStages.order2;
+const lpf_order1_stages = lpfStages.order1;
+const lpf_order2_stages = lpfStages.order2;
+const totalHPFStages = hpf_order1_stages + hpf_order2_stages;
+const totalLPFStages = lpf_order1_stages + lpf_order2_stages;
+
+// --- Ensure proper reinitialization when slope parameters change ---
+if (!context.lastSlopes || context.lastSlopes.hpf !== hpfSlope || context.lastSlopes.lpf !== lpfSlope) {
+  context.filterStates = null;
+  context.lastSlopes = { hpf: hpfSlope, lpf: lpfSlope };
+  context.initialized = false;
+}
+
+// Initialize or reset filter states if needed.
+// For first-order sections, we store one previous input and one previous output.
+// For second-order sections, we store two previous inputs and two previous outputs.
+if (!context.initialized ||
+    !context.filterStates ||
+    context.filterStates.hpf.length !== totalHPFStages ||
+    context.filterStates.lpf.length !== totalLPFStages) {
+  const createState = (order) => {
+    if (order === 1) {
+      return { x1: new Array(channelCount).fill(0), y1: new Array(channelCount).fill(0) };
+    } else { // order === 2
+      return {
+        x1: new Array(channelCount).fill(0),
+        x2: new Array(channelCount).fill(0),
+        y1: new Array(channelCount).fill(0),
+        y2: new Array(channelCount).fill(0)
+      };
+    }
   };
+  context.filterStates = { hpf: [], lpf: [] };
+  for (let s = 0; s < hpf_order1_stages; s++) {
+    context.filterStates.hpf.push(createState(1));
+  }
+  for (let s = 0; s < hpf_order2_stages; s++) {
+    context.filterStates.hpf.push(createState(2));
+  }
+  for (let s = 0; s < lpf_order1_stages; s++) {
+    context.filterStates.lpf.push(createState(1));
+  }
+  for (let s = 0; s < lpf_order2_stages; s++) {
+    context.filterStates.lpf.push(createState(2));
+  }
   context.initialized = true;
 }
 
-const fs = context.filterStates;
-const twoPi = 2 * Math.PI;
-const hpfW0 = twoPi * hpfFreq / sampleRate;
-const lpfW0 = twoPi * lpfFreq / sampleRate;
-const hpfQ = hpfSlope === -12 ? 0.707 : 0.5;
-const lpfQ = lpfSlope === -12 ? 0.707 : 0.5;
-const hpfAlpha = Math.sin(hpfW0) / (2 * hpfQ);
-const lpfAlpha = Math.sin(lpfW0) / (2 * lpfQ);
-const hpfCos = Math.cos(hpfW0);
-const lpfCos = Math.cos(lpfW0);
+// --- Pre-calculate filter coefficients ---
 
-// HPF coefficients
-const hpfA0 = 1 + hpfAlpha;
-const hpfA1 = -2 * hpfCos;
-const hpfA2 = 1 - hpfAlpha;
-const hpfB0 = (1 + hpfCos) / 2;
-const hpfB1 = -(1 + hpfCos);
-const hpfB2 = hpfB0;
+// First-order high-pass (HPF) coefficients (using bilinear transform)
+// Standard high-pass: y[n] = (1/(1+c))·(x[n] - x[n-1]) + ((1-c)/(1+c))·y[n-1]
+let hp1_b0, hp1_b1, hp1_a1;
+if (hpf_order1_stages > 0) {
+  let c = Math.tan(Math.PI * hpfFreq / sampleRate);
+  hp1_b0 = 1 / (1 + c);
+  hp1_b1 = -1 / (1 + c);
+  hp1_a1 = -((1 - c) / (1 + c));
+}
 
-// LPF coefficients
-const lpfA0 = 1 + lpfAlpha;
-const lpfA1 = -2 * lpfCos;
-const lpfA2 = 1 - lpfAlpha;
-const lpfB0 = (1 - lpfCos) / 2;
-const lpfB1 = 1 - lpfCos;
-const lpfB2 = lpfB0;
+// Second-order high-pass (HPF) coefficients (Butterworth, Q = 1/√2)
+let hp2_b0, hp2_b1, hp2_b2, hp2_a1, hp2_a2;
+if (hpf_order2_stages > 0) {
+  let w0 = 2 * Math.PI * hpfFreq / sampleRate;
+  let Q = 1 / Math.SQRT2;
+  let alpha = Math.sin(w0) / (2 * Q);
+  let a0 = 1 + alpha;
+  hp2_b0 = ((1 + Math.cos(w0)) / 2) / a0;
+  hp2_b1 = (-(1 + Math.cos(w0))) / a0;
+  hp2_b2 = ((1 + Math.cos(w0)) / 2) / a0;
+  hp2_a1 = (-2 * Math.cos(w0)) / a0;
+  hp2_a2 = (1 - alpha) / a0;
+}
 
-// Determine if cascaded stages are needed
-const doHpf2 = hpfSlope === -12;
-const doLpf2 = lpfSlope === -12;
+// First-order low-pass (LPF) coefficients (using bilinear transform)
+// Standard low-pass: y[n] = (c/(1+c))·(x[n] + x[n-1]) + ((1-c)/(1+c))·y[n-1]
+let lp1_b0, lp1_b1, lp1_a1;
+if (lpf_order1_stages > 0) {
+  let c = Math.tan(Math.PI * lpfFreq / sampleRate);
+  lp1_b0 = c / (1 + c);
+  lp1_b1 = c / (1 + c);
+  lp1_a1 = -((1 - c) / (1 + c));
+}
 
+// Second-order low-pass (LPF) coefficients (Butterworth, Q = 1/√2)
+let lp2_b0, lp2_b1, lp2_b2, lp2_a1, lp2_a2;
+if (lpf_order2_stages > 0) {
+  let w0 = 2 * Math.PI * lpfFreq / sampleRate;
+  let Q = 1 / Math.SQRT2;
+  let alpha = Math.sin(w0) / (2 * Q);
+  let a0 = 1 + alpha;
+  lp2_b0 = ((1 - Math.cos(w0)) / 2) / a0;
+  lp2_b1 = (1 - Math.cos(w0)) / a0;
+  lp2_b2 = ((1 - Math.cos(w0)) / 2) / a0;
+  lp2_a1 = (-2 * Math.cos(w0)) / a0;
+  lp2_a2 = (1 - alpha) / a0;
+}
+
+// --- Process audio ---
 for (let ch = 0, offset = 0; ch < channelCount; ch++, offset += blockSize) {
   for (let i = 0; i < blockSize; i++) {
-    let sample = data[offset + i], x, y;
+    let sample = data[offset + i];
     
-    // First-stage HPF
-    x = sample;
-    y = (hpfB0 * x + hpfB1 * fs.hpf1[ch] + hpfB2 * fs.hpf2[ch] - hpfA1 * fs.hpf3[ch] - hpfA2 * fs.hpf4[ch]) / hpfA0;
-    fs.hpf2[ch] = fs.hpf1[ch];
-    fs.hpf1[ch] = x;
-    fs.hpf4[ch] = fs.hpf3[ch];
-    fs.hpf3[ch] = y;
-    sample = y;
-    
-    // Second-stage HPF for -12dB/oct
-    if (doHpf2) {
-      x = sample;
-      y = (hpfB0 * x + hpfB1 * fs.hpf5[ch] + hpfB2 * fs.hpf6[ch] - hpfA1 * fs.hpf7[ch] - hpfA2 * fs.hpf8[ch]) / hpfA0;
-      fs.hpf6[ch] = fs.hpf5[ch];
-      fs.hpf5[ch] = x;
-      fs.hpf8[ch] = fs.hpf7[ch];
-      fs.hpf7[ch] = y;
+    // ----- High-Pass Filtering -----
+    let stageIndex = 0;
+    // Process first-order HPF stages (if any)
+    for (let s = 0; s < hpf_order1_stages; s++, stageIndex++) {
+      let state = context.filterStates.hpf[stageIndex];
+      let x = sample;
+      // Difference eq: y = hp1_b0*x + hp1_b1*x_prev - hp1_a1*y_prev
+      let y = hp1_b0 * x + hp1_b1 * state.x1[ch] - hp1_a1 * state.y1[ch];
+      state.x1[ch] = x;
+      state.y1[ch] = y;
+      sample = y;
+    }
+    // Process second-order HPF stages (if any)
+    for (let s = 0; s < hpf_order2_stages; s++, stageIndex++) {
+      let state = context.filterStates.hpf[stageIndex];
+      let x = sample;
+      // Difference eq: y = hp2_b0*x + hp2_b1*x_prev + hp2_b2*x_prev2 - hp2_a1*y_prev - hp2_a2*y_prev2
+      let y = hp2_b0 * x + hp2_b1 * state.x1[ch] + hp2_b2 * state.x2[ch]
+              - hp2_a1 * state.y1[ch] - hp2_a2 * state.y2[ch];
+      state.x2[ch] = state.x1[ch];
+      state.x1[ch] = x;
+      state.y2[ch] = state.y1[ch];
+      state.y1[ch] = y;
       sample = y;
     }
     
-    // First-stage LPF
-    x = sample;
-    y = (lpfB0 * x + lpfB1 * fs.lpf1[ch] + lpfB2 * fs.lpf2[ch] - lpfA1 * fs.lpf3[ch] - lpfA2 * fs.lpf4[ch]) / lpfA0;
-    fs.lpf2[ch] = fs.lpf1[ch];
-    fs.lpf1[ch] = x;
-    fs.lpf4[ch] = fs.lpf3[ch];
-    fs.lpf3[ch] = y;
-    sample = y;
-    
-    // Second-stage LPF for -12dB/oct
-    if (doLpf2) {
-      x = sample;
-      y = (lpfB0 * x + lpfB1 * fs.lpf5[ch] + lpfB2 * fs.lpf6[ch] - lpfA1 * fs.lpf7[ch] - lpfA2 * fs.lpf8[ch]) / lpfA0;
-      fs.lpf6[ch] = fs.lpf5[ch];
-      fs.lpf5[ch] = x;
-      fs.lpf8[ch] = fs.lpf7[ch];
-      fs.lpf7[ch] = y;
+    // ----- Low-Pass Filtering -----
+    stageIndex = 0;
+    // Process first-order LPF stages (if any)
+    for (let s = 0; s < lpf_order1_stages; s++, stageIndex++) {
+      let state = context.filterStates.lpf[stageIndex];
+      let x = sample;
+      // Difference eq: y = lp1_b0*x + lp1_b1*x_prev - lp1_a1*y_prev
+      let y = lp1_b0 * x + lp1_b1 * state.x1[ch] - lp1_a1 * state.y1[ch];
+      state.x1[ch] = x;
+      state.y1[ch] = y;
+      sample = y;
+    }
+    // Process second-order LPF stages (if any)
+    for (let s = 0; s < lpf_order2_stages; s++, stageIndex++) {
+      let state = context.filterStates.lpf[stageIndex];
+      let x = sample;
+      // Difference eq: y = lp2_b0*x + lp2_b1*x_prev + lp2_b2*x_prev2 - lp2_a1*y_prev - lp2_a2*y_prev2
+      let y = lp2_b0 * x + lp2_b1 * state.x1[ch] + lp2_b2 * state.x2[ch]
+              - lp2_a1 * state.y1[ch] - lp2_a2 * state.y2[ch];
+      state.x2[ch] = state.x1[ch];
+      state.x1[ch] = x;
+      state.y2[ch] = state.y1[ch];
+      state.y1[ch] = y;
       sample = y;
     }
     
@@ -105,11 +196,11 @@ return data;
 // Optimized NarrowRangePlugin class with simplified UI creation
 class NarrowRangePlugin extends PluginBase {
   constructor() {
-    super('Narrow Range', 'High-pass and low-pass filter combination for narrow band filtering');
-    this.hf = 60;    // HPF Frequency
-    this.hs = -12;   // HPF Slope (-6 or -12 dB/oct)
-    this.lf = 5000;  // LPF Frequency
-    this.ls = -6;    // LPF Slope (-6 or -12 dB/oct)
+    super("Narrow Range", "High-pass and low-pass filter combination for narrow band filtering (crossover-capable)");
+    this.hf = 60;    // HPF Frequency in Hz
+    this.hs = -24;   // HPF Slope (allowed values: 0, -6, -12, -18, -24, -30, -36, -42, -48 dB/oct)
+    this.lf = 5000;  // LPF Frequency in Hz
+    this.ls = -12;   // LPF Slope (allowed values: 0, -6, -12, -18, -24, -30, -36, -42, -48 dB/oct)
     this.registerProcessor(processorFunction);
   }
 
@@ -132,52 +223,54 @@ class NarrowRangePlugin extends PluginBase {
   setParameters(params) {
     if (params.enabled !== undefined) this.enabled = params.enabled;
     if (params.hf !== undefined)
-      this.hf = Math.max(20, Math.min(1000, typeof params.hf === 'number' ? params.hf : parseFloat(params.hf)));
+      this.hf = Math.max(20, Math.min(4000, typeof params.hf === "number" ? params.hf : parseFloat(params.hf)));
     if (params.hs !== undefined) {
-      const intSlope = typeof params.hs === 'number' ? params.hs : parseInt(params.hs);
-      this.hs = intSlope === -12 ? -12 : -6;
+      const intSlope = typeof params.hs === "number" ? params.hs : parseInt(params.hs);
+      const allowed = [0, -6, -12, -18, -24, -30, -36, -42, -48];
+      this.hs = allowed.includes(intSlope) ? intSlope : -12;
     }
     if (params.lf !== undefined)
-      this.lf = Math.max(200, Math.min(20000, typeof params.lf === 'number' ? params.lf : parseFloat(params.lf)));
+      this.lf = Math.max(200, Math.min(40000, typeof params.lf === "number" ? params.lf : parseFloat(params.lf)));
     if (params.ls !== undefined) {
-      const intSlope = typeof params.ls === 'number' ? params.ls : parseInt(params.ls);
-      this.ls = intSlope === -12 ? -12 : -6;
+      const intSlope = typeof params.ls === "number" ? params.ls : parseInt(params.ls);
+      const allowed = [0, -6, -12, -18, -24, -30, -36, -42, -48];
+      this.ls = allowed.includes(intSlope) ? intSlope : -12;
     }
     this.updateParameters();
   }
 
   createUI() {
-    const container = document.createElement('div');
-    container.className = 'narrow-range-plugin-ui plugin-parameter-ui';
+    const container = document.createElement("div");
+    container.className = "narrow-range-plugin-ui plugin-parameter-ui";
 
     // Helper to create a parameter row with slider and number input
     const createRow = (labelText, min, max, step, value, onInput) => {
-      const row = document.createElement('div');
-      row.className = 'parameter-row';
-      const label = document.createElement('label');
+      const row = document.createElement("div");
+      row.className = "parameter-row";
+      const label = document.createElement("label");
       label.textContent = labelText;
-      const slider = document.createElement('input');
-      slider.type = 'range';
+      const slider = document.createElement("input");
+      slider.type = "range";
       slider.min = min;
       slider.max = max;
       slider.step = step;
       slider.value = value;
-      const numberInput = document.createElement('input');
-      numberInput.type = 'number';
+      const numberInput = document.createElement("input");
+      numberInput.type = "number";
       numberInput.min = min;
       numberInput.max = max;
       numberInput.step = step;
       numberInput.value = value;
-      slider.addEventListener('input', e => {
+      slider.addEventListener("input", e => {
         onInput(parseFloat(e.target.value));
-        numberInput.value = labelText.includes('HPF') ? this.hf : this.lf;
+        numberInput.value = labelText.includes("HPF") ? this.hf : this.lf;
         this.drawGraph(canvas);
       });
-      numberInput.addEventListener('input', e => {
+      numberInput.addEventListener("input", e => {
         onInput(parseFloat(e.target.value) || 0);
-        slider.value = labelText.includes('HPF') ? this.hf : this.lf;
+        slider.value = labelText.includes("HPF") ? this.hf : this.lf;
         this.drawGraph(canvas);
-        e.target.value = labelText.includes('HPF') ? this.hf : this.lf;
+        e.target.value = labelText.includes("HPF") ? this.hf : this.lf;
       });
       row.appendChild(label);
       row.appendChild(slider);
@@ -185,43 +278,39 @@ class NarrowRangePlugin extends PluginBase {
       return row;
     };
 
-    // Helper to create a slope radio group
-    const createRadioGroup = (name, current, onChange) => {
-      const group = document.createElement('div');
-      group.className = 'radio-group';
-      [-6, -12].forEach(slope => {
-        const label = document.createElement('label');
-        label.className = 'radio-label';
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = name;
-        radio.value = slope;
-        radio.checked = current === slope;
-        radio.addEventListener('change', e => {
-          onChange(parseInt(e.target.value));
-          this.drawGraph(canvas);
-        });
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(`${Math.abs(slope)}dB/oct`));
-        group.appendChild(label);
+    // Helper to create a slope select box
+    const createSlopeSelect = (current, onChange) => {
+      const select = document.createElement("select");
+      select.className = "slope-select";
+      const slopes = [0, -6, -12, -18, -24, -30, -36, -42, -48];
+      slopes.forEach(slope => {
+        const option = document.createElement("option");
+        option.value = slope;
+        option.textContent = slope === 0 ? "Off" : `${Math.abs(slope)}dB/oct`;
+        option.selected = current === slope;
+        select.appendChild(option);
       });
-      return group;
+      select.addEventListener("change", e => {
+        onChange(parseInt(e.target.value));
+        this.drawGraph(canvas);
+      });
+      return select;
     };
 
     // Create HPF and LPF parameter rows
-    const hpfRow = createRow('HPF Freq (Hz):', 20, 1000, 1, this.hf, v => this.setHf(v));
-    hpfRow.appendChild(createRadioGroup(`hpf-slope-${this.id}`, this.hs, v => this.setHs(v)));
-    const lpfRow = createRow('LPF Freq (Hz):', 200, 20000, 100, this.lf, v => this.setLf(v));
-    lpfRow.appendChild(createRadioGroup(`lpf-slope-${this.id}`, this.ls, v => this.setLs(v)));
+    const hpfRow = createRow("HPF Freq (Hz):", 20, 4000, 1, this.hf, v => this.setHf(v));
+    hpfRow.appendChild(createSlopeSelect(this.hs, v => this.setHs(v)));
+    const lpfRow = createRow("LPF Freq (Hz):", 200, 40000, 100, this.lf, v => this.setLf(v));
+    lpfRow.appendChild(createSlopeSelect(this.ls, v => this.setLs(v)));
 
     // Create graph container and canvas
-    const graphContainer = document.createElement('div');
-    graphContainer.style.position = 'relative';
-    const canvas = document.createElement('canvas');
+    const graphContainer = document.createElement("div");
+    graphContainer.style.position = "relative";
+    const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 480;
-    canvas.style.width = '600px';
-    canvas.style.height = '240px';
+    canvas.style.width = "600px";
+    canvas.style.height = "240px";
     graphContainer.appendChild(canvas);
 
     container.appendChild(hpfRow);
@@ -232,24 +321,24 @@ class NarrowRangePlugin extends PluginBase {
   }
 
   drawGraph(canvas) {
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const width = canvas.width, height = canvas.height;
     ctx.clearRect(0, 0, width, height);
 
     // Draw grid
-    ctx.strokeStyle = '#444';
+    ctx.strokeStyle = "#444";
     ctx.lineWidth = 1;
-    const freqs = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+    const freqs = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
     freqs.forEach(freq => {
-      const x = width * (Math.log10(freq) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20));
+      const x = width * (Math.log10(freq) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20));
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, height);
       ctx.stroke();
-      if (freq > 20 && freq < 20000) {
-        ctx.fillStyle = '#666';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
+      if (freq > 20 && freq < 40000) {
+        ctx.fillStyle = "#666";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
         ctx.fillText(freq >= 1000 ? `${freq/1000}k` : freq, x, height - 40);
       }
     });
@@ -261,34 +350,68 @@ class NarrowRangePlugin extends PluginBase {
       ctx.lineTo(width, y);
       ctx.stroke();
       if (db > -30 && db < 6) {
-        ctx.fillStyle = '#666';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'right';
+        ctx.fillStyle = "#666";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "right";
         ctx.fillText(`${db}dB`, 80, y + 6);
       }
     });
-    ctx.fillStyle = '#fff';
-    ctx.font = '24px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Frequency (Hz)', width / 2, height - 5);
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Frequency (Hz)", width / 2, height - 5);
     ctx.save();
     ctx.translate(20, height / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Level (dB)', 0, 0);
+    ctx.fillText("Level (dB)", 0, 0);
     ctx.restore();
 
-    // Draw frequency response curve
+    // In the graph, recalc the overall magnitude response using the same
+    // stage computation as in the processor.
+    function computeStages(slope) {
+      const absSlope = Math.abs(slope);
+      if (absSlope === 0) return { order1: 0, order2: 0 };
+      const n = absSlope / 6;
+      if (n % 2 === 1) {
+        return { order1: 1, order2: (n - 1) / 2 };
+      } else {
+        return { order1: 0, order2: n / 2 };
+      }
+    }
+    const hpfStages = computeStages(this.hs);
+    const lpfStages = computeStages(this.ls);
+
     ctx.beginPath();
-    ctx.strokeStyle = '#00ff00';
+    ctx.strokeStyle = "#00ff00";
     ctx.lineWidth = 2;
     for (let i = 0; i < width; i++) {
-      const freq = Math.pow(10, Math.log10(20) + (i / width) * (Math.log10(20000) - Math.log10(20)));
-      const hpfOmega = freq / this.hf;
-      const lpfOmega = freq / this.lf;
-      const hpfBase = Math.sqrt((hpfOmega * hpfOmega) / (1 + hpfOmega * hpfOmega));
-      const lpfBase = Math.sqrt(1 / (1 + lpfOmega * lpfOmega));
-      const hpfMag = this.hs === -12 ? hpfBase * hpfBase : hpfBase;
-      const lpfMag = this.ls === -12 ? lpfBase * lpfBase : lpfBase;
+      const freq = Math.pow(10, Math.log10(20) + (i / width) * (Math.log10(40000) - Math.log10(20)));
+      
+      // High-pass response
+      let hpfMag = 1;
+      if (this.hs !== 0) {
+        const wRatio = freq / this.hf;
+        if (hpfStages.order1 > 0) {
+          hpfMag *= (wRatio / Math.sqrt(1 + wRatio * wRatio));
+        }
+        if (hpfStages.order2 > 0) {
+          const secondOrder = (wRatio * wRatio) / Math.sqrt(1 + 2 * wRatio * wRatio + Math.pow(wRatio, 4));
+          hpfMag *= Math.pow(secondOrder, hpfStages.order2);
+        }
+      }
+      
+      // Low-pass response
+      let lpfMag = 1;
+      if (this.ls !== 0) {
+        const wRatio = freq / this.lf;
+        if (lpfStages.order1 > 0) {
+          lpfMag *= (1 / Math.sqrt(1 + wRatio * wRatio));
+        }
+        if (lpfStages.order2 > 0) {
+          const secondOrder = 1 / Math.sqrt(1 + 2 * wRatio * wRatio + Math.pow(wRatio, 4));
+          lpfMag *= Math.pow(secondOrder, lpfStages.order2);
+        }
+      }
       const totalMag = hpfMag * lpfMag;
       const response = 20 * Math.log10(totalMag);
       const y = height * (1 - (response + 30) / 36);

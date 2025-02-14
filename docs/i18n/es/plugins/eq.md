@@ -162,21 +162,21 @@ Una herramienta que te permite enfocarte en partes específicas de la música fi
   - Cortar siseo excesivo de alta frecuencia
   - Enfocarse en las partes más importantes de la música
 
-### Parámetros
-- **HPF Frequency** - Controla dónde comienzan a reducirse los sonidos graves (20Hz a 1000Hz)
-  - Valores más altos: Elimina más graves
-  - Valores más bajos: Mantiene más graves
+### Parameters
+- **HPF Frequency** - Controla dónde comienzan a reducirse los sonidos bajos (20Hz a 1000Hz)
+  - Valores más altos: Elimina más bajos
+  - Valores más bajos: Conserva más bajos
   - Comienza con valores bajos y ajusta al gusto
-- **HPF Slope** - Qué tan rápido se reducen los sonidos graves (-6 o -12 dB/octava)
-  - -6dB: Reducción suave
-  - -12dB: Reducción más fuerte
-- **LPF Frequency** - Controla dónde comienzan a reducirse los sonidos agudos (200Hz a 20000Hz)
+- **HPF Slope** - Cuán rápidamente se reducen los sonidos bajos (0 a -48 dB/octava)
+  - 0dB: Sin reducción (apagado)
+  - De -6dB a -48dB: Reducción cada vez más fuerte en pasos de 6dB
+- **LPF Frequency** - Controla dónde comienzan a reducirse los sonidos altos (200Hz a 20000Hz)
   - Valores más bajos: Elimina más agudos
-  - Valores más altos: Mantiene más agudos
-  - Comienza alto y ajusta hacia abajo según sea necesario
-- **LPF Slope** - Qué tan rápido se reducen los sonidos agudos (-6 o -12 dB/octava)
-  - -6dB: Reducción suave
-  - -12dB: Reducción más fuerte
+  - Valores más altos: Conserva más agudos
+  - Comienza con valores altos y ajústalos hacia abajo según sea necesario
+- **LPF Slope** - Cuán rápidamente se reducen los sonidos altos (0 a -48 dB/octava)
+  - 0dB: Sin reducción (apagado)
+  - De -6dB a -48dB: Reducción cada vez más fuerte en pasos de 6dB
 - **Enabled** - Activa o desactiva el efecto
 
 ### Visualización

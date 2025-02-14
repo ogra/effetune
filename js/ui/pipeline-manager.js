@@ -185,7 +185,7 @@ export class PipelineManager {
         // Handle keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             // Handle Ctrl+S and Ctrl+Shift+S first, regardless of focus or target
-            if (e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
+            if (e.key && e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -452,7 +452,7 @@ export class PipelineManager {
                 const anchor = plugin.name.toLowerCase()
                     .replace(/[^\w\s-]/g, '')
                     .replace(/\s+/g, '-');
-                const path = `/plugins/${category.toLowerCase()}.html#${anchor}`;
+                const path = `/plugins/${category.toLowerCase().replace(/-/g, '')}.html#${anchor}`;
                 const localizedPath = this.getLocalizedDocPath(path);
                 window.open(localizedPath, '_blank');
             }

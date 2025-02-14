@@ -163,21 +163,22 @@ Uma ferramenta que permite focar em partes específicas da música filtrando fre
   - Foque nas partes mais importantes da música
 
 ### Parâmetros
-- **HPF Frequency** - Controla onde os sons graves começam a ser reduzidos (20Hz a 1000Hz)
+- **HPF Frequency** - Controla onde os sons baixos começam a ser reduzidos (20Hz a 1000Hz)
   - Valores mais altos: Remove mais graves
-  - Valores mais baixos: Mantém mais graves
-  - Comece com valores baixos e ajuste ao gosto
-- **HPF Slope** - Quão rapidamente os sons graves são reduzidos (-6 ou -12 dB/oitava)
-  - -6dB: Redução suave
-  - -12dB: Redução mais forte
+  - Valores mais baixos: Preserva mais graves
+  - Comece com valores baixos e ajuste conforme o gosto
+- **HPF Slope** - Quão rapidamente os sons baixos são reduzidos (0 a -48 dB/octava)
+  - 0dB: Sem redução (desligado)
+  - De -6dB a -48dB: Redução progressivamente mais forte em passos de 6dB
 - **LPF Frequency** - Controla onde os sons agudos começam a ser reduzidos (200Hz a 20000Hz)
   - Valores mais baixos: Remove mais agudos
-  - Valores mais altos: Mantém mais agudos
-  - Comece alto e ajuste para baixo conforme necessário
-- **LPF Slope** - Quão rapidamente os sons agudos são reduzidos (-6 ou -12 dB/oitava)
-  - -6dB: Redução suave
-  - -12dB: Redução mais forte
+  - Valores mais altos: Preserva mais agudos
+  - Comece com valores altos e ajuste para baixo conforme necessário
+- **LPF Slope** - Quão rapidamente os sons agudos são reduzidos (0 a -48 dB/octava)
+  - 0dB: Sem redução (desligado)
+  - De -6dB a -48dB: Redução progressivamente mais forte em passos de 6dB
 - **Enabled** - Liga ou desliga o efeito
+
 
 ### Display Visual
 - Gráfico claro mostrando resposta em frequência
