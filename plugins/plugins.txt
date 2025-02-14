@@ -45,4 +45,4 @@ saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
 saturation/multiband_saturation: Multiband Saturation | Saturation | MultibandSaturationPlugin | css
 saturation/saturation: Saturation | Saturation | SaturationPlugin | css
 spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
-spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin | css
+spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin

@@ -13,15 +13,42 @@
     min-width: 100px;
 }
 
-.narrow-range-plugin-ui .radio-group {
-    display: flex;
-    gap: 10px;
+.narrow-range-plugin-ui .slope-select {
     margin-left: 10px;
+    padding: 2px;
+    background: #333;
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 3px;
+    font-size: 12px;
+    width: 80px;
+    cursor: pointer;
 }
 
-.narrow-range-plugin-ui .radio-label {
+.narrow-range-plugin-ui .slope-select:focus {
+    outline: none;
+    border-color: #777;
+}
+
+.narrow-range-plugin-ui .slope-select option {
+    background: #333;
+    color: #ccc;
+    padding: 2px;
+}
+
+.narrow-range-plugin-ui .parameter-row {
     display: flex;
     align-items: center;
-    gap: 5px;
-    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.narrow-range-plugin-ui .parameter-row input[type="range"] {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.narrow-range-plugin-ui .parameter-row input[type="number"] {
+    width: 60px;
+    text-align: right;
+    margin-right: 10px;
 }

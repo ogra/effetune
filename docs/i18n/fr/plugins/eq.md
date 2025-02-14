@@ -163,20 +163,20 @@ Un outil qui vous permet de vous concentrer sur des parties spécifiques de la m
   - Concentrez-vous sur les parties les plus importantes de la musique
 
 ### Parameters
-- **HPF Frequency** - Contrôle où les sons graves commencent à être réduits (20Hz à 1000Hz)
-  - Valeurs plus hautes : Supprime plus de basses
-  - Valeurs plus basses : Conserve plus de basses
-  - Commencez avec des valeurs basses et ajustez selon le goût
-- **HPF Slope** - Rapidité de réduction des sons graves (-6 ou -12 dB/octave)
-  - -6dB : Réduction douce
-  - -12dB : Réduction plus forte
-- **LPF Frequency** - Contrôle où les sons aigus commencent à être réduits (200Hz à 20000Hz)
-  - Valeurs plus basses : Supprime plus d'aigus
-  - Valeurs plus hautes : Conserve plus d'aigus
-  - Commencez haut et ajustez vers le bas selon besoin
-- **LPF Slope** - Rapidité de réduction des sons aigus (-6 ou -12 dB/octave)
-  - -6dB : Réduction douce
-  - -12dB : Réduction plus forte
+- **HPF Frequency** - Contrôle l'endroit où les basses commencent à être atténuées (20Hz à 1000Hz)
+  - Valeurs plus élevées : Supprime davantage les basses
+  - Valeurs plus basses : Conserve davantage les basses
+  - Commencez par des valeurs basses et ajustez selon vos préférences
+- **HPF Slope** - Indique la rapidité de l'atténuation des basses (0 à -48 dB/octave)
+  - 0dB : Aucune atténuation (désactivé)
+  - De -6dB à -48dB : Atténuation de plus en plus forte par paliers de 6dB
+- **LPF Frequency** - Contrôle l'endroit où les aigus commencent à être atténués (200Hz à 20000Hz)
+  - Valeurs plus basses : Supprime davantage les aigus
+  - Valeurs plus élevées : Conserve davantage les aigus
+  - Commencez par des valeurs élevées et ajustez à la baisse si nécessaire
+- **LPF Slope** - Indique la rapidité de l'atténuation des aigus (0 à -48 dB/octave)
+  - 0dB : Aucune atténuation (désactivé)
+  - De -6dB à -48dB : Atténuation de plus en plus forte par paliers de 6dB
 - **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
