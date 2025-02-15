@@ -1,19 +1,21 @@
-.oscilloscope-plugin-ui canvas {
+/* Oscilloscope plugin specific styles */
+.plugin-parameter-ui canvas {
     background-color: #1a1a1a;
 }
 
-.oscilloscope-plugin-ui .graph-container {
+.plugin-parameter-ui .graph-container {
     margin-top: 20px;
 }
 
-.oscilloscope-plugin-ui .parameters-grid {
+.plugin-parameter-ui .parameters-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(4, auto);
-    gap: 10px;
+    column-gap: 10px;
+    row-gap:0 px;
 }
 
-.oscilloscope-plugin-ui input[type="number"] {
+.plugin-parameter-ui input[type="number"] {
     width: 80px;
     padding: 4px;
     background-color: #3d3d3d;

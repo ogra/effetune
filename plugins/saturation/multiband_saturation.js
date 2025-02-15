@@ -253,7 +253,7 @@ class MultibandSaturationPlugin extends PluginBase {
         if (!container) return;
 
         if (!this.canvases) {
-            this.canvases = Array.from(container.querySelectorAll('.band-graph canvas'));
+            this.canvases = Array.from(container.querySelectorAll('.mbs-band-graph canvas'));
             if (!this.canvases.length) return;
         }
 
@@ -360,20 +360,20 @@ class MultibandSaturationPlugin extends PluginBase {
 
     createUI() {
         const container = document.createElement('div');
-        this.instanceId = `multiband-saturation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        container.className = 'multiband-saturation-plugin-ui';
+        this.instanceId = `mbs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        container.className = 'mbs-container';
         container.setAttribute('data-instance-id', this.instanceId);
 
         // Frequency sliders UI
         const freqContainer = document.createElement('div');
-        freqContainer.className = 'frequency-sliders';
+        freqContainer.className = 'mbs-freq-sliders';
 
         const createFreqSlider = (label, min, max, value, setter) => {
             const sliderContainer = document.createElement('div');
-            sliderContainer.className = 'frequency-slider';
+            sliderContainer.className = 'mbs-freq-slider';
 
             const topRow = document.createElement('div');
-            topRow.className = 'frequency-slider-top';
+            topRow.className = 'mbs-freq-slider-top';
 
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
@@ -417,25 +417,25 @@ class MultibandSaturationPlugin extends PluginBase {
 
         // Band settings UI
         const bandSettings = document.createElement('div');
-        bandSettings.className = 'band-settings';
+        bandSettings.className = 'mbs-band-settings';
         const bandTabs = document.createElement('div');
-        bandTabs.className = 'band-tabs';
+        bandTabs.className = 'mbs-band-tabs';
         const bandContents = document.createElement('div');
-        bandContents.className = 'band-contents';
+        bandContents.className = 'mbs-band-contents';
 
         const bandNames = ['Low', 'Mid', 'High'];
         for (let i = 0; i < this.bands.length; i++) {
             const tab = document.createElement('button');
-            tab.className = `band-tab ${i === 0 ? 'active' : ''}`;
+            tab.className = `mbs-band-tab ${i === 0 ? 'active' : ''}`;
             tab.textContent = bandNames[i];
             tab.setAttribute('data-instance-id', this.instanceId);
             
             tab.onclick = () => {
                 if (i >= this.bands.length) return;
                 const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
-                container.querySelectorAll('.band-tab').forEach(t => t.classList.remove('active'));
-                container.querySelectorAll('.band-content').forEach(c => c.classList.remove('active'));
-                container.querySelectorAll('.band-graph').forEach((g, index) => {
+                container.querySelectorAll('.mbs-band-tab').forEach(t => t.classList.remove('active'));
+                container.querySelectorAll('.mbs-band-content').forEach(c => c.classList.remove('active'));
+                container.querySelectorAll('.mbs-band-graph').forEach((g, index) => {
                     g.classList.toggle('active', index === i);
                 });
                 tab.classList.add('active');
@@ -446,7 +446,7 @@ class MultibandSaturationPlugin extends PluginBase {
             bandTabs.appendChild(tab);
 
             const content = document.createElement('div');
-            content.className = `band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
+            content.className = `mbs-band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
             content.setAttribute('data-instance-id', this.instanceId);
 
             const createControl = (label, min, max, step, value, setter) => {
@@ -496,10 +496,10 @@ class MultibandSaturationPlugin extends PluginBase {
 
         // Transfer graphs UI
         const graphsContainer = document.createElement('div');
-        graphsContainer.className = 'transfer-graphs';
+        graphsContainer.className = 'mbs-transfer-graphs';
         for (let i = 0; i < this.bands.length; i++) {
             const graphDiv = document.createElement('div');
-            graphDiv.className = `band-graph ${i === 0 ? 'active' : ''}`;
+            graphDiv.className = `mbs-band-graph ${i === 0 ? 'active' : ''}`;
             graphDiv.setAttribute('data-instance-id', this.instanceId);
             const canvas = document.createElement('canvas');
             canvas.width = 320;
@@ -508,7 +508,7 @@ class MultibandSaturationPlugin extends PluginBase {
             canvas.style.height = '160px';
             canvas.style.backgroundColor = '#222';
             const label = document.createElement('div');
-            label.className = 'band-graph-label';
+            label.className = 'mbs-band-graph-label';
             label.textContent = bandNames[i];
             graphDiv.appendChild(canvas);
             graphDiv.appendChild(label);
@@ -516,7 +516,7 @@ class MultibandSaturationPlugin extends PluginBase {
         }
         container.appendChild(graphsContainer);
 
-        this.canvases = Array.from(container.querySelectorAll('.band-graph canvas'));
+        this.canvases = Array.from(container.querySelectorAll('.mbs-band-graph canvas'));
         this.updateTransferGraphs();
         this.startAnimation();
 

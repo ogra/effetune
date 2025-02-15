@@ -783,6 +783,12 @@ Use this tool during development to ensure your plugin follows the required impl
      radio.name = `channel-${this.id}`; // Include plugin ID to make it unique
      radio.value = 'Left';
      ```
+   - Use effetune.css styles as much as possible to maintain consistent look and feel across plugins
+   - When defining plugin-specific CSS, include the plugin name in class names to avoid style conflicts and duplication. Example:
+     ```css
+     .my-plugin-container { /* Plugin-specific styles */ }
+     .my-plugin-slider { /* Custom slider styles */ }
+     ```
    - Follow the standard CSS styles for common UI elements to maintain consistency across plugins
    - Keep plugin-specific CSS minimal and focused on unique styling needs
    - Use the base CSS classes for standard elements (e.g., `.parameter-row`, `.radio-group`) to ensure consistent layout and appearance

@@ -136,7 +136,7 @@ class OscillatorPlugin extends PluginBase {
     // Create UI
     createUI() {
         const container = document.createElement('div');
-        container.className = 'oscillator-plugin-ui plugin-parameter-ui';
+        container.className = 'plugin-parameter-ui';
 
         // Frequency Control
         const freqRow = document.createElement('div');
