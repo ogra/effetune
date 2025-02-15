@@ -52,7 +52,6 @@ Una herramienta de ajuste de sonido detallada con 15 controles separados, cada u
     - 6.3kHz: Brillantez del sonido
     - 10kHz: Aire del sonido
     - 16kHz: Brillo del sonido
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 - Gráfico en tiempo real mostrando tus ajustes de sonido
@@ -94,7 +93,6 @@ Un ajustador de sonido de tres bandas simple para personalización rápida y fá
   - Aumenta para más brillo y detalle
   - Disminuye para sonido más suave
   - Afecta el "brillo" de la música
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 - Gráfico fácil de leer mostrando tus ajustes
@@ -135,7 +133,6 @@ Un ecualizador paramétrico de grado profesional basado en principios científic
     - Paso Bajo/Alto: Pendiente de 12dB/octava
     - Shelf Bajo/Alto: Modelado espectral suave
     - Paso Banda: Aislamiento enfocado de frecuencia
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización Técnica
 - Visualización de respuesta en frecuencia de alta resolución
@@ -177,7 +174,6 @@ Una herramienta que te permite enfocarte en partes específicas de la música fi
 - **LPF Slope** - Cuán rápidamente se reducen los sonidos altos (0 a -48 dB/octava)
   - 0dB: Sin reducción (apagado)
   - De -6dB a -48dB: Reducción cada vez más fuerte en pasos de 6dB
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 - Gráfico claro mostrando respuesta en frecuencia

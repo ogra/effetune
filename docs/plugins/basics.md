@@ -28,7 +28,6 @@ A simple but essential control that lets you adjust how loud your music plays. P
   - Lower values: Quieter playback
   - Higher values: Louder playback
   - 0dB: Original volume level
-- **Enabled** - Turns the control on or off
 
 ## DC Offset
 
@@ -44,7 +43,6 @@ A utility that can help fix audio that sounds unbalanced or strange. Most listen
   - 0.0: Normal setting
   - Adjust if something sounds off
   - Small adjustments usually work best
-- **Enabled** - Turns the control on or off
 
 ## Polarity Inversion
 
@@ -60,7 +58,6 @@ A tool that can improve how stereo music sounds in certain situations. It's like
   - All: Affects both left and right
   - Left: Only affects left speaker/earphone
   - Right: Only affects right speaker/earphone
-- **Enabled** - Turns the control on or off
 
 ## Stereo Balance
 
@@ -81,7 +78,6 @@ Lets you adjust how the music is distributed between your left and right speaker
   - Center (0%): Equal in both sides
   - Left (-100%): More sound in left
   - Right (+100%): More sound in right
-- **Enabled** - Turns the control on or off
 
 ### Visual Display
 - Easy-to-use slider

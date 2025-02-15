@@ -21,9 +21,6 @@ Una visualización que muestra en tiempo real qué tan fuerte se está reproduci
 - La advertencia roja en la parte superior significa que el volumen podría ser demasiado alto
 - Para una escucha cómoda, intenta mantener los niveles en el rango medio
 
-### Parámetros
-- **Enabled** - Activa o desactiva la visualización
-
 ## Oscilloscope
 
 Un osciloscopio de grado profesional que muestra formas de onda de audio en tiempo real, ayudándote a visualizar la forma real de tus ondas sonoras. Cuenta con funcionalidad de disparo para una visualización estable de la forma de onda, facilitando el análisis de señales periódicas y transitorias.

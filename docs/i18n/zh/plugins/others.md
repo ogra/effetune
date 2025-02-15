@@ -37,7 +37,6 @@
   - Sawtooth:完整的谐波系列
   - White Noise:每赫兹等能量
   - Pink Noise:每倍频程等能量
-- **Enabled** - 打开或关闭发生器
 
 ### 使用示例
 

@@ -140,7 +140,6 @@ Un effet qui gère automatiquement les différences de volume dans votre musique
   - Utilisez-le pour faire correspondre le volume avec le son original
   - Augmentez si la musique semble trop douce
   - Diminuez si elle est trop forte
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 

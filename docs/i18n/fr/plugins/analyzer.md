@@ -21,9 +21,6 @@ Un affichage visuel qui montre en temps réel le volume de votre musique. Il vou
 - L'avertissement rouge en haut signifie que le volume pourrait être trop fort
 - Pour une écoute confortable, essayez de maintenir les niveaux dans la plage moyenne
 
-### Parameters
-- **Enabled** - Active ou désactive l'affichage
-
 ## Oscilloscope
 
 Un oscilloscope de qualité professionnelle qui affiche les formes d'onde audio en temps réel, vous aidant à visualiser la forme réelle de vos ondes sonores. Il dispose d'une fonction de déclenchement pour un affichage stable de la forme d'onde, facilitant l'analyse des signaux périodiques et des transitoires.

@@ -40,7 +40,6 @@ Un effet qui ajoute des variations subtiles de hauteur à votre musique, similai
 - **Randomness Cutoff** - Rapidité des changements aléatoires (0.1 à 20 Hz)
   - Plus bas : Changements plus lents et doux
   - Plus haut : Changements plus rapides et erratiques
-- **Enabled** - Active ou désactive l'effet
 
 ### Réglages Recommandés pour Différents Styles
 

@@ -37,7 +37,6 @@ A versatile audio signal generator that produces various waveforms with precise 
   - Sawtooth: Full harmonic series
   - White Noise: Equal energy per Hz
   - Pink Noise: Equal energy per octave
-- **Enabled** - Turns the generator on or off
 
 ### Example Uses
 

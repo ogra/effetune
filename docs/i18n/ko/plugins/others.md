@@ -37,7 +37,6 @@
   - Sawtooth: 완전한 하모닉 시리즈
   - White Noise: Hz당 동일한 에너지
   - Pink Noise: 옥타브당 동일한 에너지
-- **Enabled** - 제너레이터 켜기/끄기
 
 ### Example Uses
 

@@ -37,7 +37,6 @@ Un générateur de signal audio polyvalent qui produit diverses formes d'onde av
   - Sawtooth : Série harmonique complète
   - White Noise : Énergie égale par Hz
   - Pink Noise : Énergie égale par octave
-- **Enabled** - Active ou désactive le générateur
 
 ### Exemples d'Utilisation
 

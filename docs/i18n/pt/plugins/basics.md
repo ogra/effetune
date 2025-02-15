@@ -28,7 +28,6 @@ Um controle simples mas essencial que permite ajustar o volume da sua música. P
   - Valores menores: Reprodução mais baixa
   - Valores maiores: Reprodução mais alta
   - 0dB: Nível de volume original
-- **Enabled** - Liga ou desliga o controle
 
 ## DC Offset
 
@@ -44,7 +43,6 @@ Uma utilidade que pode ajudar a corrigir áudio que soa desequilibrado ou estran
   - 0.0: Configuração normal
   - Ajuste se algo soar estranho
   - Ajustes pequenos geralmente funcionam melhor
-- **Enabled** - Liga ou desliga o controle
 
 ## Polarity Inversion
 
@@ -60,7 +58,6 @@ Uma ferramenta que pode melhorar como a música estéreo soa em certas situaçõ
   - All: Afeta ambos esquerdo e direito
   - Left: Afeta apenas o alto-falante/fone esquerdo
   - Right: Afeta apenas o alto-falante/fone direito
-- **Enabled** - Liga ou desliga o controle
 
 ## Stereo Balance
 
@@ -81,7 +78,6 @@ Permite ajustar como a música é distribuída entre seus alto-falantes ou fones
   - Centro (0%): Igual em ambos os lados
   - Esquerda (-100%): Mais som na esquerda
   - Direita (+100%): Mais som na direita
-- **Enabled** - Liga ou desliga o controle
 
 ### Display Visual
 - Controle deslizante fácil de usar

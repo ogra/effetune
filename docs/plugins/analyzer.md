@@ -21,9 +21,6 @@ A visual display that shows you how loud your music is playing in real-time. It 
 - Red warning at the top means the volume might be too loud
 - For comfortable listening, try to keep levels in the middle range
 
-### Parameters
-- **Enabled** - Turns the display on or off
-
 ## Oscilloscope
 
 A professional-grade oscilloscope that displays real-time audio waveforms, helping you visualize the actual shape of your sound waves. It features trigger functionality for stable waveform display, making it easier to analyze periodic signals and transients.

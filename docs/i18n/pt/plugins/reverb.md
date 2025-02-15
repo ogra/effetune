@@ -61,7 +61,6 @@ Um efeito que pode transportar sua música para diferentes espaços, desde salas
   - 10-30%: Aprimoramento sutil
   - 30-50%: Espaço notável
   - 50-100%: Efeito dramático
-- **Enabled** - Liga ou desliga o efeito
 
 ### Configurações Recomendadas para Diferentes Estilos de Música
 

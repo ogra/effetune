@@ -132,7 +132,6 @@ Un limitador de picos de alta calidad que asegura que tu música nunca exceda un
   - Usa esto para igualar el volumen con el sonido original
   - Aumenta si la música se siente muy silenciosa
   - Disminuye si está muy fuerte
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 

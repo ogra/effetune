@@ -21,9 +21,6 @@ Um display visual que mostra em tempo real o volume da sua música. Ajuda você 
 - Aviso vermelho no topo indica que o volume pode estar muito alto
 - Para uma audição confortável, mantenha os níveis na faixa média
 
-### Parâmetros
-- **Enabled** - Liga ou desliga o display
-
 ## Oscilloscope
 
 Um osciloscópio profissional que exibe formas de onda de áudio em tempo real, ajudando você a visualizar a forma real das suas ondas sonoras. Possui funcionalidade de trigger para exibição estável da forma de onda, facilitando a análise de sinais periódicos e transientes.

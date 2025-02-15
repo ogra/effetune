@@ -140,7 +140,6 @@ Um efeito que gerencia automaticamente as diferenças de volume em sua música, 
   - Use para equiparar o volume com o som original
   - Aumente se a música parecer muito baixa
   - Diminua se estiver muito alta
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Visual
 

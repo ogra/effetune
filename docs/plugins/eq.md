@@ -52,7 +52,6 @@ A detailed sound adjustment tool with 15 separate controls, each affecting a spe
     - 6.3kHz: Sound brilliance
     - 10kHz: Sound air
     - 16kHz: Sound sparkle
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 - Real-time graph showing your sound adjustments
@@ -94,7 +93,6 @@ A simple three-band sound adjuster for quick and easy sound personalization. Per
   - Increase for more sparkle and detail
   - Decrease for smoother, softer sound
   - Affects the "brightness" of the music
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 - Easy-to-read graph showing your adjustments
@@ -135,7 +133,6 @@ A professional-grade parametric equalizer based on scientific principles, offeri
     - Low/High Pass: 12dB/octave slope
     - Low/High Shelf: Gentle spectral shaping
     - Band Pass: Focused frequency isolation
-- **Enabled** - Turns the effect on or off
 
 ### Technical Display
 - High-resolution frequency response visualization
@@ -177,7 +174,6 @@ A tool that lets you focus on specific parts of the music by filtering out unwan
 - **LPF Slope** - How quickly high sounds are reduced (0 to -48 dB/octave)
   - 0dB: No reduction (off)
   - -6dB to -48dB: Increasingly stronger reduction in 6dB steps
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 - Clear graph showing frequency response
