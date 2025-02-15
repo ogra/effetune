@@ -329,7 +329,7 @@ class FiveBandPEQPlugin extends PluginBase {
 
   createUI() {
     const container = document.createElement('div');
-    container.className = 'five-band-peq';
+    container.className = 'five-band-peq-plugin-ui plugin-parameter-ui';
 
     // Channel selector row
     const channelRow = document.createElement('div');
