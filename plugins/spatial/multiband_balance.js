@@ -261,17 +261,20 @@ class MultibandBalancePlugin extends PluginBase {
 
     createUI() {
         const container = document.createElement('div');
-        container.className = 'plugin-parameter-ui';
+        container.className = 'multiband-balance-container';
 
         // Frequency sliders UI
         const freqContainer = document.createElement('div');
-        freqContainer.className = 'frequency-sliders';
+        freqContainer.className = 'plugin-parameter-ui';
+        const freqSliders = document.createElement('div');
+        freqSliders.className = 'multiband-balance-frequency-sliders';
+        freqContainer.appendChild(freqSliders);
 
         const createFreqSlider = (label, min, max, value, setter) => {
             const sliderContainer = document.createElement('div');
-            sliderContainer.className = 'frequency-slider';
+            sliderContainer.className = 'multiband-balance-frequency-slider';
             const topRow = document.createElement('div');
-            topRow.className = 'frequency-slider-top parameter-row';
+            topRow.className = 'multiband-balance-frequency-slider-top';
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
             const numberInput = document.createElement('input');
@@ -303,15 +306,18 @@ class MultibandBalancePlugin extends PluginBase {
             return sliderContainer;
         };
 
-        freqContainer.appendChild(createFreqSlider('Freq 1 (Hz):', 20, 500, this.f1, (value) => this.setParameters({ f1: value })));
-        freqContainer.appendChild(createFreqSlider('Freq 2 (Hz):', 100, 2000, this.f2, (value) => this.setParameters({ f2: value })));
-        freqContainer.appendChild(createFreqSlider('Freq 3 (Hz):', 500, 8000, this.f3, (value) => this.setParameters({ f3: value })));
-        freqContainer.appendChild(createFreqSlider('Freq 4 (Hz):', 1000, 20000, this.f4, (value) => this.setParameters({ f4: value })));
+        freqSliders.appendChild(createFreqSlider('Freq 1 (Hz):', 20, 500, this.f1, (value) => this.setParameters({ f1: value })));
+        freqSliders.appendChild(createFreqSlider('Freq 2 (Hz):', 100, 2000, this.f2, (value) => this.setParameters({ f2: value })));
+        freqSliders.appendChild(createFreqSlider('Freq 3 (Hz):', 500, 8000, this.f3, (value) => this.setParameters({ f3: value })));
+        freqSliders.appendChild(createFreqSlider('Freq 4 (Hz):', 1000, 20000, this.f4, (value) => this.setParameters({ f4: value })));
         container.appendChild(freqContainer);
 
         // Band balance sliders UI
         const bandContainer = document.createElement('div');
-        bandContainer.className = 'band-balances';
+        bandContainer.className = 'plugin-parameter-ui';
+        const bandBalances = document.createElement('div');
+        bandBalances.className = 'multiband-balance-band-balances';
+        bandContainer.appendChild(bandBalances);
 
         const createBalanceSlider = (label, bandIndex) => {
             const row = document.createElement('div');
@@ -347,11 +353,11 @@ class MultibandBalancePlugin extends PluginBase {
         };
 
         // バンドを逆順で表示(Band 5から1)
-        bandContainer.appendChild(createBalanceSlider('Band 5 Bal. (%):', 4));
-        bandContainer.appendChild(createBalanceSlider('Band 4 Bal. (%):', 3));
-        bandContainer.appendChild(createBalanceSlider('Band 3 Bal. (%):', 2));
-        bandContainer.appendChild(createBalanceSlider('Band 2 Bal. (%):', 1));
-        bandContainer.appendChild(createBalanceSlider('Band 1 Bal. (%):', 0));
+        bandBalances.appendChild(createBalanceSlider('Band 5 Bal. (%):', 4));
+        bandBalances.appendChild(createBalanceSlider('Band 4 Bal. (%):', 3));
+        bandBalances.appendChild(createBalanceSlider('Band 3 Bal. (%):', 2));
+        bandBalances.appendChild(createBalanceSlider('Band 2 Bal. (%):', 1));
+        bandBalances.appendChild(createBalanceSlider('Band 1 Bal. (%):', 0));
         container.appendChild(bandContainer);
 
         return container;

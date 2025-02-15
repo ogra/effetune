@@ -620,3 +620,7 @@ input {
     content: "✕";
     font-size: 18px;
 }
+
+.parameter-row label {
+    width: 120px;
+}
