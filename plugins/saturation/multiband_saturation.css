@@ -1,12 +1,12 @@
 /* Multiband Saturation plugin specific styles */
-.multiband-saturation-plugin-ui {
+.mbs-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
 /* Frequency slider area */
-.frequency-sliders {
+.mbs-freq-sliders {
     display: flex;
     flex-direction: row;
     gap: 10px;
@@ -15,7 +15,7 @@
     border-radius: 4px;
 }
 
-.frequency-slider {
+.mbs-freq-slider {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -23,18 +23,18 @@
     min-width: 0;
 }
 
-.frequency-slider-top {
+.mbs-freq-slider-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
 }
 
-.frequency-slider input[type="range"] {
+.mbs-freq-slider input[type="range"] {
     width: 100%;
 }
 
-.frequency-slider input[type="number"] {
+.mbs-freq-slider input[type="number"] {
     width: 80px;
     padding: 4px;
     background-color: #3d3d3d;
@@ -44,19 +44,19 @@
 }
 
 /* Band settings area */
-.band-settings {
+.mbs-band-settings {
     background: #2a2a2a;
     border-radius: 4px;
     padding: 10px;
 }
 
-.band-tabs {
+.mbs-band-tabs {
     display: flex;
     gap: 2px;
     margin-bottom: 20px;
 }
 
-.band-tab {
+.mbs-band-tab {
     padding: 8px 16px;
     background: #333;
     border: none;
@@ -65,20 +65,20 @@
     color: #fff;
 }
 
-.band-tab.active {
+.mbs-band-tab.active {
     background: #444;
 }
 
-.band-content {
+.mbs-band-content {
     display: none;
 }
 
-.band-content.active {
+.mbs-band-content.active {
     display: block;
 }
 
 /* Transfer graphs area */
-.transfer-graphs {
+.mbs-transfer-graphs {
     display: flex;
     gap: 10px;
     justify-content: space-between;
@@ -87,7 +87,7 @@
     border-radius: 4px;
 }
 
-.band-graph {
+.mbs-band-graph {
     flex: 1;
     position: relative;
     background: #222;
@@ -95,16 +95,16 @@
     padding: 10px;
 }
 
-.band-graph.active {
+.mbs-band-graph.active {
     background: #333;
 }
 
-.band-graph canvas {
+.mbs-band-graph canvas {
     margin: 10px auto;
     display: block;
 }
 
-.band-graph-label {
+.mbs-band-graph-label {
     text-align: center;
     margin-top: 5px;
 }

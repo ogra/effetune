@@ -401,12 +401,12 @@ class MultibandCompressorPlugin extends PluginBase {
     if (!container) return;  // Exit if container is not in DOM
 
     // Cache DOM query result to minimize reflows, scoped to this instance
-    const canvases = Array.from(container.querySelectorAll('.band-graph canvas'));
+    const canvases = Array.from(container.querySelectorAll('.multiband-compressor-band-graph canvas'));
     if (!canvases.length) return;  // Exit if no canvases found
 
     // Update canvas reference if needed
     if (!this.canvas || !document.contains(this.canvas)) {
-      this.canvas = container.querySelector('.band-graph.active canvas');
+      this.canvas = container.querySelector('.multiband-compressor-band-graph.active canvas');
       if (!this.canvas) return;  // Exit if active canvas not found
     }
 
@@ -521,21 +521,21 @@ class MultibandCompressorPlugin extends PluginBase {
     const container = document.createElement('div');
     // Add unique instance identifier
     this.instanceId = `multiband-compressor-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    container.className = 'multiband-compressor-plugin-ui';
+    container.className = 'multiband-compressor-container';
     container.setAttribute('data-instance-id', this.instanceId);
 
     // Frequency sliders UI
     const freqContainer = document.createElement('div');
     freqContainer.className = 'plugin-parameter-ui';
     const freqSliders = document.createElement('div');
-    freqSliders.className = 'frequency-sliders';
+    freqSliders.className = 'multiband-compressor-frequency-sliders';
     freqContainer.appendChild(freqSliders);
 
     const createFreqSlider = (label, min, max, value, setter) => {
       const sliderContainer = document.createElement('div');
-      sliderContainer.className = 'frequency-slider';
+      sliderContainer.className = 'multiband-compressor-frequency-slider';
       const topRow = document.createElement('div');
-      topRow.className = 'frequency-slider-top parameter-row';
+      topRow.className = 'multiband-compressor-frequency-slider-top parameter-row';
       const labelEl = document.createElement('label');
       labelEl.textContent = label;
       const numberInput = document.createElement('input');
@@ -575,15 +575,15 @@ class MultibandCompressorPlugin extends PluginBase {
 
     // Band settings UI
     const bandSettings = document.createElement('div');
-    bandSettings.className = 'band-settings';
+    bandSettings.className = 'multiband-compressor-band-settings';
     const bandTabs = document.createElement('div');
-    bandTabs.className = 'band-tabs';
+    bandTabs.className = 'multiband-compressor-band-tabs';
     const bandContents = document.createElement('div');
-    bandContents.className = 'band-contents';
+    bandContents.className = 'multiband-compressor-band-contents';
 
     for (let i = 0; i < this.bands.length; i++) {
       const tab = document.createElement('button');
-      tab.className = `band-tab ${i === 0 ? 'active' : ''}`;
+      tab.className = `multiband-compressor-band-tab ${i === 0 ? 'active' : ''}`;
       tab.textContent = `Band ${i + 1}`;
       // Add instance ID to elements
       tab.setAttribute('data-instance-id', this.instanceId);
@@ -594,12 +594,12 @@ class MultibandCompressorPlugin extends PluginBase {
           return;
         }
         const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
-        container.querySelectorAll('.band-tab').forEach(t => t.classList.remove('active'));
-        container.querySelectorAll('.band-content').forEach(c => c.classList.remove('active'));
-        container.querySelectorAll('.band-graph').forEach(g => g.classList.remove('active'));
+        container.querySelectorAll('.multiband-compressor-band-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.multiband-compressor-band-content').forEach(c => c.classList.remove('active'));
+        container.querySelectorAll('.multiband-compressor-band-graph').forEach(g => g.classList.remove('active'));
         tab.classList.add('active');
         content.classList.add('active');
-        container.querySelector(`.band-graph:nth-child(${i + 1})`).classList.add('active');
+        container.querySelector(`.multiband-compressor-band-graph:nth-child(${i + 1})`).classList.add('active');
         this.selectedBand = i;
         this.updateTransferGraphs();
       };
@@ -607,7 +607,7 @@ class MultibandCompressorPlugin extends PluginBase {
 
       // Generate band content
       const content = document.createElement('div');
-      content.className = `band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
+      content.className = `multiband-compressor-band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
       content.setAttribute('data-instance-id', this.instanceId);
 
       const createControl = (label, min, max, step, value, setter) => {
@@ -659,11 +659,11 @@ class MultibandCompressorPlugin extends PluginBase {
 
     // Gain reduction graphs UI
     const graphsContainer = document.createElement('div');
-    graphsContainer.className = 'gain-reduction-graphs';
+    graphsContainer.className = 'multiband-compressor-graphs';
     // Generate graphs based on number of bands
     for (let i = 0; i < this.bands.length; i++) {
       const graphDiv = document.createElement('div');
-      graphDiv.className = `band-graph ${i === 0 ? 'active' : ''}`;
+      graphDiv.className = `multiband-compressor-band-graph ${i === 0 ? 'active' : ''}`;
       graphDiv.setAttribute('data-instance-id', this.instanceId);
       const canvas = document.createElement('canvas');
       canvas.width = 320;
@@ -672,7 +672,7 @@ class MultibandCompressorPlugin extends PluginBase {
       canvas.style.height = '160px';
       canvas.style.backgroundColor = '#222';
       const label = document.createElement('div');
-      label.className = 'band-graph-label';
+      label.className = 'multiband-compressor-band-graph-label';
       label.textContent = `Band ${i + 1}`;
       graphDiv.appendChild(canvas);
       graphDiv.appendChild(label);
@@ -681,7 +681,7 @@ class MultibandCompressorPlugin extends PluginBase {
     container.appendChild(graphsContainer);
 
     // Cache main canvas reference for animation updates
-    this.canvas = container.querySelector('.band-graph.active canvas');
+    this.canvas = container.querySelector('.multiband-compressor-band-graph.active canvas');
     this.updateTransferGraphs();
     this.startAnimation();
 

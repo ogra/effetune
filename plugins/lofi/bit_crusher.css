@@ -3,25 +3,6 @@
     position: relative;
 }
 
-.parameter-row {
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.parameter-row label {
-    min-width: 120px;
-}
-
-.parameter-row input[type="range"] {
-    flex: 1;
-}
-
-.parameter-row input[type="number"] {
-    width: 80px;
-}
-
 input[type="checkbox"] {
     margin: 0;
     width: 20px;

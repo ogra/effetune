@@ -1,32 +1,14 @@
 /* Oscillator plugin specific styles */
-.oscillator-plugin-ui {
-    position: relative;
-}
-
-.oscillator-plugin-ui label {
-    min-width: 120px;
-    display: inline-block;
-}
-
-.oscillator-plugin-ui .parameter-row {
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-}
-
-.oscillator-plugin-ui input[type="number"] {
-    width: 70px;
-    margin-left: 10px;
-}
-
-.oscillator-plugin-ui input[type="range"] {
-    flex: 1;
-    margin: 0 10px;
-}
-
-.oscillator-plugin-ui .radio-group {
+.radio-group {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
-    margin-left: 10px;
+}
+
+.radio-group label {
+    min-width: auto;
+    margin-right: 10px;
+    color: #ddd;
+    margin-top: 2px;
+    margin-bottom: 2px;
 }

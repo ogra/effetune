@@ -1,53 +1,49 @@
 /* Multiband Compressor plugin specific styles */
-.multiband-compressor-plugin-ui {
+.multiband-compressor-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
 /* Frequency slider area */
-.frequency-sliders {
+.multiband-compressor-frequency-sliders {
     display: flex;
     flex-direction: row;
     gap: 10px;
     padding: 10px;
-    background: #2a2a2a;
+    background: #2d2d2d;
     border-radius: 4px;
 }
 
-.frequency-slider {
+.multiband-compressor-frequency-slider {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 5px;
-    min-width: 0; /* Prevent flex items from overflowing */
+    min-width: 0;
 }
 
-.frequency-slider-top {
+.multiband-compressor-frequency-slider-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
 }
 
-.frequency-slider input[type="range"] {
-    width: 100%;
-}
-
 /* Band settings area */
-.band-settings {
-    background: #2a2a2a;
+.multiband-compressor-band-settings {
+    background: #2d2d2d;
     border-radius: 4px;
     padding: 10px;
 }
 
-.band-tabs {
+.multiband-compressor-band-tabs {
     display: flex;
     gap: 2px;
     margin-bottom: 20px;
 }
 
-.band-tab {
+.multiband-compressor-band-tab {
     padding: 8px 16px;
     background: #333;
     border: none;
@@ -56,45 +52,29 @@
     color: #fff;
 }
 
-.band-tab.active {
+.multiband-compressor-band-tab.active {
     background: #444;
 }
 
-.band-content {
+.multiband-compressor-band-content {
     display: none;
 }
 
-.band-content.active {
+.multiband-compressor-band-content.active {
     display: block;
 }
 
-/* Band parameter controls */
-.parameter-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.parameter-row label {
-    width: 120px;
-}
-
-.parameter-row input[type="range"] {
-    flex: 1;
-}
-
 /* Gain reduction graphs area */
-.gain-reduction-graphs {
+.multiband-compressor-graphs {
     display: flex;
     gap: 10px;
     justify-content: space-between;
     padding: 10px;
-    background: #2a2a2a;
+    background: #2d2d2d;
     border-radius: 4px;
 }
 
-.band-graph {
+.multiband-compressor-band-graph {
     flex: 1;
     position: relative;
     background: #222;
@@ -102,16 +82,16 @@
     padding: 10px;
 }
 
-.band-graph.active {
+.multiband-compressor-band-graph.active {
     background: #333;
 }
 
-.band-graph canvas {
+.multiband-compressor-band-graph canvas {
     margin: 10px auto;
     display: block;
 }
 
-.band-graph-label {
+.multiband-compressor-band-graph-label {
     text-align: center;
     margin-top: 5px;
 }
