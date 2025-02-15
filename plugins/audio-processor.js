@@ -12,6 +12,7 @@ class PluginProcessor extends AudioWorkletProcessor {
         this.currentFrame = 0;
         this.pluginProcessors = new Map();
         this.pluginContexts = new Map();
+        this.masterBypass = false;
         
         // Message control
         this.lastMessageTime = 0;
@@ -32,6 +33,7 @@ class PluginProcessor extends AudioWorkletProcessor {
                 this.updatePlugin(event.data.plugin);
             } else if (event.data.type === 'updatePlugins') {
                 this.isOfflineProcessing = event.data.isOfflineProcessing || false;
+                this.masterBypass = event.data.masterBypass || false;
                 this.updatePlugins(event.data.plugins);
             } else if (event.data.type === 'registerProcessor') {
                 this.registerPluginProcessor(event.data.pluginType, event.data.processor);
@@ -116,14 +118,22 @@ class PluginProcessor extends AudioWorkletProcessor {
         const input = inputs[0];
         const output = outputs[0];
 
-        if (!input) {
-            console.warn('Audio processor: Input is missing');
+        // Early validation of input/output
+        if (!input || !output) {
             return true;
         }
-        if (!output) {
-            console.warn('Audio processor: Output is missing');
+
+        // Handle bypass mode first
+        if (this.masterBypass) {
+            if (input[0]) {
+                for (let channel = 0; channel < input.length; channel++) {
+                    output[channel].set(input[channel]);
+                }
+            }
             return true;
         }
+
+        // Full validation for processing mode
         if (!input[0]) {
             console.warn('Audio processor: Input channel data is missing');
             return true;

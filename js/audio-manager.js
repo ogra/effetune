@@ -73,15 +73,19 @@ export class AudioManager {
             this.workletNode.disconnect();
         }
 
-        // If pipeline is empty or master bypass is enabled, connect source directly to destination
-        if (this.pipeline.length === 0 || this.masterBypass) {
-            this.sourceNode.connect(this.audioContext.destination);
-            return;
-        }
-
         // Connect source to worklet
         this.sourceNode.connect(this.workletNode);
         this.workletNode.connect(this.audioContext.destination);
+
+        // Update worklet with current state
+        if (this.pipeline.length === 0 || this.masterBypass) {
+            this.workletNode.port.postMessage({
+                type: 'updatePlugins',
+                plugins: [],
+                masterBypass: true
+            });
+            return;
+        }
 
         // Update worklet with current plugins
         this.workletNode.port.postMessage({
@@ -91,7 +95,8 @@ export class AudioManager {
                 type: plugin.constructor.name,
                 enabled: plugin.enabled,
                 parameters: plugin.getParameters()
-            }))
+            })),
+            masterBypass: this.masterBypass
         });
     }
 

@@ -38,7 +38,14 @@ An effect that recreates the sound of vintage digital devices like old gaming co
 - **ZOH Frequency** - Affects the overall clarity (4000Hz to 96000Hz)
   - Lower values: More retro, less clear
   - Higher values: Clearer, more subtle effect
-- **Enabled** - Turns the effect on or off
+- **Bit Error** - Adds vintage hardware character (0.00% to 10.00%)
+  - 0-1%: Subtle vintage warmth
+  - 1-3%: Classic hardware imperfections
+  - 3-10%: Creative lo-fi character
+- **Random Seed** - Controls the unique character of imperfections (0 to 1000)
+  - Different values create different vintage "personalities"
+  - Same value always creates the same character
+  - Perfect for finding and saving your favorite vintage sound
 
 ## Noise Blender
 
@@ -69,7 +76,6 @@ An effect that adds atmospheric background texture to your music, similar to the
 - **Per Channel** - Creates a more spacious effect
   - On: Wider, more immersive sound
   - Off: More focused, centered texture
-- **Enabled** - Turns the effect on or off
 
 ## Simple Jitter
 
@@ -94,30 +100,29 @@ An effect that adds subtle timing variations to create that imperfect, vintage d
   - Subtle (1-10ps): Gentle vintage character
   - Medium (10-100ps): Classic CD player feel
   - Strong (100ps-1ms): Creative wobble effects
-- **Enabled** - Turns the effect on or off
 
 ### Recommended Settings for Different Styles
 
 1. Relaxing Lo-Fi
-   - Bit Crusher: 12 bits, dither on
+   - Bit Crusher: 12 bits, dither on, bit error 1.5%, seed 42
    - Noise Blender: Pink noise, -60dB
    - Jitter: Light (10ps)
    - Perfect for: Study sessions, relaxation
 
 2. Retro Gaming
-   - Bit Crusher: 8 bits, dither off
+   - Bit Crusher: 8 bits, dither off, bit error 3%, seed 888
    - Noise Blender: White noise, -72dB
    - Jitter: None
    - Perfect for: Video game music appreciation
 
 3. Vintage Digital
-   - Bit Crusher: 16 bits
+   - Bit Crusher: 16 bits, bit error 0.8%, seed 123
    - Noise Blender: Pink noise, -66dB
    - Jitter: Medium (50ps)
    - Perfect for: 90s music nostalgia
 
 4. Ambient Lo-Fi
-   - Bit Crusher: 14 bits, dither on
+   - Bit Crusher: 14 bits, dither on, bit error 2%, seed 456
    - Noise Blender: Pink noise, -54dB
    - Jitter: Light (20ps)
    - Perfect for: Background atmosphere
