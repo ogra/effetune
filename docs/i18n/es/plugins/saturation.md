@@ -35,7 +35,6 @@ Un efecto que puede agregar desde calidez sutil hasta carácter intenso a tu mú
   - Both Sides: Efecto equilibrado y natural
   - Positive Only: Sonido más brillante y agresivo
   - Negative Only: Carácter más oscuro y único
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 - Gráfico en tiempo real mostrando cómo se está moldeando el sonido
@@ -163,7 +162,6 @@ Un efecto que simula el sonido cálido y agradable del equipo de válvulas vinta
 - **Gain** - Ajusta el volumen general (-18dB a +18dB)
   - Usa valores negativos si el efecto está muy fuerte
   - Usa valores positivos si el efecto está muy suave
-- **Enabled** - Activa o desactiva el efecto
 
 ### Visualización
 - Gráfico claro mostrando cómo se está moldeando el sonido

@@ -35,7 +35,6 @@ Un effet qui peut ajouter tout, de la chaleur subtile au caractère intense à v
   - Both Sides : Effet équilibré et naturel
   - Positive Only : Son plus brillant et agressif
   - Negative Only : Caractère plus sombre et unique
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 - Graphique en temps réel montrant comment le son est modelé
@@ -163,7 +162,6 @@ Un effet qui simule le son chaud et agréable des équipements à lampes vintage
 - **Gain** - Ajuste le volume global (-18dB à +18dB)
   - Utilisez des valeurs négatives si l'effet est trop fort
   - Utilisez des valeurs positives si l'effet est trop faible
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 - Graphique clair montrant comment le son est modelé

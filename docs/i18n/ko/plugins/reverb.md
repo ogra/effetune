@@ -61,7 +61,6 @@
   - 10-30%: 미묘한 향상
   - 30-50%: 눈에 띄는 공간감
   - 50-100%: 극적인 이펙트
-- **Enabled** - 이펙트 켜기/끄기
 
 ### Recommended Settings for Different Music Styles
 

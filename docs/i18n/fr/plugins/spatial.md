@@ -133,7 +133,6 @@ Un effet qui aide à obtenir un champ sonore plus naturel en ajustant la largeur
   - 0% : Mono complet (canaux gauche et droit additionnés)
   - 100% : Image stéréo originale
   - 200% : Stéréo améliorée avec largeur maximale (L-R/R-L)
-- **Enabled** - Active ou désactive l'effet
 
 ### Réglages Recommandés pour Différents Scénarios d'Écoute
 

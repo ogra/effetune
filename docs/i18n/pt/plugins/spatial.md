@@ -133,7 +133,6 @@ Um efeito que ajuda a alcançar um campo sonoro mais natural ajustando a largura
   - 0%: Mono total (canais esquerdo e direito somados)
   - 100%: Imagem estéreo original
   - 200%: Estéreo aprimorado com largura máxima (L-R/R-L)
-- **Enabled** - Liga ou desliga o efeito
 
 ### Configurações Recomendadas para Diferentes Cenários de Audição
 

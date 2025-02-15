@@ -52,7 +52,6 @@ Un outil d'ajustement sonore détaillé avec 15 contrôles distincts, chacun aff
     - 6.3kHz : Brillance du son
     - 10kHz : Air du son
     - 16kHz : Éclat du son
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 - Graphique en temps réel montrant vos ajustements sonores
@@ -94,7 +93,6 @@ Un ajusteur de son à trois bandes simple pour une personnalisation sonore rapid
   - Augmentez pour plus d'éclat et de détail
   - Diminuez pour un son plus doux et lisse
   - Affecte la "brillance" de la musique
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 - Graphique facile à lire montrant vos ajustements
@@ -135,7 +133,6 @@ Un égaliseur paramétrique de qualité professionnelle basé sur des principes 
     - Low/High Pass : Pente de 12dB/octave
     - Low/High Shelf : Mise en forme spectrale douce
     - Band Pass : Isolation fréquentielle ciblée
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Technique
 - Visualisation haute résolution de la réponse en fréquence
@@ -177,7 +174,6 @@ Un outil qui vous permet de vous concentrer sur des parties spécifiques de la m
 - **LPF Slope** - Indique la rapidité de l'atténuation des aigus (0 à -48 dB/octave)
   - 0dB : Aucune atténuation (désactivé)
   - De -6dB à -48dB : Atténuation de plus en plus forte par paliers de 6dB
-- **Enabled** - Active ou désactive l'effet
 
 ### Affichage Visuel
 - Graphique clair montrant la réponse en fréquence

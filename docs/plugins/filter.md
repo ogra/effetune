@@ -40,7 +40,6 @@ An effect that adds subtle pitch variations to your music, similar to the natura
 - **Randomness Cutoff** - How quickly the random changes happen (0.1 to 20 Hz)
   - Lower: Slower, more gentle changes
   - Higher: Quicker, more erratic changes
-- **Enabled** - Turns the effect on or off
 
 ### Recommended Settings for Different Styles
 

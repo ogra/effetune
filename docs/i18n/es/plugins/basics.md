@@ -28,7 +28,6 @@ Un control simple pero esencial que te permite ajustar qué tan fuerte se reprod
   - Valores más bajos: Reproducción más silenciosa
   - Valores más altos: Reproducción más fuerte
   - 0dB: Nivel de volumen original
-- **Enabled** - Activa o desactiva el control
 
 ## DC Offset
 
@@ -44,7 +43,6 @@ Una utilidad que puede ayudar a corregir el audio que suena desequilibrado o ext
   - 0.0: Configuración normal
   - Ajusta si algo suena mal
   - Los ajustes pequeños suelen funcionar mejor
-- **Enabled** - Activa o desactiva el control
 
 ## Polarity Inversion
 
@@ -60,7 +58,6 @@ Una herramienta que puede mejorar cómo suena la música estéreo en ciertas sit
   - All: Afecta tanto izquierda como derecha
   - Left: Solo afecta al altavoz/auricular izquierdo
   - Right: Solo afecta al altavoz/auricular derecho
-- **Enabled** - Activa o desactiva el control
 
 ## Stereo Balance
 
@@ -81,7 +78,6 @@ Te permite ajustar cómo se distribuye la música entre tus altavoces o auricula
   - Centro (0%): Igual en ambos lados
   - Izquierda (-100%): Más sonido en la izquierda
   - Derecha (+100%): Más sonido en la derecha
-- **Enabled** - Activa o desactiva el control
 
 ### Visualización
 - Control deslizante fácil de usar

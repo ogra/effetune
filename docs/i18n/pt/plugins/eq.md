@@ -52,7 +52,6 @@ Uma ferramenta de ajuste detalhado do som com 15 controles separados, cada um af
     - 6.3kHz: Brilho do som
     - 10kHz: Ar do som
     - 16kHz: Cintilância do som
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Visual
 - Gráfico em tempo real mostrando seus ajustes de som
@@ -94,7 +93,6 @@ Um ajustador de som de três bandas simples para personalização rápida e fác
   - Aumente para mais brilho e detalhe
   - Diminua para som mais suave e macio
   - Afeta o "brilho" da música
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Visual
 - Gráfico fácil de ler mostrando seus ajustes
@@ -135,7 +133,6 @@ Um equalizador paramétrico de nível profissional baseado em princípios cient�
     - Low/High Pass: Inclinação de 12dB/oitava
     - Low/High Shelf: Modelagem espectral suave
     - Band Pass: Isolamento focado de frequência
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Técnico
 - Visualização de resposta em frequência em alta resolução
@@ -177,7 +174,6 @@ Uma ferramenta que permite focar em partes específicas da música filtrando fre
 - **LPF Slope** - Quão rapidamente os sons agudos são reduzidos (0 a -48 dB/octava)
   - 0dB: Sem redução (desligado)
   - De -6dB a -48dB: Redução progressivamente mais forte em passos de 6dB
-- **Enabled** - Liga ou desliga o efeito
 
 
 ### Display Visual

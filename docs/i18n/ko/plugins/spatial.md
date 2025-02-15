@@ -133,7 +133,6 @@
   - 0%: 완전한 모노(좌우 채널 합산)
   - 100%: 원래의 스테레오 이미지
   - 200%: 최대 폭의 향상된 스테레오(L-R/R-L)
-- **Enabled** - 이펙트 켜기/끄기
 
 ### Recommended Settings for Different Listening Scenarios
 

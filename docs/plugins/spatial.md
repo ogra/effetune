@@ -133,7 +133,6 @@ An effect that helps achieve a more natural sound field by adjusting the stereo 
   - 0%: Full mono (left and right channels summed)
   - 100%: Original stereo image
   - 200%: Enhanced stereo with maximum width (L-R/R-L)
-- **Enabled** - Turns the effect on or off
 
 ### Recommended Settings for Different Listening Scenarios
 

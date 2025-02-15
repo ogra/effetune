@@ -28,6 +28,16 @@ class FiveBandPEQPlugin extends PluginBase {
 
     const { channelCount, blockSize, sampleRate } = parameters;
 
+    // Notify plugin of sample rate change
+    if (!context.lastSampleRate || context.lastSampleRate !== sampleRate) {
+        context.lastSampleRate = sampleRate;
+        port.postMessage({
+            type: 'processBuffer',
+            pluginId: parameters.id,
+            sampleRate: sampleRate
+        });
+    }
+
     // Initialize filter states if not exists
     if (!context.initialized) {
       context.filterStates = {};
@@ -199,8 +209,18 @@ class FiveBandPEQPlugin extends PluginBase {
   constructor() {
     super('5Band PEQ', '5-band parametric equalizer');
 
-    // Internal sample rate (default 48000Hz)
-    this._sampleRate = 48000;
+    // Internal sample rate (default 96000Hz)
+    this._sampleRate = 96000;
+
+    // Handle messages from processor
+    this.onMessage = (message) => {
+      if (message.sampleRate !== undefined && message.sampleRate !== this._sampleRate) {
+        this._sampleRate = message.sampleRate;
+        if (this.responseSvg) {
+          this.updateResponse();
+        }
+      }
+    };
 
     // Initialize band parameters
     for (let i = 0; i < 5; i++) {
@@ -253,36 +273,58 @@ class FiveBandPEQPlugin extends PluginBase {
   }
 
   getParameters() {
-    const params = { 
-      type: this.constructor.name, 
-      enabled: this.enabled,
-      ch: this.ch
-    };
-    for (let i = 0; i < 5; i++) {
-      params['f' + i] = this['f' + i];
-      params['g' + i] = this['g' + i];
-      params['q' + i] = this['q' + i];
-      params['t' + i] = this['t' + i];
-    }
-    return params;
+      const params = {
+          type: this.constructor.name,
+          enabled: this.enabled,
+          ch: this.ch,
+          sampleRate: this._sampleRate
+      };
+      for (let i = 0; i < 5; i++) {
+          params['f' + i] = this['f' + i];
+          params['g' + i] = this['g' + i];
+          params['q' + i] = this['q' + i];
+          params['t' + i] = this['t' + i];
+      }
+      return params;
   }
 
   setParameters(params) {
-    if (params.enabled !== undefined) this.enabled = params.enabled;
-    if (params.sampleRate !== undefined) this._sampleRate = params.sampleRate;
-    if (params.ch !== undefined) this.setChannel(params.ch);
-    for (let i = 0; i < 5; i++) {
-      if (params['f' + i] !== undefined) this['f' + i] = params['f' + i];
-      if (params['g' + i] !== undefined) this['g' + i] = params['g' + i];
-      if (params['q' + i] !== undefined) this['q' + i] = params['q' + i];
-      if (params['t' + i] !== undefined) {
-        this['t' + i] = params['t' + i];
-        if (params['t' + i] === 'ls' || params['t' + i] === 'hs') {
-          this['q' + i] = 0.7;
-        }
+      let shouldUpdateResponse = false;
+      
+      if (params.enabled !== undefined) this.enabled = params.enabled;
+      if (params.sampleRate !== undefined) {
+          this._sampleRate = params.sampleRate;
+          shouldUpdateResponse = true;
       }
-    }
-    this.updateParameters();
+      if (params.ch !== undefined) this.setChannel(params.ch);
+      for (let i = 0; i < 5; i++) {
+          if (params['f' + i] !== undefined) {
+              this['f' + i] = params['f' + i];
+              shouldUpdateResponse = true;
+          }
+          if (params['g' + i] !== undefined) {
+              this['g' + i] = params['g' + i];
+              shouldUpdateResponse = true;
+          }
+          if (params['q' + i] !== undefined) {
+              this['q' + i] = params['q' + i];
+              shouldUpdateResponse = true;
+          }
+          if (params['t' + i] !== undefined) {
+              this['t' + i] = params['t' + i];
+              if (params['t' + i] === 'ls' || params['t' + i] === 'hs') {
+                  this['q' + i] = 0.7;
+              }
+              shouldUpdateResponse = true;
+          }
+      }
+      
+      this.updateParameters();
+      
+      // Update response curve if any frequency-related parameters changed
+      if (shouldUpdateResponse && this.responseSvg) {
+          this.updateResponse();
+      }
   }
 
   createUI() {
@@ -331,7 +373,7 @@ class FiveBandPEQPlugin extends PluginBase {
     gridSvg.setAttribute('width', '100%');
     gridSvg.setAttribute('height', '100%');
 
-    const freqs = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+    const freqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
     freqs.forEach(freq => {
       const x = this.freqToX(freq);
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -557,6 +599,7 @@ class FiveBandPEQPlugin extends PluginBase {
         this.setBand(i, undefined, undefined, undefined, typeSelect.value);
         updateQControlsState(typeSelect.value);
         this.updateResponse();
+        this.updateMarkers();
       });
 
       const updateQ = (value) => {
@@ -601,10 +644,10 @@ class FiveBandPEQPlugin extends PluginBase {
 
   // Convert frequency to x-coordinate (percentage) and vice versa
   freqToX(freq) {
-    return (Math.log10(freq) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20)) * 100;
+    return (Math.log10(freq) - Math.log10(10)) / (Math.log10(40000) - Math.log10(10)) * 100;
   }
   xToFreq(x) {
-    return Math.pow(10, Math.log10(20) + (x / 100) * (Math.log10(20000) - Math.log10(20)));
+    return Math.pow(10, Math.log10(10) + (x / 100) * (Math.log10(40000) - Math.log10(10)));
   }
 
   // Convert gain to y-coordinate (percentage) and vice versa
@@ -633,13 +676,14 @@ class FiveBandPEQPlugin extends PluginBase {
       const isLeft = xPos < centerX;
       markerText.className = `five-band-peq-marker-text ${isLeft ? 'left' : 'right'}`;
       const freqText = freq >= 1000 ? `${(freq/1000).toFixed(2)}k` : freq.toFixed(0);
-      markerText.innerHTML = `${freqText}Hz<br>${gain.toFixed(1)}dB`;
+      const type = this['t' + i];
+      markerText.innerHTML = `${freqText}Hz${type === 'lp' || type === 'hp' || type === 'bp' ? '' : `<br>${gain.toFixed(1)}dB`}`;
     }
   }
 
   // Frequency response calculation (same logic as the processor)
   calculateBandResponse(freq, bandFreq, bandGain, bandQ, bandType) {
-    const sampleRate = this._sampleRate || 48000;
+    const sampleRate = this._sampleRate || 96000;
     const w0 = 2 * Math.PI * bandFreq / sampleRate;
     const w = 2 * Math.PI * freq / sampleRate;
     const Q = (bandType === 'ls' || bandType === 'hs') ? 0.7 : bandQ;
@@ -738,11 +782,10 @@ class FiveBandPEQPlugin extends PluginBase {
   updateResponse() {
     const width = this.responseSvg.clientWidth;
     const height = this.responseSvg.clientHeight;
-    const sampleRate = this._sampleRate || 48000;
     const freqPoints = [];
     const numPoints = 500;
-    const minFreq = 20;
-    const maxFreq = 20000;
+    const minFreq = 10;
+    const maxFreq = 40000;
     
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;

@@ -61,7 +61,6 @@ An effect that can transport your music into different spaces, from cozy rooms t
   - 10-30%: Subtle enhancement
   - 30-50%: Notable space
   - 50-100%: Dramatic effect
-- **Enabled** - Turns the effect on or off
 
 ### Recommended Settings for Different Music Styles
 

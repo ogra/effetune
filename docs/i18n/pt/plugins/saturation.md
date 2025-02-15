@@ -35,7 +35,6 @@ Um efeito que pode adicionar desde calor sutil até caráter intenso à sua mús
   - Both Sides: Efeito equilibrado e natural
   - Positive Only: Som mais brilhante e agressivo
   - Negative Only: Caráter mais escuro e único
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Visual
 - Gráfico em tempo real mostrando como o som está sendo moldado
@@ -163,7 +162,6 @@ Um efeito que simula o som quente e agradável de equipamentos valvulados vintag
 - **Gain** - Ajusta o volume geral (-18dB a +18dB)
   - Use valores negativos se o efeito estiver muito alto
   - Use valores positivos se o efeito estiver muito baixo
-- **Enabled** - Liga ou desliga o efeito
 
 ### Display Visual
 - Gráfico claro mostrando como o som está sendo moldado

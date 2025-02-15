@@ -35,7 +35,6 @@ An effect that can add anything from subtle warmth to intense character to your 
   - Both Sides: Balanced, natural-feeling effect
   - Positive Only: Brighter, more aggressive sound
   - Negative Only: Darker, unique character
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 - Real-time graph showing how the sound is being shaped
@@ -163,7 +162,6 @@ An effect that simulates the warm, pleasant sound of vintage tube equipment. It 
 - **Gain** - Adjusts the overall volume (-18dB to +18dB)
   - Use negative values if the effect is too loud
   - Use positive values if the effect is too quiet
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 - Clear graph showing how the sound is being shaped

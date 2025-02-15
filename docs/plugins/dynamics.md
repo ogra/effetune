@@ -141,7 +141,6 @@ An effect that automatically manages volume differences in your music by gently 
   - Use this to match the volume with the original sound
   - Increase if the music feels too quiet
   - Decrease if it's too loud
-- **Enabled** - Turns the effect on or off
 
 ### Visual Display
 

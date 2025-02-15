@@ -133,7 +133,6 @@ Un efecto que ayuda a lograr un campo sonoro más natural ajustando el ancho est
   - 0%: Mono completo (canales izquierdo y derecho sumados)
   - 100%: Imagen estéreo original
   - 200%: Estéreo mejorado con ancho máximo (L-R/R-L)
-- **Enabled** - Activa o desactiva el efecto
 
 ### Ajustes Recomendados para Diferentes Escenarios de Escucha
 

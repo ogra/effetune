@@ -61,7 +61,6 @@ Un efecto que puede transportar tu música a diferentes espacios, desde salas ac
   - 10-30%: Mejora sutil
   - 30-50%: Espacio notable
   - 50-100%: Efecto dramático
-- **Enabled** - Activa o desactiva el efecto
 
 ### Ajustes Recomendados para Diferentes Estilos de Música
 

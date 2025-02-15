@@ -40,7 +40,6 @@ Un efecto que agrega variaciones sutiles de tono a tu música, similar a la fluc
 - **Randomness Cutoff** - Qué tan rápido ocurren los cambios aleatorios (0.1 a 20 Hz)
   - Más bajo: Cambios más lentos y suaves
   - Más alto: Cambios más rápidos y erráticos
-- **Enabled** - Activa o desactiva el efecto
 
 ### Ajustes Recomendados para Diferentes Estilos
 

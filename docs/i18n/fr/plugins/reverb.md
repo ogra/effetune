@@ -61,7 +61,6 @@ Un effet qui peut transporter votre musique dans différents espaces, des pièce
   - 10-30% : Amélioration subtile
   - 30-50% : Espace notable
   - 50-100% : Effet dramatique
-- **Enabled** - Active ou désactive l'effet
 
 ### Réglages Recommandés pour Différents Styles de Musique
 

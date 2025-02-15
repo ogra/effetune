@@ -28,7 +28,6 @@ Un contrôle simple mais essentiel qui vous permet d'ajuster le volume de lectur
   - Valeurs basses : Lecture plus douce
   - Valeurs hautes : Lecture plus forte
   - 0dB : Niveau de volume original
-- **Enabled** - Active ou désactive le contrôle
 
 ## DC Offset
 
@@ -44,7 +43,6 @@ Un utilitaire qui peut aider à corriger l'audio qui semble déséquilibré ou �
   - 0.0 : Réglage normal
   - Ajustez si quelque chose sonne mal
   - Les petits ajustements fonctionnent généralement mieux
-- **Enabled** - Active ou désactive le contrôle
 
 ## Polarity Inversion
 
@@ -60,7 +58,6 @@ Un outil qui peut améliorer le rendu de la musique stéréo dans certaines situ
   - All : Affecte les côtés gauche et droit
   - Left : Affecte uniquement le haut-parleur/écouteur gauche
   - Right : Affecte uniquement le haut-parleur/écouteur droit
-- **Enabled** - Active ou désactive le contrôle
 
 ## Stereo Balance
 
@@ -81,7 +78,6 @@ Permet d'ajuster la distribution de la musique entre vos haut-parleurs ou écout
   - Centre (0%) : Égal des deux côtés
   - Gauche (-100%) : Plus de son à gauche
   - Droite (+100%) : Plus de son à droite
-- **Enabled** - Active ou désactive le contrôle
 
 ### Affichage Visuel
 - Curseur facile à utiliser

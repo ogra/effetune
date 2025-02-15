@@ -40,7 +40,6 @@
 - **Randomness Cutoff** - 랜덤한 변화가 일어나는 속도(0.1에서 20 Hz)
   - 낮음: 더 느리고 부드러운 변화
   - 높음: 더 빠르고 불규칙한 변화
-- **Enabled** - 이펙트 켜기/끄기
 
 ### Recommended Settings for Different Styles
 
