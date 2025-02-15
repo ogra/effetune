@@ -38,7 +38,14 @@ Un effet qui recrée le son des appareils numériques vintage comme les ancienne
 - **ZOH Frequency** - Affecte la clarté globale (4000Hz à 96000Hz)
   - Valeurs plus basses : Plus rétro, moins clair
   - Valeurs plus hautes : Plus clair, effet plus subtil
-- **Enabled** - Active ou désactive l'effet
+- **Bit Error** - Ajoute du caractère matériel vintage (0.00% à 10.00%)
+  - 0-1% : Chaleur vintage subtile
+  - 1-3% : Imperfections matérielles classiques
+  - 3-10% : Caractère lo-fi créatif
+- **Random Seed** - Contrôle l'unicité des imperfections (0 à 1000)
+  - Différentes valeurs créent différentes "personnalités" vintage
+  - La même valeur reproduit toujours le même caractère
+  - Parfait pour trouver et sauvegarder votre son vintage préféré
 
 ## Noise Blender
 
@@ -69,7 +76,6 @@ Un effet qui ajoute une texture atmosphérique en arrière-plan à votre musique
 - **Per Channel** - Crée un effet plus spacieux
   - On : Son plus large et immersif
   - Off : Texture plus focalisée et centrée
-- **Enabled** - Active ou désactive l'effet
 
 ## Simple Jitter
 
@@ -94,30 +100,29 @@ Un effet qui ajoute des variations de timing subtiles pour créer ce son numéri
   - Subtil (1-10ps) : Caractère vintage doux
   - Moyen (10-100ps) : Sensation de lecteur CD classique
   - Fort (100ps-1ms) : Effets de wobble créatifs
-- **Enabled** - Active ou désactive l'effet
 
 ### Réglages Recommandés pour Différents Styles
 
 1. Lo-Fi Relaxant
-   - Bit Crusher : 12 bits, dither activé
+   - Bit Crusher : 12 bits, dither activé, erreur bit 1.5%, seed 42
    - Noise Blender : Pink noise, -60dB
    - Jitter : Léger (10ps)
    - Parfait pour : Sessions d'étude, relaxation
 
 2. Rétro Gaming
-   - Bit Crusher : 8 bits, dither désactivé
+   - Bit Crusher : 8 bits, dither désactivé, erreur bit 3%, seed 888
    - Noise Blender : White noise, -72dB
    - Jitter : Aucun
    - Parfait pour : Appréciation de musique de jeux vidéo
 
 3. Numérique Vintage
-   - Bit Crusher : 16 bits
+   - Bit Crusher : 16 bits, erreur bit 0.8%, seed 123
    - Noise Blender : Pink noise, -66dB
    - Jitter : Moyen (50ps)
    - Parfait pour : Nostalgie des années 90
 
 4. Lo-Fi Ambiant
-   - Bit Crusher : 14 bits, dither activé
+   - Bit Crusher : 14 bits, dither activé, erreur bit 2%, seed 456
    - Noise Blender : Pink noise, -54dB
    - Jitter : Léger (20ps)
    - Parfait pour : Atmosphère d'arrière-plan
