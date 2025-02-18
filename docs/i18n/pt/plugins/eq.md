@@ -6,6 +6,7 @@ Uma coleção de plugins que permitem ajustar diferentes aspectos do som da sua 
 
 - [15Band GEQ](#15band-geq) - Ajuste detalhado do som com 15 controles precisos
 - [5Band PEQ](#5band-peq) - Equalizador paramétrico profissional com controles flexíveis
+- [Loudness Equalizer](#loudness-equalizer) - Correção do balanço de frequências para audição em volume baixo
 - [Tone Control](#tone-control) - Ajuste simples de graves, médios e agudos
 - [Narrow Range](#narrow-range) - Foco em partes específicas do som
 
@@ -57,6 +58,44 @@ Uma ferramenta de ajuste detalhado do som com 15 controles separados, cada um af
 - Gráfico em tempo real mostrando seus ajustes de som
 - Controles deslizantes fáceis de usar com controle preciso
 - Reset para configurações padrão com um clique
+
+## Loudness Equalizer
+
+Um equalizador especializado que ajusta automaticamente o balanço de frequências com base no seu volume de audição. Este plugin compensa a sensibilidade reduzida do ouvido humano às frequências baixas e altas em volumes baixos, garantindo uma experiência de audição consistente e agradável independentemente do nível de reprodução.
+
+### Guia de Aprimoramento da Audição
+- Audição em Volume Baixo:
+  - Reforço de frequências graves e agudas
+  - Mantém o balanço musical em níveis silenciosos
+  - Compensa as características da audição humana
+- Processamento Dependente do Volume:
+  - Maior reforço em volumes mais baixos
+  - Redução gradual do processamento com o aumento do volume
+  - Som natural em níveis de audição mais altos
+- Balanço de Frequências:
+  - Shelf baixo para reforço de graves (100-300Hz)
+  - Shelf alto para reforço de agudos (3-6kHz)
+  - Transição suave entre faixas de frequência
+
+### Parâmetros
+- **Average SPL** - Nível de audição atual (60dB a 85dB)
+  - Valores mais baixos: Maior reforço
+  - Valores mais altos: Menor reforço
+  - Representa o volume típico de audição
+- **Controles de Baixa Frequência**
+  - Frequência: Centro de reforço dos graves (100Hz a 300Hz)
+  - Ganho: Reforço máximo dos graves (0dB a 15dB)
+  - Q: Forma do reforço dos graves (0.5 a 1.0)
+- **Controles de Alta Frequência**
+  - Frequência: Centro de reforço dos agudos (3kHz a 6kHz)
+  - Ganho: Reforço máximo dos agudos (0dB a 15dB)
+  - Q: Forma do reforço dos agudos (0.5 a 1.0)
+
+### Display Visual
+- Gráfico de resposta em frequência em tempo real
+- Controles de parâmetros interativos
+- Visualização de curva dependente do volume
+- Leituras numéricas precisas
 
 ## Tone Control
 

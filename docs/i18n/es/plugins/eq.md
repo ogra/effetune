@@ -6,6 +6,7 @@ Una colección de plugins que te permiten ajustar diferentes aspectos del sonido
 
 - [15Band GEQ](#15band-geq) - Ajuste detallado del sonido con 15 controles precisos
 - [5Band PEQ](#5band-peq) - Ecualizador paramétrico profesional con controles flexibles
+- [Loudness Equalizer](#loudness-equalizer) - Corrección del balance de frecuencias para escucha a bajo volumen
 - [Tone Control](#tone-control) - Ajuste simple de graves, medios y agudos
 - [Narrow Range](#narrow-range) - Enfoque en partes específicas del sonido
 
@@ -57,6 +58,44 @@ Una herramienta de ajuste de sonido detallada con 15 controles separados, cada u
 - Gráfico en tiempo real mostrando tus ajustes de sonido
 - Deslizadores fáciles de usar con control preciso
 - Restablecimiento a ajustes predeterminados con un clic
+
+## Loudness Equalizer
+
+Un ecualizador especializado que ajusta automáticamente el balance de frecuencias según tu volumen de escucha. Este plugin compensa la reducida sensibilidad del oído humano a las frecuencias bajas y altas a volúmenes bajos, asegurando una experiencia de escucha consistente y agradable independientemente del nivel de reproducción.
+
+### Guía de Mejora de Escucha
+- Escucha a Bajo Volumen:
+  - Mejora de frecuencias graves y agudas
+  - Mantiene el balance musical a niveles silenciosos
+  - Compensa las características del oído humano
+- Procesamiento Dependiente del Volumen:
+  - Mayor mejora a volúmenes más bajos
+  - Reducción gradual del procesamiento al aumentar el volumen
+  - Sonido natural a niveles de escucha más altos
+- Balance de Frecuencias:
+  - Shelf bajo para mejora de graves (100-300Hz)
+  - Shelf alto para mejora de agudos (3-6kHz)
+  - Transición suave entre rangos de frecuencia
+
+### Parámetros
+- **Average SPL** - Nivel de escucha actual (60dB a 85dB)
+  - Valores más bajos: Mayor mejora
+  - Valores más altos: Menor mejora
+  - Representa el volumen típico de escucha
+- **Controles de Baja Frecuencia**
+  - Frecuencia: Centro de mejora de graves (100Hz a 300Hz)
+  - Ganancia: Refuerzo máximo de graves (0dB a 15dB)
+  - Q: Forma de la mejora de graves (0.5 a 1.0)
+- **Controles de Alta Frecuencia**
+  - Frecuencia: Centro de mejora de agudos (3kHz a 6kHz)
+  - Ganancia: Refuerzo máximo de agudos (0dB a 15dB)
+  - Q: Forma de la mejora de agudos (0.5 a 1.0)
+
+### Visualización
+- Gráfico de respuesta en frecuencia en tiempo real
+- Controles de parámetros interactivos
+- Visualización de curva dependiente del volumen
+- Lecturas numéricas precisas
 
 ## Tone Control
 

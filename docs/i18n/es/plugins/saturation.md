@@ -7,6 +7,7 @@ Una colección de plugins que agregan calidez y carácter a tu música. Estos ef
 - [Hard Clipping](#hard-clipping) - Agrega intensidad y borde al sonido
 - [Multiband Saturation](#multiband-saturation) - Moldea y mejora diferentes rangos de frecuencia independientemente
 - [Saturation](#saturation) - Agrega calidez y riqueza como equipo vintage
+- [Sub Synth](#sub-synth) - Genera y mezcla señales subarmónicas para mejorar los graves
 
 ## Hard Clipping
 
@@ -188,3 +189,67 @@ Un efecto que simula el sonido cálido y agradable del equipo de válvulas vinta
 3. Ajusta Mix para equilibrar el efecto
 4. Ajusta Gain si es necesario para volumen adecuado
 5. ¡Experimenta y confía en tus oídos!
+
+## Sub Synth
+
+Un efecto especializado que mejora los graves de tu música mediante la generación y mezcla de señales subarmónicas. Perfecto para agregar profundidad y potencia a grabaciones con pocos graves o crear sonidos graves ricos y corpulentos.
+
+### Guía de Mejora de Escucha
+- Mejora de Graves:
+  - Agrega profundidad y potencia a grabaciones delgadas
+  - Crea graves más llenos y ricos
+  - Perfecto para escucha con auriculares
+- Control de Frecuencia:
+  - Control preciso sobre frecuencias subarmónicas
+  - Filtrado independiente para graves limpios
+  - Mantiene la claridad mientras agrega potencia
+
+### Parámetros
+- **Sub Level** - Controla el nivel de la señal subarmónica (0-200%)
+  - Ligero (0-50%): Mejora sutil de graves
+  - Medio (50-100%): Refuerzo equilibrado de graves
+  - Alto (100-200%): Efecto dramático de graves
+- **Dry Level** - Ajusta el nivel de la señal original (0-200%)
+  - Usado para equilibrar con la señal subarmónica
+  - Mantiene la claridad del sonido original
+- **Sub LPF** - Filtro paso bajo para señal subarmónica (5-400Hz)
+  - Frecuencia: Controla el límite superior del sub
+  - Pendiente: Ajusta la pendiente del filtro (Off a -24dB/oct)
+- **Sub HPF** - Filtro paso alto para señal subarmónica (5-400Hz)
+  - Frecuencia: Elimina retumbe no deseado
+  - Pendiente: Controla la pendiente del filtro (Off a -24dB/oct)
+- **Dry HPF** - Filtro paso alto para señal original (5-400Hz)
+  - Frecuencia: Previene acumulación de graves
+  - Pendiente: Ajusta la pendiente del filtro (Off a -24dB/oct)
+
+### Visualización
+- Gráfico interactivo de respuesta en frecuencia
+- Visualización clara de curvas de filtro
+- Retroalimentación visual en tiempo real
+
+### Consejos de Mejora Musical
+- Para Mejora General de Graves:
+  1. Comienza con Sub Level al 50%
+  2. Ajusta Sub LPF alrededor de 100Hz (-12dB/oct)
+  3. Mantén Sub HPF en 20Hz (-6dB/oct)
+  4. Ajusta Dry Level a gusto
+
+- Para Refuerzo Limpio de Graves:
+  1. Ajusta Sub Level a 70-100%
+  2. Usa Sub LPF en 80Hz (-18dB/oct)
+  3. Ajusta Sub HPF a 30Hz (-12dB/oct)
+  4. Activa Dry HPF en 40Hz
+
+- Para Máximo Impacto:
+  1. Aumenta Sub Level a 150%
+  2. Ajusta Sub LPF a 120Hz (-24dB/oct)
+  3. Mantén Sub HPF en 15Hz (-6dB/oct)
+  4. Equilibra con Dry Level
+
+### Guía de Inicio Rápido
+1. Comienza con Sub Level moderado (50-70%)
+2. Ajusta Sub LPF alrededor de 100Hz
+3. Activa Sub HPF alrededor de 20Hz
+4. Ajusta Dry Level para equilibrio
+5. Afina filtros a gusto
+6. ¡Confía en tus oídos y ajusta gradualmente!

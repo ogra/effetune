@@ -33,6 +33,7 @@ dynamics/gate: Gate | Dynamics | GatePlugin | css
 dynamics/multiband_compressor: Multiband Compressor | Dynamics | MultibandCompressorPlugin | css
 eq/fifteen_band_geq: 15Band GEQ | EQ | FifteenBandGEQPlugin | css
 eq/five_band_peq: 5Band PEQ | EQ | FiveBandPEQPlugin | css
+eq/loudness_equalizer: Loudness Equalizer | EQ | LoudnessEqualizerPlugin | css
 eq/narrow_range: Narrow Range | EQ | NarrowRangePlugin | css
 eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
 filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
@@ -44,5 +45,6 @@ reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
 saturation/multiband_saturation: Multiband Saturation | Saturation | MultibandSaturationPlugin | css
 saturation/saturation: Saturation | Saturation | SaturationPlugin | css
+saturation/sub_synth: Sub Synth | Saturation | SubSynthPlugin | css
 spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
 spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin

@@ -184,7 +184,8 @@ export class PipelineManager {
     initKeyboardEvents() {
         // Handle keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Handle Ctrl+S and Ctrl+Shift+S first, regardless of focus or target
+            // Handle Ctrl+S and Ctrl+Shift+S first
+            // Always handle Ctrl+S regardless of focus
             if (e.key && e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -201,13 +202,13 @@ export class PipelineManager {
             }
 
             // Handle Escape key for preset select
-            if (e.key === 'Escape' && e.target === this.presetSelect) {
-                this.presetSelect.value = '';
+            // Skip other shortcuts if focus is on an input/textarea element
+            if (e.target.matches('input, textarea')) {
                 return;
             }
 
-            // Skip other shortcuts if focus is on an input/textarea element
-            if (e.target.matches('input, textarea')) {
+            if (e.key === 'Escape' && e.target === this.presetSelect) {
+                this.presetSelect.value = '';
                 return;
             }
 

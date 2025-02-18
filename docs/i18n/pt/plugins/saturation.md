@@ -7,6 +7,7 @@ Uma coleção de plugins que adicionam calor e caráter à sua música. Esses ef
 - [Hard Clipping](#hard-clipping) - Adiciona intensidade e borda ao som
 - [Multiband Saturation](#multiband-saturation) - Molda e aprimora diferentes faixas de frequência independentemente
 - [Saturation](#saturation) - Adiciona calor e riqueza como equipamentos vintage
+- [Sub Synth](#sub-synth) - Gera e mistura sinais sub-harmônicos para aprimoramento dos graves
 
 ## Hard Clipping
 
@@ -188,3 +189,67 @@ Um efeito que simula o som quente e agradável de equipamentos valvulados vintag
 3. Ajuste Mix para equilibrar o efeito
 4. Ajuste Gain se necessário para volume adequado
 5. Experimente e confie em seus ouvidos!
+
+## Sub Synth
+
+Um efeito especializado que aprimora os graves da sua música gerando e misturando sinais sub-harmônicos. Perfeito para adicionar profundidade e potência a gravações com poucos graves ou criar sons de baixo ricos e encorpados.
+
+### Guia de Aprimoramento da Audição
+- Aprimoramento dos Graves:
+  - Adiciona profundidade e potência a gravações finas
+  - Cria graves mais cheios e ricos
+  - Perfeito para audição com fones de ouvido
+- Controle de Frequência:
+  - Controle preciso sobre frequências sub-harmônicas
+  - Filtragem independente para graves limpos
+  - Mantém a clareza enquanto adiciona potência
+
+### Parâmetros
+- **Sub Level** - Controla o nível do sinal sub-harmônico (0-200%)
+  - Leve (0-50%): Aprimoramento sutil dos graves
+  - Médio (50-100%): Reforço equilibrado dos graves
+  - Alto (100-200%): Efeito dramático nos graves
+- **Dry Level** - Ajusta o nível do sinal original (0-200%)
+  - Usado para equilibrar com o sinal sub-harmônico
+  - Mantém a clareza do som original
+- **Sub LPF** - Filtro passa-baixas para sinal sub-harmônico (5-400Hz)
+  - Frequência: Controla o limite superior do sub
+  - Inclinação: Ajusta a inclinação do filtro (Off a -24dB/oct)
+- **Sub HPF** - Filtro passa-altas para sinal sub-harmônico (5-400Hz)
+  - Frequência: Remove ronco indesejado
+  - Inclinação: Controla a inclinação do filtro (Off a -24dB/oct)
+- **Dry HPF** - Filtro passa-altas para sinal original (5-400Hz)
+  - Frequência: Previne acúmulo de graves
+  - Inclinação: Ajusta a inclinação do filtro (Off a -24dB/oct)
+
+### Display Visual
+- Gráfico interativo de resposta em frequência
+- Visualização clara das curvas de filtro
+- Feedback visual em tempo real
+
+### Dicas de Aprimoramento Musical
+- Para Aprimoramento Geral dos Graves:
+  1. Comece com Sub Level em 50%
+  2. Ajuste Sub LPF em torno de 100Hz (-12dB/oct)
+  3. Mantenha Sub HPF em 20Hz (-6dB/oct)
+  4. Ajuste Dry Level a gosto
+
+- Para Reforço Limpo dos Graves:
+  1. Ajuste Sub Level para 70-100%
+  2. Use Sub LPF em 80Hz (-18dB/oct)
+  3. Ajuste Sub HPF para 30Hz (-12dB/oct)
+  4. Ative Dry HPF em 40Hz
+
+- Para Máximo Impacto:
+  1. Aumente Sub Level para 150%
+  2. Ajuste Sub LPF para 120Hz (-24dB/oct)
+  3. Mantenha Sub HPF em 15Hz (-6dB/oct)
+  4. Equilibre com Dry Level
+
+### Guia de Início Rápido
+1. Comece com Sub Level moderado (50-70%)
+2. Ajuste Sub LPF em torno de 100Hz
+3. Ative Sub HPF em torno de 20Hz
+4. Ajuste Dry Level para equilíbrio
+5. Ajuste fino dos filtros conforme necessário
+6. Confie em seus ouvidos e ajuste gradualmente!

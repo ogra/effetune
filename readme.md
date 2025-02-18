@@ -18,7 +18,7 @@ No audiophile myths, Just pure science.
 
 - Real-time audio processing
 - Drag-and-drop interface for building effect chains
-- Expandable plugin system with categorized effects
+- Expandable effect system with categorized effects
 - Live audio visualization
 - Audio pipeline that can be modified in real-time
 - Offline audio file processing with current effect chain
@@ -36,11 +36,10 @@ To process audio from streaming services (Spotify, YouTube Music, etc.):
    - Configure your streaming service to output audio to the virtual audio device
 
 2. Configuration:
-   - Launch EffeTune
-   - Select the virtual audio device as your input source
+   - Open EffeTune in a browser
+   - Select the virtual audio device as the input source in the browser
    - Start playing music from your streaming service
    - Verify that audio is flowing through EffeTune
-   - Add effects to the Pipeline to enhance your listening experience
 
 ### Physical Audio Source Setup
 
@@ -48,8 +47,8 @@ To use EffeTune with CD players, network players, or other physical sources:
 
 1. Configuration:
    - Connect your audio interface to your computer
-   - Launch EffeTune
-   - Select your audio interface as the input source
+   - Open EffeTune in a browser
+   - Select your audio interface as the input source in the browser
    - Configure your browser's audio output to your audio interface
    - Your audio interface now functions as a multi-effects processor:
      * Input: Your CD player, network player, or other audio source
@@ -60,50 +59,54 @@ To use EffeTune with CD players, network players, or other physical sources:
 
 ### Building Your Effect Chain
 
-1. Available plugins are listed on the left side of the screen
-2. Drag plugins from the list to the Effect Pipeline area
-3. Plugins are processed in order from top to bottom
-4. Use the handle (⋮) to reorder plugins by dragging
-5. Click a plugin's name to expand/collapse its settings
-6. Use the ON/OFF button to bypass individual effects
-7. Remove plugins using the trash can icon
+1. Available effects are listed on the left side of the screen
+   - Use the search button next to "Available Effects" to filter effects
+   - Type any text to find effects by name or category
+   - Press ESC to clear the search
+2. Drag effects from the list to the Effect Pipeline area
+3. Effects are processed in order from top to bottom
+4. Use the handle (⋮) to reorder effects by dragging
+5. Click an effect's name to expand/collapse its settings
+6. Use the ON button to bypass individual effects
+7. Click the ? button to open its detailed documentation in a new tab
+8. Remove effects using the trash can icon
 
 ### Using Presets
 
 1. Save Your Effect Chain:
    - Set up your desired effect chain and parameters
    - Enter a name in the preset input field
-   - Click the Save button to store your preset
+   - Click the save button to store your preset
 
 2. Load a Preset:
    - Type or select a preset name from the dropdown list
    - The preset will be loaded automatically
-   - All plugins and their settings will be restored
+   - All effects and their settings will be restored
 
 3. Delete a Preset:
    - Select the preset you want to remove
-   - Click the Delete button
+   - Click the delete button
    - Confirm the deletion when prompted
 
 4. Preset Information:
    - Each preset stores your complete effect chain configuration
-   - Includes plugin order, parameters, and states
+   - Includes effect order, parameters, and states
 
-### Plugin Selection and Keyboard Shortcuts
+### Effect Selection and Keyboard Shortcuts
 
-1. Plugin Selection Methods:
-   - Click on plugin headers to select individual plugins
-   - Hold Ctrl while clicking to select multiple plugins
-   - Click on empty space in the Pipeline area to deselect all plugins
+1. Effect Selection Methods:
+   - Click on effect headers to select individual effects
+   - Hold Ctrl while clicking to select multiple effects
+   - Click on empty space in the Pipeline area to deselect all effects
 
 2. Keyboard Shortcuts:
-   - Ctrl + A: Select all plugins in the Pipeline
-   - Ctrl + C: Copy selected plugins
-   - Ctrl + V: Paste plugins from clipboard
-   - ESC: Deselect all plugins
-
-3. Plugin Documentation:
-   - Click the ? button on any plugin to open its detailed documentation in a new tab
+   - Ctrl + A: Select all effects in the pipeline
+   - Ctrl + C: Copy selected effects
+   - Ctrl + V: Paste effects from clipboard
+   - Ctrl + F: Search for effects
+   - Ctrl + S: Save the current pipeline
+   - Ctrl + Shift + S: Save current pipeline as
+   - ESC: Deselect all effects
 
 ### Processing Audio Files
 
@@ -142,22 +145,21 @@ Here are some popular effect combinations to enhance your listening experience:
 
 ### Headphone Enhancement
 1. Stereo Blend -> RS Reverb
-   - Stereo Blend: Adjusts stereo width for comfort (90-110%)
+   - Stereo Blend: Adjusts stereo width for comfort (60-100%)
    - RS Reverb: Adds subtle room ambience (10-20% mix)
    - Result: More natural, less fatiguing headphone listening
 
 ### Vinyl Simulation
-1. Wow Flutter -> Noise Blender -> Simple Tube
+1. Wow Flutter -> Noise Blender -> Saturation
    - Wow Flutter: Adds gentle pitch variation
    - Noise Blender: Creates vinyl-like atmosphere
-   - Simple Tube: Adds analog warmth
+   - Saturation: Adds analog warmth
    - Result: Authentic vinyl record experience
 
 ### FM Radio Style
-1. Multiband Compressor -> 5Band PEQ -> Hard Clipping
+1. Multiband Compressor -> Stereo Blend
    - Multiband Compressor: Creates that "radio" sound
-   - 5Band PEQ: Enhances presence and clarity
-   - Hard Clipping: Adds subtle warmth
+   - Stereo Blend: Adjusts stereo width for comfort (100-150%)
    - Result: Professional broadcast-like sound
 
 ### Lo-Fi Character
@@ -198,7 +200,7 @@ Here are some popular effect combinations to enhance your listening experience:
 ## FAQ
 
 Q. Does this app support surround sound?
-A. Currently, due to browser limitations, we cannot handle more than 2 channels in the browser, and there is no proven track record of surround sound operation. While the plugin implementation itself supports surround sound, we'll need to wait for future browser support.
+A. Currently, due to browser limitations, we cannot handle more than 2 channels in the browser, and there is no proven track record of surround sound operation. While the effect implementation itself supports surround sound, we'll need to wait for future browser support.
 
 Q. What's the recommended effect chain length?
 A. While there's no strict limit, we recommend keeping your effect chain to 8-10 effects for optimal performance. More complex chains may impact system performance.
@@ -230,6 +232,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Dynamics | Multiband Compressor | Professional 5-band dynamics processor with FM radio-style sound shaping | [Details](docs/plugins/dynamics.md#multiband-compressor) |
 | EQ | 15Band GEQ | 15-band graphic equalizer | [Details](docs/plugins/eq.md#15band-geq) |
 | EQ | 5Band PEQ | Professional parametric equalizer with 5 fully configurable bands | [Details](docs/plugins/eq.md#5band-peq) |
+| EQ | Loudness Equalizer | Frequency balance correction for low volume listening | [Details](docs/plugins/eq.md#loudness-equalizer) |
 | EQ | Narrow Range | High-pass and low-pass filter combination | [Details](docs/plugins/eq.md#narrow-range) |
 | EQ | Tone Control | Three-band tone control | [Details](docs/plugins/eq.md#tone-control) |
 | Filter | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/filter.md#wow-flutter) |
@@ -240,6 +243,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
 | Saturation | Multiband Saturation | 3-band saturation effect for precise frequency-based warmth | [Details](docs/plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
+| Saturation | Sub Synth | Mixes subharmonic signals for bass enhancement | [Details](docs/plugins/saturation.md#sub-synth) |
 | Spatial | Multiband Balance | 5-band frequency-dependent stereo balance control | [Details](docs/plugins/spatial.md#multiband-balance) |
 | Spatial | Stereo Blend | Stereo width control effect | [Details](docs/plugins/spatial.md#stereo-blend) |
 | Others | Oscillator | Multi-waveform audio signal generator | [Details](docs/plugins/others.md#oscillator) |
@@ -272,42 +276,9 @@ For optimal performance with nonlinear effects, it is recommended to use EffeTun
 
 Want to create your own audio plugins? Check out our [Plugin Development Guide](docs/plugin-development.md).
 
-## Version History
-
-### Version 1.20 (February 11, 2025)
-- Added some new effects
-- Various minor improvements
-
-### Version 1.10 (February 9, 2025)
-- Added audio file processing functionality
-- Various minor improvements
-
-### Version 1.00 (February 8, 2025)
-- Improved processing efficiency
-- Various minor improvements
-
-### Version 0.50 (February 7, 2025)
-- Added preset functionality for saving and loading effect chain configurations
-- Our usage documentation is now available in the following languages: 中文 (简体), Español, हिन्दी, العربية, Português, Русский, 日本語, 한국어, and Français.
-- Various minor improvements
-
-### Version 0.30 (February 5, 2025)
-- Improved processing efficiency
-- Added plugin selection and keyboard shortcuts (Ctrl+A, Ctrl+C, Ctrl+V)
-- Added Oscilloscope plugin for real-time waveform visualization
-- Various minor improvements
-
-### Version 0.10 (February 3, 2025)
-- Added touch operation support
-- Improved processing efficiency
-- Optimized heavy processing tasks
-- Reduced audio dropouts
-- Various minor improvements
-
-### Version 0.01 (February 2, 2025)
-- Initial release
-
 ## Links
+
+[Version History](docs/version-history.md)
 
 [Source Code](https://github.com/Frieve-A/effetune)
 

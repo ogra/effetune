@@ -10,18 +10,17 @@
 }
 
 .narrow-range-plugin-ui label {
-    min-width: 100px;
+    min-width: 120px;
 }
 
 .narrow-range-plugin-ui .slope-select {
-    margin-left: 10px;
     padding: 2px;
     background: #333;
     color: #ccc;
     border: 1px solid #555;
     border-radius: 3px;
     font-size: 12px;
-    width: 80px;
+    width: 90px;
     cursor: pointer;
 }
 
@@ -39,16 +38,13 @@
 .narrow-range-plugin-ui .parameter-row {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
 }
 
 .narrow-range-plugin-ui .parameter-row input[type="range"] {
     flex: 1;
-    margin: 0 10px;
 }
 
 .narrow-range-plugin-ui .parameter-row input[type="number"] {
-    width: 60px;
+    width: 80px;
     text-align: right;
-    margin-right: 10px;
 }

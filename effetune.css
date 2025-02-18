@@ -109,6 +109,7 @@ input {
     border-radius: 4px;
     padding: 20px;
     position: relative;
+    min-width: 200px;
     min-height: 200px; /* Ensure minimum height for spinner positioning */
 }
 
@@ -118,17 +119,63 @@ input {
     padding-bottom: 10px;
     border-bottom: 1px solid #3d3d3d;
     height: 33px;
+    position: relative;
 }
 
 .plugin-list-header h2 {
+    position: absolute;
+    left: 0;
+    top: 5px;
     margin: 0;
-    margin-top: 0;
+}
+
+.effect-search-input {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: calc(100% - 40px);
+    height: 16px;
+    padding: 4px 4px;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    color: #ffffff;
+    border-radius: 4px;
+    display: none;
+    margin-right: 5px;
+}
+
+.search-button {
+    position: absolute;
+    right: 0;
+    top: 5px;
+}
+
+.effect-search-input:focus {
+    outline: none;
+    border-color: #4a9eff;
+}
+
+.search-button {
+    padding: 4px 8px;
+    background-color: #4d4d4d;
+    border: 1px solid #5d5d5d;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-button:hover {
+    background-color: #5d5d5d;
 }
 
 .plugin-list-content {
     display: grid;
     grid-template-columns: 64px 1fr;
-    gap: 20px;
+    gap: 10px;
     padding-top: 8px;
 }
 
@@ -151,7 +198,7 @@ input {
 .plugin-category-items {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .plugin-item {
@@ -159,7 +206,8 @@ input {
     padding-bottom: 6px;
     padding-left: 10px;
     padding-right: 10px;
-    margin: 2px 0;
+    margin-top: 2px;
+    margin-bottom: 2px;
     background-color: #3d3d3d;
     border-radius: 4px;
     cursor: move;
