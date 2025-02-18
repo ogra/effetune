@@ -8,6 +8,29 @@ export class PluginListManager {
         this.loadingSpinner.className = 'loading-spinner';
         this.pluginList.appendChild(this.loadingSpinner);
 
+        // Search functionality
+        this.searchButton = document.getElementById('effectSearchButton');
+        this.searchInput = document.getElementById('effectSearchInput');
+        this.availableEffectsTitle = document.getElementById('availableEffectsTitle');
+        this.isSearchActive = false;
+
+        this.setupSearchFunctionality();
+
+        // Add keyboard shortcut for search
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault(); // Prevent browser's default search
+                e.stopPropagation(); // Stop event propagation
+                if (this.isSearchActive) {
+                    // If already searching, click twice to re-enable search
+                    this.searchButton.click(); // First click to cancel
+                    setTimeout(() => this.searchButton.click(), 0); // Second click to re-enable
+                } else {
+                    this.searchButton.click(); // Single click to enable search
+                }
+            }
+        }, true); // Use capture phase
+
         // Create drag message element
         this.dragMessage = document.createElement('div');
         this.dragMessage.className = 'drag-message';
@@ -71,6 +94,80 @@ export class PluginListManager {
             this.insertionIndicator.style.top = `${pipelineRect.top - pipelineList.offsetTop}px`;
         }
         this.insertionIndicator.style.display = 'block';
+    }
+
+    setupSearchFunctionality() {
+        // Search button click handler
+        this.searchButton.addEventListener('click', () => {
+            this.isSearchActive = !this.isSearchActive;
+            if (this.isSearchActive) {
+                this.availableEffectsTitle.style.display = 'none';
+                this.searchInput.style.display = 'block';
+                this.searchInput.focus();
+                this.searchInput.select();
+            } else {
+                this.availableEffectsTitle.style.display = 'block';
+                this.searchInput.style.display = 'none';
+                this.searchInput.value = '';
+                this.filterPlugins('');
+            }
+        });
+
+        // Search input handlers
+        this.searchInput.addEventListener('input', (e) => {
+            this.filterPlugins(e.target.value);
+        });
+
+        this.searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.searchButton.click();
+            }
+        });
+    }
+
+    filterPlugins(searchText) {
+        const contentContainer = this.pluginList.querySelector('.plugin-list-content');
+        if (!contentContainer) return;
+
+        const categories = Array.from(contentContainer.children);
+        let totalVisibleEffects = 0;
+
+        for (let i = 0; i < categories.length; i += 2) {
+            const categoryTitle = categories[i];
+            const categoryItems = categories[i + 1];
+            
+            if (!categoryTitle || !categoryItems) continue;
+
+            let hasVisibleItems = false;
+            const items = categoryItems.getElementsByClassName('plugin-item');
+            
+            for (const item of items) {
+                // Get plugin name (direct text content, excluding description)
+                const pluginName = item.childNodes[0].textContent.trim();
+                
+                const matchesSearch = searchText === '' || 
+                    categoryTitle.textContent.toLowerCase().includes(searchText.toLowerCase()) ||
+                    pluginName.toLowerCase().includes(searchText.toLowerCase());
+                
+                item.style.display = matchesSearch ? '' : 'none';
+                if (matchesSearch) {
+                    hasVisibleItems = true;
+                    totalVisibleEffects++;
+                }
+            }
+
+            // Show/hide category title based on whether it has visible items
+            categoryTitle.style.display = hasVisibleItems ? '' : 'none';
+            categoryItems.style.display = hasVisibleItems ? '' : 'none';
+        }
+
+        // Update effect count text based on search state
+        const effectCountDiv = this.pluginList.querySelector('#effectCount');
+        if (effectCountDiv) {
+            effectCountDiv.textContent = searchText ? 
+                `${totalVisibleEffects} effects found` : 
+                `${totalVisibleEffects} effects available`;
+        }
     }
 
     initPluginList() {

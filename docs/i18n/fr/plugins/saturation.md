@@ -7,6 +7,7 @@ Une collection de plugins qui ajoutent de la chaleur et du caractère à votre m
 - [Hard Clipping](#hard-clipping) - Ajoute de l'intensité et du mordant au son
 - [Multiband Saturation](#multiband-saturation) - Façonne et améliore différentes plages de fréquences indépendamment
 - [Saturation](#saturation) - Ajoute de la chaleur et de la richesse comme un équipement vintage
+- [Sub Synth](#sub-synth) - Génère et mélange des signaux sous-harmoniques pour l'amélioration des graves
 
 ## Hard Clipping
 
@@ -188,3 +189,67 @@ Un effet qui simule le son chaud et agréable des équipements à lampes vintage
 3. Ajustez Mix pour équilibrer l'effet
 4. Ajustez Gain si nécessaire pour un volume approprié
 5. Expérimentez et faites confiance à vos oreilles !
+
+## Sub Synth
+
+Un effet spécialisé qui améliore les basses de votre musique en générant et en mélangeant des signaux sous-harmoniques. Parfait pour ajouter de la profondeur et de la puissance aux enregistrements manquant de graves ou créer des sons de basse riches et corpulents.
+
+### Guide d'Amélioration de l'Écoute
+- Amélioration des Graves :
+  - Ajoute de la profondeur et de la puissance aux enregistrements fins
+  - Crée des graves plus pleines et plus riches
+  - Parfait pour l'écoute au casque
+- Contrôle de Fréquence :
+  - Contrôle précis sur les fréquences sous-harmoniques
+  - Filtrage indépendant pour des graves propres
+  - Maintient la clarté tout en ajoutant de la puissance
+
+### Parameters
+- **Sub Level** - Contrôle le niveau du signal sous-harmonique (0-200%)
+  - Léger (0-50%) : Amélioration subtile des graves
+  - Moyen (50-100%) : Renforcement équilibré des graves
+  - Fort (100-200%) : Effet dramatique sur les graves
+- **Dry Level** - Ajuste le niveau du signal original (0-200%)
+  - Utilisé pour équilibrer avec le signal sous-harmonique
+  - Maintient la clarté du son original
+- **Sub LPF** - Filtre passe-bas pour le signal sous-harmonique (5-400Hz)
+  - Fréquence : Contrôle la limite supérieure du sub
+  - Pente : Ajuste la pente du filtre (Off à -24dB/oct)
+- **Sub HPF** - Filtre passe-haut pour le signal sous-harmonique (5-400Hz)
+  - Fréquence : Élimine le grondement indésirable
+  - Pente : Contrôle la pente du filtre (Off à -24dB/oct)
+- **Dry HPF** - Filtre passe-haut pour le signal original (5-400Hz)
+  - Fréquence : Prévient l'accumulation des graves
+  - Pente : Ajuste la pente du filtre (Off à -24dB/oct)
+
+### Affichage Visuel
+- Graphique interactif de réponse en fréquence
+- Visualisation claire des courbes de filtre
+- Retour visuel en temps réel
+
+### Conseils d'Amélioration Musicale
+- Pour l'Amélioration Générale des Graves :
+  1. Commencez avec Sub Level à 50%
+  2. Réglez Sub LPF autour de 100Hz (-12dB/oct)
+  3. Gardez Sub HPF à 20Hz (-6dB/oct)
+  4. Ajustez Dry Level selon le goût
+
+- Pour un Renforcement Propre des Graves :
+  1. Réglez Sub Level à 70-100%
+  2. Utilisez Sub LPF à 80Hz (-18dB/oct)
+  3. Réglez Sub HPF à 30Hz (-12dB/oct)
+  4. Activez Dry HPF à 40Hz
+
+- Pour un Impact Maximum :
+  1. Augmentez Sub Level jusqu'à 150%
+  2. Réglez Sub LPF à 120Hz (-24dB/oct)
+  3. Gardez Sub HPF à 15Hz (-6dB/oct)
+  4. Équilibrez avec Dry Level
+
+### Guide de Démarrage Rapide
+1. Commencez avec un Sub Level modéré (50-70%)
+2. Réglez Sub LPF autour de 100Hz
+3. Activez Sub HPF autour de 20Hz
+4. Ajustez Dry Level pour l'équilibre
+5. Affinez les filtres selon les besoins
+6. Faites confiance à vos oreilles et ajustez progressivement !

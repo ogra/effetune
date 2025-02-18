@@ -6,6 +6,7 @@ A collection of plugins that let you adjust different aspects of your music's so
 
 - [15Band GEQ](#15band-geq) - Detailed sound adjustment with 15 precise controls
 - [5Band PEQ](#5band-peq) - Professional parametric equalizer with flexible controls
+- [Loudness Equalizer](#loudness-equalizer) - Frequency balance correction for low volume listening
 - [Tone Control](#tone-control) - Simple bass, mid, and treble adjustment
 - [Narrow Range](#narrow-range) - Focus on specific parts of the sound
 
@@ -57,6 +58,44 @@ A detailed sound adjustment tool with 15 separate controls, each affecting a spe
 - Real-time graph showing your sound adjustments
 - Easy-to-use sliders with precise control
 - One-click reset to default settings
+
+## Loudness Equalizer
+
+A specialized equalizer that automatically adjusts frequency balance based on your listening volume. This plugin compensates for the human ear's reduced sensitivity to low and high frequencies at lower volumes, ensuring a consistent and enjoyable listening experience regardless of playback level.
+
+### Listening Enhancement Guide
+- Low Volume Listening:
+  - Enhances bass and treble frequencies
+  - Maintains musical balance at quiet levels
+  - Compensates for human hearing characteristics
+- Volume-Dependent Processing:
+  - More enhancement at lower volumes
+  - Gradual reduction of processing as volume increases
+  - Natural sound at higher listening levels
+- Frequency Balance:
+  - Low shelf for bass enhancement (100-300Hz)
+  - High shelf for treble enhancement (3-6kHz)
+  - Smooth transition between frequency ranges
+
+### Parameters
+- **Average SPL** - Current listening level (60dB to 85dB)
+  - Lower values: More enhancement
+  - Higher values: Less enhancement
+  - Represents typical listening volume
+- **Low Frequency Controls**
+  - Frequency: Bass enhancement center (100Hz to 300Hz)
+  - Gain: Maximum bass boost (0dB to 15dB)
+  - Q: Shape of bass enhancement (0.5 to 1.0)
+- **High Frequency Controls**
+  - Frequency: Treble enhancement center (3kHz to 6kHz)
+  - Gain: Maximum treble boost (0dB to 15dB)
+  - Q: Shape of treble enhancement (0.5 to 1.0)
+
+### Visual Display
+- Real-time frequency response graph
+- Interactive parameter controls
+- Volume-dependent curve visualization
+- Precise numerical readouts
 
 ## Tone Control
 

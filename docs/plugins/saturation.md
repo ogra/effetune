@@ -7,6 +7,7 @@ A collection of plugins that add warmth and character to your music. These effec
 - [Hard Clipping](#hard-clipping) - Adds intensity and edge to the sound
 - [Multiband Saturation](#multiband-saturation) - Shape and enhance different frequency ranges independently
 - [Saturation](#saturation) - Adds warmth and richness like vintage equipment
+- [Sub Synth](#sub-synth) - Generates and mixes subharmonic signals for bass enhancement
 
 ## Hard Clipping
 
@@ -188,3 +189,67 @@ An effect that simulates the warm, pleasant sound of vintage tube equipment. It 
 3. Adjust Mix to balance the effect
 4. Adjust Gain if needed for proper volume
 5. Experiment and trust your ears!
+
+## Sub Synth
+
+A specialized effect that enhances the low-end of your music by generating and mixing subharmonic signals. Perfect for adding depth and power to bass-light recordings or creating rich, full-bodied bass sounds.
+
+### Listening Enhancement Guide
+- Bass Enhancement:
+  - Adds depth and power to thin recordings
+  - Creates fuller, richer low end
+  - Perfect for headphone listening
+- Frequency Control:
+  - Precise control over sub frequencies
+  - Independent filtering for clean bass
+  - Maintains clarity while adding power
+
+### Parameters
+- **Sub Level** - Controls the subharmonic signal level (0-200%)
+  - Light (0-50%): Subtle bass enhancement
+  - Medium (50-100%): Balanced bass boost
+  - High (100-200%): Dramatic bass effect
+- **Dry Level** - Adjusts the original signal level (0-200%)
+  - Use to balance with sub signal
+  - Maintain clarity of original sound
+- **Sub LPF** - Low-pass filter for sub signal (5-400Hz)
+  - Frequency: Controls upper limit of sub
+  - Slope: Adjusts filter steepness (Off to -24dB/oct)
+- **Sub HPF** - High-pass filter for sub signal (5-400Hz)
+  - Frequency: Removes unwanted rumble
+  - Slope: Controls filter steepness (Off to -24dB/oct)
+- **Dry HPF** - High-pass filter for dry signal (5-400Hz)
+  - Frequency: Prevents bass buildup
+  - Slope: Adjusts filter steepness (Off to -24dB/oct)
+
+### Visual Display
+- Interactive frequency response graph
+- Clear visualization of filter curves
+- Real-time visual feedback
+
+### Music Enhancement Tips
+- For General Bass Enhancement:
+  1. Start with Sub Level at 50%
+  2. Set Sub LPF around 100Hz (-12dB/oct)
+  3. Keep Sub HPF at 20Hz (-6dB/oct)
+  4. Adjust Dry Level to taste
+
+- For Clean Bass Boost:
+  1. Set Sub Level to 70-100%
+  2. Use Sub LPF at 80Hz (-18dB/oct)
+  3. Set Sub HPF to 30Hz (-12dB/oct)
+  4. Enable Dry HPF at 40Hz
+
+- For Maximum Impact:
+  1. Increase Sub Level to 150%
+  2. Set Sub LPF to 120Hz (-24dB/oct)
+  3. Keep Sub HPF at 15Hz (-6dB/oct)
+  4. Balance with Dry Level
+
+### Quick Start Guide
+1. Start with moderate Sub Level (50-70%)
+2. Set Sub LPF around 100Hz
+3. Enable Sub HPF around 20Hz
+4. Adjust Dry Level for balance
+5. Fine-tune filters to taste
+6. Trust your ears and adjust gradually!

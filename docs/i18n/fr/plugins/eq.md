@@ -6,6 +6,7 @@ Une collection de plugins qui vous permettent d'ajuster différents aspects du s
 
 - [15Band GEQ](#15band-geq) - Ajustement détaillé du son avec 15 contrôles précis
 - [5Band PEQ](#5band-peq) - Égaliseur paramétrique professionnel avec contrôles flexibles
+- [Loudness Equalizer](#loudness-equalizer) - Correction de la balance des fréquences pour l'écoute à faible volume
 - [Tone Control](#tone-control) - Ajustement simple des basses, médiums et aigus
 - [Narrow Range](#narrow-range) - Concentration sur des parties spécifiques du son
 
@@ -57,6 +58,44 @@ Un outil d'ajustement sonore détaillé avec 15 contrôles distincts, chacun aff
 - Graphique en temps réel montrant vos ajustements sonores
 - Curseurs faciles à utiliser avec contrôle précis
 - Réinitialisation en un clic aux paramètres par défaut
+
+## Loudness Equalizer
+
+Un égaliseur spécialisé qui ajuste automatiquement la balance des fréquences en fonction de votre volume d'écoute. Ce plugin compense la sensibilité réduite de l'oreille humaine aux basses et hautes fréquences à faible volume, assurant une expérience d'écoute cohérente et agréable quel que soit le niveau de lecture.
+
+### Guide d'Amélioration de l'Écoute
+- Écoute à Faible Volume :
+  - Amélioration des basses et hautes fréquences
+  - Maintien de l'équilibre musical à des niveaux silencieux
+  - Compensation des caractéristiques de l'audition humaine
+- Traitement Dépendant du Volume :
+  - Plus d'amélioration à faible volume
+  - Réduction progressive du traitement avec l'augmentation du volume
+  - Son naturel à des niveaux d'écoute plus élevés
+- Balance des Fréquences :
+  - Filtre en plateau bas pour l'amélioration des basses (100-300Hz)
+  - Filtre en plateau haut pour l'amélioration des aigus (3-6kHz)
+  - Transition douce entre les plages de fréquences
+
+### Paramètres
+- **Average SPL** - Niveau d'écoute actuel (60dB à 85dB)
+  - Valeurs plus basses : Plus d'amélioration
+  - Valeurs plus hautes : Moins d'amélioration
+  - Représente le volume d'écoute typique
+- **Contrôles Basses Fréquences**
+  - Fréquence : Centre d'amélioration des basses (100Hz à 300Hz)
+  - Gain : Boost maximum des basses (0dB à 15dB)
+  - Q : Forme de l'amélioration des basses (0.5 à 1.0)
+- **Contrôles Hautes Fréquences**
+  - Fréquence : Centre d'amélioration des aigus (3kHz à 6kHz)
+  - Gain : Boost maximum des aigus (0dB à 15dB)
+  - Q : Forme de l'amélioration des aigus (0.5 à 1.0)
+
+### Affichage Visuel
+- Graphique de réponse en fréquence en temps réel
+- Contrôles de paramètres interactifs
+- Visualisation de courbe dépendante du volume
+- Lectures numériques précises
 
 ## Tone Control
 
