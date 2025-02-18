@@ -201,14 +201,14 @@ export class PipelineManager {
                 return;
             }
 
-            // Handle Escape key for preset select
-            // Skip other shortcuts if focus is on an input/textarea element
-            if (e.target.matches('input, textarea')) {
+            // Handle Escape key for preset select first
+            if (e.key === 'Escape' && e.target === this.presetSelect) {
+                this.presetSelect.value = '';
                 return;
             }
 
-            if (e.key === 'Escape' && e.target === this.presetSelect) {
-                this.presetSelect.value = '';
+            // Skip other shortcuts if focus is on an input/textarea element
+            if (e.target.matches('input, textarea')) {
                 return;
             }
 
