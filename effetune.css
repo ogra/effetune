@@ -383,7 +383,7 @@ input {
 
 .handle {
     cursor: move;
-    padding: 8px 15px;
+    padding: 9px 15px 7px 15px;
     color: #ccc;
     font-size: 18px;
 }
@@ -394,13 +394,15 @@ input {
 
 .toggle-button {
     padding: 2px 8px;
-    margin-right: 8px;
+    margin-right: 16px;
     border: 1px solid #606060;
     border-radius: 4px;
     background-color: #4CAF50;
     color: white;
     cursor: pointer;
     font-size: 12px;
+    width: 48px;
+    height: 24px;
 }
 
 .toggle-button.off {
