@@ -2,89 +2,102 @@ class GatePlugin extends PluginBase {
     constructor() {
         super('Gate', 'Noise gate with threshold, ratio, and knee control');
         
-        this.th = -40;  // th: Threshold (-96 to 0 dB)
-        this.rt = 10;   // rt: Ratio (1:1 to 100:1)
-        this.at = 1;    // at: Attack Time (0.01 to 50 ms)
-        this.rl = 200;  // rl: Release Time (1 to 2000 ms)
-        this.kn = 1;    // kn: Knee (0 to 6 dB)
-        this.gn = 0;    // gn: Gain (-12 to +12 dB)
-        this.gr = 0;    // gr: Current gain reduction value
+        // Initialize parameters
+        this.th = -40;  // Threshold (-96 to 0 dB)
+        this.rt = 10;   // Ratio (1:1 to 100:1)
+        this.at = 1;    // Attack Time (0.01 to 50 ms)
+        this.rl = 200;  // Release Time (10 to 2000 ms)
+        this.kn = 1;    // Knee (0 to 6 dB)
+        this.gn = 0;    // Gain (-12 to +12 dB)
+        this.gr = 0;    // Current gain reduction value
         this.lastProcessTime = performance.now() / 1000;
         this.animationFrameId = null;
         this._hasMessageHandler = false;
 
         this._setupMessageHandler();
 
+        // Register processor with per-sample processing
         this.registerProcessor(`
+            // Create a copy of the input data
             const result = new Float32Array(data.length);
             result.set(data);
+            if (!parameters.enabled) {
+                return result;
+            }
 
             const MIN_ENVELOPE = 1e-6;
             const MIN_DB = -96;
             const MAX_DB = 0;
-            
+
+            // Calculate attack and release sample counts and coefficients
             const attackSamples = Math.max(1, (parameters.at * parameters.sampleRate) / 1000);
             const releaseSamples = Math.max(1, (parameters.rl * parameters.sampleRate) / 1000);
             const attackCoeff = Math.exp(-Math.LN2 / attackSamples);
             const releaseCoeff = Math.exp(-Math.LN2 / releaseSamples);
-            
+
+            // Initialize envelope state per channel if not already set
             if (!context.envelopeStates || context.envelopeStates.length !== parameters.channelCount) {
                 context.envelopeStates = new Float32Array(parameters.channelCount).fill(MIN_ENVELOPE);
             }
 
-            let maxEnvelopeDb = MIN_DB;
+            // For measurement: track maximum gain reduction across the block
+            let blockMaxGainReduction = 0;
+
+            // Process each sample for every channel individually
             for (let ch = 0; ch < parameters.channelCount; ch++) {
                 const offset = ch * parameters.blockSize;
-                let envelope = context.envelopeStates[ch] || MIN_ENVELOPE;
-                
+                let envelope = context.envelopeStates[ch];
+
                 for (let i = 0; i < parameters.blockSize; i++) {
-                    const input = data[offset + i];
+                    const index = offset + i;
+                    const input = data[index];
                     const inputAbs = Math.abs(input);
-                    
-                    const coeff = inputAbs > envelope ? attackCoeff : releaseCoeff;
-                    envelope = Math.max(MIN_ENVELOPE, 
-                        envelope * coeff + inputAbs * (1 - coeff));
-                    
-                    const envelopeDb = Math.max(MIN_DB, 
-                        Math.min(MAX_DB, 20 * Math.log10(envelope)));
-                    
-                    maxEnvelopeDb = Math.max(maxEnvelopeDb, envelopeDb);
+
+                    // Update envelope using appropriate coefficient (attack or release)
+                    const coeff = (inputAbs > envelope) ? attackCoeff : releaseCoeff;
+                    envelope = Math.max(MIN_ENVELOPE, envelope * coeff + inputAbs * (1 - coeff));
+
+                    // Convert envelope to decibel scale
+                    const envelopeDb = Math.max(MIN_DB, Math.min(MAX_DB, 20 * Math.log10(envelope)));
+
+                    // Compute the difference from the threshold
+                    const diff = parameters.th - envelopeDb;
+                    let gainReduction = 0;
+
+                    // Calculate gain reduction based on ratio and knee
+                    if (parameters.rt === 1) {
+                        gainReduction = 0;
+                    } else {
+                        if (diff <= -parameters.kn / 2) {
+                            gainReduction = 0;
+                        } else if (diff >= parameters.kn / 2) {
+                            gainReduction = diff * (parameters.rt - 1);
+                        } else {
+                            const t = (diff + parameters.kn / 2) / parameters.kn;
+                            gainReduction = (parameters.rt - 1) * parameters.kn * t * t / 2;
+                        }
+                    }
+
+                    // Update block maximum gain reduction for measurement purposes
+                    if (gainReduction > blockMaxGainReduction) {
+                        blockMaxGainReduction = gainReduction;
+                    }
+
+                    // If gain reduction is applied, compute the total gain and process the sample
+                    if (gainReduction > 0) {
+                        const totalGainDb = Math.max(-60, Math.min(60, -gainReduction + parameters.gn));
+                        const totalGainLin = Math.pow(10, totalGainDb / 20);
+                        result[index] *= totalGainLin;
+                    }
                 }
-                
+                // Update envelope state for current channel
                 context.envelopeStates[ch] = envelope;
             }
 
-            const diff = parameters.th - maxEnvelopeDb;
-            let gainReduction = 0;
-            
-            if (parameters.rt === 1) {
-                gainReduction = 0;
-            } else {
-                if (diff <= -parameters.kn/2) {
-                    gainReduction = 0;
-                } else if (diff >= parameters.kn/2) {
-                    gainReduction = diff * (parameters.rt - 1);
-                } else {
-                    const t = (diff + parameters.kn/2) / parameters.kn;
-                    gainReduction = (parameters.rt - 1) * parameters.kn * t * t / 2;
-                }
-            }
-
-            if (parameters.enabled && gainReduction > 0) {
-                const totalGainDb = Math.max(-60, Math.min(60, -gainReduction + parameters.gn));
-                const totalGainLin = Math.pow(10, totalGainDb / 20);
-                
-                for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const offset = ch * parameters.blockSize;
-                    for (let i = 0; i < parameters.blockSize; i++) {
-                        result[offset + i] *= totalGainLin;
-                    }
-                }
-            }
-
+            // Set measurements for monitoring
             result.measurements = {
                 time: parameters.time,
-                gainReduction: gainReduction
+                gainReduction: blockMaxGainReduction
             };
 
             return result;
@@ -188,7 +201,7 @@ class GatePlugin extends PluginBase {
         const width = canvas.width;
         const height = canvas.height;
         
-        // Draw grid and labels at dB positions
+        // Draw grid and dB labels
         ctx.strokeStyle = '#444';
         ctx.lineWidth = 1;
         ctx.fillStyle = '#666';
@@ -198,12 +211,13 @@ class GatePlugin extends PluginBase {
             const x = ((db + 96) / 96) * width;
             const y = height - ((db + 96) / 96) * height;
             
-            // Draw grid lines
+            // Draw vertical grid line
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
             ctx.stroke();
             
+            // Draw horizontal grid line
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
@@ -236,12 +250,12 @@ class GatePlugin extends PluginBase {
             if (ratio === 1) {
                 gainReduction = 0;
             } else {
-                if (diff <= -kneeDb/2) {
+                if (diff <= -kneeDb / 2) {
                     gainReduction = 0;
-                } else if (diff >= kneeDb/2) {
+                } else if (diff >= kneeDb / 2) {
                     gainReduction = diff * (ratio - 1);
                 } else {
-                    const t = (diff + kneeDb/2) / kneeDb;
+                    const t = (diff + kneeDb / 2) / kneeDb;
                     gainReduction = (ratio - 1) * kneeDb * t * t / 2;
                 }
             }
@@ -265,11 +279,11 @@ class GatePlugin extends PluginBase {
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
         
-        ctx.fillText('in', width/2, height - 5);
+        ctx.fillText('in', width / 2, height - 5);
         
         ctx.save();
-        ctx.translate(20, height/2);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(20, height / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('out', 0, 0);
         ctx.restore();
     }

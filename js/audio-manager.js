@@ -17,47 +17,43 @@ export class AudioManager {
         try {
             // Create audio context if not exists
             if (!this.audioContext) {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
-                window.audioContext = this.audioContext;  // Make audio context globally accessible
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.audioContext = new AudioContext({ latencyHint: 'playback' });
+                window.audioContext = this.audioContext; // Global reference
             }
 
             // Load audio worklet with absolute path
             const currentPath = window.location.pathname;
             const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-            await this.audioContext.audioWorklet.addModule(basePath + '/plugins/audio-processor.js');
-            
-            // Get user media
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
+            await this.audioContext.audioWorklet.addModule(`${basePath}/plugins/audio-processor.js`);
+
+            // Get user media with audio constraints
+            this.stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: false,
                     noiseSuppression: false,
                     autoGainControl: false
                 }
             });
-            
-            // Create source node
+
+            // Create source and worklet nodes
             this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
-            
-            // Create worklet node and make it globally accessible
             this.workletNode = new AudioWorkletNode(this.audioContext, 'plugin-processor');
             window.workletNode = this.workletNode;
+            window.pipeline = this.pipeline; // Global pipeline reference
 
-            // Make pipeline globally accessible
-            window.pipeline = this.pipeline;
-
-            // Handle messages from worklet if needed in the future
+            // Setup worklet message handler (for future use)
             this.workletNode.port.onmessage = (event) => {
-                // Generic message handling can be added here
+                // Future message handling can be added here
             };
-            
-            // Rebuild pipeline
+
+            // Build initial pipeline
             await this.rebuildPipeline();
-            
-            // Resume context
+
+            // Resume context if suspended
             if (this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
             }
-            
             return '';
         } catch (error) {
             throw new Error(`Audio Error: ${error.message}`);
@@ -67,17 +63,17 @@ export class AudioManager {
     async rebuildPipeline() {
         if (!this.audioContext || !this.sourceNode) return;
 
-        // Disconnect all nodes
+        // Disconnect existing connections
         this.sourceNode.disconnect();
         if (this.workletNode) {
             this.workletNode.disconnect();
         }
 
-        // Connect source to worklet
+        // Connect source to worklet and worklet to destination
         this.sourceNode.connect(this.workletNode);
         this.workletNode.connect(this.audioContext.destination);
 
-        // Update worklet with current state
+        // Update worklet with current pipeline state
         if (this.pipeline.length === 0 || this.masterBypass) {
             this.workletNode.port.postMessage({
                 type: 'updatePlugins',
@@ -87,7 +83,6 @@ export class AudioManager {
             return;
         }
 
-        // Update worklet with current plugins
         this.workletNode.port.postMessage({
             type: 'updatePlugins',
             plugins: this.pipeline.map(plugin => ({
@@ -100,12 +95,14 @@ export class AudioManager {
         });
     }
 
-    reset() {
+    async reset() {
+        // Close audio context and clear global reference
         if (this.audioContext) {
-            this.audioContext.close();
+            await this.audioContext.close();
             this.audioContext = null;
-            window.audioContext = null;  // Clear global reference
+            window.audioContext = null;
         }
+        // Stop all media tracks
         if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop());
             this.stream = null;
@@ -125,62 +122,55 @@ export class AudioManager {
         return this.rebuildPipeline();
     }
 
-    // File processing methods
+    // Process an audio file offline
     async processAudioFile(file, progressCallback = null) {
         this.isOfflineProcessing = true;
         this.isCancelled = false;
         try {
-            // Read file as ArrayBuffer
+            // Read file as ArrayBuffer and decode audio data
             const arrayBuffer = await file.arrayBuffer();
             const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
-            // Skip processing if no plugins or all disabled
+            // If no active plugins, encode directly to WAV
             const activePlugins = this.pipeline.filter(plugin => plugin.enabled);
             if (activePlugins.length === 0) {
                 return this.encodeWAV(audioBuffer);
             }
 
-            // Process audio directly without worklet
+            const { numberOfChannels, length: totalSamples, sampleRate } = audioBuffer;
             // Create offline context for final rendering
             this.offlineContext = new OfflineAudioContext({
-                numberOfChannels: audioBuffer.numberOfChannels,
-                length: audioBuffer.length,
-                sampleRate: audioBuffer.sampleRate
+                numberOfChannels,
+                length: totalSamples,
+                sampleRate
             });
 
-            // Process audio in chunks
             const BLOCK_SIZE = 128;
-            const channelCount = audioBuffer.numberOfChannels;
-            const totalSamples = audioBuffer.length;
-            const processedBuffer = this.offlineContext.createBuffer(
-                channelCount,
-                totalSamples,
-                audioBuffer.sampleRate
-            );
+            // Create buffer for processed audio
+            const processedBuffer = this.offlineContext.createBuffer(numberOfChannels, totalSamples, sampleRate);
 
-            // Create processing context
+            // Map to hold plugin-specific processing contexts
             const pluginContexts = new Map();
             const createContext = (pluginId) => {
                 if (!pluginContexts.has(pluginId)) {
                     pluginContexts.set(pluginId, {
-                        sampleRate: audioBuffer.sampleRate,
+                        sampleRate,
                         currentTime: 0,
                         initialized: false,
                         fadeStates: new Map(),
                         getFadeValue: (id, currentValue, time) => {
                             const FADE_DURATION = 0.010; // 10ms fade
                             const context = pluginContexts.get(pluginId);
-                            const fadeState = context.fadeStates.get(id);
-                            
+                            let fadeState = context.fadeStates.get(id);
                             if (!fadeState) {
-                                context.fadeStates.set(id, {
+                                fadeState = {
                                     prevValue: currentValue,
                                     targetValue: currentValue,
                                     startTime: time
-                                });
+                                };
+                                context.fadeStates.set(id, fadeState);
                                 return currentValue;
                             }
-                            
                             if (fadeState.prevValue === null) {
                                 fadeState.prevValue = currentValue;
                                 fadeState.targetValue = currentValue;
@@ -189,7 +179,6 @@ export class AudioManager {
                                 fadeState.targetValue = currentValue;
                                 fadeState.startTime = time;
                             }
-
                             const fadeProgress = Math.min(1, (time - fadeState.startTime) / FADE_DURATION);
                             return fadeState.prevValue + (fadeState.targetValue - fadeState.prevValue) * fadeProgress;
                         }
@@ -199,47 +188,43 @@ export class AudioManager {
             };
 
             let lastProgressUpdate = 0;
-            const PROGRESS_UPDATE_INTERVAL = 16; // 60fps
+            const PROGRESS_UPDATE_INTERVAL = 16; // ~60fps
 
-            // Process in blocks
+            // Process audio in blocks
             for (let offset = 0; offset < totalSamples; offset += BLOCK_SIZE) {
                 const blockSize = Math.min(BLOCK_SIZE, totalSamples - offset);
-                const inputBlock = new Float32Array(blockSize * channelCount);
+                const inputBlock = new Float32Array(blockSize * numberOfChannels);
 
-                // Interleave channels: [L0,L1,...,L127,R0,R1,...,R127]
-                for (let ch = 0; ch < channelCount; ch++) {
+                // Interleave channel data into a single block
+                for (let ch = 0; ch < numberOfChannels; ch++) {
                     const channelData = audioBuffer.getChannelData(ch);
-                    const blockOffset = ch * blockSize;
+                    const channelOffset = ch * blockSize;
                     for (let i = 0; i < blockSize; i++) {
-                        inputBlock[blockOffset + i] = channelData[offset + i];
+                        inputBlock[channelOffset + i] = channelData[offset + i];
                     }
                 }
 
-                // Process through plugin chain
+                // Process block through each active plugin
                 let processedBlock = new Float32Array(inputBlock);
                 for (const plugin of activePlugins) {
                     if (!plugin.enabled) continue;
 
-                    // Create plugin parameters with correct channel count
                     const parameters = {
                         ...plugin.getParameters(),
-                        channelCount: channelCount,
-                        blockSize: blockSize,
-                        sampleRate: audioBuffer.sampleRate,
+                        channelCount: numberOfChannels,
+                        blockSize,
+                        sampleRate,
                         initialized: pluginContexts.has(plugin.id)
                     };
 
                     try {
-                        // Get or create plugin-specific context
                         const pluginContext = createContext(plugin.id);
-                        pluginContext.currentTime = offset / audioBuffer.sampleRate;
+                        pluginContext.currentTime = offset / sampleRate;
 
-                        // Ensure processedBlock is a Float32Array
                         if (!(processedBlock instanceof Float32Array)) {
                             processedBlock = new Float32Array(processedBlock);
                         }
                         
-                        // Execute processor with plugin-specific context
                         const result = plugin.executeProcessor(
                             pluginContext,
                             processedBlock,
@@ -247,86 +232,71 @@ export class AudioManager {
                             pluginContext.currentTime
                         );
 
-                        // Validate processor output
-                        if (!result) {
-                            throw new Error('Plugin returned null or undefined');
+                        if (!result || !(result instanceof Float32Array) || result.length !== blockSize * numberOfChannels) {
+                            throw new Error('Invalid plugin output');
                         }
-                        if (!(result instanceof Float32Array)) {
-                            throw new Error('Plugin must return Float32Array');
-                        }
-                        if (result.length !== blockSize * channelCount) {
-                            throw new Error('Plugin returned invalid block size');
-                        }
-
                         processedBlock = result;
                     } catch (error) {
-                        // On error, pass through original block
+                        // On error, pass through the original block
                         processedBlock = inputBlock;
                     }
                 }
 
-                // De-interleave channels back to the processed buffer
-                for (let ch = 0; ch < channelCount; ch++) {
+                // De-interleave processed data back into the processed buffer
+                for (let ch = 0; ch < numberOfChannels; ch++) {
                     const channelData = processedBuffer.getChannelData(ch);
-                    const blockOffset = ch * blockSize;
+                    const channelOffset = ch * blockSize;
                     for (let i = 0; i < blockSize; i++) {
-                        channelData[offset + i] = processedBlock[blockOffset + i];
+                        channelData[offset + i] = processedBlock[channelOffset + i];
                     }
                 }
 
-                // Update progress with throttling
+                // Throttle progress updates (~60fps)
                 const currentTime = performance.now();
-                if (currentTime - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL) {
-                    const progress = Math.round((offset + blockSize) / totalSamples * 100);
-                    if (progressCallback) {
-                        await new Promise(resolve => requestAnimationFrame(() => {
+                if (progressCallback && currentTime - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL) {
+                    const progress = Math.round(((offset + blockSize) / totalSamples) * 100);
+                    await new Promise(resolve =>
+                        requestAnimationFrame(() => {
                             progressCallback(progress);
                             resolve();
-                        }));
-                    }
+                        })
+                    );
                     lastProgressUpdate = currentTime;
                 }
 
                 // Check for cancellation
-                if (this.isCancelled) {
-                    return null;
-                }
+                if (this.isCancelled) return null;
 
-                // Allow UI updates between blocks
+                // Yield to UI updates between blocks
                 if (offset % (BLOCK_SIZE * 8) === 0) {
                     await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
 
-            // Create source node and connect for final rendering
+            // Create source node for final offline rendering
             const sourceNode = this.offlineContext.createBufferSource();
             sourceNode.buffer = processedBuffer;
             sourceNode.connect(this.offlineContext.destination);
 
             try {
-                // Start rendering
                 sourceNode.start();
                 const renderedBuffer = await this.offlineContext.startRendering();
-
-                // Verify the rendered buffer
                 if (!renderedBuffer || renderedBuffer.length === 0) {
                     throw new Error('Rendering produced empty buffer');
                 }
-
-                // Update progress to 100%
                 if (progressCallback) {
-                    await new Promise(resolve => requestAnimationFrame(() => {
-                        progressCallback(100);
-                        resolve();
-                    }));
+                    await new Promise(resolve =>
+                        requestAnimationFrame(() => {
+                            progressCallback(100);
+                            resolve();
+                        })
+                    );
                 }
-
-                // Encode to WAV
                 return this.encodeWAV(renderedBuffer);
             } catch (error) {
                 throw new Error(`Processing failed: ${error.message}`);
             } finally {
-                // Clean up
+                // Clean up offline nodes and context
                 sourceNode.disconnect();
                 if (this.offlineWorkletNode) {
                     this.offlineWorkletNode.disconnect();
@@ -341,8 +311,9 @@ export class AudioManager {
         }
     }
 
+    // Encode audio buffer to WAV format with 24-bit samples
     encodeWAV(audioBuffer) {
-        // WAV file format constants - FourCC in correct byte order
+        // Helper function to write string data into DataView
         const writeString = (view, offset, string) => {
             for (let i = 0; i < string.length; i++) {
                 view.setUint8(offset + i, string.charCodeAt(i));
@@ -352,8 +323,8 @@ export class AudioManager {
         const format = 1; // PCM
         const numChannels = audioBuffer.numberOfChannels;
         const sampleRate = audioBuffer.sampleRate;
-        const bitsPerSample = 16;
-        const bytesPerSample = bitsPerSample / 8;
+        const bitsPerSample = 24; // Changed to 24-bit
+        const bytesPerSample = bitsPerSample / 8; // 3 bytes per sample
         const blockAlign = numChannels * bytesPerSample;
         const byteRate = sampleRate * blockAlign;
         const samples = audioBuffer.length;
@@ -363,8 +334,6 @@ export class AudioManager {
         // Create buffer for WAV file
         const buffer = new ArrayBuffer(44 + dataSize);
         const view = new DataView(buffer);
-
-        // Write WAV header
         let offset = 0;
 
         // RIFF chunk descriptor
@@ -374,7 +343,7 @@ export class AudioManager {
 
         // fmt sub-chunk
         writeString(view, offset, 'fmt '); offset += 4;
-        view.setUint32(offset, 16, true); offset += 4; // Subchunk1Size (16 for PCM)
+        view.setUint32(offset, 16, true); offset += 4; // Subchunk1Size for PCM
         view.setUint16(offset, format, true); offset += 2;
         view.setUint16(offset, numChannels, true); offset += 2;
         view.setUint32(offset, sampleRate, true); offset += 4;
@@ -386,19 +355,31 @@ export class AudioManager {
         writeString(view, offset, 'data'); offset += 4;
         view.setUint32(offset, dataSize, true); offset += 4;
 
-        // Write audio data
+        // Write audio samples to buffer as 24-bit little endian
         const channels = [];
         for (let i = 0; i < numChannels; i++) {
             channels.push(audioBuffer.getChannelData(i));
         }
 
         let index = 0;
-        const volume = 0x7FFF; // Maximum value for 16-bit
         for (let i = 0; i < samples; i++) {
-            for (let channel = 0; channel < numChannels; channel++) {
-                const sample = Math.max(-1, Math.min(1, channels[channel][i]));
-                view.setInt16(offset + index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-                index += 2;
+            for (let ch = 0; ch < numChannels; ch++) {
+                let sample = channels[ch][i];
+                // Clamp the sample value between -1 and 1
+                sample = Math.max(-1, Math.min(1, sample));
+                // Scale sample to 24-bit range
+                let intSample;
+                if (sample < 0) {
+                    intSample = Math.round(sample * 0x800000);
+                } else {
+                    intSample = Math.round(sample * 0x7FFFFF);
+                }
+                // Convert to unsigned 24-bit integer (two's complement)
+                let intSample24 = intSample & 0xFFFFFF;
+                view.setUint8(offset + index, intSample24 & 0xFF); // Least significant byte
+                view.setUint8(offset + index + 1, (intSample24 >> 8) & 0xFF);
+                view.setUint8(offset + index + 2, (intSample24 >> 16) & 0xFF);
+                index += 3;
             }
         }
 

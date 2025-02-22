@@ -17,18 +17,15 @@ class BrickwallLimiterPlugin extends PluginBase {
 
         // Register the audio processing function with Audio Worklet.
         // Processing chain:
-        //  1. Apply input gain.
-        //  2. If oversampling > 1:
-        //      Upsample via polyphase interpolation.
-        //  3. Write the (gain‐unprocessed) input into a delay buffer (for lookahead).
-        //  4. Read the delayed block (lookahead signal) and compute its maximum level.
-        //  5. Compute the required gain so that (max * gain) <= effective threshold.
-        //     Effective threshold is computed as: parameters.th + Margin.
-        //     If the upcoming block exceeds effective threshold, immediately drop gain,
-        //     otherwise allow gradual recovery (release).
-        //  6. Apply the computed gain to the delayed block.
-        //  7. If oversampling > 1:
-        //      Downsample via polyphase decimation.
+        //  1. Apply input gain sample-by-sample.
+        //  2. If oversampling > 1, perform upsampling via polyphase interpolation.
+        //  3. Write the unprocessed input into a delay buffer for lookahead and process each sample.
+        //  4. For each delayed sample, compute the target gain so that (sample * gain) <= effective threshold.
+        //     The effective threshold is computed as: parameters.th + Margin.
+        //     If the sample exceeds the effective threshold, the gain is dropped immediately;
+        //     otherwise, it recovers gradually (using the release coefficient).
+        //  5. Apply the computed gain to the delayed sample.
+        //  6. If oversampling > 1, perform downsampling via polyphase decimation.
         this.registerProcessor(`
             if (!parameters.enabled) {
                 return data;
@@ -37,7 +34,7 @@ class BrickwallLimiterPlugin extends PluginBase {
             const blockSize = parameters.blockSize;
             const sampleRate = parameters.sampleRate;
             
-            // Global state reinitialization if sample rate or os factor changes.
+            // Global state reinitialization if sample rate or oversampling factor changes.
             if (context.sampleRate !== sampleRate || context.lastOsFactor !== parameters.os) {
                 context.sampleRate = sampleRate;
                 context.lastOsFactor = parameters.os;
@@ -56,7 +53,7 @@ class BrickwallLimiterPlugin extends PluginBase {
                 delete context.delayWritePosOS;
             }
             
-            // Input Gain (dB -> linear)
+            // Apply input gain (dB to linear conversion) sample-by-sample.
             const inputGainDb = (parameters.ig !== undefined) ? parameters.ig : 0;
             const inputGainLinear = Math.pow(10, inputGainDb / 20);
             let inputBuffer = new Float32Array(data.length);
@@ -64,23 +61,23 @@ class BrickwallLimiterPlugin extends PluginBase {
                 inputBuffer[i] = data[i] * inputGainLinear;
             }
             
-            // Time delta calculation
+            // Block time delta (for informational purposes)
             const currentTime = (parameters.time !== undefined) ? parameters.time : 0;
             const prevTime = (context.prevTime !== undefined) ? context.prevTime : currentTime;
             const deltaTime = Math.max(0.001, currentTime - prevTime);
             context.prevTime = currentTime;
             
-            // Release smoothing coefficient (release time is in seconds)
+            // Release time in seconds and compute per-sample release coefficient.
             const releaseTime = Math.max(10, parameters.rl) / 1000;
-            const releaseCoeff = Math.exp(-deltaTime / releaseTime);
+            const releaseCoeffSample = Math.exp(- (1 / sampleRate) / releaseTime);
             
-            // Threshold and Margin conversion (dB -> linear)
+            // Convert threshold and margin from dB to linear.
             const thresholdDb = parameters.th;
             const marginDb = (parameters.sm !== undefined) ? parameters.sm : -1.00;
             const effectiveThresholdDb = thresholdDb + marginDb;
             const effectiveThresholdLin = Math.pow(10, effectiveThresholdDb / 20);
             
-            // 1x Processing (No Oversampling)
+            // Processing for no oversampling (os === 1)
             if (parameters.os === 1) {
                 if (!context.initialized) {
                     const delaySamples = Math.ceil(parameters.la * sampleRate / 1000);
@@ -93,65 +90,32 @@ class BrickwallLimiterPlugin extends PluginBase {
                     context.gainStates = new Float32Array(numChannels).fill(1);
                     context.initialized = true;
                 }
-                // Write input into delay buffers (for lookahead)
-                for (let ch = 0; ch < numChannels; ch++) {
-                    const chOffset = ch * blockSize;
-                    const delayBuffer = context.delayBuffers[ch];
-                    for (let i = 0; i < blockSize; i++) {
-                        delayBuffer[(context.delayWritePos + i) % context.delayLength] = inputBuffer[chOffset + i];
-                    }
-                }
-                // Read delayed block from delay buffers
                 let output = new Float32Array(data.length);
-                for (let ch = 0; ch < numChannels; ch++) {
-                    const chOffset = ch * blockSize;
-                    const delayBuffer = context.delayBuffers[ch];
-                    for (let i = 0; i < blockSize; i++) {
-                        output[chOffset + i] = delayBuffer[(context.delayWritePos + i) % context.delayLength];
+                // Process each sample individually for each channel.
+                for (let i = 0; i < blockSize; i++) {
+                    for (let ch = 0; ch < numChannels; ch++) {
+                        const chOffset = ch * blockSize;
+                        const pos = (context.delayWritePos + i) % context.delayLength;
+                        // Read delayed sample from delay buffer.
+                        const delayedSample = context.delayBuffers[ch][pos];
+                        // Write current input sample into delay buffer.
+                        context.delayBuffers[ch][pos] = inputBuffer[chOffset + i];
+                        const absSample = Math.abs(delayedSample);
+                        const targetGain = (absSample > effectiveThresholdLin) ? (effectiveThresholdLin / absSample) : 1;
+                        const currentGain = context.gainStates[ch];
+                        // Update gain state sample-by-sample.
+                        const newGain = (targetGain < currentGain) ? targetGain : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        context.gainStates[ch] = newGain;
+                        // Apply computed gain to delayed sample.
+                        output[chOffset + i] = delayedSample * newGain;
                     }
                 }
                 context.delayWritePos = (context.delayWritePos + blockSize) % context.delayLength;
-                
-                // Compute maximum level in delayed (lookahead) block
-                let maxDelayed = 0;
-                for (let ch = 0; ch < numChannels; ch++) {
-                    const chOffset = ch * blockSize;
-                    for (let i = 0; i < blockSize; i++) {
-                        const sample = Math.abs(output[chOffset + i]);
-                        if (sample > maxDelayed) {
-                            maxDelayed = sample;
-                        }
-                    }
-                }
-                const requiredGain = (maxDelayed > effectiveThresholdLin) ? (effectiveThresholdLin / maxDelayed) : 1;
-                
-                // Update gain state per channel
-                if (!context.gainStates) {
-                    context.gainStates = new Float32Array(numChannels).fill(1);
-                }
-                for (let ch = 0; ch < numChannels; ch++) {
-                    const currentGain = context.gainStates[ch];
-                    if (requiredGain < currentGain) {
-                        context.gainStates[ch] = requiredGain;
-                    } else {
-                        context.gainStates[ch] = releaseCoeff * currentGain + (1 - releaseCoeff) * requiredGain;
-                    }
-                }
-                
-                // Apply computed gain to the delayed output
-                for (let ch = 0; ch < numChannels; ch++) {
-                    const chOffset = ch * blockSize;
-                    const gain = context.gainStates[ch];
-                    for (let i = 0; i < blockSize; i++) {
-                        output[chOffset + i] *= gain;
-                    }
-                }
-                
                 output.measurements = { time: parameters.time, gainReduction: 1 - Math.min(...context.gainStates) };
                 return output;
             }
             
-            // Oversampling Processing (os > 1) using Polyphase Filtering
+            // Oversampling Processing (os > 1) using Polyphase Filtering.
             const osFactor = parameters.os;
             const L = osFactor;
             
@@ -200,7 +164,7 @@ class BrickwallLimiterPlugin extends PluginBase {
             const N = context.filterLength;
             const polyphase = context.polyphase;
             
-            // Upsampling (Polyphase Interpolation)
+            // Upsampling (Polyphase Interpolation).
             let P_len = 0;
             for (let p = 0; p < L; p++) {
                 if (polyphase[p].length > P_len) {
@@ -236,7 +200,12 @@ class BrickwallLimiterPlugin extends PluginBase {
                 state.set(X.subarray(combinedLength - (P_len - 1), combinedLength));
             }
             
-            // Lookahead Delay in Oversampled Domain
+            // Initialize gain state for oversampled branch if needed.
+            if (!context.gainStates) {
+                context.gainStates = new Float32Array(numChannels).fill(1);
+            }
+            
+            // Lookahead Delay in Oversampled Domain with sample-by-sample gain processing.
             const rawDelaySamplesOS = Math.ceil(parameters.la * sampleRate / 1000);
             const delaySamplesOS = (rawDelaySamplesOS > 0 ? rawDelaySamplesOS : 1) * osFactor;
             if (!context.delayBufferOS || context.delayBufferOS[0].length !== delaySamplesOS) {
@@ -247,57 +216,31 @@ class BrickwallLimiterPlugin extends PluginBase {
                     context.delayWritePosOS[ch] = 0;
                 }
             }
-            let delayedOversampled = new Float32Array(numChannels * oversampledLength);
+            // Compute per-sample release coefficient for oversampled domain.
+            const releaseCoeffSampleOS = Math.exp(- (1 / (sampleRate * osFactor)) / releaseTime);
+            let processedOversampled = new Float32Array(numChannels * oversampledLength);
             for (let ch = 0; ch < numChannels; ch++) {
                 const buf = context.delayBufferOS[ch];
                 let writePos = context.delayWritePosOS[ch];
                 for (let i = 0; i < oversampledLength; i++) {
-                    delayedOversampled[ch * oversampledLength + i] = buf[writePos];
-                    buf[writePos] = oversampled[ch * oversampledLength + i];
-                    writePos = (writePos + 1) % delaySamplesOS;
+                    const pos = (writePos + i) % delaySamplesOS;
+                    // Read delayed sample from delay buffer.
+                    const delayedSample = buf[pos];
+                    // Write current oversampled sample into delay buffer.
+                    buf[pos] = oversampled[ch * oversampledLength + i];
+                    const absSample = Math.abs(delayedSample);
+                    const targetGain = (absSample > effectiveThresholdLin) ? (effectiveThresholdLin / absSample) : 1;
+                    const currentGain = context.gainStates[ch];
+                    // Update gain state sample-by-sample in oversampled domain.
+                    const newGain = (targetGain < currentGain) ? targetGain : (releaseCoeffSampleOS * currentGain + (1 - releaseCoeffSampleOS) * targetGain);
+                    context.gainStates[ch] = newGain;
+                    processedOversampled[ch * oversampledLength + i] = delayedSample * newGain;
                 }
-                context.delayWritePosOS[ch] = writePos;
+                context.delayWritePosOS[ch] = (writePos + oversampledLength) % delaySamplesOS;
             }
             
-            // Compute maximum level in delayed oversampled block
-            let maxDelayedOS = 0;
-            for (let ch = 0; ch < numChannels; ch++) {
-                const offset = ch * oversampledLength;
-                for (let i = 0; i < oversampledLength; i++) {
-                    const sample = Math.abs(delayedOversampled[offset + i]);
-                    if (sample > maxDelayedOS) {
-                        maxDelayedOS = sample;
-                    }
-                }
-            }
-            const requiredGainOS = (maxDelayedOS > effectiveThresholdLin) ? (effectiveThresholdLin / maxDelayedOS) : 1;
-            
-            // Update gain state for each channel in oversampled domain
-            if (!context.gainStates) {
-                context.gainStates = new Float32Array(numChannels).fill(1);
-            }
-            for (let ch = 0; ch < numChannels; ch++) {
-                const currentGain = context.gainStates[ch];
-                if (requiredGainOS < currentGain) {
-                    context.gainStates[ch] = requiredGainOS;
-                } else {
-                    context.gainStates[ch] = releaseCoeff * currentGain + (1 - releaseCoeff) * requiredGainOS;
-                }
-            }
-            
-            // Apply computed gain to the delayed oversampled signal
-            for (let ch = 0; ch < numChannels; ch++) {
-                const offset = ch * oversampledLength;
-                const gain = context.gainStates[ch];
-                for (let i = 0; i < oversampledLength; i++) {
-                    delayedOversampled[offset + i] *= gain;
-                }
-            }
-            
-            // Downsampling (Polyphase Decimation)
+            // Downsampling (Polyphase Decimation).
             const M = Math.ceil(N / osFactor);
-            // Set d to the full history length needed so that for i = 0:
-            // n_index = d = osFactor*(M - 1) and the smallest index used is 0.
             const d = osFactor * (M - 1);
             const stateLength = d;
             if (!context.downsampleState) {
@@ -313,7 +256,7 @@ class BrickwallLimiterPlugin extends PluginBase {
                 let combinedLength = state.length + oversampledLength;
                 let Z = new Float32Array(combinedLength);
                 Z.set(state, 0);
-                Z.set(delayedOversampled.subarray(osOffset, osOffset + oversampledLength), state.length);
+                Z.set(processedOversampled.subarray(osOffset, osOffset + oversampledLength), state.length);
                 for (let i = 0; i < blockSize; i++) {
                     let n_index = i * L + d;
                     let r = n_index % L;

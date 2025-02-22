@@ -1,4 +1,4 @@
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -9,6 +9,9 @@ class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     server_address = ('', 8000)
-    httpd = HTTPServer(server_address, NoCacheHTTPRequestHandler)
+    httpd = ThreadingHTTPServer(server_address, NoCacheHTTPRequestHandler)
     print('Serving HTTP on port 8000 (Press CTRL+C to quit)...')
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print('Server stopped.')

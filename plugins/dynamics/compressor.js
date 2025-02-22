@@ -1,7 +1,7 @@
 class CompressorPlugin extends PluginBase {
     constructor() {
         super('Compressor', 'Dynamic range compression with threshold, ratio, and knee control');
-        
+
         this.th = -24;  // th: Threshold (-60 to 0 dB)
         this.rt = 2;    // rt: Ratio (1:1 to 20:1)
         this.at = 10;   // at: Attack Time (0.1 to 100 ms)
@@ -9,6 +9,7 @@ class CompressorPlugin extends PluginBase {
         this.kn = 3;    // kn: Knee (0 to 12 dB)
         this.gn = 0;    // gn: Gain (-12 to +12 dB)
         this.gr = 0;    // gr: Current gain reduction value
+        this.enabled = true; // Plugin is enabled by default
         this.lastProcessTime = performance.now() / 1000;
         this.animationFrameId = null;
         this._hasMessageHandler = false;
@@ -16,72 +17,84 @@ class CompressorPlugin extends PluginBase {
         this._setupMessageHandler();
 
         this.registerProcessor(`
-            const result = new Float32Array(data.length);
-            result.set(data);
+            // If compression is disabled, return the input immediately without processing
+            if (!parameters.enabled) {
+                const result = new Float32Array(data.length);
+                result.set(data);
+                result.measurements = {
+                    time: parameters.time,
+                    gainReduction: 0
+                };
+                return result;
+            }
 
+            const result = new Float32Array(data.length);
+
+            // Constants for envelope and dB limits
             const MIN_ENVELOPE = 1e-6;
             const MIN_DB = -60;
             const MAX_DB = 0;
-            
-            const attackSamples = Math.max(1, (parameters.at * parameters.sampleRate) / 1000);
-            const releaseSamples = Math.max(1, (parameters.rl * parameters.sampleRate) / 1000);
+
+            // Cache frequently used parameters
+            const at = parameters.at;
+            const rl = parameters.rl;
+            const blockSize = parameters.blockSize;
+            const channelCount = parameters.channelCount;
+
+            // Calculate filter coefficients for attack and release
+            const attackSamples = Math.max(1, (at * parameters.sampleRate) / 1000);
+            const releaseSamples = Math.max(1, (rl * parameters.sampleRate) / 1000);
             const attackCoeff = Math.exp(-Math.LN2 / attackSamples);
             const releaseCoeff = Math.exp(-Math.LN2 / releaseSamples);
-            
-            if (!context.envelopeStates || context.envelopeStates.length !== parameters.channelCount) {
-                context.envelopeStates = new Float32Array(parameters.channelCount).fill(MIN_ENVELOPE);
+
+            // Initialize envelope state if needed
+            if (!context.envelopeStates || context.envelopeStates.length !== channelCount) {
+                context.envelopeStates = new Float32Array(channelCount).fill(MIN_ENVELOPE);
             }
 
-            let maxEnvelopeDb = MIN_DB;
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                let envelope = context.envelopeStates[ch] || MIN_ENVELOPE;
-                
-                for (let i = 0; i < parameters.blockSize; i++) {
+            let maxGainReduction = 0; // For measurement over the entire block
+
+            // Process each channel sample-by-sample
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                let envelope = context.envelopeStates[ch];
+                for (let i = 0; i < blockSize; i++) {
                     const input = data[offset + i];
                     const inputAbs = Math.abs(input);
-                    
                     const coeff = inputAbs > envelope ? attackCoeff : releaseCoeff;
-                    envelope = Math.max(MIN_ENVELOPE, 
-                        envelope * coeff + inputAbs * (1 - coeff));
-                    
-                    const envelopeDb = Math.max(MIN_DB, 
-                        Math.min(MAX_DB, 20 * Math.log10(envelope)));
-                    
-                    maxEnvelopeDb = Math.max(maxEnvelopeDb, envelopeDb);
-                }
-                
-                context.envelopeStates[ch] = envelope;
-            }
+                    envelope = Math.max(MIN_ENVELOPE, envelope * coeff + inputAbs * (1 - coeff));
 
-            const diff = maxEnvelopeDb - parameters.th;
-            let gainReduction = 0;
-            
-            if (diff <= -parameters.kn/2) {
-                gainReduction = 0;
-            } else if (diff >= parameters.kn/2) {
-                gainReduction = diff * (1 - 1/parameters.rt);
-            } else {
-                const t = (diff + parameters.kn/2) / parameters.kn;
-                const slope = (1 - 1/parameters.rt);
-                gainReduction = slope * parameters.kn * t * t / 2;
-            }
-
-            if (parameters.enabled && gainReduction > 0) {
-                const totalGainDb = Math.max(-60, Math.min(60, -gainReduction + parameters.gn));
-                const totalGainLin = Math.pow(10, totalGainDb / 20);
-                
-                for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const offset = ch * parameters.blockSize;
-                    for (let i = 0; i < parameters.blockSize; i++) {
-                        result[offset + i] *= totalGainLin;
+                    // Convert envelope to dB, clamped between MIN_DB and MAX_DB
+                    const envelopeDb = Math.max(MIN_DB, Math.min(MAX_DB, 20 * Math.log10(envelope)));
+                    // Calculate the difference between envelope and threshold
+                    const diff = envelopeDb - parameters.th;
+                    let gainReduction = 0;
+                    if (diff <= -parameters.kn / 2) {
+                        gainReduction = 0;
+                    } else if (diff >= parameters.kn / 2) {
+                        gainReduction = diff * (1 - 1 / parameters.rt);
+                    } else {
+                        const t = (diff + parameters.kn / 2) / parameters.kn;
+                        const slope = (1 - 1 / parameters.rt);
+                        gainReduction = slope * parameters.kn * t * t / 2;
                     }
+                    // Update max gain reduction for measurement
+                    maxGainReduction = Math.max(maxGainReduction, gainReduction);
+
+                    // Compute total gain for the sample
+                    let sampleGain = 1;
+                    if (gainReduction > 0) {
+                        const totalGainDb = Math.max(-60, Math.min(60, -gainReduction + parameters.gn));
+                        sampleGain = Math.pow(10, totalGainDb / 20);
+                    }
+                    result[offset + i] = input * sampleGain;
                 }
+                context.envelopeStates[ch] = envelope;
             }
 
             result.measurements = {
                 time: parameters.time,
-                gainReduction: gainReduction
+                gainReduction: maxGainReduction
             };
 
             return result;
@@ -91,12 +104,10 @@ class CompressorPlugin extends PluginBase {
     onMessage(message) {
         if (message.type === 'processBuffer' && message.buffer) {
             const result = this.process(message.buffer, message);
-            
             if (this.canvas) {
                 this.updateTransferGraph();
                 this.updateReductionMeter();
             }
-            
             return result;
         }
     }
@@ -111,12 +122,11 @@ class CompressorPlugin extends PluginBase {
         const targetGr = message.measurements.gainReduction || 0;
         const attackTime = 0.005;  // 5ms for fast attack
         const releaseTime = 0.100; // 100ms for smooth release
-        
-        const smoothingFactor = targetGr > this.gr ? 
-            Math.min(1, deltaTime / attackTime) : 
+        const smoothingFactor = targetGr > this.gr ?
+            Math.min(1, deltaTime / attackTime) :
             Math.min(1, deltaTime / releaseTime);
-        
-        this.gr = this.gr + (targetGr - this.gr) * smoothingFactor;
+
+        this.gr += (targetGr - this.gr) * smoothingFactor;
         this.gr = Math.max(0, this.gr);
 
         return audioBuffer;
@@ -124,7 +134,6 @@ class CompressorPlugin extends PluginBase {
 
     setParameters(params) {
         let graphNeedsUpdate = false;
-
         if (params.th !== undefined) {
             this.th = Math.max(-60, Math.min(0, params.th));
             graphNeedsUpdate = true;
@@ -184,32 +193,30 @@ class CompressorPlugin extends PluginBase {
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
-        
+
         // Draw grid and labels at dB positions
         ctx.strokeStyle = '#444';
         ctx.lineWidth = 1;
         ctx.fillStyle = '#666';
         ctx.font = '20px Arial';
-        
+
         [-48, -36, -24, -12].forEach(db => {
             const x = ((db + 60) / 60) * width;
             const y = height - ((db + 60) / 60) * height;
-            
-            // Draw grid lines
+
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, height);
             ctx.stroke();
-            
+
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
             ctx.stroke();
-            
-            // Draw labels
+
             ctx.textAlign = 'right';
             ctx.fillText(`${db}dB`, 80, y + 6);
-            
+
             ctx.textAlign = 'center';
             ctx.fillText(`${db}dB`, x, height - 40);
         });
@@ -226,26 +233,21 @@ class CompressorPlugin extends PluginBase {
 
         for (let i = 0; i < width; i++) {
             const inputDb = (i / width) * 60 - 60;
-            
             const diff = inputDb - thresholdDb;
             let gainReduction = 0;
-            
-            if (diff <= -kneeDb/2) {
+            if (diff <= -kneeDb / 2) {
                 gainReduction = 0;
-            } else if (diff >= kneeDb/2) {
-                gainReduction = diff * (1 - 1/ratio);
+            } else if (diff >= kneeDb / 2) {
+                gainReduction = diff * (1 - 1 / ratio);
             } else {
-                const t = (diff + kneeDb/2) / kneeDb;
-                const slope = (1 - 1/ratio);
+                const t = (diff + kneeDb / 2) / kneeDb;
+                const slope = (1 - 1 / ratio);
                 gainReduction = slope * kneeDb * t * t / 2;
             }
-            
             const outputDb = inputDb - gainReduction + gainDb;
-            
             const x = i;
             const y = ((outputDb + 60) / 60) * height;
             const clampedY = Math.max(0, Math.min(height, y));
-            
             if (i === 0) {
                 ctx.moveTo(x, height - clampedY);
             } else {
@@ -258,12 +260,12 @@ class CompressorPlugin extends PluginBase {
         ctx.fillStyle = '#fff';
         ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        
-        ctx.fillText('in', width/2, height - 5);
-        
+
+        ctx.fillText('in', width / 2, height - 5);
+
         ctx.save();
-        ctx.translate(20, height/2);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(20, height / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.fillText('out', 0, 0);
         ctx.restore();
     }
@@ -288,7 +290,6 @@ class CompressorPlugin extends PluginBase {
         ctx.fillRect(meterX, 0, meterWidth, height);
 
         const reductionHeight = Math.min(height, (this.gr / 60) * height);
-
         if (reductionHeight > 0) {
             ctx.fillStyle = '#008000';
             ctx.fillRect(meterX, 0, meterWidth, reductionHeight);
@@ -304,36 +305,36 @@ class CompressorPlugin extends PluginBase {
         const createControl = (label, min, max, step, value, setter) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
-            
+
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
-            
+
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
-            
+
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
             numberInput.min = min;
             numberInput.max = max;
             numberInput.step = step;
             numberInput.value = value;
-            
+
             slider.addEventListener('input', (e) => {
                 setter(parseFloat(e.target.value));
                 numberInput.value = e.target.value;
             });
-            
+
             numberInput.addEventListener('input', (e) => {
                 const value = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
                 setter(value);
                 slider.value = value;
                 e.target.value = value;
             });
-            
+
             row.appendChild(labelEl);
             row.appendChild(slider);
             row.appendChild(numberInput);
@@ -373,16 +374,16 @@ class CompressorPlugin extends PluginBase {
 
         const animate = () => {
             if (!this.canvas) return;
-            
+
             const ctx = this.canvas.getContext('2d');
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
+
             this.updateReductionMeter();
             this.updateTransferGraph();
-            
+
             this.animationFrameId = requestAnimationFrame(animate);
         };
-        
+
         this.animationFrameId = requestAnimationFrame(animate);
     }
 
