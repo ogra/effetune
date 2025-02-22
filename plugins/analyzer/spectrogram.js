@@ -465,11 +465,45 @@ class SpectrogramPlugin extends PluginBase {
     }
 
     cleanup() {
+        // Cancel animation frame
         this.lastProcessTime = performance.now() / 1000;
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+
+        // Remove all event listeners
+        for (const [element, listener] of this.boundEventListeners) {
+            element.removeEventListener('input', listener);
+            element.removeEventListener('change', listener);
+        }
+        this.boundEventListeners.clear();
+
+        // Release canvas resources
+        if (this.tempCtx) {
+            this.tempCtx = null;
+        }
+        if (this.tempCanvas) {
+            this.tempCanvas.width = 0;
+            this.tempCanvas.height = 0;
+            this.tempCanvas = null;
+        }
+        if (this.canvas) {
+            this.canvas.width = 0;
+            this.canvas.height = 0;
+            this.canvas = null;
+        }
+        this.canvasCtx = null;
+        this.imageDataCache = null;
+
+        // Release buffer references
+        this.spectrogramBuffer = null;
+        this.real = null;
+        this.imag = null;
+        this.window = null;
+        this.sinTable = null;
+        this.cosTable = null;
+        this.spectrum = null;
     }
 
     // Convert dB value to heatmap color and return [r, g, b]

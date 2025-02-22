@@ -10,30 +10,35 @@ class PluginBase {
         this.enabled = true;
         this.id = null; // Will be set by createPlugin
         this.errorState = null; // Holds error state
-        this._setupMessageHandler = this._setupMessageHandler.bind(this);
-        
-        // Message control additions
-        this.lastUpdateTime = 0;
-        this.UPDATE_INTERVAL = 16; // Minimum update interval (ms)
-        this.pendingUpdate = null;
 
-        // Store processor function string and compiled function
+        // Message control properties
+        this.lastUpdateTime = 0;
+        this.UPDATE_INTERVAL = 16; // Minimum update interval in ms
+        this.pendingUpdate = null;
+        this._pendingTimeoutId = null; // Stores the timeout ID for queued updates
+
+        // Processor storage
         this.processorString = null;
         this.compiledFunction = null;
-        
-        // Try to setup message handler immediately if workletNode exists
+
+        // Flag to track message handler registration
+        this._hasMessageHandler = false;
+
+        // Bind _handleMessage only once for performance
+        this._boundHandleMessage = this._handleMessage.bind(this);
+
+        // If workletNode exists, set up the message handler immediately
         if (window.workletNode) {
             this._setupMessageHandler();
         }
-        
-        // Also setup a MutationObserver to watch for workletNode
-        const observer = new MutationObserver((mutations) => {
+
+        // Observe mutations to detect when workletNode becomes available
+        const observer = new MutationObserver(() => {
             if (window.workletNode && !this._hasMessageHandler) {
                 this._setupMessageHandler();
                 observer.disconnect();
             }
         });
-        
         observer.observe(document, {
             attributes: true,
             childList: true,
@@ -43,56 +48,59 @@ class PluginBase {
 
     _setupMessageHandler() {
         if (!this._hasMessageHandler && window.workletNode) {
-            window.workletNode.port.addEventListener('message', (event) => {
-                if (event.data.pluginId === this.id) {
-                    const currentTime = performance.now();
-                    if (currentTime - this.lastUpdateTime >= this.UPDATE_INTERVAL) {
-                        // Immediate update if enough time has passed
-                        this.onMessage(event.data);
-                        this.lastUpdateTime = currentTime;
-                        this.pendingUpdate = null;
-                    } else {
-                        // Queue update (overwrite existing if any)
-                        this.pendingUpdate = event.data;
-                        
-                        // Execute queued update at next timing
-                        const timeUntilNextUpdate = this.UPDATE_INTERVAL - (currentTime - this.lastUpdateTime);
-                        setTimeout(() => {
-                            if (this.pendingUpdate) {
-                                this.onMessage(this.pendingUpdate);
-                                this.lastUpdateTime = performance.now();
-                                this.pendingUpdate = null;
-                            }
-                        }, timeUntilNextUpdate);
-                    }
-                }
-            });
+            window.workletNode.port.addEventListener('message', this._boundHandleMessage);
             this._hasMessageHandler = true;
         }
     }
 
-    // Default message handler - can be overridden by subclasses
+    _handleMessage(event) {
+        if (event.data.pluginId === this.id) {
+            const currentTime = performance.now();
+            if (currentTime - this.lastUpdateTime >= this.UPDATE_INTERVAL) {
+                // Process immediately if enough time has passed
+                this.onMessage(event.data);
+                this.lastUpdateTime = currentTime;
+                this.pendingUpdate = null;
+                if (this._pendingTimeoutId !== null) {
+                    clearTimeout(this._pendingTimeoutId);
+                    this._pendingTimeoutId = null;
+                }
+            } else {
+                // Queue update by overwriting any existing pending update
+                this.pendingUpdate = event.data;
+                // Schedule a timeout only if one is not already pending
+                if (this._pendingTimeoutId === null) {
+                    const timeUntilNextUpdate = this.UPDATE_INTERVAL - (currentTime - this.lastUpdateTime);
+                    this._pendingTimeoutId = setTimeout(() => {
+                        if (this.pendingUpdate) {
+                            this.onMessage(this.pendingUpdate);
+                            this.lastUpdateTime = performance.now();
+                            this.pendingUpdate = null;
+                        }
+                        this._pendingTimeoutId = null;
+                    }, timeUntilNextUpdate);
+                }
+            }
+        }
+    }
+
+    // Default message handler (can be overridden by subclasses)
     onMessage(message) {
         // Default implementation does nothing
     }
 
-    // Default process function - can be overridden by subclasses
+    // Default process function (can be overridden by subclasses)
     process(context, data, parameters, time) {
-        // Default implementation returns input unchanged
         return data;
     }
 
-    // Register processor function with the audio worklet and store for offline processing
-    registerProcessor(processorFunction) {
-        // Store processor string for offline processing
-        this.processorString = processorFunction.toString();
-
-        // Create compiled function with enhanced error handling
+    // Compile the processor function using the stored processor string.
+    // The 'with' statement is maintained to preserve functionality.
+    _compileProcessor(processorStr) {
         try {
-            this.compiledFunction = new Function('context', 'data', 'parameters', 'time',
-                `with (context) {
+            return new Function('context', 'data', 'parameters', 'time', `
+                with (context) {
                     try {
-                        // Validate input parameters
                         if (!parameters || !parameters.channelCount || !parameters.blockSize) {
                             throw new Error('Invalid parameters');
                         }
@@ -105,13 +113,9 @@ class PluginBase {
                         if (data.length !== parameters.channelCount * parameters.blockSize) {
                             throw new Error('Buffer size mismatch');
                         }
-
-                        // Execute processor function
                         const result = (function() {
-                            ${this.processorString}
+                            ${processorStr}
                         })();
-
-                        // Validate result
                         if (!result) {
                             throw new Error('Processor returned no result');
                         }
@@ -121,7 +125,6 @@ class PluginBase {
                         if (result.length !== data.length) {
                             throw new Error('Result length mismatch');
                         }
-
                         return result;
                     } catch (error) {
                         console.error('Processor error:', {
@@ -131,17 +134,22 @@ class PluginBase {
                         });
                         return data;
                     }
-                }`
-            );
+                }
+            `);
         } catch (error) {
             console.error('Failed to compile processor:', {
                 type: this.constructor.name,
                 error: error.message
             });
-            this.compiledFunction = null;
+            return null;
         }
+    }
 
-        // Register with audio worklet if available
+    // Register the processor function with the audio worklet and store it for offline processing.
+    registerProcessor(processorFunction) {
+        this.processorString = processorFunction.toString();
+        this.compiledFunction = this._compileProcessor(this.processorString);
+
         if (window.workletNode) {
             window.workletNode.port.postMessage({
                 type: 'registerProcessor',
@@ -152,13 +160,12 @@ class PluginBase {
         }
     }
 
-    // Execute processor function for offline processing
+    // Execute the compiled processor function for offline processing.
     executeProcessor(context, data, parameters, time) {
         if (!this.compiledFunction) {
             console.warn('No compiled function available for plugin:', this.name);
             return data;
         }
-
         try {
             return this.compiledFunction.call(null, context, data, parameters, time);
         } catch (error) {
@@ -170,10 +177,9 @@ class PluginBase {
         }
     }
 
-    // Update plugin parameters
+    // Update plugin parameters via the worklet.
     updateParameters() {
         if (window.workletNode) {
-            // Send only the parameters of the current plugin
             window.workletNode.port.postMessage({
                 type: 'updatePlugin',
                 plugin: {
@@ -183,15 +189,13 @@ class PluginBase {
                     parameters: this.getParameters()
                 }
             });
-            
-            // Update URL when parameters change
             if (window.uiManager) {
                 window.uiManager.updateURL();
             }
         }
     }
 
-    // Get current parameters - should be overridden by subclasses
+    // Get current parameters; can be overridden by subclasses.
     getParameters() {
         return {
             type: this.constructor.name,
@@ -200,104 +204,69 @@ class PluginBase {
         };
     }
 
-    // Get serializable parameters for URL state with deep copy support
+    // Return serializable parameters for URL state using a deep copy.
     getSerializableParameters() {
         const params = this.getParameters();
-        
-        // Deep copy function to handle nested objects and arrays
-        const deepCopy = (obj) => {
-            if (obj === null || typeof obj !== 'object') {
-                return obj;
-            }
-
-            if (Array.isArray(obj)) {
-                return obj.map(item => deepCopy(item));
-            }
-
-            const copy = {};
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    copy[key] = deepCopy(obj[key]);
-                }
-            }
-            return copy;
-        };
-
-        // Create a deep copy of all parameters
-        const serializedParams = deepCopy(params);
-
-        // Remove internal properties that shouldn't be serialized
+        const serializedParams = JSON.parse(JSON.stringify(params));
+        // Remove internal properties that should not be serialized
         const { type, id, ...cleanParams } = serializedParams;
-
         return cleanParams;
     }
 
-    // Set parameters from serialized state
+    // Set parameters from a serialized state.
     setSerializedParameters(params) {
         const { nm, en, id, ...pluginParams } = params;
-        
-        // Create parameters object with common and plugin-specific parameters
         const parameters = {
             type: this.constructor.name,
             enabled: en,
             ...(id !== undefined && { id }),
             ...pluginParams
         };
-        
         this.setParameters(parameters);
     }
 
-    // Set parameters - must be implemented by subclasses
+    // Set parameters (must be implemented by subclasses).
     setParameters(params) {
         try {
             this._validateParameters(params);
             this._setValidatedParameters(params);
         } catch (error) {
             this._handleError('Parameter Error', error.message);
-            // Keep current values if parameters are invalid
-            return;
         }
     }
 
-    // Parameter validation - can be overridden by subclasses
+    // Validate parameters (can be overridden by subclasses).
     _validateParameters(params) {
         if (params === null || typeof params !== 'object') {
             throw new Error('Parameters must be an object');
         }
     }
 
-    // Set validated parameters - must be implemented by subclasses
+    // Apply validated parameters (must be implemented by subclasses).
     _setValidatedParameters(params) {
         throw new Error('_setValidatedParameters must be implemented by subclass');
     }
 
-    // Error handling
+    // Handle errors by storing error state and updating the error UI.
     _handleError(type, message) {
         this.errorState = {
             type: type,
             message: message,
             timestamp: Date.now()
         };
-
-        // Update error UI display
         this._updateErrorUI();
-
-        // Error logging
         console.error(`[${this.name}] ${type}: ${message}`);
     }
 
-    // Update error UI display
+    // Update the error UI display.
     _updateErrorUI() {
         const container = document.getElementById(`plugin-${this.id}`);
         if (!container) return;
 
-        // Remove existing error display
         const existingError = container.querySelector('.plugin-error');
         if (existingError) {
             existingError.remove();
         }
-
-        // Display if there is an error
         if (this.errorState) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'plugin-error';
@@ -306,30 +275,27 @@ class PluginBase {
                 <div class="error-message">${this.errorState.message}</div>
                 <div class="error-timestamp">${new Date(this.errorState.timestamp).toLocaleTimeString()}</div>
             `;
-            
-            // Automatically remove error display after 5 seconds
             setTimeout(() => {
                 if (errorDiv.parentNode) {
                     errorDiv.remove();
                     this.errorState = null;
                 }
             }, 5000);
-
             container.appendChild(errorDiv);
         }
     }
 
-    // Create UI elements - should be overridden by subclasses
+    // Create UI elements (should be overridden by subclasses).
     createUI() {
         return document.createElement('div');
     }
 
-    // Cleanup resources - should be overridden by subclasses
+    // Cleanup resources (should be overridden by subclasses).
     cleanup() {
         // Default implementation does nothing
     }
 
-    // Enable/disable plugin
+    // Enable or disable the plugin.
     setEnabled(enabled) {
         if (this.enabled !== enabled) {
             this.enabled = enabled;

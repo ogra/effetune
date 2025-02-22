@@ -271,7 +271,7 @@ class LoudnessEqualizerPlugin extends PluginBase {
         ctx.restore();
 
         // Use a fixed sample rate for visualization
-        const sampleRate = 48000;
+        const sampleRate = 96000;
 
         // Calculate gain multiplier based on SPL difference
         const gainMultiplier = (85 - this.sp) / 25;

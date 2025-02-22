@@ -25,10 +25,10 @@ class MultibandCompressorPlugin extends PluginBase {
     this.registerProcessor(this.getProcessorCode());
   }
 
-  // Returns the processor code string with inline optimizations.
+  // Returns the processor code string with sample-by-sample processing and internal optimizations.
   getProcessorCode() {
     return `
-      // Processor code for Multiband Compressor
+      // Processor code for Multiband Compressor with sample-by-sample processing and optimizations
       const result = new Float32Array(data.length);
       result.set(data);
 
@@ -152,117 +152,106 @@ class MultibandCompressorPlugin extends PluginBase {
       if (!context.gainReductions) context.gainReductions = new Float32Array(5);
       const gainReductions = context.gainReductions;
 
-      // Process each channel
+      // Process filtering for each channel (sample-by-sample)
       for (let ch = 0; ch < parameters.channelCount; ch++) {
         const offset = ch * parameters.blockSize;
         const bandSignals = context.bandSignals[ch];
         const filterStates = context.filterStates;
-
-        // Split signal into frequency bands using cascaded Linkwitz-Riley filters
         for (let i = 0; i < parameters.blockSize; i++) {
           const input = data[offset + i];
           // Band 0 (Low)
-          bandSignals[0][i] = applyFilter(input, context.cachedFilters[0].lowpass, filterStates.lowpass[0], ch);
+          const low = applyFilter(input, context.cachedFilters[0].lowpass, filterStates.lowpass[0], ch);
+          bandSignals[0][i] = low;
           const hp1 = applyFilter(input, context.cachedFilters[0].highpass, filterStates.highpass[0], ch);
           // Band 1 (Low-Mid)
-          bandSignals[1][i] = applyFilter(hp1, context.cachedFilters[1].lowpass, filterStates.lowpass[1], ch);
+          const lowMid = applyFilter(hp1, context.cachedFilters[1].lowpass, filterStates.lowpass[1], ch);
+          bandSignals[1][i] = lowMid;
           const hp2 = applyFilter(hp1, context.cachedFilters[1].highpass, filterStates.highpass[1], ch);
           // Band 2 (Mid)
-          bandSignals[2][i] = applyFilter(hp2, context.cachedFilters[2].lowpass, filterStates.lowpass[2], ch);
+          const mid = applyFilter(hp2, context.cachedFilters[2].lowpass, filterStates.lowpass[2], ch);
+          bandSignals[2][i] = mid;
           const hp3 = applyFilter(hp2, context.cachedFilters[2].highpass, filterStates.highpass[2], ch);
           // Band 3 (High-Mid)
-          bandSignals[3][i] = applyFilter(hp3, context.cachedFilters[3].lowpass, filterStates.lowpass[3], ch);
+          const highMid = applyFilter(hp3, context.cachedFilters[3].lowpass, filterStates.lowpass[3], ch);
+          bandSignals[3][i] = highMid;
           // Band 4 (High)
-          bandSignals[4][i] = applyFilter(hp3, context.cachedFilters[3].highpass, filterStates.highpass[3], ch);
+          const high = applyFilter(hp3, context.cachedFilters[3].highpass, filterStates.highpass[3], ch);
+          bandSignals[4][i] = high;
         }
+      }
 
-        // Envelope detection and gain reduction calculation for each band
-        if (!context.envelopeStates) {
-          context.envelopeStates = new Float32Array(parameters.channelCount * 5).fill(1e-6);
+      // Prepare envelope and gain parameters
+      if (!context.envelopeStates) {
+        context.envelopeStates = new Float32Array(parameters.channelCount * 5).fill(1e-6);
+      }
+      const sampleRateMs = parameters.sampleRate / 1000;
+      const LOG2 = Math.log(2);
+      if (!context.timeConstants) {
+        context.timeConstants = new Float32Array(10); // 5 bands * 2 (attack & release)
+        for (let b = 0; b < 5; b++) {
+          const bandParams = parameters.bands[b];
+          context.timeConstants[b * 2] = Math.exp(-LOG2 / Math.max(1, bandParams.a * sampleRateMs));
+          context.timeConstants[b * 2 + 1] = Math.exp(-LOG2 / Math.max(1, bandParams.rl * sampleRateMs));
         }
-        const sampleRateMs = parameters.sampleRate / 1000;
-        const LOG2 = Math.log(2);
-        if (!context.timeConstants) {
-          context.timeConstants = new Float32Array(10); // 5 bands * 2 (attack & release)
-          for (let i = 0; i < 5; i++) {
-            const bandParams = parameters.bands[i];
-            context.timeConstants[i * 2] = Math.exp(-LOG2 / Math.max(1, bandParams.a * sampleRateMs));
-            context.timeConstants[i * 2 + 1] = Math.exp(-LOG2 / Math.max(1, bandParams.rl * sampleRateMs));
-          }
-        }
-        const LOG10_20 = 8.685889638065035; // 20/ln(10)
-        const ENVELOPE_CHUNK_SIZE = 64;
-        const GAIN_CHUNK_SIZE = 128;
-        let maxEnvelopeDb = -60;
+      }
+      const LOG10_20 = 8.685889638065035; // 20/ln(10)
 
+      // Process envelope detection, gain reduction, and apply gain per sample
+      for (let ch = 0; ch < parameters.channelCount; ch++) {
+        const bandSignals = context.bandSignals[ch];
+        const offset = ch * parameters.blockSize;
+        const envelopeOffset = ch * 5;
+        // Preload per-band constants to reduce per-sample overhead
+        const attackCoeffs = new Float32Array(5);
+        const releaseCoeffs = new Float32Array(5);
         for (let band = 0; band < 5; band++) {
-          const bandParams = parameters.bands[band];
-          const attackCoeff = context.timeConstants[band * 2];
-          const releaseCoeff = context.timeConstants[band * 2 + 1];
-          let envelope = context.envelopeStates[ch * 5 + band];
-          const bandSignal = bandSignals[band];
-
-          for (let i = 0; i < parameters.blockSize; i += ENVELOPE_CHUNK_SIZE) {
-            const end = Math.min(i + ENVELOPE_CHUNK_SIZE, parameters.blockSize);
-            for (let j = i; j < end - 3; j += 4) {
-              const abs0 = Math.abs(bandSignal[j]);
-              const abs1 = Math.abs(bandSignal[j + 1]);
-              const abs2 = Math.abs(bandSignal[j + 2]);
-              const abs3 = Math.abs(bandSignal[j + 3]);
-              envelope = Math.max(1e-6, envelope * (abs0 > envelope ? attackCoeff : releaseCoeff) + abs0 * (1 - (abs0 > envelope ? attackCoeff : releaseCoeff)));
-              envelope = Math.max(1e-6, envelope * (abs1 > envelope ? attackCoeff : releaseCoeff) + abs1 * (1 - (abs1 > envelope ? attackCoeff : releaseCoeff)));
-              envelope = Math.max(1e-6, envelope * (abs2 > envelope ? attackCoeff : releaseCoeff) + abs2 * (1 - (abs2 > envelope ? attackCoeff : releaseCoeff)));
-              envelope = Math.max(1e-6, envelope * (abs3 > envelope ? attackCoeff : releaseCoeff) + abs3 * (1 - (abs3 > envelope ? attackCoeff : releaseCoeff)));
-              const envelopeDb = LOG10_20 * Math.log(envelope);
-              maxEnvelopeDb = Math.min(0, Math.max(maxEnvelopeDb, envelopeDb));
-            }
-            for (let j = end - (end % 4); j < end; j++) {
-              const absVal = Math.abs(bandSignal[j]);
-              const coeff = absVal > envelope ? attackCoeff : releaseCoeff;
-              envelope = Math.max(1e-6, envelope * coeff + absVal * (1 - coeff));
-              const envelopeDb = LOG10_20 * Math.log(envelope);
-              maxEnvelopeDb = Math.min(0, Math.max(maxEnvelopeDb, envelopeDb));
-            }
-          }
-          context.envelopeStates[ch * 5 + band] = envelope;
-
-          // Gain reduction calculation (branchless)
-          const diff = maxEnvelopeDb - bandParams.t;
-          const halfKnee = bandParams.k * 0.5;
-          const invRatio = 1 - 1 / bandParams.r;
-          const t = Math.max(0, (diff + halfKnee) / bandParams.k);
-          const softKnee = invRatio * bandParams.k * t * t * 0.5;
-          const hardKnee = diff * invRatio;
-          const gainReduction = diff >= halfKnee ? hardKnee : diff <= -halfKnee ? 0 : softKnee;
-          const totalGainLin = Math.exp((-gainReduction + bandParams.g) * 0.11512925464970229);
-
-          // Apply gain using chunked processing for performance
-          for (let i = 0; i < parameters.blockSize; i += GAIN_CHUNK_SIZE) {
-            const end = Math.min(i + GAIN_CHUNK_SIZE, parameters.blockSize);
-            for (let j = i; j < end - 3; j += 4) {
-              bandSignal[j] *= totalGainLin;
-              bandSignal[j + 1] *= totalGainLin;
-              bandSignal[j + 2] *= totalGainLin;
-              bandSignal[j + 3] *= totalGainLin;
-            }
-            for (let j = end - (end % 4); j < end; j++) {
-              bandSignal[j] *= totalGainLin;
-            }
-          }
-          gainReductions[band] = gainReduction;
+          attackCoeffs[band] = context.timeConstants[band * 2];
+          releaseCoeffs[band] = context.timeConstants[band * 2 + 1];
         }
-
-        // Sum bands and apply fade-in if active
-        const fadeIn = context.fadeIn;
-        const fadeActive = fadeIn && fadeIn.counter < fadeIn.length;
-        const fadeLength = fadeActive ? fadeIn.length : 1;
+        // Local envelope states for current channel
+        const localEnvelopes = new Float32Array(5);
+        for (let band = 0; band < 5; band++) {
+          localEnvelopes[band] = context.envelopeStates[envelopeOffset + band];
+        }
         for (let i = 0; i < parameters.blockSize; i++) {
-          const sum = bandSignals[0][i] +
-                      bandSignals[1][i] +
-                      bandSignals[2][i] +
-                      bandSignals[3][i] +
-                      bandSignals[4][i];
-          result[ch * parameters.blockSize + i] = fadeActive ? sum * (fadeIn.counter++ / fadeLength) : sum;
+          let sumBands = 0;
+          for (let band = 0; band < 5; band++) {
+            const bp = parameters.bands[band];
+            let sampleVal = bandSignals[band][i];
+            let envelope = localEnvelopes[band];
+            const absVal = Math.abs(sampleVal);
+            const coeff = absVal > envelope ? attackCoeffs[band] : releaseCoeffs[band];
+            envelope = envelope * coeff + absVal * (1 - coeff);
+            if (envelope < 1e-6) envelope = 1e-6;
+            localEnvelopes[band] = envelope;
+            const envelopeDb = LOG10_20 * Math.log(envelope);
+            const diff = envelopeDb - bp.t;
+            const halfKnee = bp.k * 0.5;
+            const invRatio = 1 - 1 / bp.r;
+            let gainReduction = 0;
+            if (diff >= halfKnee) {
+              gainReduction = diff * invRatio;
+            } else if (diff > -halfKnee) {
+              const tVal = (diff + halfKnee) / bp.k;
+              gainReduction = invRatio * bp.k * tVal * tVal * 0.5;
+            }
+            const totalGainLin = Math.exp((-gainReduction + bp.g) * 0.11512925464970229);
+            sampleVal *= totalGainLin;
+            bandSignals[band][i] = sampleVal;
+            sumBands += sampleVal;
+            if (i === parameters.blockSize - 1) {
+              gainReductions[band] = gainReduction;
+            }
+          }
+          if (context.fadeIn && context.fadeIn.counter < context.fadeIn.length) {
+            result[offset + i] = sumBands * (context.fadeIn.counter++ / context.fadeIn.length);
+          } else {
+            result[offset + i] = sumBands;
+          }
+        }
+        // Update global envelope states for this channel
+        for (let band = 0; band < 5; band++) {
+          context.envelopeStates[envelopeOffset + band] = localEnvelopes[band];
         }
       }
 
@@ -599,7 +588,7 @@ class MultibandCompressorPlugin extends PluginBase {
         container.querySelectorAll('.multiband-compressor-band-graph').forEach(g => g.classList.remove('active'));
         tab.classList.add('active');
         content.classList.add('active');
-        container.querySelector(`.multiband-compressor-band-graph:nth-child(${i + 1})`).classList.add('active');
+        container.querySelectorAll('.multiband-compressor-band-graph')[i].classList.add('active');
         this.selectedBand = i;
         this.updateTransferGraphs();
       };
