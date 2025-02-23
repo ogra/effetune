@@ -221,12 +221,15 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Analyzer  | Level Meter        | 피크 홀드 기능을 포함한 오디오 레벨 표시             | [세부 정보](plugins/analyzer.md#level-meter) |
 | Analyzer  | Oscilloscope       | 실시간 파형 시각화                                   | [세부 정보](plugins/analyzer.md#oscilloscope) |
 | Analyzer  | Spectrogram        | 시간에 따른 주파수 스펙트럼 변화를 표시              | [세부 정보](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Stereo Meter       | 스테레오 밸런스와 사운드 이동을 시각화               | [세부 정보](plugins/analyzer.md#stereo-meter) |
 | Analyzer  | Spectrum Analyzer  | 실시간 스펙트럼 분석                                 | [세부 정보](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter       | 스테레오 밸런스와 사운드 이동을 시각화               | [세부 정보](plugins/analyzer.md#stereo-meter) |
 | Basics    | DC Offset          | DC 오프셋 조정                                      | [세부 정보](plugins/basics.md#dc-offset) |
 | Basics    | Polarity Inversion | 신호 극성 반전                                      | [세부 정보](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance     | 스테레오 채널 밸런스 조절                           | [세부 정보](plugins/basics.md#stereo-balance) |
 | Basics    | Volume             | 기본 볼륨 조절                                      | [세부 정보](plugins/basics.md#volume) |
+| Delay     | Time Alignment     | 오디오 채널의 정밀한 타이밍 조정                     | [세부 정보](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler       | LUFS 측정 기반의 일관된 청취 경험을 위한 자동 볼륨 조정 | [세부 정보](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter  | 안전하고 편안한 청취를 위한 투명한 피크 제어          | [세부 정보](plugins/dynamics.md#brickwall-limiter) |
 | Dynamics  | Compressor         | 임계값, 비율, 및 knee 제어를 통한 다이내믹 레인지 압축 | [세부 정보](plugins/dynamics.md#compressor) |
 | Dynamics  | Gate               | 노이즈 감소를 위한 임계값, 비율, 및 knee 제어가 포함된 노이즈 게이트 | [세부 정보](plugins/dynamics.md#gate) |
 | Dynamics  | Multiband Compressor | FM 라디오 스타일의 사운드 셰이핑을 위한 전문 5밴드 다이내믹스 프로세서 | [세부 정보](plugins/dynamics.md#multiband-compressor) |

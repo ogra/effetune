@@ -217,12 +217,15 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Analyzer  | Level Meter | Affiche le niveau audio avec maintien du pic | [Détails](plugins/analyzer.md#level-meter) |
 | Analyzer  | Oscilloscope | Visualisation de la forme d'onde en temps réel | [Détails](plugins/analyzer.md#oscilloscope) |
 | Analyzer  | Spectrogram | Affiche les variations du spectre de fréquences au fil du temps | [Détails](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Stereo Meter | Visualise l'équilibre stéréo et le mouvement du son | [Détails](plugins/analyzer.md#stereo-meter) |
 | Analyzer  | Spectrum Analyzer | Analyse le spectre en temps réel | [Détails](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter | Visualise l'équilibre stéréo et le mouvement du son | [Détails](plugins/analyzer.md#stereo-meter) |
 | Basics    | DC Offset | Réglage du décalage DC | [Détails](plugins/basics.md#dc-offset) |
 | Basics    | Polarity Inversion | Inversion de la polarité du signal | [Détails](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance | Contrôle de l'équilibre des canaux stéréo | [Détails](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Contrôle de volume basique | [Détails](plugins/basics.md#volume) |
+| Delay     | Time Alignment | Ajustements précis de la synchronisation des canaux audio | [Détails](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler | Ajustement automatique du volume basé sur la mesure LUFS pour une expérience d'écoute cohérente | [Détails](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter | Contrôle transparent des crêtes pour une écoute sûre et confortable | [Détails](plugins/dynamics.md#brickwall-limiter) |
 | Dynamics  | Compressor | Compression de la plage dynamique avec contrôle du seuil, du ratio et du knee | [Détails](plugins/dynamics.md#compressor) |
 | Dynamics  | Gate | Noise gate avec contrôle du seuil, du ratio et du knee pour la réduction du bruit | [Détails](plugins/dynamics.md#gate) |
 | Dynamics  | Multiband Compressor | Processeur dynamique professionnel à 5 bandes avec modulation sonore de type radio FM | [Détails](plugins/dynamics.md#multiband-compressor) |

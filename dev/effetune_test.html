@@ -172,6 +172,8 @@
             div.textContent = message;
             div.className = type;
             results.appendChild(div);
+            // Scroll to bottom after adding new content
+            window.scrollTo(0, document.body.scrollHeight);
         }
 
         async function testPlugin(plugin) {
@@ -188,7 +190,12 @@
                 div.textContent = message;
                 div.className = type;
                 testGroup.appendChild(div);
+                // Scroll to bottom after adding new content
+                window.scrollTo(0, document.body.scrollHeight);
             };
+
+            // Scroll to bottom after adding test group
+            window.scrollTo(0, document.body.scrollHeight);
 
             try {
                 // Test 1: Constructor implementation
@@ -235,9 +242,125 @@
                     groupLog('✓ Enabled state handling works correctly', 'success');
                 }
 
-                // Test 5: Parameter handling
+                // Test 5: Audio processing test
                 try {
-                    // Test setEnabled method
+                    const SAMPLE_RATE = 44100;
+                    const BUFFER_SIZE = 128;
+                    const DURATION = 1; // 1 second
+                    const NUM_BLOCKS = Math.ceil(SAMPLE_RATE * DURATION / BUFFER_SIZE);
+                    
+                    // Get plugin parameters and add required values
+                    const params = plugin.getParameters();
+                    params.channelCount = 2;
+                    params.blockSize = BUFFER_SIZE;
+                    params.sampleRate = SAMPLE_RATE;
+
+                    let success = true;
+                    let errorMessage = null;
+
+                    // Process blocks for 1 second
+                    for (let i = 0; i < NUM_BLOCKS && success; i++) {
+                        const inputData = new Float32Array(BUFFER_SIZE * 2); // stereo
+                        try {
+                            const result = plugin.executeProcessor({}, inputData, params, i * BUFFER_SIZE / SAMPLE_RATE);
+                            if (!(result instanceof Float32Array) || result.length !== inputData.length) {
+                                success = false;
+                                errorMessage = 'Invalid processor output';
+                                break;
+                            }
+                        } catch (error) {
+                            success = false;
+                            errorMessage = error.message;
+                            break;
+                        }
+                    }
+
+                    if (success) {
+                        groupLog(`✓ Successfully processed ${DURATION}s of audio`, 'success');
+                    } else {
+                        groupLog('❌ Audio processing failed', 'error');
+                        groupLog(`Cause: ${errorMessage}`, 'error-details');
+                    }
+
+                } catch (error) {
+                    groupLog(`❌ Audio processing test failed: ${error.message}`, 'error');
+                }
+
+            // Test 6: Memory leak detection
+            try {
+                // Store initial memory usage
+                const initialMemory = window.performance.memory ? window.performance.memory.usedJSHeapSize : null;
+                
+                // Create and destroy plugin multiple times
+                const iterations = 100;
+                for (let i = 0; i < iterations; i++) {
+                    const tempPlugin = new plugin.constructor();
+                    tempPlugin.id = `temp_${i}`;
+                    
+                    // Exercise plugin functionality
+                    tempPlugin.createUI();
+                    tempPlugin.setEnabled(true);
+                    tempPlugin.updateParameters();
+                    
+                    // Process some audio
+                    const testData = new Float32Array(1024);
+                    tempPlugin.executeProcessor({}, testData, {
+                        channelCount: 2,
+                        blockSize: 512,
+                        sampleRate: 44100
+                    }, 0);
+                    
+                    // Cleanup
+                    tempPlugin.cleanup();
+                    
+                    // Remove references
+                    if (tempPlugin._boundHandleMessage) {
+                        window.workletNode?.port.removeEventListener('message', tempPlugin._boundHandleMessage);
+                    }
+                }
+
+                // Force garbage collection if available
+                if (window.gc) {
+                    window.gc();
+                }
+
+                // Check final memory usage
+                if (window.performance.memory) {
+                    const finalMemory = window.performance.memory.usedJSHeapSize;
+                    const memoryIncrease = finalMemory - initialMemory;
+                    const averageIncrease = memoryIncrease / iterations;
+
+                    if (averageIncrease > 1000000) { // 1MB threshold
+                        groupLog('❌ Potential memory leak detected', 'error');
+                        groupLog(`Memory increased by ${(memoryIncrease/1024/1024).toFixed(2)}MB over ${iterations} iterations`, 'error-details');
+                        groupLog(`Average increase: ${(averageIncrease/1024).toFixed(2)}KB per instance`, 'error-details');
+                        groupLog('Solution: Check for uncleaned event listeners, timers, or circular references', 'error-suggestion');
+                    } else {
+                        groupLog('✓ No significant memory leaks detected', 'success');
+                    }
+                } else {
+                    groupLog('⚠️ Memory usage monitoring not available', 'warning');
+                }
+
+                // Check for event listener leaks
+                if (window.workletNode) {
+                    const listeners = window.workletNode.port.eventListeners?.('message') || [];
+                    if (listeners.length > iterations) {
+                        groupLog('❌ Event listener leak detected', 'error');
+                        groupLog(`${listeners.length} message listeners found after cleanup`, 'error-details');
+                        groupLog('Solution: Ensure removeEventListener is called in cleanup()', 'error-suggestion');
+                    } else {
+                        groupLog('✓ No event listener leaks detected', 'success');
+                    }
+                }
+
+            } catch (error) {
+                groupLog(`❌ Memory leak test failed: ${error.message}`, 'error');
+            }
+
+            // Test 7: Parameter handling
+            try {
+                // Test setEnabled method
                     plugin.setEnabled(false);
                     let params = plugin.getParameters();
                     if (params.enabled === false) {
@@ -294,9 +417,13 @@
                 
                 log(`Loaded ${Object.keys(pluginClasses).length} plugins`, 'success');
                 
+                // Test plugins one by one with a small delay between each test
                 for (const [name, PluginClass] of Object.entries(pluginClasses)) {
                     const plugin = manager.createPlugin(name);
                     await testPlugin(plugin);
+                    
+                    // Add a small delay to ensure UI updates
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
                 log('All tests completed', 'success');

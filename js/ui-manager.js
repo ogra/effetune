@@ -210,7 +210,7 @@ export class UIManager {
             navigator.clipboard.writeText(newURL.toString())
                 .then(() => {
                     this.setError('URL copied to clipboard!');
-                    setTimeout(() => this.clearError(), 2000);
+                    setTimeout(() => this.clearError(), 3000);
                 })
                 .catch(err => {
                     console.error('Failed to copy URL:', err);

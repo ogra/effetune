@@ -225,12 +225,15 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Analyzer   | Level Meter           | ピークホールド付きでオーディオレベルを表示                 | [詳細](plugins/analyzer.md#level-meter)                    |
 | Analyzer   | Oscilloscope          | リアルタイムで波形を表示                                   | [詳細](plugins/analyzer.md#oscilloscope)                   |
 | Analyzer   | Spectrogram           | 時間経過とともに周波数スペクトルの変化を表示               | [詳細](plugins/analyzer.md#spectrogram)                    |
-| Analyzer   | Stereo Meter          | ステレオバランスと音の動きを表示                           | [詳細](plugins/analyzer.md#stereo-meter)                   |
 | Analyzer   | Spectrum Analyzer     | リアルタイムでスペクトラム解析を行う                        | [詳細](plugins/analyzer.md#spectrum-analyzer)              |
+| Analyzer   | Stereo Meter          | ステレオバランスと音の動きを表示                           | [詳細](plugins/analyzer.md#stereo-meter)                   |
 | Basics     | DC Offset             | DCオフセットの調整                                         | [詳細](plugins/basics.md#dc-offset)                        |
 | Basics     | Polarity Inversion    | 信号の極性反転                                             | [詳細](plugins/basics.md#polarity-inversion)               |
 | Basics     | Stereo Balance        | ステレオチャンネルのバランス制御                           | [詳細](plugins/basics.md#stereo-balance)                   |
 | Basics     | Volume                | 基本的な音量調整                                           | [詳細](plugins/basics.md#volume)                           |
+| Delay      | Time Alignment        | オーディオチャンネルの精密なタイミング調整                 | [詳細](plugins/delay.md#time-alignment)                    |
+| Dynamics   | Auto Leveler         | LUFS測定に基づく一貫したリスニング体験のための自動音量調整 | [詳細](plugins/dynamics.md#auto-leveler)                  |
+| Dynamics   | Brickwall Limiter    | 安全で快適なリスニングのための透明なピークコントロール     | [詳細](plugins/dynamics.md#brickwall-limiter)             |
 | Dynamics   | Compressor            | スレッショルド、レシオ、ニー制御を備えたダイナミックレンジ圧縮 | [詳細](plugins/dynamics.md#compressor)                     |
 | Dynamics   | Gate                  | スレッショルド、レシオ、ニー制御付きのノイズリダクション用ノイズゲート | [詳細](plugins/dynamics.md#gate)                           |
 | Dynamics   | Multiband Compressor  | FMラジオ風のサウンドシェーピングを備えたプロフェッショナルな5バンドダイナミクスプロセッサ | [詳細](plugins/dynamics.md#multiband-compressor)           |

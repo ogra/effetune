@@ -114,7 +114,7 @@ export class PipelineManager {
         
         if (window.uiManager) {
             window.uiManager.setError(`Preset "${name}" saved!`);
-            setTimeout(() => window.uiManager.clearError(), 2000);
+            setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
 
@@ -162,7 +162,7 @@ export class PipelineManager {
         
         if (window.uiManager) {
             window.uiManager.setError(`Preset "${name}" loaded!`);
-            setTimeout(() => window.uiManager.clearError(), 2000);
+            setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
 
@@ -177,7 +177,7 @@ export class PipelineManager {
         
         if (window.uiManager) {
             window.uiManager.setError(`Preset "${name}" deleted!`);
-            setTimeout(() => window.uiManager.clearError(), 2000);
+            setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
 
@@ -239,7 +239,7 @@ export class PipelineManager {
                         .then(() => {
                             if (window.uiManager) {
                                 window.uiManager.setError('Plugin settings copied to clipboard!');
-                                setTimeout(() => window.uiManager.clearError(), 2000);
+                                setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         })
                         .catch(err => {
@@ -327,7 +327,7 @@ export class PipelineManager {
 
                             if (window.uiManager) {
                                 window.uiManager.setError('Plugin settings pasted successfully!');
-                                setTimeout(() => window.uiManager.clearError(), 2000);
+                                setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         } catch (err) {
                             console.error('Failed to paste plugin settings:', err);

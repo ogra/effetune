@@ -219,12 +219,15 @@
 | Analyzer | Level Meter     | يعرض مستوى الصوت مع تثبيت القمة                             | [تفاصيل](plugins/analyzer.md#level-meter)       |
 | Analyzer | Oscilloscope    | تصور الموجة الزمنية في الوقت الحقيقي                         | [تفاصيل](plugins/analyzer.md#oscilloscope)      |
 | Analyzer | Spectrogram     | يعرض تغيرات طيف التردد مع مرور الوقت                        | [تفاصيل](plugins/analyzer.md#spectrogram)       |
-| Analyzer | Stereo Meter    | يصوّر توازن الصوت الستيريو وحركة الصوت                         | [تفاصيل](plugins/analyzer.md#stereo-meter)       |
 | Analyzer | Spectrum Analyzer | تحليل الطيف في الوقت الحقيقي                               | [تفاصيل](plugins/analyzer.md#spectrum-analyzer)  |
+| Analyzer | Stereo Meter    | يصوّر توازن الصوت الستيريو وحركة الصوت                         | [تفاصيل](plugins/analyzer.md#stereo-meter)       |
 | Basics   | DC Offset       | تعديل الإزاحة المستمرة (DC offset)                           | [تفاصيل](plugins/basics.md#dc-offset)           |
 | Basics   | Polarity Inversion | عكس قطبية الإشارة                                        | [تفاصيل](plugins/basics.md#polarity-inversion)   |
 | Basics   | Stereo Balance  | تحكم في توازن القنوات الستيريو                              | [تفاصيل](plugins/basics.md#stereo-balance)       |
 | Basics   | Volume          | تحكم أساسي في مستوى الصوت                                  | [تفاصيل](plugins/basics.md#volume)              |
+| Delay    | Time Alignment  | ضبط دقيق لتوقيت القنوات الصوتية                           | [تفاصيل](plugins/delay.md#time-alignment)       |
+| Dynamics | Auto Leveler    | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متناسقة | [تفاصيل](plugins/dynamics.md#auto-leveler)      |
+| Dynamics | Brickwall Limiter | تحكم شفاف في القمم للاستماع الآمن والمريح                | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |
 | Dynamics | Compressor      | ضغط النطاق الديناميكي مع تحكم في العتبة والنسبة والنقاط الحرجة | [تفاصيل](plugins/dynamics.md#compressor)        |
 | Dynamics | Gate            | بوابة للحد من الضوضاء مع تحكم في العتبة والنسبة والنقاط الحرجة لتقليل الضوضاء | [تفاصيل](plugins/dynamics.md#gate)              |
 | Dynamics | Multiband Compressor | معالج ديناميكي احترافي بخمس نطاقات مع تشكيل صوت على نمط إذاعة FM | [تفاصيل](plugins/dynamics.md#multiband-compressor) |
