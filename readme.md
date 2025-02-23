@@ -221,12 +221,15 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Analyzer | Level Meter | Displays audio level with peak hold | [Details](docs/plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope | Real-time waveform visualization | [Details](docs/plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram | Displays frequency spectrum changes over time | [Details](docs/plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter | Visualizes stereo balance and sound movement | [Details](docs/plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer | Real-time spectrum analysis | [Details](docs/plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Stereo Meter | Visualizes stereo balance and sound movement | [Details](docs/plugins/analyzer.md#stereo-meter) |
 | Basics | DC Offset | DC offset adjustment | [Details](docs/plugins/basics.md#dc-offset) |
 | Basics | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
 | Basics | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |
 | Basics | Volume | Basic volume control | [Details](docs/plugins/basics.md#volume) |
+| Delay | Time Alignment | Precise timing adjustments for audio channels | [Details](docs/plugins/delay.md#time-alignment) |
+| Dynamics | Auto Leveler | Automatic volume adjustment based on LUFS measurement for consistent listening experience | [Details](docs/plugins/dynamics.md#auto-leveler) |
+| Dynamics | Brickwall Limiter | Transparent peak control for safe and comfortable listening | [Details](docs/plugins/dynamics.md#brickwall-limiter) |
 | Dynamics | Compressor | Dynamic range compression with threshold, ratio, and knee control | [Details](docs/plugins/dynamics.md#compressor) |
 | Dynamics | Gate | Noise gate with threshold, ratio, and knee control for noise reduction | [Details](docs/plugins/dynamics.md#gate) |
 | Dynamics | Multiband Compressor | Professional 5-band dynamics processor with FM radio-style sound shaping | [Details](docs/plugins/dynamics.md#multiband-compressor) |

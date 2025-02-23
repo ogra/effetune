@@ -27,6 +27,7 @@ basics/polarity_inversion: Polarity Inversion | Basics | PolarityInversionPlugin
 basics/stereo_balance: Stereo Balance | Basics | StereoBalancePlugin
 basics/volume: Volume | Basics | VolumePlugin
 delay/time_alignment: Time Alignment | Delay | TimeAlignmentPlugin | css
+dynamics/auto_leveler: Auto Leveler | Dynamics | AutoLevelerPlugin | css
 dynamics/brickwall_limiter: Brickwall Limiter | Dynamics | BrickwallLimiterPlugin | css
 dynamics/compressor: Compressor | Dynamics | CompressorPlugin | css
 dynamics/gate: Gate | Dynamics | GatePlugin | css

@@ -4,10 +4,121 @@
 
 ## Plugin List
 
+- [Auto Leveler](#auto-leveler) - 일관된 청취 경험을 위한 자동 볼륨 조절
 - [Brickwall Limiter](#brickwall-limiter) - 안전하고 편안한 청취를 위한 투명한 피크 제어
 - [Compressor](#compressor) - 더 편안한 청취를 위해 볼륨 레벨을 자동으로 균형 조절
 - [Gate](#gate) - 임계값 이하의 신호를 감쇠시켜 원치 않는 배경 노이즈 감소
 - [Multiband Compressor](#multiband-compressor) - FM 라디오 스타일의 사운드 쉐이핑이 가능한 전문가급 5밴드 다이나믹 프로세서
+
+# Dynamics Plugins
+
+A collection of plugins that help balance the loud and quiet parts of your music, making your listening experience more enjoyable and comfortable.
+
+## Plugin List
+
+- [Auto Leveler](#auto-leveler) - Automatic volume adjustment for consistent listening experience
+- [Brickwall Limiter](#brickwall-limiter) - Transparent peak control for safe and comfortable listening
+- [Compressor](#compressor) - Automatically balances volume levels for more comfortable listening
+- [Gate](#gate) - Reduces unwanted background noise by attenuating signals below a threshold
+- [Multiband Compressor](#multiband-compressor) - Professional 5-band dynamics processor with FM radio-style sound shaping
+
+## Auto Leveler
+
+일관된 청취 레벨을 유지하기 위해 자동으로 음악의 볼륨을 조절하는 스마트 볼륨 컨트롤입니다. 표준 LUFS 측정 방식을 사용하여, 조용한 클래식 곡이든 다이내믹한 팝송이든 항상 편안한 볼륨을 유지할 수 있도록 도와줍니다.
+
+### 청취 향상 가이드
+- **클래식 음악:**
+  - 볼륨을 건드리지 않아도 조용한 구간과 큰 크레센도를 자연스럽게 즐길 수 있습니다.
+  - 피아노 작품의 섬세한 디테일까지 모두 들을 수 있습니다.
+  - 녹음 레벨이 다양한 앨범에 최적입니다.
+- **팝/록 음악:**
+  - 곡마다 일정한 볼륨을 유지합니다.
+  - 너무 크거나 작은 트랙으로 인한 불편함이 없습니다.
+  - 장시간 청취에도 편안한 환경을 제공합니다.
+- **배경 음악:**
+  - 작업이나 공부 중에도 일정한 볼륨을 유지합니다.
+  - 볼륨이 지나치게 크거나 작지 않습니다.
+  - 다양한 콘텐츠가 섞인 재생목록에 적합합니다.
+
+### Parameters
+
+- **Target** (-36.0dB to 0.0dB LUFS)
+  - 원하는 청취 레벨을 설정합니다.
+  - 기본값 -18.0dB LUFS는 대부분의 음악에 적합한 편안한 볼륨을 제공합니다.
+  - 배경 음악 청취에는 더 낮은 값이 좋습니다.
+  - 보다 임팩트 있는 사운드를 원한다면 높은 값을 사용합니다.
+
+- **Time Window** (1000ms to 10000ms)
+  - 볼륨 측정 간격을 결정합니다.
+  - 짧은 시간은 변화에 더 민감하게 반응합니다.
+  - 긴 시간은 보다 안정적이고 자연스러운 사운드를 제공합니다.
+  - 기본값 3000ms는 대부분의 음악에 잘 맞습니다.
+
+- **Max Gain** (0.0dB to 12.0dB)
+  - 조용한 소리가 얼마나 증폭될지를 제한합니다.
+  - 높은 값은 보다 일정한 볼륨을 유지합니다.
+  - 낮은 값은 자연스러운 다이내믹스를 제공합니다.
+  - 부드러운 제어를 위해 6.0dB로 시작합니다.
+
+- **Min Gain** (-36.0dB to 0.0dB)
+  - 큰 소리가 얼마나 감쇠될지를 제한합니다.
+  - 높은 값은 보다 자연스러운 사운드를 유지합니다.
+  - 낮은 값은 보다 일정한 볼륨을 제공합니다.
+  - 초기값으로 -12.0dB를 권장합니다.
+
+- **Attack Time** (1ms to 1000ms)
+  - 볼륨이 줄어드는 속도를 결정합니다.
+  - 빠른 시간은 갑작스런 큰 소리를 효과적으로 제어합니다.
+  - 느린 시간은 보다 자연스러운 전환을 제공합니다.
+  - 기본값 50ms는 제어력과 자연스러움의 균형을 이룹니다.
+
+- **Release Time** (10ms to 10000ms)
+  - 볼륨이 원래 상태로 돌아가는 속도를 결정합니다.
+  - 빠른 시간은 보다 즉각적인 반응을 제공합니다.
+  - 느린 시간은 부드러운 전환을 보장합니다.
+  - 기본값 1000ms는 자연스러운 사운드를 만듭니다.
+
+- **Noise Gate** (-96dB to -24dB)
+  - 매우 조용한 소리의 처리를 줄여줍니다.
+  - 높은 값은 배경 노이즈를 효과적으로 줄입니다.
+  - 낮은 값은 더 많은 조용한 소리를 처리합니다.
+  - 기본값 -60dB로 시작하여 필요에 따라 조정합니다.
+
+### 시각적 피드백
+- 실시간 LUFS 레벨 디스플레이
+- Input level (green line)
+- Output level (white line)
+- 볼륨 조정의 명확한 시각적 피드백 제공
+- 읽기 쉬운 시간 기반 그래프
+
+### 추천 설정
+
+#### 일반 청취
+- Target: -18.0dB LUFS
+- Time Window: 3000ms
+- Max Gain: 6.0dB
+- Min Gain: -12.0dB
+- Attack Time: 50ms
+- Release Time: 1000ms
+- Noise Gate: -60dB
+
+#### 배경 음악
+- Target: -23.0dB LUFS
+- Time Window: 5000ms
+- Max Gain: 9.0dB
+- Min Gain: -18.0dB
+- Attack Time: 100ms
+- Release Time: 2000ms
+- Noise Gate: -54dB
+
+#### 다이내믹 음악
+- Target: -16.0dB LUFS
+- Time Window: 2000ms
+- Max Gain: 3.0dB
+- Min Gain: -6.0dB
+- Attack Time: 30ms
+- Release Time: 500ms
+- Noise Gate: -72dB
 
 ## Brickwall Limiter
 

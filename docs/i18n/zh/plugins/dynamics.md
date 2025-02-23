@@ -4,10 +4,113 @@
 
 ## 插件列表
 
+- [Auto Leveler](#auto-leveler) - 自动调整音量以保持一致的聆听体验
 - [Brickwall Limiter](#brickwall-limiter) - 透明的峰值控制,实现安全舒适的聆听体验
 - [Compressor](#compressor) - 自动平衡音量级别,实现更舒适的聆听体验
 - [Gate](#gate) - 通过衰减低于阈值的信号来减少不需要的背景噪音
 - [Multiband Compressor](#multiband-compressor) - 具有 FM 广播风格声音塑造的专业 5 段动态处理器
+
+## Auto Leveler
+
+一款智能音量控制插件，能够自动调整音乐，确保整体音量保持稳定。无论您在聆听安静的古典乐还是充满动感的流行音乐，它都利用行业标准的 LUFS 测量，确保音乐始终处于舒适的音量水平。
+
+### 聆听增强指南
+
+- **古典音乐:**
+  - 无需调节音量，即可畅享安静段落与激情高潮
+  - 细致感受钢琴作品中的每一个细微之处
+  - 非常适合录音水平不一的专辑
+
+- **流行/摇滚音乐:**
+  - 不同歌曲间保持一致的音量
+  - 避免因曲目音量过高或过低而产生意外
+  - 长时间聆听亦感舒适
+
+- **背景音乐:**
+  - 工作或学习时保持稳定音量
+  - 既不会过响也不会过低
+  - 适合混合曲目的播放列表
+
+### 参数
+
+- **Target** (-36.0dB 至 0.0dB LUFS)
+  - 设定期望的聆听电平
+  - 默认 -18.0dB LUFS 适合大多数音乐
+  - 较低数值适合安静的背景音乐
+  - 较高数值则能带来更有冲击力的音效
+
+- **Time Window** (1000ms 至 10000ms)
+  - 测量电平的时间窗口
+  - 短窗口：响应更迅速
+  - 长窗口：音量更稳定，自然
+  - 默认 3000ms 适用于大多数音乐
+
+- **Max Gain** (0.0dB 至 12.0dB)
+  - 限制安静部分的最大增益
+  - 较高数值：音量更一致
+  - 较低数值：保留更自然的动态
+  - 可从 6.0dB 开始以实现温和控制
+
+- **Min Gain** (-36.0dB 至 0.0dB)
+  - 限制响亮部分的最小增益调整
+  - 较高数值：声音更自然
+  - 较低数值：音量更一致
+  - 可尝试从 -12.0dB 开始
+
+- **Attack Time** (1ms 至 1000ms)
+  - 音量下降的响应速度
+  - 较快时间：更好控制突发的响声
+  - 较慢时间：过渡更自然
+  - 默认 50ms 平衡控制与自然度
+
+- **Release Time** (10ms 至 10000ms)
+  - 音量恢复正常的速度
+  - 较快时间：响应更迅速
+  - 较慢时间：过渡更平滑
+  - 默认 1000ms 提供自然音效
+
+- **Noise Gate** (-96dB 至 -24dB)
+  - 降低处理极低音量的信号
+  - 较高数值：减少背景噪音
+  - 较低数值：处理更多细微信号
+  - 从 -60dB 开始，根据需要调整
+
+### 视觉反馈
+
+- 实时 LUFS 电平显示
+- 输入电平（绿线）
+- 输出电平（白线）
+- 清晰显示音量调整效果
+- 易于阅读的时间图表
+
+### 推荐设置
+
+#### General Listening
+- Target: -18.0dB LUFS
+- Time Window: 3000ms
+- Max Gain: 6.0dB
+- Min Gain: -12.0dB
+- Attack Time: 50ms
+- Release Time: 1000ms
+- Noise Gate: -60dB
+
+#### Background Music
+- Target: -23.0dB LUFS
+- Time Window: 5000ms
+- Max Gain: 9.0dB
+- Min Gain: -18.0dB
+- Attack Time: 100ms
+- Release Time: 2000ms
+- Noise Gate: -54dB
+
+#### Dynamic Music
+- Target: -16.0dB LUFS
+- Time Window: 2000ms
+- Max Gain: 3.0dB
+- Min Gain: -6.0dB
+- Attack Time: 30ms
+- Release Time: 500ms
+- Noise Gate: -72dB
 
 ## Brickwall Limiter
 

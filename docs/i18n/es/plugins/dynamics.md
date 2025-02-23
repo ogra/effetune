@@ -4,10 +4,109 @@ Una colección de plugins que ayudan a equilibrar las partes fuertes y suaves de
 
 ## Lista de Plugins
 
+- [Auto Leveler](#auto-leveler) - Ajuste automático de volumen para una experiencia de escucha consistente
 - [Brickwall Limiter](#brickwall-limiter) - Control transparente de picos para una escucha segura y cómoda
 - [Compressor](#compressor) - Equilibra automáticamente los niveles de volumen para una escucha más cómoda
 - [Gate](#gate) - Reduce el ruido de fondo no deseado atenuando señales por debajo de un umbral
 - [Multiband Compressor](#multiband-compressor) - Procesador de dinámica profesional de 5 bandas con modelado de sonido estilo radio FM
+
+## Auto Leveler
+
+Un control de volumen inteligente que ajusta automáticamente tu música para mantener un nivel de escucha constante. Utiliza mediciones LUFS, estándares de la industria, para asegurar que tu música se reproduzca a un volumen confortable, ya sea que estés escuchando piezas clásicas suaves o canciones pop dinámicas.
+
+### Guía de Mejora de Escucha
+- **Música Clásica:**
+  - Disfruta de pasajes tranquilos y crescendos intensos sin necesidad de ajustar el volumen
+  - Percibe todos los detalles sutiles en las piezas de piano
+  - Ideal para álbumes con niveles de grabación variables
+- **Música Pop/Rock:**
+  - Mantén un volumen constante entre diferentes canciones
+  - Sin sorpresas por pistas excesivamente fuertes o suaves
+  - Escucha cómoda durante sesiones prolongadas
+- **Música de Fondo:**
+  - Conserva un volumen estable mientras trabajas o estudias
+  - Nunca resulta demasiado alto ni demasiado bajo
+  - Perfecto para listas de reproducción con contenido variado
+
+### Parameters
+
+- **Target** (-36.0dB to 0.0dB LUFS)
+  - Establece el nivel de escucha deseado
+  - El valor predeterminado de -18.0dB LUFS es cómodo para la mayoría de la música
+  - Valores más bajos para una escucha de fondo más discreta
+  - Valores más altos para un sonido más impactante
+
+- **Time Window** (1000ms to 10000ms)
+  - Define la rapidez con la que se mide el nivel
+  - Tiempos más cortos: Responde más rápidamente a los cambios
+  - Tiempos más largos: Ofrece un sonido más estable y natural
+  - El valor predeterminado de 3000ms funciona bien para la mayoría de la música
+
+- **Max Gain** (0.0dB to 12.0dB)
+  - Limita el aumento de los sonidos silenciosos
+  - Valores más altos: Volumen más consistente
+  - Valores más bajos: Dinámica más natural
+  - Comienza con 6.0dB para un control suave
+
+- **Min Gain** (-36.0dB to 0.0dB)
+  - Limita la reducción de los sonidos fuertes
+  - Valores más altos: Sonido más natural
+  - Valores más bajos: Volumen más consistente
+  - Prueba con -12.0dB como punto de partida
+
+- **Attack Time** (1ms to 1000ms)
+  - Define la rapidez con la que se reduce el volumen
+  - Tiempos más rápidos: Mejor control de sonidos fuertes repentinos
+  - Tiempos más lentos: Transiciones más naturales
+  - El valor predeterminado de 50ms equilibra el control y la naturalidad
+
+- **Release Time** (10ms to 10000ms)
+  - Define la rapidez con la que el volumen vuelve a la normalidad
+  - Tiempos más rápidos: Mayor capacidad de respuesta
+  - Tiempos más lentos: Transiciones más suaves
+  - El valor predeterminado de 1000ms ofrece un sonido natural
+
+- **Noise Gate** (-96dB to -24dB)
+  - Reduce el procesamiento de sonidos muy silenciosos
+  - Valores más altos: Menos ruido de fondo
+  - Valores más bajos: Procesa más sonidos silenciosos
+  - Empieza en -60dB y ajusta si es necesario
+
+### Visual Feedback
+- Visualización en tiempo real del nivel LUFS
+- Nivel de entrada (línea verde)
+- Nivel de salida (línea blanca)
+- Retroalimentación visual clara de los ajustes de volumen
+- Gráfico temporal de fácil lectura
+
+### Recommended Settings
+
+#### Escucha General
+- Target: -18.0dB LUFS
+- Time Window: 3000ms
+- Max Gain: 6.0dB
+- Min Gain: -12.0dB
+- Attack Time: 50ms
+- Release Time: 1000ms
+- Noise Gate: -60dB
+
+#### Música de Fondo
+- Target: -23.0dB LUFS
+- Time Window: 5000ms
+- Max Gain: 9.0dB
+- Min Gain: -18.0dB
+- Attack Time: 100ms
+- Release Time: 2000ms
+- Noise Gate: -54dB
+
+#### Música Dinámica
+- Target: -16.0dB LUFS
+- Time Window: 2000ms
+- Max Gain: 3.0dB
+- Min Gain: -6.0dB
+- Attack Time: 30ms
+- Release Time: 500ms
+- Noise Gate: -72dB
 
 ## Brickwall Limiter
 

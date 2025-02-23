@@ -219,12 +219,15 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Analyzer | Level Meter        | पीक होल्ड के साथ ऑडियो स्तर प्रदर्शित करता है               | [विवरण](plugins/analyzer.md#level-meter) |
 | Analyzer | Oscilloscope       | वास्तविक समय में वेवफॉर्म का दृश्यावलोकन                    | [विवरण](plugins/analyzer.md#oscilloscope) |
 | Analyzer | Spectrogram        | समय के साथ आवृत्ति स्पेक्ट्रम में परिवर्तनों को प्रदर्शित करता है | [विवरण](plugins/analyzer.md#spectrogram) |
-| Analyzer | Stereo Meter       | स्टीरियो संतुलन और ध्वनि के गति का दृश्यावलोकन करता है         | [विवरण](plugins/analyzer.md#stereo-meter) |
 | Analyzer | Spectrum Analyzer  | वास्तविक समय में स्पेक्ट्रम विश्लेषण                        | [विवरण](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Stereo Meter       | स्टीरियो संतुलन और ध्वनि के गति का दृश्यावलोकन करता है         | [विवरण](plugins/analyzer.md#stereo-meter) |
 | Basics   | DC Offset          | DC ऑफसेट समायोजन                                          | [विवरण](plugins/basics.md#dc-offset) |
 | Basics   | Polarity Inversion | सिग्नल ध्रुवीकरण उलटना                                    | [विवरण](plugins/basics.md#polarity-inversion) |
 | Basics   | Stereo Balance     | स्टीरियो चैनल संतुलन नियंत्रण                             | [विवरण](plugins/basics.md#stereo-balance) |
 | Basics   | Volume             | बेसिक वॉल्यूम नियंत्रण                                     | [विवरण](plugins/basics.md#volume) |
+| Delay    | Time Alignment     | ऑडियो चैनलों के लिए सटीक टाइमिंग समायोजन                   | [विवरण](plugins/delay.md#time-alignment) |
+| Dynamics | Auto Leveler       | LUFS मापन पर आधारित स्वचालित वॉल्यूम समायोजन जो एक समान सुनने का अनुभव प्रदान करता है | [विवरण](plugins/dynamics.md#auto-leveler) |
+| Dynamics | Brickwall Limiter  | सुरक्षित और आरामदायक सुनने के लिए पारदर्शी पीक नियंत्रण    | [विवरण](plugins/dynamics.md#brickwall-limiter) |
 | Dynamics | Compressor         | थ्रेशोल्ड, रेशियो, और नी नियंत्रण के साथ डायनामिक रेंज कंप्रेशन | [विवरण](plugins/dynamics.md#compressor) |
 | Dynamics | Gate               | थ्रेशोल्ड, रेशियो, और नी नियंत्रण के साथ नॉइज रिडक्शन के लिए नॉइज गेट | [विवरण](plugins/dynamics.md#gate) |
 | Dynamics | Multiband Compressor | FM रेडियो-स्टाइल साउंड शेपिंग के साथ पेशेवर 5-बैंड डायनामिक्स प्रोसेसर | [विवरण](plugins/dynamics.md#multiband-compressor) |

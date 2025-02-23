@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.23 (February 23, 2025)
+- Supports installation as an app
+- Added some new effects
+- Various minor improvements
+
 ### Version 1.22 (February 18, 2025)
 - Added effect search function
 - Added some new effects

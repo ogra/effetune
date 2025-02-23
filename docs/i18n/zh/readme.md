@@ -219,12 +219,15 @@ EffeTune 专为希望将音乐聆听体验提升到新水平的音频爱好者�
 | Analyzer  | Level Meter       | 显示具有峰值保持的音频电平                   | [详情](plugins/analyzer.md#level-meter) |
 | Analyzer  | Oscilloscope      | 实时波形可视化                              | [详情](plugins/analyzer.md#oscilloscope) |
 | Analyzer  | Spectrogram       | 显示频谱随时间变化的情况                     | [详情](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Stereo Meter      | 可视化立体声平衡及声音运动                    | [详情](plugins/analyzer.md#stereo-meter) |
 | Analyzer  | Spectrum Analyzer | 实时频谱分析                              | [详情](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter      | 可视化立体声平衡及声音运动                    | [详情](plugins/analyzer.md#stereo-meter) |
 | Basics    | DC Offset         | 直流偏移调整                               | [详情](plugins/basics.md#dc-offset) |
 | Basics    | Polarity Inversion| 信号极性反转                               | [详情](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance    | 立体声通道平衡控制                          | [详情](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | 基本音量控制                               | [详情](plugins/basics.md#volume) |
+| Delay     | Time Alignment    | 音频通道的精确时间调整                      | [详情](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler      | 基于 LUFS 测量的自动音量调整，确保一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter | 透明的峰值控制，实现安全舒适的聆听           | [详情](plugins/dynamics.md#brickwall-limiter) |
 | Dynamics  | Compressor        | 带有阈值、比例和拐点控制的动态范围压缩            | [详情](plugins/dynamics.md#compressor) |
 | Dynamics  | Gate              | 带有阈值、比例和拐点控制的降噪门                   | [详情](plugins/dynamics.md#gate) |
 | Dynamics  | Multiband Compressor | 专业的 5 频段动态处理器，具有 FM 电台风格的声音塑形   | [详情](plugins/dynamics.md#multiband-compressor) |
