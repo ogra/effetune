@@ -8,6 +8,10 @@ A web-based real-time audio effect processor designed for audio enthusiasts to e
 
 [![Screenshot](images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
 
+## Introduction video
+
+[![YouTube Video](images/video_thumbnail.jpg)](https://www.youtube.com/watch?v=agD0PrOSi04)
+
 ## Concept
 
 EffeTune is created for audio enthusiasts who want to take their music listening experience to the next level. Whether you're streaming music or playing from physical media, EffeTune lets you add professional-grade effects to customize the sound to your exact preferences. Transform your computer into a powerful audio effects processor that sits between your audio source and your speakers or amplifier.
