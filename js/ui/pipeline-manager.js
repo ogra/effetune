@@ -124,6 +124,13 @@ export class PipelineManager {
         
         if (!preset) return;
         
+        // Clean up existing plugins before removing them
+        this.audioManager.pipeline.forEach(plugin => {
+            if (typeof plugin.cleanup === 'function') {
+                plugin.cleanup();
+            }
+        });
+        
         // Clear current pipeline and expanded plugins
         this.audioManager.pipeline.length = 0;
         this.expandedPlugins.clear();
@@ -354,6 +361,12 @@ export class PipelineManager {
                     selectedIndices.forEach(index => {
                         if (index > -1) {
                             const plugin = this.audioManager.pipeline[index];
+                            
+                            // Clean up plugin resources before removing
+                            if (typeof plugin.cleanup === 'function') {
+                                plugin.cleanup();
+                            }
+                            
                             this.audioManager.pipeline.splice(index, 1);
                             this.selectedPlugins.delete(plugin);
                         }
@@ -479,6 +492,11 @@ export class PipelineManager {
             
             const index = this.audioManager.pipeline.indexOf(plugin);
             if (index > -1) {
+                // Clean up plugin resources before removing
+                if (typeof plugin.cleanup === 'function') {
+                    plugin.cleanup();
+                }
+                
                 this.audioManager.pipeline.splice(index, 1);
                 this.selectedPlugins.delete(plugin);
                 this.updatePipelineUI();

@@ -52,6 +52,24 @@ class PluginBase {
             this._hasMessageHandler = true;
         }
     }
+    
+    // Clean up resources when plugin is removed
+    cleanup() {
+        // Remove message event listener to prevent memory leaks
+        if (this._hasMessageHandler && window.workletNode) {
+            window.workletNode.port.removeEventListener('message', this._boundHandleMessage);
+            this._hasMessageHandler = false;
+        }
+        
+        // Clear any pending timeouts
+        if (this._pendingTimeoutId !== null) {
+            clearTimeout(this._pendingTimeoutId);
+            this._pendingTimeoutId = null;
+        }
+        
+        // Clear any other resources
+        this.pendingUpdate = null;
+    }
 
     _handleMessage(event) {
         if (event.data.pluginId === this.id) {

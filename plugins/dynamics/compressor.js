@@ -16,7 +16,12 @@ class CompressorPlugin extends PluginBase {
 
         this._setupMessageHandler();
 
-        this.registerProcessor(`
+        this.registerProcessor(this.getProcessorCode());
+    }
+
+    // Returns the processor code string with optimized processing
+    getProcessorCode() {
+        return `
             // If compression is disabled, return the input immediately without processing
             if (!parameters.enabled) {
                 const result = new Float32Array(data.length);
@@ -34,16 +39,22 @@ class CompressorPlugin extends PluginBase {
             const MIN_ENVELOPE = 1e-6;
             const MIN_DB = -60;
             const MAX_DB = 0;
+            const LOG10_20 = 8.685889638065035; // 20/ln(10)
+            const GAIN_FACTOR = 0.11512925464970229; // ln(10)/20
 
             // Cache frequently used parameters
-            const at = parameters.at;
-            const rl = parameters.rl;
+            const th = parameters.th;
+            const rt = parameters.rt;
+            const kn = parameters.kn;
+            const gn = parameters.gn;
             const blockSize = parameters.blockSize;
             const channelCount = parameters.channelCount;
+            const halfKnee = kn * 0.5;
+            const invRatio = 1 - 1 / rt;
 
             // Calculate filter coefficients for attack and release
-            const attackSamples = Math.max(1, (at * parameters.sampleRate) / 1000);
-            const releaseSamples = Math.max(1, (rl * parameters.sampleRate) / 1000);
+            const attackSamples = Math.max(1, (parameters.at * parameters.sampleRate) / 1000);
+            const releaseSamples = Math.max(1, (parameters.rl * parameters.sampleRate) / 1000);
             const attackCoeff = Math.exp(-Math.LN2 / attackSamples);
             const releaseCoeff = Math.exp(-Math.LN2 / releaseSamples);
 
@@ -52,44 +63,217 @@ class CompressorPlugin extends PluginBase {
                 context.envelopeStates = new Float32Array(channelCount).fill(MIN_ENVELOPE);
             }
 
+            // Create or reuse lookup tables for expensive math operations
+            if (!context.dbLookup) {
+                // Create lookup table for LOG10_20 * Math.log(x) operation
+                const DB_LOOKUP_SIZE = 4096;
+                const DB_LOOKUP_SCALE = DB_LOOKUP_SIZE / 10; // 0 to 10 range
+                context.dbLookup = new Float32Array(DB_LOOKUP_SIZE);
+                for (let i = 0; i < DB_LOOKUP_SIZE; i++) {
+                    const x = i / DB_LOOKUP_SCALE;
+                    if (x < 1e-6) {
+                        context.dbLookup[i] = -120; // Minimum dB value
+                    } else {
+                        context.dbLookup[i] = LOG10_20 * Math.log(x);
+                    }
+                }
+                
+                // Create lookup table for Math.pow(10, -x/20) operation
+                const EXP_LOOKUP_SIZE = 2048;
+                const EXP_LOOKUP_SCALE = EXP_LOOKUP_SIZE / 60; // 0 to 60 dB range
+                context.expLookup = new Float32Array(EXP_LOOKUP_SIZE);
+                for (let i = 0; i < EXP_LOOKUP_SIZE; i++) {
+                    const x = i / EXP_LOOKUP_SCALE;
+                    context.expLookup[i] = Math.exp(-x * GAIN_FACTOR);
+                }
+                
+                // Store constants for faster access
+                context.DB_LOOKUP_SIZE = DB_LOOKUP_SIZE;
+                context.DB_LOOKUP_SCALE = DB_LOOKUP_SCALE;
+                context.EXP_LOOKUP_SIZE = EXP_LOOKUP_SIZE;
+                context.EXP_LOOKUP_SCALE = EXP_LOOKUP_SCALE;
+            }
+            
+            // Fast approximation functions using lookup tables
+            function fastDb(x) {
+                // Fast dB conversion using lookup table
+                if (x <= 0) return -120;
+                // Scale and clamp to lookup table range
+                const idx = Math.min(context.dbLookup.length - 1, Math.floor(x * context.DB_LOOKUP_SCALE));
+                return context.dbLookup[idx];
+            }
+            
+            function fastExp(x) {
+                // Fast exponential using lookup table
+                if (x <= 0) return 1;
+                if (x >= 60) return context.expLookup[context.expLookup.length - 1];
+                // Scale and clamp to lookup table range
+                const idx = Math.min(context.expLookup.length - 1, Math.floor(x * context.EXP_LOOKUP_SCALE));
+                return context.expLookup[idx];
+            }
+
+            // Create or reuse work buffer for envelope calculations
+            if (!context.workBuffer || context.workBuffer.length !== blockSize) {
+                context.workBuffer = new Float32Array(blockSize);
+            }
+            const workBuffer = context.workBuffer;
+
             let maxGainReduction = 0; // For measurement over the entire block
 
-            // Process each channel sample-by-sample
+            // Process each channel with block processing for better cache locality
             for (let ch = 0; ch < channelCount; ch++) {
                 const offset = ch * blockSize;
                 let envelope = context.envelopeStates[ch];
+                
+                // First pass: calculate envelope values for the entire block
                 for (let i = 0; i < blockSize; i++) {
                     const input = data[offset + i];
                     const inputAbs = Math.abs(input);
                     const coeff = inputAbs > envelope ? attackCoeff : releaseCoeff;
                     envelope = Math.max(MIN_ENVELOPE, envelope * coeff + inputAbs * (1 - coeff));
-
-                    // Convert envelope to dB, clamped between MIN_DB and MAX_DB
-                    const envelopeDb = Math.max(MIN_DB, Math.min(MAX_DB, 20 * Math.log10(envelope)));
-                    // Calculate the difference between envelope and threshold
-                    const diff = envelopeDb - parameters.th;
-                    let gainReduction = 0;
-                    if (diff <= -parameters.kn / 2) {
-                        gainReduction = 0;
-                    } else if (diff >= parameters.kn / 2) {
-                        gainReduction = diff * (1 - 1 / parameters.rt);
-                    } else {
-                        const t = (diff + parameters.kn / 2) / parameters.kn;
-                        const slope = (1 - 1 / parameters.rt);
-                        gainReduction = slope * parameters.kn * t * t / 2;
+                    workBuffer[i] = envelope;
+                }
+                
+                // Store updated envelope state
+                context.envelopeStates[ch] = envelope;
+                
+                // Calculate maximum envelope value to optimize processing
+                let maxEnvelope = MIN_ENVELOPE;
+                for (let i = 0; i < blockSize; i++) {
+                    if (workBuffer[i] > maxEnvelope) maxEnvelope = workBuffer[i];
+                }
+                
+                // Convert max envelope to dB
+                const maxEnvelopeDb = fastDb(maxEnvelope);
+                const maxDiff = maxEnvelopeDb - th;
+                
+                // If max envelope is below threshold - knee/2, we can skip per-sample gain calculation
+                if (maxDiff <= -halfKnee) {
+                    // No compression needed, just copy input to output
+                    for (let i = 0; i < blockSize; i++) {
+                        result[offset + i] = data[offset + i];
                     }
-                    // Update max gain reduction for measurement
+                    continue;
+                }
+                
+                // Second pass: apply gain reduction with loop unrolling for better performance
+                const blockSizeMod4 = blockSize & ~3; // Fast way to calculate blockSize - (blockSize % 4)
+                let i = 0;
+                
+                // Process 4 samples at a time
+                for (; i < blockSizeMod4; i += 4) {
+                    // Sample 1
+                    let envelopeDb = fastDb(workBuffer[i]);
+                    let diff = envelopeDb - th;
+                    let gainReduction = 0;
+                    
+                    if (diff <= -halfKnee) {
+                        gainReduction = 0;
+                    } else if (diff >= halfKnee) {
+                        gainReduction = diff * invRatio;
+                    } else {
+                        const t = (diff + halfKnee) / kn;
+                        gainReduction = invRatio * kn * t * t * 0.5;
+                    }
+                    
                     maxGainReduction = Math.max(maxGainReduction, gainReduction);
-
-                    // Compute total gain for the sample
+                    
                     let sampleGain = 1;
                     if (gainReduction > 0) {
-                        const totalGainDb = Math.max(-60, Math.min(60, -gainReduction + parameters.gn));
-                        sampleGain = Math.pow(10, totalGainDb / 20);
+                        sampleGain = fastExp(gainReduction) * fastExp(-gn);
                     }
-                    result[offset + i] = input * sampleGain;
+                    result[offset + i] = data[offset + i] * sampleGain;
+                    
+                    // Sample 2
+                    envelopeDb = fastDb(workBuffer[i+1]);
+                    diff = envelopeDb - th;
+                    gainReduction = 0;
+                    
+                    if (diff <= -halfKnee) {
+                        gainReduction = 0;
+                    } else if (diff >= halfKnee) {
+                        gainReduction = diff * invRatio;
+                    } else {
+                        const t = (diff + halfKnee) / kn;
+                        gainReduction = invRatio * kn * t * t * 0.5;
+                    }
+                    
+                    maxGainReduction = Math.max(maxGainReduction, gainReduction);
+                    
+                    sampleGain = 1;
+                    if (gainReduction > 0) {
+                        sampleGain = fastExp(gainReduction) * fastExp(-gn);
+                    }
+                    result[offset + i+1] = data[offset + i+1] * sampleGain;
+                    
+                    // Sample 3
+                    envelopeDb = fastDb(workBuffer[i+2]);
+                    diff = envelopeDb - th;
+                    gainReduction = 0;
+                    
+                    if (diff <= -halfKnee) {
+                        gainReduction = 0;
+                    } else if (diff >= halfKnee) {
+                        gainReduction = diff * invRatio;
+                    } else {
+                        const t = (diff + halfKnee) / kn;
+                        gainReduction = invRatio * kn * t * t * 0.5;
+                    }
+                    
+                    maxGainReduction = Math.max(maxGainReduction, gainReduction);
+                    
+                    sampleGain = 1;
+                    if (gainReduction > 0) {
+                        sampleGain = fastExp(gainReduction) * fastExp(-gn);
+                    }
+                    result[offset + i+2] = data[offset + i+2] * sampleGain;
+                    
+                    // Sample 4
+                    envelopeDb = fastDb(workBuffer[i+3]);
+                    diff = envelopeDb - th;
+                    gainReduction = 0;
+                    
+                    if (diff <= -halfKnee) {
+                        gainReduction = 0;
+                    } else if (diff >= halfKnee) {
+                        gainReduction = diff * invRatio;
+                    } else {
+                        const t = (diff + halfKnee) / kn;
+                        gainReduction = invRatio * kn * t * t * 0.5;
+                    }
+                    
+                    maxGainReduction = Math.max(maxGainReduction, gainReduction);
+                    
+                    sampleGain = 1;
+                    if (gainReduction > 0) {
+                        sampleGain = fastExp(gainReduction) * fastExp(-gn);
+                    }
+                    result[offset + i+3] = data[offset + i+3] * sampleGain;
                 }
-                context.envelopeStates[ch] = envelope;
+                
+                // Handle remaining samples
+                for (; i < blockSize; i++) {
+                    const envelopeDb = fastDb(workBuffer[i]);
+                    const diff = envelopeDb - th;
+                    let gainReduction = 0;
+                    
+                    if (diff <= -halfKnee) {
+                        gainReduction = 0;
+                    } else if (diff >= halfKnee) {
+                        gainReduction = diff * invRatio;
+                    } else {
+                        const t = (diff + halfKnee) / kn;
+                        gainReduction = invRatio * kn * t * t * 0.5;
+                    }
+                    
+                    maxGainReduction = Math.max(maxGainReduction, gainReduction);
+                    
+                    let sampleGain = 1;
+                    if (gainReduction > 0) {
+                        sampleGain = fastExp(gainReduction) * fastExp(-gn);
+                    }
+                    result[offset + i] = data[offset + i] * sampleGain;
+                }
             }
 
             result.measurements = {
@@ -98,7 +282,7 @@ class CompressorPlugin extends PluginBase {
             };
 
             return result;
-        `);
+        `;
     }
 
     onMessage(message) {
@@ -115,13 +299,28 @@ class CompressorPlugin extends PluginBase {
     process(audioBuffer, message) {
         if (!message?.measurements) return audioBuffer;
 
+        // Use cached time constants for better performance
+        if (!this._timeConstants) {
+            this._timeConstants = {
+                attackTime: 0.005,  // 5ms for fast attack
+                releaseTime: 0.100  // 100ms for smooth release
+            };
+        }
+        
         const time = performance.now() / 1000;
         const deltaTime = time - this.lastProcessTime;
         this.lastProcessTime = time;
 
         const targetGr = message.measurements.gainReduction || 0;
-        const attackTime = 0.005;  // 5ms for fast attack
-        const releaseTime = 0.100; // 100ms for smooth release
+        const { attackTime, releaseTime } = this._timeConstants;
+        
+        // Fast path: if gain reduction is very small, skip processing
+        if (Math.abs(targetGr) < 0.01 && Math.abs(this.gr) < 0.01) {
+            this.gr = 0;
+            return audioBuffer;
+        }
+        
+        // Optimized smoothing calculation
         const smoothingFactor = targetGr > this.gr ?
             Math.min(1, deltaTime / attackTime) :
             Math.min(1, deltaTime / releaseTime);
@@ -161,7 +360,7 @@ class CompressorPlugin extends PluginBase {
         }
 
         this.updateParameters();
-        if (graphNeedsUpdate) {
+        if (graphNeedsUpdate && this.canvas) {
             this.updateTransferGraph();
         }
     }
@@ -371,19 +570,19 @@ class CompressorPlugin extends PluginBase {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-
+        
         const animate = () => {
             if (!this.canvas) return;
-
+            
             const ctx = this.canvas.getContext('2d');
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+            
             this.updateReductionMeter();
             this.updateTransferGraph();
-
+            
             this.animationFrameId = requestAnimationFrame(animate);
         };
-
+        
         this.animationFrameId = requestAnimationFrame(animate);
     }
 
