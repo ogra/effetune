@@ -47,9 +47,15 @@ class AutoLevelerPlugin extends PluginBase {
                     pre: { x1: 0, x2: 0, y1: 0, y2: 0 },
                     shelf: { x1: 0, x2: 0, y1: 0, y2: 0 }
                 };
+                // Initialize mono buffer for block processing
+                context.monoBuffer = new Float32Array(parameters.blockSize);
+                context.weightedBuffer = new Float32Array(parameters.blockSize);
                 context.initialized = true;
                 context.lastLufs = -70;
                 context.lastOutputLufs = -70;
+                // Pre-compute linear thresholds to avoid repeated conversions
+                context.noiseGateLinear = Math.pow(10, parameters.gt / 10); // -60dB -> 1e-6 linear
+                context.targetLufsLinear = Math.pow(10, parameters.tg / 10); // -18dB -> ~0.016 linear
             }
 
             const result = new Float32Array(data.length);
@@ -65,82 +71,211 @@ class AutoLevelerPlugin extends PluginBase {
             const shelfB = [1.53512485958697, -2.69169618940638, 1.19839281085285];
             const shelfA = [1.0, -1.69065929318241, 0.73248077421585];
 
-            // Biquad filter function
-            function biquad(x, state, b, a) {
-                const y = b[0] * x + b[1] * state.x1 + b[2] * state.x2 - a[1] * state.y1 - a[2] * state.y2;
-                state.x2 = state.x1;
-                state.x1 = x;
-                state.y2 = state.y1;
-                state.y1 = y;
-                return y;
-            }
-
             // Calculate attack and release coefficients
             const attackSamples = Math.max(1, (parameters.at * parameters.sampleRate) / 1000);
             const releaseSamples = Math.max(1, (parameters.rt * parameters.sampleRate) / 1000);
             const attackCoeff = Math.exp(-Math.LN2 / attackSamples);
             const releaseCoeff = Math.exp(-Math.LN2 / releaseSamples);
 
-            // Process each sample
-            for (let i = 0; i < blockSize; i++) {
-                // Calculate mono sum for this sample
-                let monoSum = 0;
-                for (let ch = 0; ch < channelCount; ch++) {
-                    monoSum += data[ch * blockSize + i];
+            // Pre-compute linear min/max gain values
+            const maxGainLinear = Math.pow(10, parameters.mg / 20);
+            const minGainLinear = Math.pow(10, parameters.ng / 20);
+            
+            // Convert noise gate threshold to linear domain
+            const noiseGateLinear = Math.pow(10, parameters.gt / 10);
+            const targetLufsLinear = Math.pow(10, parameters.tg / 10);
+
+            // Step 1: Create mono mix for the entire block more efficiently
+            // First clear the mono buffer
+            context.monoBuffer.fill(0);
+            
+            // Then add each channel's contribution
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                for (let i = 0; i < blockSize; i++) {
+                    context.monoBuffer[i] += data[offset + i];
                 }
-                monoSum /= channelCount;
-
-                // Apply K-weighting filter to the mono signal
-                let weighted = biquad(monoSum, context.kfilter.pre, preB, preA);
-                weighted = biquad(weighted, context.kfilter.shelf, shelfB, shelfA);
-
-                // Update running sum and buffer with K-weighted value
-                context.sum -= context.buffer[context.bufferIndex];
-                context.sum += weighted * weighted;
-                context.buffer[context.bufferIndex] = weighted * weighted;
-                
-                context.bufferIndex = (context.bufferIndex + 1) % windowSamples;
-                if (context.bufferIndex === 0) {
-                    context.bufferFilled = true;
-                }
-
-                // Calculate current LUFS (ITU-R BS.1770 approximation) based on K-weighted RMS
-                let currentLUFS = -70;
-                // Use current valid sample count even if buffer is not fully filled
-                const validSamples = context.bufferFilled ? windowSamples : context.bufferIndex;
-                if (validSamples > 0 && context.sum > 0) {
-                    currentLUFS = 10 * Math.log10(context.sum / validSamples) - 0.691;
-                }
-                context.lastLufs = currentLUFS;
-
-                // Apply noise gate
-                const targetLUFS = currentLUFS < parameters.gt ? currentLUFS : parameters.tg;
-
-                // Calculate target gain in dB
-                let targetGainDB = 0;
-                if (currentLUFS < parameters.gt) {
-                    targetGainDB = 0; // Below noise gate threshold, no gain change
-                } else {
-                    targetGainDB = parameters.tg - currentLUFS;
-                }
-                targetGainDB = Math.min(parameters.mg, Math.max(parameters.ng, targetGainDB));
-
-                // Convert target gain dB to linear and apply smoothing
-                const targetGain = Math.pow(10, targetGainDB / 20);
-                // Use Attack Time when gain is lowered, Release Time when gain is increased
-                const coeff = targetGain < context.currentGain ? attackCoeff : releaseCoeff;
-                context.currentGain = context.currentGain * coeff + targetGain * (1 - coeff);
-
-                // Compute smoothed output LUFS using the smoothed gain
-                context.lastOutputLufs = currentLUFS + 20 * Math.log10(context.currentGain);
-
-                // Apply gain to all channels (processing original input)
-                for (let ch = 0; ch < channelCount; ch++) {
-                    result[ch * blockSize + i] = data[ch * blockSize + i] * context.currentGain;
+            }
+            
+            // Finally, divide by channel count to get the mono mix
+            if (channelCount > 1) {
+                const scale = 1 / channelCount;
+                for (let i = 0; i < blockSize; i++) {
+                    context.monoBuffer[i] *= scale;
                 }
             }
 
-            // Send LUFS measurements to UI only when at least1サンプル分が存在
+            // Step 2: Apply K-weighting filters to the entire mono block
+            // Optimized biquad filter implementation for block processing
+            function processBlockBiquad(input, output, state, b, a) {
+                const len = input.length;
+                
+                // Use local variables for state and coefficients for faster access
+                let x1 = state.x1, x2 = state.x2, y1 = state.y1, y2 = state.y2;
+                const b0 = b[0], b1 = b[1], b2 = b[2];
+                const a1 = a[1], a2 = a[2];
+                
+                // Process in chunks of 4 samples when possible for better loop optimization
+                const mainLoopEnd = len - (len % 4);
+                
+                // Main loop - process 4 samples at a time
+                for (let i = 0; i < mainLoopEnd; i += 4) {
+                    // Sample 1
+                    let x = input[i];
+                    let y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                    x2 = x1; x1 = x; y2 = y1; y1 = y;
+                    output[i] = y;
+                    
+                    // Sample 2
+                    x = input[i + 1];
+                    y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                    x2 = x1; x1 = x; y2 = y1; y1 = y;
+                    output[i + 1] = y;
+                    
+                    // Sample 3
+                    x = input[i + 2];
+                    y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                    x2 = x1; x1 = x; y2 = y1; y1 = y;
+                    output[i + 2] = y;
+                    
+                    // Sample 4
+                    x = input[i + 3];
+                    y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                    x2 = x1; x1 = x; y2 = y1; y1 = y;
+                    output[i + 3] = y;
+                }
+                
+                // Handle remaining samples
+                for (let i = mainLoopEnd; i < len; i++) {
+                    const x = input[i];
+                    const y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+                    
+                    // Update state
+                    x2 = x1;
+                    x1 = x;
+                    y2 = y1;
+                    y1 = y;
+                    
+                    output[i] = y;
+                }
+                
+                // Save state back to the object
+                state.x1 = x1;
+                state.x2 = x2;
+                state.y1 = y1;
+                state.y2 = y2;
+            }
+            
+            // Apply K-weighting filters in sequence
+            // First apply pre-filter (high-pass)
+            processBlockBiquad(context.monoBuffer, context.weightedBuffer, context.kfilter.pre, preB, preA);
+            // Then apply shelf filter (high-frequency boost)
+            processBlockBiquad(context.weightedBuffer, context.weightedBuffer, context.kfilter.shelf, shelfB, shelfA);
+
+            // Step 3: Calculate squared values for the entire block at once
+            const weightedSquared = new Float32Array(blockSize);
+            for (let i = 0; i < blockSize; i++) {
+                weightedSquared[i] = context.weightedBuffer[i] * context.weightedBuffer[i];
+            }
+            
+            // Step 4: Update LUFS measurement buffer and calculate current LUFS
+            // We'll use a more efficient approach for buffer management
+            let currentLUFS = -70;
+            let currentLufsLinear = 0;
+            
+            // Calculate how many samples we can process before wrapping around the buffer
+            const remainingInBuffer = windowSamples - context.bufferIndex;
+            const firstChunkSize = Math.min(blockSize, remainingInBuffer);
+            const secondChunkSize = blockSize - firstChunkSize;
+            
+            // Calculate sum changes in one pass
+            let sumChange = 0;
+            
+            // Process first chunk (up to buffer wrap point)
+            const bufferStartIndex = context.bufferIndex;
+            for (let i = 0; i < firstChunkSize; i++) {
+                const bufferIndex = bufferStartIndex + i;
+                sumChange -= context.buffer[bufferIndex];
+                sumChange += weightedSquared[i];
+                context.buffer[bufferIndex] = weightedSquared[i];
+            }
+            
+            // Process second chunk (after buffer wrap) if needed
+            if (secondChunkSize > 0) {
+                for (let i = 0; i < secondChunkSize; i++) {
+                    sumChange -= context.buffer[i];
+                    sumChange += weightedSquared[firstChunkSize + i];
+                    context.buffer[i] = weightedSquared[firstChunkSize + i];
+                }
+                context.bufferFilled = true;
+            }
+            
+            // Update buffer index and sum in one operation
+            context.sum += sumChange;
+            context.bufferIndex = (context.bufferIndex + blockSize) % windowSamples;
+            
+            // Mark buffer as filled if we've wrapped around
+            if (context.bufferIndex === 0 || secondChunkSize > 0) {
+                context.bufferFilled = true;
+            }
+            
+            // Calculate current LUFS in linear domain
+            const validSamples = context.bufferFilled ? windowSamples : context.bufferIndex;
+            if (validSamples > 0 && context.sum > 0) {
+                // Store linear value (mean square of the K-weighted signal)
+                currentLufsLinear = context.sum / validSamples;
+                
+                // Convert to dB only for measurement output
+                // LUFS = 10 * log10(mean square) - 0.691
+                currentLUFS = 10 * Math.log10(currentLufsLinear) - 0.691;
+            }
+            context.lastLufs = currentLUFS;
+            
+            // Step 5: Calculate target gain (once per block)
+            let targetGainLinear;
+            if (currentLufsLinear < noiseGateLinear) {
+                targetGainLinear = 1.0; // Below noise gate threshold, no gain change
+            } else {
+                // In linear domain: targetGain = targetLevel / currentLevel
+                targetGainLinear = targetLufsLinear / currentLufsLinear;
+                // Apply square root because we're working with energy (squared values)
+                targetGainLinear = Math.sqrt(targetGainLinear);
+            }
+            
+            // Apply min/max gain limits
+            targetGainLinear = Math.min(maxGainLinear, Math.max(minGainLinear, targetGainLinear));
+            
+            // Step 6: Apply smoothed gain to all samples
+            // We'll use a more efficient approach for gain smoothing
+            // Pre-calculate gain values for each sample in the block
+            const gainValues = new Float32Array(blockSize);
+            let currentGain = context.currentGain;
+            
+            for (let i = 0; i < blockSize; i++) {
+                // Use Attack Time when gain is lowered, Release Time when gain is increased
+                const coeff = targetGainLinear < currentGain ? attackCoeff : releaseCoeff;
+                currentGain = currentGain * coeff + targetGainLinear * (1 - coeff);
+                gainValues[i] = currentGain;
+            }
+            
+            // Store the final gain value for the next block
+            context.currentGain = currentGain;
+            
+            // Compute output LUFS for measurement only (using the final gain value)
+            context.lastOutputLufs = currentLUFS + 20 * Math.log10(context.currentGain);
+            
+            // Step 6: Apply gain to all channels more efficiently
+            // Process each channel in a single pass
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                
+                // Apply gain to this channel's samples
+                for (let i = 0; i < blockSize; i++) {
+                    result[offset + i] = data[offset + i] * gainValues[i];
+                }
+            }
+
+            // Send LUFS measurements to UI only when at least 1 sample exist
             if ((context.bufferFilled || context.bufferIndex > 0)) {
                 result.measurements = {
                     inputLufs: context.lastLufs,

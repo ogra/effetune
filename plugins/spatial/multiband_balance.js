@@ -23,6 +23,7 @@ class MultibandBalancePlugin extends PluginBase {
 
     getProcessorCode() {
         return `
+            // Create a result buffer to avoid modifying the input data directly
             const result = new Float32Array(data.length);
 
             if (!parameters.enabled) {
@@ -90,29 +91,114 @@ class MultibandBalancePlugin extends PluginBase {
                 };
             }
 
-            // Helper function to apply cascaded Linkwitz-Riley filter (2 stages)
-            function applyFilter(input, coeffs, state, ch) {
+            // Helper function to apply cascaded Linkwitz-Riley filter to a block of samples (highly optimized)
+            function applyFilterBlock(input, output, coeffs, state, ch, blockSize) {
                 const { b0, b1, b2, a1, a2 } = coeffs;
                 const s1 = state.stage1, s2 = state.stage2;
-                // First stage filtering
-                const stage1_out = b0 * input + b1 * s1.x1[ch] + b2 * s1.x2[ch] - a1 * s1.y1[ch] - a2 * s1.y2[ch];
-                s1.x2[ch] = s1.x1[ch];
-                s1.x1[ch] = input;
-                s1.y2[ch] = s1.y1[ch];
-                s1.y1[ch] = stage1_out;
-                // Second stage filtering
-                const stage2_out = b0 * stage1_out + b1 * s2.x1[ch] + b2 * s2.x2[ch] - a1 * s2.y1[ch] - a2 * s2.y2[ch];
-                s2.x2[ch] = s2.x1[ch];
-                s2.x1[ch] = stage1_out;
-                s2.y2[ch] = s2.y1[ch];
-                s2.y1[ch] = stage2_out;
-                return stage2_out;
+                
+                // Local variables for filter state (faster access)
+                let s1_x1 = s1.x1[ch], s1_x2 = s1.x2[ch], s1_y1 = s1.y1[ch], s1_y2 = s1.y2[ch];
+                let s2_x1 = s2.x1[ch], s2_x2 = s2.x2[ch], s2_y1 = s2.y1[ch], s2_y2 = s2.y2[ch];
+                
+                // Process the entire block with loop unrolling for better performance
+                // Process 4 samples at a time when possible
+                const blockSizeMod4 = blockSize & ~3; // Fast way to calculate blockSize - (blockSize % 4)
+                let i = 0;
+                
+                // Main loop with 4-sample unrolling
+                for (; i < blockSizeMod4; i += 4) {
+                    // Sample 1
+                    let sample = input[i];
+                    let stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1;
+                    s1_x1 = sample;
+                    s1_y2 = s1_y1;
+                    s1_y1 = stage1_out;
+                    
+                    let stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1;
+                    s2_x1 = stage1_out;
+                    s2_y2 = s2_y1;
+                    s2_y1 = stage2_out;
+                    
+                    output[i] = stage2_out;
+                    
+                    // Sample 2
+                    sample = input[i+1];
+                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1;
+                    s1_x1 = sample;
+                    s1_y2 = s1_y1;
+                    s1_y1 = stage1_out;
+                    
+                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1;
+                    s2_x1 = stage1_out;
+                    s2_y2 = s2_y1;
+                    s2_y1 = stage2_out;
+                    
+                    output[i+1] = stage2_out;
+                    
+                    // Sample 3
+                    sample = input[i+2];
+                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1;
+                    s1_x1 = sample;
+                    s1_y2 = s1_y1;
+                    s1_y1 = stage1_out;
+                    
+                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1;
+                    s2_x1 = stage1_out;
+                    s2_y2 = s2_y1;
+                    s2_y1 = stage2_out;
+                    
+                    output[i+2] = stage2_out;
+                    
+                    // Sample 4
+                    sample = input[i+3];
+                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1;
+                    s1_x1 = sample;
+                    s1_y2 = s1_y1;
+                    s1_y1 = stage1_out;
+                    
+                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1;
+                    s2_x1 = stage1_out;
+                    s2_y2 = s2_y1;
+                    s2_y1 = stage2_out;
+                    
+                    output[i+3] = stage2_out;
+                }
+                
+                // Handle remaining samples
+                for (; i < blockSize; i++) {
+                    // First stage filtering
+                    const stage1_out = b0 * input[i] + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1;
+                    s1_x1 = input[i];
+                    s1_y2 = s1_y1;
+                    s1_y1 = stage1_out;
+                    
+                    // Second stage filtering
+                    const stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1;
+                    s2_x1 = stage1_out;
+                    s2_y2 = s2_y1;
+                    s2_y1 = stage2_out;
+                    
+                    output[i] = stage2_out;
+                }
+                
+                // Update filter state
+                s1.x1[ch] = s1_x1; s1.x2[ch] = s1_x2; s1.y1[ch] = s1_y1; s1.y2[ch] = s1_y2;
+                s2.x1[ch] = s2_x1; s2.x2[ch] = s2_x2; s2.y1[ch] = s2_y1; s2.y2[ch] = s2_y2;
             }
 
             // Cache filter coefficients if frequencies have changed
             if (!context.cachedFilters || !context.filterConfig || !context.filterConfig.frequencies ||
                 frequencies.some((f, i) => f !== context.filterConfig.frequencies[i])) {
-                const TWO_PI = 2 * Math.PI;
                 const SQRT2 = Math.SQRT2;
                 const sampleRateHalf = parameters.sampleRate * 0.5;
                 const invSampleRate = 1 / parameters.sampleRate;
@@ -130,84 +216,143 @@ class MultibandBalancePlugin extends PluginBase {
                 }
             }
 
-            // Setup band signal buffers
-            if (!context.bandSignals || context.bandSignals.length !== 5) {
-                context.bandSignals = new Array(5).fill(0).map(() => ({
-                    left: new Float32Array(blockSize),
-                    right: new Float32Array(blockSize)
-                }));
+            // Setup band signal buffers using a pooled TypedArray to avoid reallocation
+            if (!context.bandSignals || context.bandSignals.length !== parameters.channelCount) {
+                const totalArrays = parameters.channelCount * 5;
+                const arrayPool = new Float32Array(totalArrays * parameters.blockSize);
+                context.bandSignals = Array.from({ length: parameters.channelCount }, (_, ch) => {
+                    return new Array(5).fill(0).map((_, band) => {
+                        const offset = (ch * 5 + band) * parameters.blockSize;
+                        return arrayPool.subarray(offset, offset + parameters.blockSize);
+                    });
+                });
+                context.arrayPool = arrayPool; // Prevent GC of the pool
             }
 
-            const filterStates = context.filterStates;
-            const bandSignals = context.bandSignals;
+            // Create temporary buffers for intermediate results if they don't exist
+            if (!context.tempBuffers || context.tempBuffers.length !== 3) {
+                context.tempBuffers = [
+                    new Float32Array(parameters.blockSize),
+                    new Float32Array(parameters.blockSize),
+                    new Float32Array(parameters.blockSize)
+                ];
+            }
 
-            // Process each sample
-            for (let i = 0; i < blockSize; i++) {
-                const leftInput = data[i];
-                const rightInput = data[i + blockSize];
+            // Create output buffer for summing if it doesn't exist
+            if (!context.outputBuffer || context.outputBuffer.length !== parameters.blockSize * parameters.channelCount) {
+                context.outputBuffer = new Float32Array(parameters.blockSize * parameters.channelCount);
+            }
 
-                // Split signal into frequency bands using cascaded Linkwitz-Riley filters
-                // Band 0 (Low)
-                bandSignals[0].left[i] = applyFilter(leftInput, context.cachedFilters[0].lowpass, filterStates.lowpass[0], 0);
-                bandSignals[0].right[i] = applyFilter(rightInput, context.cachedFilters[0].lowpass, filterStates.lowpass[0], 1);
-                const hp1Left = applyFilter(leftInput, context.cachedFilters[0].highpass, filterStates.highpass[0], 0);
-                const hp1Right = applyFilter(rightInput, context.cachedFilters[0].highpass, filterStates.highpass[0], 1);
-
+            // Process filtering for each channel (block processing)
+            for (let ch = 0; ch < parameters.channelCount; ch++) {
+                const offset = ch * parameters.blockSize;
+                const bandSignals = context.bandSignals[ch];
+                const filterStates = context.filterStates;
+                
+                // Extract channel data to temporary buffer
+                const inputBuffer = context.tempBuffers[0];
+                const hp1Buffer = context.tempBuffers[1];
+                const hp2Buffer = context.tempBuffers[2];
+                
+                for (let i = 0; i < parameters.blockSize; i++) {
+                    inputBuffer[i] = data[offset + i];
+                }
+                
+                // Apply filters in blocks for better cache locality
+                // Band 0 (Low) - direct lowpass on input
+                applyFilterBlock(inputBuffer, bandSignals[0], context.cachedFilters[0].lowpass, filterStates.lowpass[0], ch, parameters.blockSize);
+                
+                // Highpass branch for remaining bands
+                applyFilterBlock(inputBuffer, hp1Buffer, context.cachedFilters[0].highpass, filterStates.highpass[0], ch, parameters.blockSize);
+                
                 // Band 1 (Low-Mid)
-                bandSignals[1].left[i] = applyFilter(hp1Left, context.cachedFilters[1].lowpass, filterStates.lowpass[1], 0);
-                bandSignals[1].right[i] = applyFilter(hp1Right, context.cachedFilters[1].lowpass, filterStates.lowpass[1], 1);
-                const hp2Left = applyFilter(hp1Left, context.cachedFilters[1].highpass, filterStates.highpass[1], 0);
-                const hp2Right = applyFilter(hp1Right, context.cachedFilters[1].highpass, filterStates.highpass[1], 1);
-
+                applyFilterBlock(hp1Buffer, bandSignals[1], context.cachedFilters[1].lowpass, filterStates.lowpass[1], ch, parameters.blockSize);
+                
+                // Highpass for bands 2-4
+                applyFilterBlock(hp1Buffer, hp2Buffer, context.cachedFilters[1].highpass, filterStates.highpass[1], ch, parameters.blockSize);
+                
                 // Band 2 (Mid)
-                bandSignals[2].left[i] = applyFilter(hp2Left, context.cachedFilters[2].lowpass, filterStates.lowpass[2], 0);
-                bandSignals[2].right[i] = applyFilter(hp2Right, context.cachedFilters[2].lowpass, filterStates.lowpass[2], 1);
-                const hp3Left = applyFilter(hp2Left, context.cachedFilters[2].highpass, filterStates.highpass[2], 0);
-                const hp3Right = applyFilter(hp2Right, context.cachedFilters[2].highpass, filterStates.highpass[2], 1);
-
+                applyFilterBlock(hp2Buffer, bandSignals[2], context.cachedFilters[2].lowpass, filterStates.lowpass[2], ch, parameters.blockSize);
+                
+                // Highpass for bands 3-4
+                applyFilterBlock(hp2Buffer, hp1Buffer, context.cachedFilters[2].highpass, filterStates.highpass[2], ch, parameters.blockSize); // Reuse hp1Buffer
+                
                 // Band 3 (High-Mid)
-                bandSignals[3].left[i] = applyFilter(hp3Left, context.cachedFilters[3].lowpass, filterStates.lowpass[3], 0);
-                bandSignals[3].right[i] = applyFilter(hp3Right, context.cachedFilters[3].lowpass, filterStates.lowpass[3], 1);
-
+                applyFilterBlock(hp1Buffer, bandSignals[3], context.cachedFilters[3].lowpass, filterStates.lowpass[3], ch, parameters.blockSize);
+                
                 // Band 4 (High)
-                bandSignals[4].left[i] = applyFilter(hp3Left, context.cachedFilters[3].highpass, filterStates.highpass[3], 0);
-                bandSignals[4].right[i] = applyFilter(hp3Right, context.cachedFilters[3].highpass, filterStates.highpass[3], 1);
+                applyFilterBlock(hp1Buffer, bandSignals[4], context.cachedFilters[3].highpass, filterStates.highpass[3], ch, parameters.blockSize);
             }
 
             // Apply balance and sum bands
             const balanceValues = parameters.bands.map(b => b.balance / 100); // Convert percentage to -1.0 to 1.0
-            for (let i = 0; i < blockSize; i++) {
-                let leftSum = 0;
-                let rightSum = 0;
-
+            const outputBuffer = context.outputBuffer;
+            outputBuffer.fill(0); // Clear output buffer
+            
+            // Process each channel
+            for (let ch = 0; ch < parameters.channelCount; ch++) {
+                const offset = ch * parameters.blockSize;
+                const bandSignals = context.bandSignals[ch];
+                
+                // Process each band with balance in blocks
                 for (let band = 0; band < 5; band++) {
-                    const leftSignal = bandSignals[band].left[i];
-                    const rightSignal = bandSignals[band].right[i];
                     const balance = balanceValues[band];
+                    const bandSignal = bandSignals[band];
                     
                     if (Math.abs(balance) < 1e-6) {
                         // Center position (balance = 0): no change
-                        leftSum += leftSignal;
-                        rightSum += rightSignal;
+                        // Process in blocks with loop unrolling
+                        const blockSizeMod4 = parameters.blockSize & ~3;
+                        let i = 0;
+                        
+                        // Main loop with 4-sample unrolling
+                        for (; i < blockSizeMod4; i += 4) {
+                            outputBuffer[offset + i] += bandSignal[i];
+                            outputBuffer[offset + i + 1] += bandSignal[i + 1];
+                            outputBuffer[offset + i + 2] += bandSignal[i + 2];
+                            outputBuffer[offset + i + 3] += bandSignal[i + 3];
+                        }
+                        
+                        // Handle remaining samples
+                        for (; i < parameters.blockSize; i++) {
+                            outputBuffer[offset + i] += bandSignal[i];
+                        }
                     } else {
                         // Apply balance
                         const leftGain = Math.max(0, 1 - balance);
                         const rightGain = Math.max(0, 1 + balance);
-                        leftSum += leftSignal * leftGain;
-                        rightSum += rightSignal * rightGain;
+                        const gain = ch === 0 ? leftGain : rightGain;
+                        
+                        // Process in blocks with loop unrolling
+                        const blockSizeMod4 = parameters.blockSize & ~3;
+                        let i = 0;
+                        
+                        // Main loop with 4-sample unrolling
+                        for (; i < blockSizeMod4; i += 4) {
+                            outputBuffer[offset + i] += bandSignal[i] * gain;
+                            outputBuffer[offset + i + 1] += bandSignal[i + 1] * gain;
+                            outputBuffer[offset + i + 2] += bandSignal[i + 2] * gain;
+                            outputBuffer[offset + i + 3] += bandSignal[i + 3] * gain;
+                        }
+                        
+                        // Handle remaining samples
+                        for (; i < parameters.blockSize; i++) {
+                            outputBuffer[offset + i] += bandSignal[i] * gain;
+                        }
                     }
                 }
-
-                // Apply fade-in if active
-                const fadeIn = context.fadeIn;
-                if (fadeIn && fadeIn.counter < fadeIn.length) {
-                    const gain = fadeIn.counter++ / fadeIn.length;
-                    leftSum *= gain;
-                    rightSum *= gain;
+            }
+            
+            // Apply fade-in if needed and copy to result buffer
+            if (context.fadeIn && context.fadeIn.counter < context.fadeIn.length) {
+                for (let i = 0; i < outputBuffer.length; i++) {
+                    const fadeGain = Math.min(1, context.fadeIn.counter++ / context.fadeIn.length);
+                    result[i] = outputBuffer[i] * fadeGain;
+                    if (context.fadeIn.counter >= context.fadeIn.length) break;
                 }
-
-                result[i] = leftSum;
-                result[i + blockSize] = rightSum;
+            } else {
+                // Copy output buffer to result
+                result.set(outputBuffer);
             }
 
             return result;

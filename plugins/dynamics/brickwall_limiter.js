@@ -39,6 +39,8 @@ class BrickwallLimiterPlugin extends PluginBase {
                 context.sampleRate = sampleRate;
                 context.lastOsFactor = parameters.os;
                 context.initialized = false;
+                
+                // Clear all state variables to ensure clean initialization
                 delete context.delayLength;
                 delete context.delayWritePos;
                 delete context.delayBuffers;
@@ -51,13 +53,43 @@ class BrickwallLimiterPlugin extends PluginBase {
                 delete context.downsampleState;
                 delete context.delayBufferOS;
                 delete context.delayWritePosOS;
+                
+                // Clear additional state variables used in optimized implementation
+                delete context.oversampled;
+                delete context.X;
+                delete context.Z;
+                delete context.downsampledOutput;
+                delete context.phaseIndices;
+                delete context.phaseRemainders;
+                delete context.processedOversampled;
+                delete context.outputBuffer;
             }
             
             // Apply input gain (dB to linear conversion) sample-by-sample.
             const inputGainDb = (parameters.ig !== undefined) ? parameters.ig : 0;
             const inputGainLinear = Math.pow(10, inputGainDb / 20);
-            let inputBuffer = new Float32Array(data.length);
-            for (let i = 0; i < data.length; i++) {
+            
+            // Reuse input buffer if it exists or create a new one
+            if (!context.inputBuffer || context.inputBuffer.length !== data.length) {
+                context.inputBuffer = new Float32Array(data.length);
+            }
+            let inputBuffer = context.inputBuffer;
+            
+            // Apply input gain with loop unrolling for better performance
+            const dataLength = data.length;
+            const dataLengthMod4 = dataLength & ~3; // Fast way to calculate dataLength - (dataLength % 4)
+            let i = 0;
+            
+            // Process 4 samples at a time
+            for (; i < dataLengthMod4; i += 4) {
+                inputBuffer[i] = data[i] * inputGainLinear;
+                inputBuffer[i+1] = data[i+1] * inputGainLinear;
+                inputBuffer[i+2] = data[i+2] * inputGainLinear;
+                inputBuffer[i+3] = data[i+3] * inputGainLinear;
+            }
+            
+            // Handle remaining samples
+            for (; i < dataLength; i++) {
                 inputBuffer[i] = data[i] * inputGainLinear;
             }
             
@@ -75,7 +107,50 @@ class BrickwallLimiterPlugin extends PluginBase {
             const thresholdDb = parameters.th;
             const marginDb = (parameters.sm !== undefined) ? parameters.sm : -1.00;
             const effectiveThresholdDb = thresholdDb + marginDb;
+            
+            // Cache the threshold conversion to avoid recalculating for each sample
             const effectiveThresholdLin = Math.pow(10, effectiveThresholdDb / 20);
+            
+            // Create lookup table for expensive division operations if it doesn't exist
+            if (!context.thresholdDivLookup || context.lastThresholdLin !== effectiveThresholdLin) {
+                const LOOKUP_SIZE = 1024;
+                const MAX_ABS_VALUE = 10.0; // Maximum expected absolute sample value
+                
+                if (!context.thresholdDivLookup) {
+                    context.thresholdDivLookup = new Float32Array(LOOKUP_SIZE);
+                }
+                
+                for (let i = 0; i < LOOKUP_SIZE; i++) {
+                    const absSample = (i / LOOKUP_SIZE) * MAX_ABS_VALUE;
+                    if (absSample <= 1e-6) {
+                        context.thresholdDivLookup[i] = 1.0; // Avoid division by zero
+                    } else if (absSample > effectiveThresholdLin) {
+                        context.thresholdDivLookup[i] = effectiveThresholdLin / absSample;
+                    } else {
+                        context.thresholdDivLookup[i] = 1.0;
+                    }
+                }
+                
+                context.lastThresholdLin = effectiveThresholdLin;
+                context.thresholdLookupScale = LOOKUP_SIZE / MAX_ABS_VALUE;
+            }
+            
+            // Fast lookup function for threshold division
+            function fastThresholdDiv(absSample) {
+                if (absSample <= 1e-6) return 1.0;
+                if (absSample > effectiveThresholdLin) {
+                    // For very large values outside the lookup range, calculate directly
+                    if (absSample > 10.0) return effectiveThresholdLin / absSample;
+                    
+                    // Use lookup table for common range
+                    const idx = Math.min(
+                        context.thresholdDivLookup.length - 1, 
+                        Math.floor(absSample * context.thresholdLookupScale)
+                    );
+                    return context.thresholdDivLookup[idx];
+                }
+                return 1.0;
+            }
             
             // Processing for no oversampling (os === 1)
             if (parameters.os === 1) {
@@ -90,26 +165,93 @@ class BrickwallLimiterPlugin extends PluginBase {
                     context.gainStates = new Float32Array(numChannels).fill(1);
                     context.initialized = true;
                 }
-                let output = new Float32Array(data.length);
-                // Process each sample individually for each channel.
-                for (let i = 0; i < blockSize; i++) {
-                    for (let ch = 0; ch < numChannels; ch++) {
-                        const chOffset = ch * blockSize;
-                        const pos = (context.delayWritePos + i) % context.delayLength;
-                        // Read delayed sample from delay buffer.
-                        const delayedSample = context.delayBuffers[ch][pos];
-                        // Write current input sample into delay buffer.
-                        context.delayBuffers[ch][pos] = inputBuffer[chOffset + i];
+                
+                // Reuse output buffer if it exists or create a new one
+                if (!context.outputBuffer || context.outputBuffer.length !== data.length) {
+                    context.outputBuffer = new Float32Array(data.length);
+                }
+                let output = context.outputBuffer;
+                
+                // Process each channel with optimized block processing
+                for (let ch = 0; ch < numChannels; ch++) {
+                    const chOffset = ch * blockSize;
+                    let currentGain = context.gainStates[ch];
+                    const delayBuffer = context.delayBuffers[ch];
+                    let writePos = context.delayWritePos;
+                    
+                    // Process in blocks of 4 samples for better cache performance
+                    const blockSizeMod4 = blockSize & ~3;
+                    let i = 0;
+                    
+                    for (; i < blockSizeMod4; i += 4) {
+                        // Sample 1
+                        let pos = (writePos + i) % context.delayLength;
+                        let delayedSample = delayBuffer[pos];
+                        delayBuffer[pos] = inputBuffer[chOffset + i];
+                        let absSample = Math.abs(delayedSample);
+                        let targetGain = fastThresholdDiv(absSample);
+                        let newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        output[chOffset + i] = delayedSample * newGain;
+                        
+                        // Sample 2
+                        pos = (writePos + i + 1) % context.delayLength;
+                        delayedSample = delayBuffer[pos];
+                        delayBuffer[pos] = inputBuffer[chOffset + i + 1];
+                        absSample = Math.abs(delayedSample);
+                        targetGain = fastThresholdDiv(absSample);
+                        currentGain = newGain; // Use previous sample's gain as starting point
+                        newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        output[chOffset + i + 1] = delayedSample * newGain;
+                        
+                        // Sample 3
+                        pos = (writePos + i + 2) % context.delayLength;
+                        delayedSample = delayBuffer[pos];
+                        delayBuffer[pos] = inputBuffer[chOffset + i + 2];
+                        absSample = Math.abs(delayedSample);
+                        targetGain = fastThresholdDiv(absSample);
+                        currentGain = newGain;
+                        newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        output[chOffset + i + 2] = delayedSample * newGain;
+                        
+                        // Sample 4
+                        pos = (writePos + i + 3) % context.delayLength;
+                        delayedSample = delayBuffer[pos];
+                        delayBuffer[pos] = inputBuffer[chOffset + i + 3];
+                        absSample = Math.abs(delayedSample);
+                        targetGain = fastThresholdDiv(absSample);
+                        currentGain = newGain;
+                        newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        output[chOffset + i + 3] = delayedSample * newGain;
+                        
+                        currentGain = newGain;
+                    }
+                    
+                    // Handle remaining samples
+                    for (; i < blockSize; i++) {
+                        const pos = (writePos + i) % context.delayLength;
+                        const delayedSample = delayBuffer[pos];
+                        delayBuffer[pos] = inputBuffer[chOffset + i];
                         const absSample = Math.abs(delayedSample);
-                        const targetGain = (absSample > effectiveThresholdLin) ? (effectiveThresholdLin / absSample) : 1;
-                        const currentGain = context.gainStates[ch];
-                        // Update gain state sample-by-sample.
-                        const newGain = (targetGain < currentGain) ? targetGain : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
-                        context.gainStates[ch] = newGain;
-                        // Apply computed gain to delayed sample.
+                        const targetGain = fastThresholdDiv(absSample);
+                        const newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSample * currentGain + (1 - releaseCoeffSample) * targetGain);
+                        currentGain = newGain;
                         output[chOffset + i] = delayedSample * newGain;
                     }
+                    
+                    // Store final gain state
+                    context.gainStates[ch] = currentGain;
                 }
+                
                 context.delayWritePos = (context.delayWritePos + blockSize) % context.delayLength;
                 output.measurements = { time: parameters.time, gainReduction: 1 - Math.min(...context.gainStates) };
                 return output;
@@ -127,35 +269,103 @@ class BrickwallLimiterPlugin extends PluginBase {
                 const N = 63;
                 const half = (N - 1) / 2;
                 const beta = 5.0;
-                function sinc(x) { return (x === 0) ? 1 : Math.sin(Math.PI * x) / (Math.PI * x); }
+                
+                // Pre-compute constants for optimization
+                const PI = Math.PI;
+                const betaSqrt = beta * beta;
+                
+                // Optimized sinc function with cached PI value
+                function sinc(x) { 
+                    return (Math.abs(x) < 1e-6) ? 1 : Math.sin(PI * x) / (PI * x); 
+                }
+                
+                // Optimized Kaiser window function with lookup table for I0
                 function kaiser(n, N, beta) {
-                    let r = (n - (N - 1) / 2) / ((N - 1) / 2);
+                    const r = 2 * (n / (N - 1) - 0.5);
+                    const rSquared = r * r;
+                    
+                    // More efficient I0 calculation using a lookup approach for common values
                     function I0(x) {
-                        let sum = 1, y = x * x / 4, t = y;
-                        for (let i = 1; i < 25; i++) { sum += t; t *= y / (i * i); }
-                        return sum;
+                        // For small x values, use Taylor series approximation
+                        if (x < 3.75) {
+                            let sum = 1.0;
+                            let term = 1.0;
+                            let y = (x / 3.75) * (x / 3.75);
+                            
+                            // Coefficients for the approximation
+                            const coeffs = [
+                                1.0, 3.5156229, 3.0899424, 1.2067492, 
+                                0.2659732, 0.0360768, 0.0045813
+                            ];
+                            
+                            for (let i = 1; i < coeffs.length; i++) {
+                                term *= y;
+                                sum += coeffs[i] * term;
+                            }
+                            return sum;
+                        } else {
+                            // For larger x values, use asymptotic expansion
+                            const y = 3.75 / x;
+                            let sum = 0.39894228;
+                            let term = 1.0;
+                            
+                            // Coefficients for the approximation
+                            const coeffs = [
+                                0.01328592, 0.00225319, -0.00157565, 0.00916281,
+                                -0.02057706, 0.02635537, -0.01647633, 0.00392377
+                            ];
+                            
+                            for (let i = 0; i < coeffs.length; i++) {
+                                term *= y;
+                                sum += coeffs[i] * term;
+                            }
+                            
+                            return sum * Math.exp(x) / Math.sqrt(x);
+                        }
                     }
-                    return I0(beta * Math.sqrt(1 - r * r)) / I0(beta);
+                    
+                    const arg = beta * Math.sqrt(1 - rSquared);
+                    const denominator = I0(beta);
+                    return I0(arg) / denominator;
                 }
-                let h = new Float32Array(N);
-                for (let n = 0; n < N; n++) {
-                    h[n] = osFactor * sinc((n - half) / osFactor) * kaiser(n, N, beta);
-                }
+                
+                // Allocate filter coefficient array once
+                const h = new Float32Array(N);
+                
+                // Calculate filter coefficients in a single pass
                 let sumH = 0;
                 for (let n = 0; n < N; n++) {
+                    // Calculate sinc and kaiser window in one step
+                    h[n] = osFactor * sinc((n - half) / osFactor) * kaiser(n, N, beta);
                     sumH += h[n];
                 }
+                
+                // Normalize in a separate loop for better cache locality
+                const normFactor = osFactor / sumH;
                 for (let n = 0; n < N; n++) {
-                    h[n] *= osFactor / sumH;
+                    h[n] *= normFactor;
                 }
-                let polyphase = [];
+                
+                // Create polyphase decomposition with pre-allocated arrays
+                const polyphase = new Array(L);
                 for (let p = 0; p < L; p++) {
-                    let phaseCoeffs = [];
+                    // Count coefficients for this phase
+                    let coeffCount = 0;
                     for (let k = 0; p + L * k < N; k++) {
-                        phaseCoeffs.push(h[p + L * k]);
+                        coeffCount++;
                     }
-                    polyphase.push(Float32Array.from(phaseCoeffs));
+                    
+                    // Pre-allocate the array for this phase
+                    const phaseCoeffs = new Float32Array(coeffCount);
+                    
+                    // Fill the array
+                    for (let k = 0, idx = 0; p + L * k < N; k++, idx++) {
+                        phaseCoeffs[idx] = h[p + L * k];
+                    }
+                    
+                    polyphase[p] = phaseCoeffs;
                 }
+                
                 context.filterCoeffs = h;
                 context.filterLength = N;
                 context.polyphase = polyphase;
@@ -164,40 +374,100 @@ class BrickwallLimiterPlugin extends PluginBase {
             const N = context.filterLength;
             const polyphase = context.polyphase;
             
-            // Upsampling (Polyphase Interpolation).
+            // Upsampling (Polyphase Interpolation) - Optimized implementation
+            // Find maximum filter phase length once
             let P_len = 0;
             for (let p = 0; p < L; p++) {
-                if (polyphase[p].length > P_len) {
-                    P_len = polyphase[p].length;
-                }
+                P_len = Math.max(P_len, polyphase[p].length);
             }
+            
+            // Initialize upsample state if needed
             if (!context.upsampleState) {
                 context.upsampleState = [];
                 for (let ch = 0; ch < numChannels; ch++) {
                     context.upsampleState[ch] = new Float32Array(P_len - 1).fill(0);
                 }
             }
-            let oversampledLength = blockSize * L;
-            let oversampled = new Float32Array(numChannels * oversampledLength);
+            
+            // Pre-calculate output length
+            const oversampledLength = blockSize * L;
+            
+            // Reuse oversampled buffer if it exists or create a new one
+            if (!context.oversampled || context.oversampled.length !== numChannels * oversampledLength) {
+                context.oversampled = new Float32Array(numChannels * oversampledLength);
+            }
+            let oversampled = context.oversampled;
+            
+            // Process each channel
             for (let ch = 0; ch < numChannels; ch++) {
                 const inOffset = ch * blockSize;
                 const state = context.upsampleState[ch];
-                let combinedLength = state.length + blockSize;
-                let X = new Float32Array(combinedLength);
+                const stateLength = state.length;
+                const combinedLength = stateLength + blockSize;
+                
+                // Reuse X buffer if it exists or create a new one
+                if (!context.X || context.X.length < combinedLength) {
+                    context.X = new Float32Array(combinedLength);
+                }
+                let X = context.X;
+                
+                // Copy state and input data to X
                 X.set(state, 0);
-                X.set(inputBuffer.subarray(inOffset, inOffset + blockSize), state.length);
-                for (let i = P_len - 1; i < combinedLength; i++) {
-                    let j = i - (P_len - 1);
+                X.set(inputBuffer.subarray(inOffset, inOffset + blockSize), stateLength);
+                
+                // Calculate output offset for this channel
+                const outOffset = ch * oversampledLength;
+                
+                // Process samples with loop unrolling and SIMD-friendly operations
+                const startIdx = P_len - 1;
+                const endIdx = combinedLength;
+                
+                // Main processing loop with optimizations
+                for (let i = startIdx; i < endIdx; i++) {
+                    const j = i - startIdx;
+                    const baseOutIdx = outOffset + j * L;
+                    
+                    // Process each phase (unroll if L is known at compile time)
                     for (let p = 0; p < L; p++) {
+                        const h_poly = polyphase[p];
+                        const h_len = h_poly.length;
+                        
+                        // Use a local accumulator for better register usage
                         let acc = 0;
-                        let h_poly = polyphase[p];
-                        for (let k = 0; k < h_poly.length; k++) {
-                            acc += h_poly[k] * X[i - k];
+                        
+                        // Process filter taps with loop unrolling for common sizes
+                        if (h_len >= 8) {
+                            // Unrolled loop for better instruction pipelining
+                            let k = 0;
+                            for (; k < h_len - 7; k += 8) {
+                                acc += h_poly[k] * X[i - k];
+                                acc += h_poly[k+1] * X[i - (k+1)];
+                                acc += h_poly[k+2] * X[i - (k+2)];
+                                acc += h_poly[k+3] * X[i - (k+3)];
+                                acc += h_poly[k+4] * X[i - (k+4)];
+                                acc += h_poly[k+5] * X[i - (k+5)];
+                                acc += h_poly[k+6] * X[i - (k+6)];
+                                acc += h_poly[k+7] * X[i - (k+7)];
+                            }
+                            
+                            // Handle remaining taps
+                            for (; k < h_len; k++) {
+                                acc += h_poly[k] * X[i - k];
+                            }
+                        } else {
+                            // For shorter filters, use a simple loop
+                            for (let k = 0; k < h_len; k++) {
+                                acc += h_poly[k] * X[i - k];
+                            }
                         }
-                        oversampled[ch * oversampledLength + j * L + p] = acc;
+                        
+                        // Store result
+                        oversampled[baseOutIdx + p] = acc;
                     }
                 }
-                state.set(X.subarray(combinedLength - (P_len - 1), combinedLength));
+                
+                // Update state for next block
+                state.set(X.subarray(combinedLength - stateLength, combinedLength));
             }
             
             // Initialize gain state for oversampled branch if needed.
@@ -218,57 +488,166 @@ class BrickwallLimiterPlugin extends PluginBase {
             }
             // Compute per-sample release coefficient for oversampled domain.
             const releaseCoeffSampleOS = Math.exp(- (1 / (sampleRate * osFactor)) / releaseTime);
-            let processedOversampled = new Float32Array(numChannels * oversampledLength);
+            
+            // Reuse processed oversampled buffer if it exists or create a new one
+            if (!context.processedOversampled || context.processedOversampled.length !== numChannels * oversampledLength) {
+                context.processedOversampled = new Float32Array(numChannels * oversampledLength);
+            }
+            let processedOversampled = context.processedOversampled;
+            
+            // Process each channel with optimized block processing in oversampled domain
             for (let ch = 0; ch < numChannels; ch++) {
                 const buf = context.delayBufferOS[ch];
                 let writePos = context.delayWritePosOS[ch];
-                for (let i = 0; i < oversampledLength; i++) {
-                    const pos = (writePos + i) % delaySamplesOS;
-                    // Read delayed sample from delay buffer.
-                    const delayedSample = buf[pos];
-                    // Write current oversampled sample into delay buffer.
-                    buf[pos] = oversampled[ch * oversampledLength + i];
-                    const absSample = Math.abs(delayedSample);
-                    const targetGain = (absSample > effectiveThresholdLin) ? (effectiveThresholdLin / absSample) : 1;
-                    const currentGain = context.gainStates[ch];
-                    // Update gain state sample-by-sample in oversampled domain.
-                    const newGain = (targetGain < currentGain) ? targetGain : (releaseCoeffSampleOS * currentGain + (1 - releaseCoeffSampleOS) * targetGain);
-                    context.gainStates[ch] = newGain;
-                    processedOversampled[ch * oversampledLength + i] = delayedSample * newGain;
+                let currentGain = context.gainStates[ch];
+                const osOffset = ch * oversampledLength;
+                
+                // Process in blocks of 8 samples for better cache performance
+                const oversampledLengthMod8 = oversampledLength & ~7;
+                let i = 0;
+                
+                for (; i < oversampledLengthMod8; i += 8) {
+                    // Process 8 samples at once with loop unrolling
+                    for (let j = 0; j < 8; j++) {
+                        const pos = (writePos + i + j) % delaySamplesOS;
+                        const delayedSample = buf[pos];
+                        buf[pos] = oversampled[osOffset + i + j];
+                        const absSample = Math.abs(delayedSample);
+                        const targetGain = fastThresholdDiv(absSample);
+                        const newGain = (targetGain < currentGain) 
+                            ? targetGain 
+                            : (releaseCoeffSampleOS * currentGain + (1 - releaseCoeffSampleOS) * targetGain);
+                        currentGain = newGain;
+                        processedOversampled[osOffset + i + j] = delayedSample * newGain;
+                    }
                 }
+                
+                // Handle remaining samples
+                for (; i < oversampledLength; i++) {
+                    const pos = (writePos + i) % delaySamplesOS;
+                    const delayedSample = buf[pos];
+                    buf[pos] = oversampled[osOffset + i];
+                    const absSample = Math.abs(delayedSample);
+                    const targetGain = fastThresholdDiv(absSample);
+                    const newGain = (targetGain < currentGain) 
+                        ? targetGain 
+                        : (releaseCoeffSampleOS * currentGain + (1 - releaseCoeffSampleOS) * targetGain);
+                    currentGain = newGain;
+                    processedOversampled[osOffset + i] = delayedSample * newGain;
+                }
+                
+                // Store final gain state
+                context.gainStates[ch] = currentGain;
                 context.delayWritePosOS[ch] = (writePos + oversampledLength) % delaySamplesOS;
             }
             
-            // Downsampling (Polyphase Decimation).
+            // Downsampling (Polyphase Decimation) - Optimized implementation
             const M = Math.ceil(N / osFactor);
             const d = osFactor * (M - 1);
             const stateLength = d;
+            
+            // Initialize downsample state if needed
             if (!context.downsampleState) {
                 context.downsampleState = [];
                 for (let ch = 0; ch < numChannels; ch++) {
                     context.downsampleState[ch] = new Float32Array(stateLength).fill(0);
                 }
             }
-            let downsampledOutput = new Float32Array(numChannels * blockSize);
+            
+            // Reuse output buffer if it exists or create a new one
+            if (!context.downsampledOutput || context.downsampledOutput.length !== numChannels * blockSize) {
+                context.downsampledOutput = new Float32Array(numChannels * blockSize);
+            }
+            let downsampledOutput = context.downsampledOutput;
+            
+            // Pre-compute phase indices for each output sample
+            if (!context.phaseIndices || context.phaseIndices.length !== blockSize) {
+                context.phaseIndices = new Uint32Array(blockSize);
+                context.phaseRemainders = new Uint32Array(blockSize);
+                
+                for (let i = 0; i < blockSize; i++) {
+                    const n_index = i * L + d;
+                    context.phaseIndices[i] = n_index;
+                    context.phaseRemainders[i] = n_index % L;
+                }
+            }
+            
+            // Process each channel
             for (let ch = 0; ch < numChannels; ch++) {
                 const osOffset = ch * oversampledLength;
                 const state = context.downsampleState[ch];
-                let combinedLength = state.length + oversampledLength;
-                let Z = new Float32Array(combinedLength);
+                const combinedLength = state.length + oversampledLength;
+                
+                // Reuse Z buffer if it exists or create a new one
+                if (!context.Z || context.Z.length < combinedLength) {
+                    context.Z = new Float32Array(combinedLength);
+                }
+                let Z = context.Z;
+                
+                // Copy state and processed oversampled data to Z
                 Z.set(state, 0);
                 Z.set(processedOversampled.subarray(osOffset, osOffset + oversampledLength), state.length);
+                
+                // Calculate output offset for this channel
+                const outOffset = ch * blockSize;
+                
+                // Process each output sample with optimized inner loop
                 for (let i = 0; i < blockSize; i++) {
-                    let n_index = i * L + d;
-                    let r = n_index % L;
+                    const n_index = context.phaseIndices[i];
+                    const r = context.phaseRemainders[i];
+                    const h_poly = polyphase[r];
+                    const h_len = h_poly.length;
+                    
+                    // Use a local accumulator for better register usage
                     let acc = 0;
-                    let h_poly = polyphase[r];
-                    for (let k = 0; k < h_poly.length; k++) {
-                        let idx = n_index - L * k;
-                        if (idx < 0) break;
-                        acc += h_poly[k] * Z[idx];
+                    
+                    // Process filter taps with loop unrolling for common sizes
+                    if (h_len >= 8) {
+                        // Unrolled loop for better instruction pipelining
+                        let k = 0;
+                        for (; k < h_len - 7; k += 8) {
+                            const idx1 = n_index - L * k;
+                            const idx2 = n_index - L * (k+1);
+                            const idx3 = n_index - L * (k+2);
+                            const idx4 = n_index - L * (k+3);
+                            const idx5 = n_index - L * (k+4);
+                            const idx6 = n_index - L * (k+5);
+                            const idx7 = n_index - L * (k+6);
+                            const idx8 = n_index - L * (k+7);
+                            
+                            // Check if all indices are valid
+                            if (idx8 < 0) break;
+                            
+                            acc += h_poly[k] * Z[idx1];
+                            acc += h_poly[k+1] * Z[idx2];
+                            acc += h_poly[k+2] * Z[idx3];
+                            acc += h_poly[k+3] * Z[idx4];
+                            acc += h_poly[k+4] * Z[idx5];
+                            acc += h_poly[k+5] * Z[idx6];
+                            acc += h_poly[k+6] * Z[idx7];
+                            acc += h_poly[k+7] * Z[idx8];
+                        }
+                        
+                        // Handle remaining taps
+                        for (; k < h_len; k++) {
+                            const idx = n_index - L * k;
+                            if (idx < 0) break;
+                            acc += h_poly[k] * Z[idx];
+                        }
+                    } else {
+                        // For shorter filters, use a simple loop with early termination
+                        for (let k = 0; k < h_len; k++) {
+                            const idx = n_index - L * k;
+                            if (idx < 0) break;
+                            acc += h_poly[k] * Z[idx];
+                        }
                     }
-                    downsampledOutput[ch * blockSize + i] = acc;
+                    
+                    // Store result
+                    downsampledOutput[outOffset + i] = acc;
                 }
+                
+                // Update state for next block
                 state.set(Z.subarray(combinedLength - stateLength, combinedLength));
             }
             
