@@ -29,23 +29,48 @@ export class PluginManager {
                 if (hasCSS) cssUrls.push(`${path}.css`);
             }
 
-            // Load all resources in parallel
+            // Calculate total files to load for progress tracking
+            const totalFiles = jsUrls.length + cssUrls.length;
+            let loadedFiles = 0;
+            
+            // Show initial progress
+            if (window.uiManager) window.uiManager.updateLoadingProgress(0);
+            
+            // Function to update progress
+            const updateProgress = () => {
+                loadedFiles++;
+                // Calculate progress percentage based on loaded files (0-100%)
+                const percent = Math.round((loadedFiles / totalFiles) * 100);
+                if (window.uiManager) window.uiManager.updateLoadingProgress(percent);
+            };
+
+            // Load all resources in parallel with progress tracking
             const [jsContents, cssContents] = await Promise.all([
                 // Load all JS files
-                Promise.all(jsUrls.map(url => 
+                Promise.all(jsUrls.map(url =>
                     fetch(url)
                         .then(r => r.text())
+                        .then(text => {
+                            updateProgress();
+                            return text;
+                        })
                         .catch(error => {
                             console.error(`Failed to load JS: ${url}`, error);
+                            updateProgress();
                             return '';
                         })
                 )),
                 // Load all CSS files
-                Promise.all(cssUrls.map(url => 
+                Promise.all(cssUrls.map(url =>
                     fetch(url)
                         .then(r => r.text())
+                        .then(text => {
+                            updateProgress();
+                            return text;
+                        })
                         .catch(error => {
                             console.error(`Failed to load CSS: ${url}`, error);
+                            updateProgress();
                             return '';
                         })
                 ))

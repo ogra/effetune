@@ -259,6 +259,23 @@ input {
     z-index: 1000;
 }
 
+.loading-spinner-progress {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: calc(50% - 21px);
+    left: calc(50% - 18px);
+    width: 50px;
+    height: 50px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #808080;
+    z-index: 1001;
+    text-align: center;
+    pointer-events: none;
+}
+
 /* Pipeline */
 .pipeline {
     flex-grow: 1;

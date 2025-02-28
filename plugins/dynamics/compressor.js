@@ -288,10 +288,14 @@ class CompressorPlugin extends PluginBase {
     onMessage(message) {
         if (message.type === 'processBuffer' && message.buffer) {
             const result = this.process(message.buffer, message);
-            if (this.canvas) {
+            
+            // Only update graphs if there's significant gain reduction
+            const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
+            if (this.canvas && this.gr > GR_THRESHOLD) {
                 this.updateTransferGraph();
                 this.updateReductionMeter();
             }
+            
             return result;
         }
     }
@@ -571,19 +575,75 @@ class CompressorPlugin extends PluginBase {
             this.animationFrameId = null;
         }
         
+        let lastGraphState = null;
+        
         const animate = () => {
-            if (!this.canvas) return;
+            // Check if canvas still exists in DOM
+            if (!this.canvas) {
+                this.cleanup();  // Stop animation if canvas is removed
+                return;
+            }
             
-            const ctx = this.canvas.getContext('2d');
-            ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            // Check if the element is in the viewport before updating
+            const rect = this.canvas.getBoundingClientRect();
+            const isVisible = (
+                rect.top < window.innerHeight &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.right > 0
+            );
             
-            this.updateReductionMeter();
-            this.updateTransferGraph();
+            if (isVisible) {
+                // Check if we need to update the graph
+                const needsUpdate = this.needsGraphUpdate(lastGraphState);
+                if (needsUpdate) {
+                    const ctx = this.canvas.getContext('2d');
+                    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    this.updateReductionMeter();
+                    this.updateTransferGraph();
+                    
+                    // Store current state for future comparison
+                    lastGraphState = this.getCurrentGraphState();
+                }
+            }
             
             this.animationFrameId = requestAnimationFrame(animate);
         };
         
         this.animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // Helper method to determine if graph update is needed
+    needsGraphUpdate(lastState) {
+        // Always update if no previous state exists
+        if (!lastState) return true;
+        
+        // Use a threshold to determine significant gain reduction
+        const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
+        
+        // Check if there's significant gain reduction
+        const hasActiveReduction = this.gr > GR_THRESHOLD;
+        
+        // If there's significant gain reduction, we should update
+        if (hasActiveReduction) return true;
+        
+        // Compare current state with last state
+        const currentState = this.getCurrentGraphState();
+        
+        // Check if any relevant parameters have changed
+        return JSON.stringify(currentState) !== JSON.stringify(lastState);
+    }
+    
+    // Get current state of parameters that affect graph appearance
+    getCurrentGraphState() {
+        return {
+            threshold: this.th,
+            ratio: this.rt,
+            knee: this.kn,
+            gain: this.gn,
+            gainReduction: this.gr
+        };
     }
 
     cleanup() {

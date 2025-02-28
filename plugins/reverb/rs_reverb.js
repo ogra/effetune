@@ -23,105 +23,150 @@ class RSReverbPlugin extends PluginBase {
 
             const channelCount = parameters.channelCount;
             const blockSize = parameters.blockSize;
-
+            const sampleRate = parameters.sampleRate; // Define sampleRate at the beginning
+            
             // Initialize context state if needed
             if (!context.initialized || context.sampleRate !== sampleRate) {
                 context.sampleRate = sampleRate;
                 const maxPreDelay = Math.ceil(sampleRate * 0.05); // 50ms
-
-                // Pre-delay buffer
-                context.preDelayBuffer = [];
-                for (let ch = 0; ch < channelCount; ch++) {
-                    context.preDelayBuffer.push({ buffer: new Float32Array(maxPreDelay), pos: 0 });
-                }
-
+                
                 // Initialize base delays and randomize them once
-                const baseDelays = [19, 29, 41, 47, 23, 31, 37, 43];
-                context.randomizedDelays = baseDelays.map(delay => delay + Math.random());
-
-                // Initialize comb filters using stored randomized delays
-                context.combFilters = [];
+                if (!context.randomizedDelays) {
+                    const baseDelays = [19, 29, 41, 47, 23, 31, 37, 43];
+                    context.randomizedDelays = new Array(baseDelays.length);
+                    for (let i = 0; i < baseDelays.length; i++) {
+                        context.randomizedDelays[i] = baseDelays[i] + Math.random();
+                    }
+                }
+                
+                // Pre-allocate arrays
+                context.preDelayBuffer = new Array(channelCount);
+                context.combFilters = new Array(channelCount);
+                context.allpassFilters = new Array(channelCount);
+                
+                // Calculate allpass filter delay once
+                const apfDelay = Math.ceil(0.005 * sampleRate); // 5ms
+                
+                // Initialize all buffers for all channels at once
                 for (let ch = 0; ch < channelCount; ch++) {
-                    const combs = [];
+                    // Pre-delay buffer
+                    context.preDelayBuffer[ch] = {
+                        buffer: new Float32Array(maxPreDelay),
+                        pos: 0
+                    };
+                    
+                    // Comb filters
+                    const combs = new Array(context.randomizedDelays.length);
                     for (let j = 0; j < context.randomizedDelays.length; j++) {
                         const delay = context.randomizedDelays[j];
-                        const bufferLength = Math.ceil(delay * sampleRate * 0.001); // Convert ms to seconds
-                        combs.push({ buffer: new Float32Array(bufferLength), pos: 0, hdState: 0, ldState: 0 });
+                        const bufferLength = Math.ceil(delay * sampleRate * 0.001); // Convert ms to samples
+                        combs[j] = {
+                            buffer: new Float32Array(bufferLength),
+                            pos: 0,
+                            hdState: 0,
+                            ldState: 0
+                        };
                     }
-                    context.combFilters.push(combs);
+                    context.combFilters[ch] = combs;
+                    
+                    // Allpass filters - fixed at 2 filters
+                    const apfs = new Array(2);
+                    apfs[0] = { buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 };
+                    apfs[1] = { buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 };
+                    context.allpassFilters[ch] = apfs;
                 }
-
-                // Initialize allpass filters
-                const apfDelay = Math.ceil(0.005 * sampleRate); // 5ms
-                context.allpassFilters = [];
-                for (let ch = 0; ch < channelCount; ch++) {
-                    const apfs = [];
-                    for (let j = 0; j < 2; j++) {
-                        apfs.push({ buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 });
-                    }
-                    context.allpassFilters.push(apfs);
-                }
-
+                
                 // Initialize damping filter states per channel
                 context.hdStates = new Float32Array(channelCount);
                 context.ldStates = new Float32Array(channelCount);
-
+                
                 context.initialized = true;
             }
 
-            // Reset if channel count changes
+            // Reset if channel count changes - use similar optimizations as initialization
             if (context.preDelayBuffer.length !== channelCount) {
-                const maxPreDelay = Math.ceil(context.sampleRate * 0.05);
-                context.preDelayBuffer = [];
+                const sRate = context.sampleRate;
+                const maxPreDelay = Math.ceil(sRate * 0.05);
+                const apfDelay = Math.ceil(0.005 * sRate);
+                
+                // Pre-allocate arrays
+                context.preDelayBuffer = new Array(channelCount);
+                context.combFilters = new Array(channelCount);
+                context.allpassFilters = new Array(channelCount);
+                
+                // Initialize all buffers for all channels at once
                 for (let ch = 0; ch < channelCount; ch++) {
-                    context.preDelayBuffer.push({ buffer: new Float32Array(maxPreDelay), pos: 0 });
-                }
-
-                context.combFilters = [];
-                for (let ch = 0; ch < channelCount; ch++) {
-                    const combs = [];
+                    // Pre-delay buffer
+                    context.preDelayBuffer[ch] = {
+                        buffer: new Float32Array(maxPreDelay),
+                        pos: 0
+                    };
+                    
+                    // Comb filters
+                    const combs = new Array(context.randomizedDelays.length);
                     for (let j = 0; j < context.randomizedDelays.length; j++) {
                         const delay = context.randomizedDelays[j];
-                        const bufferLength = Math.ceil(delay * context.sampleRate * 0.001);
-                        combs.push({ buffer: new Float32Array(bufferLength), pos: 0, hdState: 0, ldState: 0 });
+                        const bufferLength = Math.ceil(delay * sRate * 0.001);
+                        combs[j] = {
+                            buffer: new Float32Array(bufferLength),
+                            pos: 0,
+                            hdState: 0,
+                            ldState: 0
+                        };
                     }
-                    context.combFilters.push(combs);
+                    context.combFilters[ch] = combs;
+                    
+                    // Allpass filters - fixed at 2 filters
+                    const apfs = new Array(2);
+                    apfs[0] = { buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 };
+                    apfs[1] = { buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 };
+                    context.allpassFilters[ch] = apfs;
                 }
-
+                
+                // Reset damping filter states
                 context.hdStates = new Float32Array(channelCount);
                 context.ldStates = new Float32Array(channelCount);
-
-                const apfDelay = Math.ceil(0.005 * context.sampleRate);
-                context.allpassFilters = [];
-                for (let ch = 0; ch < channelCount; ch++) {
-                    const apfs = [];
-                    for (let j = 0; j < 2; j++) {
-                        apfs.push({ buffer: new Float32Array(apfDelay), pos: 0, lastOutput: 0 });
-                    }
-                    context.allpassFilters.push(apfs);
-                }
             }
 
-            // Pre-calculate coefficients for the block
-            const hdCoeff = Math.exp(-2 * Math.PI * parameters.hd / context.sampleRate);
-            const ldCoeff = 1 - Math.exp(-2 * Math.PI * parameters.ld / context.sampleRate);
+            // Pre-calculate coefficients for the block - cache frequently used values
+            const twoPI = 2 * Math.PI;
+            
+            // Damping coefficients
+            const hdCoeff = Math.exp(-twoPI * parameters.hd / sampleRate);
+            const ldCoeff = 1 - Math.exp(-twoPI * parameters.ld / sampleRate);
             const dampAmount = parameters.dp / 100;
+            
+            // Density and diffusion
             const numActiveCombs = parameters.ds;
             const normalizationFactor = 0.4 / Math.max(1, numActiveCombs);
             const df = parameters.df;
-            const mx = parameters.mx;
-            const wetMix = mx / 100;
+            
+            // Mix calculations
+            const wetMix = parameters.mx / 100;
             const dryGain = wetMix <= 0.5 ? 1.0 : 2.0 * (1.0 - wetMix);
             const wetGain = wetMix <= 0.5 ? 2.0 * wetMix : 1.0;
-
+            
+            // Room size scaling factor
+            const roomScale = parameters.rs / 10.0;
+            
+            // Reverb time coefficient (calculate once)
+            const rtCoeff = 1 / parameters.rt;
+            
             // Pre-calculate feedback gains using stored randomized delays
-            const feedbackGains = context.randomizedDelays.map(delay => {
-                const delayTime = delay * 0.001;
-                const gain = Math.pow(0.001, delayTime / parameters.rt);
-                const roomScale = parameters.rs / 10.0;
-                return Math.min(0.9, Math.max(-0.9, gain * roomScale));
-            });
+            const feedbackGains = new Array(context.randomizedDelays.length);
+            for (let i = 0; i < context.randomizedDelays.length; i++) {
+                const delayTime = context.randomizedDelays[i] * 0.001;
+                const gain = Math.pow(0.001, delayTime * rtCoeff);
+                feedbackGains[i] = Math.min(0.9, Math.max(-0.9, gain * roomScale));
+            }
 
+            // Precalculate values used in the inner loop
+            const hasDamping = parameters.dp > 0;
+            const oneMinusDampAmount = 1 - dampAmount;
+            const dfSquared = df * df;
+            const oneMinusDf = 1 - df;
+            const oneMinusDfSquared = 1 - dfSquared;
+            
             // Process each channel
             for (let ch = 0; ch < channelCount; ch++) {
                 const channelDataOffset = ch * blockSize;
@@ -129,54 +174,98 @@ class RSReverbPlugin extends PluginBase {
                 const combFilters = context.combFilters[ch];
                 const allpassFilters = context.allpassFilters[ch];
                 const numCombs = numActiveCombs;
+                
+                // Cache buffer properties to avoid property lookups in the inner loop
+                const preDelayBuffer = preDelay.buffer;
+                let preDelayPos = preDelay.pos;
+                const preDelayLength = preDelayBuffer.length;
+                
+                // Cache channel damping states
+                let hdState = context.hdStates[ch];
+                let ldState = context.ldStates[ch];
+                
+                // Cache allpass filter properties
+                const apf0 = allpassFilters[0];
+                const apf1 = allpassFilters[1];
+                const apf0Buffer = apf0.buffer;
+                const apf1Buffer = apf1.buffer;
+                let apf0Pos = apf0.pos;
+                let apf1Pos = apf1.pos;
+                const apf0Length = apf0Buffer.length;
+                const apf1Length = apf1Buffer.length;
+                let apf0LastOutput = apf0.lastOutput;
+                let apf1LastOutput = apf1.lastOutput;
 
                 for (let i = 0; i < blockSize; i++) {
                     const input = data[channelDataOffset + i];
-                    let output = 0;
-
+                    
                     // Apply pre-delay
-                    const delayedInput = preDelay.buffer[preDelay.pos];
-                    preDelay.buffer[preDelay.pos] = input;
-                    preDelay.pos = (preDelay.pos + 1) % preDelay.buffer.length;
-
+                    const delayedInput = preDelayBuffer[preDelayPos];
+                    preDelayBuffer[preDelayPos] = input;
+                    preDelayPos++;
+                    if (preDelayPos >= preDelayLength) preDelayPos = 0;
+                    
                     // Process through comb filters based on density
                     let combOut = 0;
                     for (let j = 0; j < numCombs; j++) {
                         const comb = combFilters[j];
-                        const delayedSample = comb.buffer[comb.pos];
-
+                        const combBuffer = comb.buffer;
+                        let combPos = comb.pos;
+                        const combLength = combBuffer.length;
+                        
+                        const delayedSample = combBuffer[combPos];
+                        
                         // Apply damping filters in series to feedback signal
                         comb.hdState = delayedSample + hdCoeff * (comb.hdState - delayedSample);
                         comb.ldState = comb.hdState + ldCoeff * (comb.ldState - comb.hdState);
-                        const dampedSample = delayedSample * (1 - dampAmount) + comb.ldState * dampAmount;
-                        comb.buffer[comb.pos] = delayedInput + dampedSample * feedbackGains[j];
-                        comb.pos = (comb.pos + 1) % comb.buffer.length;
+                        const dampedSample = delayedSample * oneMinusDampAmount + comb.ldState * dampAmount;
+                        
+                        combBuffer[combPos] = delayedInput + dampedSample * feedbackGains[j];
+                        combPos++;
+                        if (combPos >= combLength) combPos = 0;
+                        comb.pos = combPos;
+                        
                         combOut += dampedSample;
                     }
-                    output = combOut * normalizationFactor;
-
-                    // Apply allpass filters for diffusion
-                    for (let j = 0; j < 2; j++) {
-                        const apf = allpassFilters[j];
-                        const delaySample = apf.buffer[apf.pos];
-                        const out = -(1 - df) * output + delaySample + df * apf.lastOutput;
-                        apf.buffer[apf.pos] = output;
-                        apf.pos = (apf.pos + 1) % apf.buffer.length;
-                        apf.lastOutput = out;
-                        output = out * (1 - df * df);
-                    }
-
+                    let output = combOut * normalizationFactor;
+                    
+                    // Apply first allpass filter
+                    const delaySample0 = apf0Buffer[apf0Pos];
+                    const out0 = -oneMinusDf * output + delaySample0 + df * apf0LastOutput;
+                    apf0Buffer[apf0Pos] = output;
+                    apf0Pos++;
+                    if (apf0Pos >= apf0Length) apf0Pos = 0;
+                    apf0LastOutput = out0;
+                    output = out0 * oneMinusDfSquared;
+                    
+                    // Apply second allpass filter
+                    const delaySample1 = apf1Buffer[apf1Pos];
+                    const out1 = -oneMinusDf * output + delaySample1 + df * apf1LastOutput;
+                    apf1Buffer[apf1Pos] = output;
+                    apf1Pos++;
+                    if (apf1Pos >= apf1Length) apf1Pos = 0;
+                    apf1LastOutput = out1;
+                    output = out1 * oneMinusDfSquared;
+                    
                     // Apply damping filters per channel if needed
-                    if (parameters.dp > 0) {
-                        context.hdStates[ch] = output + hdCoeff * (context.hdStates[ch] - output);
-                        context.ldStates[ch] = output + ldCoeff * (context.ldStates[ch] - output);
-                        output = output * (1 - dampAmount) +
-                                 (context.hdStates[ch] * 0.5 + context.ldStates[ch] * 0.5) * dampAmount;
+                    if (hasDamping) {
+                        hdState = output + hdCoeff * (hdState - output);
+                        ldState = output + ldCoeff * (ldState - output);
+                        output = output * oneMinusDampAmount + (hdState * 0.5 + ldState * 0.5) * dampAmount;
                     }
-
+                    
                     // Apply wet/dry mix
                     data[channelDataOffset + i] = input * dryGain + output * wetGain;
                 }
+                
+                // Update context with modified values
+                preDelay.pos = preDelayPos;
+                apf0.pos = apf0Pos;
+                apf1.pos = apf1Pos;
+                apf0.lastOutput = apf0LastOutput;
+                apf1.lastOutput = apf1LastOutput;
+                context.hdStates[ch] = hdState;
+                context.ldStates[ch] = ldState;
             }
 
             return data;
