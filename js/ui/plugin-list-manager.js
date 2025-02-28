@@ -7,6 +7,12 @@ export class PluginListManager {
         this.loadingSpinner = document.createElement('div');
         this.loadingSpinner.className = 'loading-spinner';
         this.pluginList.appendChild(this.loadingSpinner);
+        
+        // Create progress display as a separate element
+        this.progressDisplay = document.createElement('div');
+        this.progressDisplay.className = 'loading-spinner-progress';
+        this.progressDisplay.textContent = '0%';
+        this.pluginList.appendChild(this.progressDisplay);
 
         // Search functionality
         this.searchButton = document.getElementById('effectSearchButton');
@@ -403,10 +409,21 @@ export class PluginListManager {
 
     showLoadingSpinner() {
         this.loadingSpinner.style.display = 'block';
+        this.progressDisplay.style.display = 'flex';
+        this.updateLoadingProgress(0);
     }
 
     hideLoadingSpinner() {
         this.loadingSpinner.style.display = 'none';
+        this.progressDisplay.style.display = 'none';
+    }
+    
+    updateLoadingProgress(percent) {
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+        
+        const formattedPercent = Math.round(percent);
+        this.progressDisplay.textContent = `${formattedPercent}%`;
     }
 
     getDragMessage() {

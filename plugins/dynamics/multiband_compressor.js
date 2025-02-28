@@ -579,7 +579,11 @@ class MultibandCompressorPlugin extends PluginBase {
   onMessage(message) {
     if (message.type === 'processBuffer' && message.buffer) {
       const result = this.process(message.buffer, message);
-      if (this.canvas) this.updateTransferGraphs();
+      // Only update graphs if there's significant gain reduction (using a threshold to avoid lingering updates)
+      const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
+      if (this.canvas && this.bands.some(band => band.gr > GR_THRESHOLD)) {
+        this.updateTransferGraphs();
+      }
       return result;
     }
   }
@@ -994,11 +998,9 @@ class MultibandCompressorPlugin extends PluginBase {
   startAnimation() {
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
     
-    // Use a lower frame rate for UI updates to reduce CPU usage
-    const FRAME_INTERVAL = 250; // Update every 250ms instead of every frame
-    let lastUpdateTime = 0;
+    let lastGraphState = null;
     
-    const animate = (timestamp) => {
+    const animate = () => {
       // Check if container still exists in DOM
       const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
       if (!container) {
@@ -1006,28 +1008,63 @@ class MultibandCompressorPlugin extends PluginBase {
         return;
       }
       
-      // Only update if enough time has passed
-      if (timestamp - lastUpdateTime >= FRAME_INTERVAL) {
-        // Check if the element is in the viewport before updating
-        const rect = container.getBoundingClientRect();
-        const isVisible = (
-          rect.top < window.innerHeight &&
-          rect.bottom > 0 &&
-          rect.left < window.innerWidth &&
-          rect.right > 0
-        );
-        
-        if (isVisible) {
+      // Check if the element is in the viewport before updating
+      const rect = container.getBoundingClientRect();
+      const isVisible = (
+        rect.top < window.innerHeight &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.right > 0
+      );
+      
+      if (isVisible) {
+        // Check if we need to update the graph
+        const needsUpdate = this.needsGraphUpdate(lastGraphState);
+        if (needsUpdate) {
           this.updateTransferGraphs();
+          // Store current state for future comparison
+          lastGraphState = this.getCurrentGraphState();
         }
-        
-        lastUpdateTime = timestamp;
       }
       
       this.animationFrameId = requestAnimationFrame(animate);
     };
     
     this.animationFrameId = requestAnimationFrame(animate);
+  }
+  
+  // Helper method to determine if graph update is needed
+  needsGraphUpdate(lastState) {
+    // Always update if no previous state exists
+    if (!lastState) return true;
+    
+    // Use a threshold to determine significant gain reduction
+    const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
+    
+    // Check if any band has significant gain reduction
+    const hasActiveReduction = this.bands.some(band => band.gr > GR_THRESHOLD);
+    
+    // If any band has significant gain reduction, we should update
+    if (hasActiveReduction) return true;
+    
+    // Compare current state with last state
+    const currentState = this.getCurrentGraphState();
+    
+    // Check if any relevant parameters have changed
+    return JSON.stringify(currentState) !== JSON.stringify(lastState);
+  }
+  
+  // Get current state of parameters that affect graph appearance
+  getCurrentGraphState() {
+    const selectedBand = this.bands[this.selectedBand];
+    return {
+      selectedBand: this.selectedBand,
+      threshold: selectedBand.t,
+      ratio: selectedBand.r,
+      knee: selectedBand.k,
+      gain: selectedBand.g,
+      gainReduction: selectedBand.gr
+    };
   }
 
   cleanup() {

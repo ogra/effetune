@@ -45,6 +45,10 @@ export class UIManager {
     hideLoadingSpinner() {
         this.pluginListManager.hideLoadingSpinner();
     }
+    
+    updateLoadingProgress(percent) {
+        this.pluginListManager.updateLoadingProgress(percent);
+    }
 
     initPluginList() {
         this.pluginListManager.initPluginList();

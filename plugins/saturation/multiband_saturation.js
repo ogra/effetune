@@ -14,8 +14,6 @@ class MultibandSaturationPlugin extends PluginBase {
         ];
 
         this.selectedBand = 0;
-        this.lastProcessTime = performance.now() / 1000;
-        this.animationFrameId = null;
 
         this.registerProcessor(this.getProcessorCode());
     }
@@ -326,7 +324,6 @@ class MultibandSaturationPlugin extends PluginBase {
     onMessage(message) {
         if (message.type === 'processBuffer' && message.buffer) {
             const result = this.process(message.buffer, message);
-            this.updateTransferGraphs();
             return result;
         }
     }
@@ -489,52 +486,8 @@ class MultibandSaturationPlugin extends PluginBase {
         });
     }
 
-    startAnimation() {
-        if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-        
-        // Use a lower frame rate for UI updates to reduce CPU usage
-        const FRAME_INTERVAL = 250; // Update every 250ms instead of every frame
-        let lastUpdateTime = 0;
-        
-        const animate = (timestamp) => {
-            // Check if container still exists in DOM
-            const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
-            if (!container) {
-                this.cleanup();  // Stop animation if container is removed
-                return;
-            }
-            
-            // Only update if enough time has passed
-            if (timestamp - lastUpdateTime >= FRAME_INTERVAL) {
-                // Check if the element is in the viewport before updating
-                const rect = container.getBoundingClientRect();
-                const isVisible = (
-                    rect.top < window.innerHeight &&
-                    rect.bottom > 0 &&
-                    rect.left < window.innerWidth &&
-                    rect.right > 0
-                );
-                
-                if (isVisible) {
-                    this.updateTransferGraphs();
-                }
-                
-                lastUpdateTime = timestamp;
-            }
-            
-            this.animationFrameId = requestAnimationFrame(animate);
-        };
-        
-        this.animationFrameId = requestAnimationFrame(animate);
-    }
-
     cleanup() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
         this.canvases = null;
-        this.lastProcessTime = performance.now() / 1000;
     }
 
     createUI() {
@@ -696,8 +649,10 @@ class MultibandSaturationPlugin extends PluginBase {
         container.appendChild(graphsContainer);
 
         this.canvases = Array.from(container.querySelectorAll('.mbs-band-graph canvas'));
-        this.updateTransferGraphs();
-        this.startAnimation();
+        
+        setTimeout(() => {
+            this.updateTransferGraphs();
+        }, 0);
 
         return container;
     }
