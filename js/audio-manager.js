@@ -42,9 +42,24 @@ export class AudioManager {
             window.workletNode = this.workletNode;
             window.pipeline = this.pipeline; // Global pipeline reference
 
-            // Setup worklet message handler (for future use)
+            // Setup worklet message handler
             this.workletNode.port.onmessage = (event) => {
-                // Future message handling can be added here
+                const data = event.data;
+                if (data.type === 'sleepModeChanged') {
+                    // Update UI with sleep mode status
+                    const sampleRateElement = document.getElementById('sampleRate');
+                    if (sampleRateElement) {
+                        if (data.isSleepMode) {
+                            // Add sleep mode indicator if not already present
+                            if (!sampleRateElement.textContent.includes('Sleep Mode')) {
+                                sampleRateElement.textContent += ' - Sleep Mode';
+                            }
+                        } else {
+                            // Remove sleep mode indicator
+                            sampleRateElement.textContent = sampleRateElement.textContent.replace(' - Sleep Mode', '');
+                        }
+                    }
+                }
             };
 
             // Build initial pipeline

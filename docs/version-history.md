@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.24 (Mar 4, 2025)
+- Added sleep mode when there is no sound for more than one minute
+- Various minor improvements
+
 ### Version 1.23 (February 23, 2025)
 - Supports installation as an app
 - Added some new effects
