@@ -27,6 +27,14 @@ class PluginProcessor extends AudioWorkletProcessor {
         // Offline processing flag
         this.isOfflineProcessing = false;
         
+        // Audio level monitoring for sleep mode
+        this.audioLevelMonitoring = {
+            lastActiveTime: 0,            // Will be updated on first process call
+            isSleepMode: false,
+            SILENCE_THRESHOLD: -84,       // -84dB threshold for silence
+            SILENCE_DURATION: 60          // 60 seconds of silence before sleep
+        };
+        
         // Message handler for plugin updates and processor registration
         this.port.onmessage = (event) => {
             const data = event.data;
@@ -117,8 +125,54 @@ class PluginProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         if (!input || !output) return true;
 
-        // Master bypass: copy input directly to output
-        if (this.masterBypass) {
+        // Calculate current time in seconds
+        const time = this.currentFrame / sampleRate;
+        
+        // Monitor audio input level
+        if (input[0] && input[0].length > 0) {
+            // Check for any sample above the threshold across all channels
+            let hasSignal = false;
+            const threshold = Math.pow(10, this.audioLevelMonitoring.SILENCE_THRESHOLD / 20); // Convert -80dB to amplitude
+            
+            // Check each channel for any sample above threshold
+            for (let channel = 0; channel < input.length && !hasSignal; channel++) {
+                for (let i = 0; i < input[channel].length && !hasSignal; i++) {
+                    // Check absolute value against threshold
+                    if (Math.abs(input[channel][i]) > threshold) {
+                        hasSignal = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Update state based on signal presence
+            if (hasSignal) {
+                this.audioLevelMonitoring.lastActiveTime = time;
+                
+                // If we were in sleep mode, exit it and notify UI
+                if (this.audioLevelMonitoring.isSleepMode) {
+                    this.audioLevelMonitoring.isSleepMode = false;
+                    this.port.postMessage({
+                        type: 'sleepModeChanged',
+                        isSleepMode: false
+                    });
+                }
+            } else {
+                // Check if we should enter sleep mode
+                const silenceDuration = time - this.audioLevelMonitoring.lastActiveTime;
+                if (!this.audioLevelMonitoring.isSleepMode &&
+                    silenceDuration > this.audioLevelMonitoring.SILENCE_DURATION) {
+                    this.audioLevelMonitoring.isSleepMode = true;
+                    this.port.postMessage({
+                        type: 'sleepModeChanged',
+                        isSleepMode: true
+                    });
+                }
+            }
+        }
+
+        // Master bypass or Sleep mode: copy input directly to output
+        if (this.masterBypass || this.audioLevelMonitoring.isSleepMode) {
             for (let channel = 0; channel < input.length; channel++) {
                 output[channel].set(input[channel]);
             }
@@ -132,7 +186,6 @@ class PluginProcessor extends AudioWorkletProcessor {
 
         // Update block size from input buffer length
         this.blockSize = input[0].length;
-        const time = this.currentFrame / sampleRate;
         this.currentFrame += this.blockSize;
 
         const channelCount = input.length;
