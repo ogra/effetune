@@ -549,6 +549,12 @@ export class PipelineManager {
             const isExpanded = ui.classList.toggle('expanded');
             if (isExpanded) {
                 this.expandedPlugins.add(plugin);
+                if (plugin.updateMarkers && plugin.updateResponse) {
+                    requestAnimationFrame(() => {
+                        plugin.updateMarkers();
+                        plugin.updateResponse();
+                    });
+                }
             } else {
                 this.expandedPlugins.delete(plugin);
             }
