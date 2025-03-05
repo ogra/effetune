@@ -11,6 +11,33 @@ export class AudioManager {
         this.pipelineManager = pipelineManager;
         this.isOfflineProcessing = false;
         this.isCancelled = false;
+        
+        // Setup user activity detection
+        this.setupUserActivityDetection();
+    }
+    
+    setupUserActivityDetection() {
+        // Detect user activity events
+        const userActivityEvents = [
+            'mousedown', 'mouseup', 'mousemove',
+            'keydown', 'keyup',
+            'touchstart', 'touchend', 'touchmove',
+            'click', 'dblclick', 'wheel'
+        ];
+        
+        // Add event listeners for all user activity events
+        userActivityEvents.forEach(eventType => {
+            document.addEventListener(eventType, this.handleUserActivity.bind(this), { passive: true });
+        });
+    }
+    
+    handleUserActivity() {
+        // Notify audio processor about user activity
+        if (this.workletNode) {
+            this.workletNode.port.postMessage({
+                type: 'userActivity'
+            });
+        }
     }
 
     async initAudio() {

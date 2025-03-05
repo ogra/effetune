@@ -29,7 +29,9 @@ class PluginProcessor extends AudioWorkletProcessor {
         
         // Audio level monitoring for sleep mode
         this.audioLevelMonitoring = {
-            lastActiveTime: 0,            // Will be updated on first process call
+            lastInputActiveTime: 0,       // Last time input signal was detected
+            lastOutputActiveTime: 0,       // Last time output signal was detected
+            lastUserActivityTime: 0,      // Will be updated from main thread
             isSleepMode: false,
             SILENCE_THRESHOLD: -84,       // -84dB threshold for silence
             SILENCE_DURATION: 60          // 60 seconds of silence before sleep
@@ -49,6 +51,20 @@ class PluginProcessor extends AudioWorkletProcessor {
                     break;
                 case 'registerProcessor':
                     this.registerPluginProcessor(data.pluginType, data.processor);
+                    break;
+                case 'userActivity':
+                    // Update user activity timestamp
+                    const time = this.currentFrame / sampleRate;
+                    this.audioLevelMonitoring.lastUserActivityTime = time;
+                    
+                    // If we were in sleep mode, exit it
+                    if (this.audioLevelMonitoring.isSleepMode) {
+                        this.audioLevelMonitoring.isSleepMode = false;
+                        this.port.postMessage({
+                            type: 'sleepModeChanged',
+                            isSleepMode: false
+                        });
+                    }
                     break;
             }
         };
@@ -131,23 +147,23 @@ class PluginProcessor extends AudioWorkletProcessor {
         // Monitor audio input level
         if (input[0] && input[0].length > 0) {
             // Check for any sample above the threshold across all channels
-            let hasSignal = false;
-            const threshold = Math.pow(10, this.audioLevelMonitoring.SILENCE_THRESHOLD / 20); // Convert -80dB to amplitude
+            let hasInputSignal = false;
+            const threshold = Math.pow(10, this.audioLevelMonitoring.SILENCE_THRESHOLD / 20); // Convert -84dB to amplitude
             
             // Check each channel for any sample above threshold
-            for (let channel = 0; channel < input.length && !hasSignal; channel++) {
-                for (let i = 0; i < input[channel].length && !hasSignal; i++) {
+            for (let channel = 0; channel < input.length && !hasInputSignal; channel++) {
+                for (let i = 0; i < input[channel].length && !hasInputSignal; i++) {
                     // Check absolute value against threshold
                     if (Math.abs(input[channel][i]) > threshold) {
-                        hasSignal = true;
+                        hasInputSignal = true;
                         break;
                     }
                 }
             }
             
-            // Update state based on signal presence
-            if (hasSignal) {
-                this.audioLevelMonitoring.lastActiveTime = time;
+            // Update input activity time if signal is detected
+            if (hasInputSignal) {
+                this.audioLevelMonitoring.lastInputActiveTime = time;
                 
                 // If we were in sleep mode, exit it and notify UI
                 if (this.audioLevelMonitoring.isSleepMode) {
@@ -157,20 +173,34 @@ class PluginProcessor extends AudioWorkletProcessor {
                         isSleepMode: false
                     });
                 }
-            } else {
-                // Check if we should enter sleep mode
-                const silenceDuration = time - this.audioLevelMonitoring.lastActiveTime;
-                if (!this.audioLevelMonitoring.isSleepMode &&
-                    silenceDuration > this.audioLevelMonitoring.SILENCE_DURATION) {
-                    this.audioLevelMonitoring.isSleepMode = true;
-                    this.port.postMessage({
-                        type: 'sleepModeChanged',
-                        isSleepMode: true
-                    });
-                }
             }
         }
 
+        // Check if we should enter sleep mode - all three conditions must be met:
+        // 1. Input silence duration > SILENCE_DURATION
+        // 2. Output silence duration > SILENCE_DURATION
+        // 3. User inactivity duration > SILENCE_DURATION
+        if (!this.audioLevelMonitoring.isSleepMode) {
+            const inputSilenceDuration = time - this.audioLevelMonitoring.lastInputActiveTime;
+            const outputSilenceDuration = time - this.audioLevelMonitoring.lastOutputActiveTime;
+            const userInactivityDuration = time - this.audioLevelMonitoring.lastUserActivityTime;
+            
+            // Initialize lastUserActivityTime if it's still 0 (not set yet)
+            if (this.audioLevelMonitoring.lastUserActivityTime === 0) {
+                this.audioLevelMonitoring.lastUserActivityTime = time;
+            }
+            
+            if (inputSilenceDuration > this.audioLevelMonitoring.SILENCE_DURATION &&
+                outputSilenceDuration > this.audioLevelMonitoring.SILENCE_DURATION &&
+                userInactivityDuration > this.audioLevelMonitoring.SILENCE_DURATION) {
+                this.audioLevelMonitoring.isSleepMode = true;
+                this.port.postMessage({
+                    type: 'sleepModeChanged',
+                    isSleepMode: true
+                });
+            }
+        }
+        
         // Master bypass or Sleep mode: copy input directly to output
         if (this.masterBypass || this.audioLevelMonitoring.isSleepMode) {
             for (let channel = 0; channel < input.length; channel++) {
@@ -262,6 +292,27 @@ class PluginProcessor extends AudioWorkletProcessor {
         for (let i = 0; i < channelCount; i++) {
             output[i].set(this.combinedBuffer.subarray(i * this.blockSize, (i + 1) * this.blockSize));
         }
+        
+        // Monitor output level
+        let hasOutputSignal = false;
+        const threshold = Math.pow(10, this.audioLevelMonitoring.SILENCE_THRESHOLD / 20);
+        
+        // Check each output channel for any sample above threshold
+        for (let channel = 0; channel < output.length && !hasOutputSignal; channel++) {
+            for (let i = 0; i < output[channel].length && !hasOutputSignal; i++) {
+                // Check absolute value against threshold
+                if (Math.abs(output[channel][i]) > threshold) {
+                    hasOutputSignal = true;
+                    break;
+                }
+            }
+        }
+        
+        // Update output activity time if signal is detected
+        if (hasOutputSignal) {
+            this.audioLevelMonitoring.lastOutputActiveTime = time;
+        }
+        
         return true;
     }
 }
