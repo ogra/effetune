@@ -10,42 +10,90 @@
         (function() {
             // Get the current path (excluding domain and protocol)
             var path = window.location.pathname;
+            var hostname = window.location.hostname;
             
-            // For GitHub Pages, we need to handle the repository name
-            // Extract repository name from the path if it exists
-            var repoName = '';
-            var pathParts = path.split('/');
-            if (pathParts.length > 1 && pathParts[1] !== '') {
-                // Check if this is a GitHub Pages site with a custom domain
-                if (window.location.hostname.indexOf('github.io') > -1) {
-                    repoName = '/' + pathParts[1];
+            // For GitHub Pages, we need special handling
+            var isGitHubPages = hostname.indexOf('github.io') > -1;
+            var repoPath = '';
+            
+            // Determine the repository path for GitHub Pages
+            if (isGitHubPages) {
+                var pathParts = path.split('/');
+                if (pathParts.length > 1 && pathParts[1] !== '') {
+                    // For user/organization pages, the repo name is in the first segment
+                    repoPath = '/' + pathParts[1];
                 }
             }
             
-            // Calculate relative path to root
-            var pathToRoot = './';
-            var depth = path.split('/').filter(function(p) { return p !== ''; }).length;
-            // If we're at root level, depth will be 0 or 1 (depending on trailing slash)
-            if (depth > 1) {
-                pathToRoot = '';
-                for (var i = 0; i < depth - 1; i++) {
-                    pathToRoot += '../';
+            // Calculate the absolute path to the repository root
+            var absoluteRepoRoot = '';
+            if (isGitHubPages) {
+                absoluteRepoRoot = '/' + path.split('/')[1];
+            }
+            
+            // Calculate relative path to root based on current URL depth
+            var pathToRoot = '';
+            var segments = path.split('/').filter(function(p) { return p !== ''; });
+            
+            // For GitHub Pages, we need to handle the repository name specially
+            if (isGitHubPages) {
+                // Skip the repository name in the path calculation
+                var effectiveDepth = segments.length;
+                if (effectiveDepth > 1) { // If we're deeper than the repo root
+                    for (var i = 0; i < effectiveDepth - 1; i++) {
+                        pathToRoot += '../';
+                    }
+                } else {
+                    pathToRoot = './';
+                }
+            } else {
+                // Standard path calculation for non-GitHub Pages
+                var depth = segments.length;
+                if (depth > 0) {
+                    for (var i = 0; i < depth; i++) {
+                        pathToRoot += '../';
+                    }
+                } else {
+                    pathToRoot = './';
                 }
             }
             
-            // Store the path for use by other elements
+            // Debug information (can be removed in production)
+            console.log('Path: ' + path);
+            console.log('Hostname: ' + hostname);
+            console.log('Is GitHub Pages: ' + isGitHubPages);
+            console.log('Repo Path: ' + repoPath);
+            console.log('Path to Root: ' + pathToRoot);
+            
+            // Store the paths for use by other elements
             window.pathToRoot = pathToRoot;
+            window.absoluteRepoRoot = absoluteRepoRoot;
+            
+            // Function to resolve a path correctly for the current environment
+            function resolvePath(relativePath) {
+                // For GitHub Pages with repository name
+                if (isGitHubPages && absoluteRepoRoot) {
+                    // Ensure we're using the absolute path from the repository root
+                    return absoluteRepoRoot + '/' + relativePath;
+                } else {
+                    // For other environments, use the calculated relative path
+                    return pathToRoot + relativePath;
+                }
+            }
+            
+            // Store the resolve function for use by other scripts
+            window.resolvePath = resolvePath;
             
             // Create and inject CSS link with correct path
             var cssLink = document.createElement('link');
             cssLink.rel = 'stylesheet';
-            cssLink.href = pathToRoot + 'effetune.css';
+            cssLink.href = resolvePath('effetune.css');
             document.head.appendChild(cssLink);
             
             // Create and inject favicon with correct path
             var favicon = document.createElement('link');
             favicon.rel = 'icon';
-            favicon.href = pathToRoot + 'favicon.ico';
+            favicon.href = resolvePath('favicon.ico');
             favicon.type = 'image/x-icon';
             document.head.appendChild(favicon);
             
@@ -56,8 +104,8 @@
                 images.forEach(function(img) {
                     if (img.src.indexOf('http') !== 0) { // Only fix relative URLs
                         var srcPath = img.getAttribute('src');
-                        if (srcPath.indexOf('/') !== 0) { // Not already root-relative
-                            img.src = pathToRoot + srcPath;
+                        if (srcPath && srcPath.indexOf('/') !== 0) { // Not already absolute
+                            img.src = resolvePath(srcPath);
                         }
                     }
                 });
@@ -67,11 +115,17 @@
                 links.forEach(function(link) {
                     if (link.href.indexOf('http') !== 0) { // Only fix relative URLs
                         var hrefPath = link.getAttribute('href');
-                        if (hrefPath && hrefPath.indexOf('/') !== 0) { // Not already root-relative
-                            link.href = pathToRoot + hrefPath;
+                        if (hrefPath && hrefPath.indexOf('/') !== 0 && hrefPath.indexOf('#') !== 0) { // Not already absolute or anchor
+                            link.href = resolvePath(hrefPath);
                         }
                     }
                 });
+                
+                // Explicitly update the "Return to EffeTune App" link to ensure it's correctly set
+                var returnLink = document.querySelector('.download-link');
+                if (returnLink) {
+                    returnLink.href = resolvePath('effetune.html');
+                }
             });
         })();
     </script>
@@ -80,7 +134,11 @@
     <div class="title-container">
         <h1>Frieve EffeTune<img src="images/icon_64x64.png" class="title-icon" alt="EffeTune Icon"><div class="message-display error-message">404 Page not found</div></h1>
         <div style="margin-top: 20px;">
-            <a href="effetune.html" class="download-link">Return to EffeTune App</a>
+            <a href="#" class="download-link" id="return-link">Return to EffeTune App</a>
+            <script>
+                // Set the return link immediately to avoid showing incorrect href even for a moment
+                document.getElementById('return-link').href = window.resolvePath('effetune.html');
+            </script>
         </div>
     </div>
 </body>
