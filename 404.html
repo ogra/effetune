@@ -4,8 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1440">
     <title>404 - Page Not Found | EffeTune</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="effetune.css">
+    <!-- Dynamic path resolution script -->
+    <script>
+        // Calculate path to root based on current URL
+        (function() {
+            // Get the current path (excluding domain and protocol)
+            var path = window.location.pathname;
+            
+            // For GitHub Pages, we need to handle the repository name
+            // Extract repository name from the path if it exists
+            var repoName = '';
+            var pathParts = path.split('/');
+            if (pathParts.length > 1 && pathParts[1] !== '') {
+                // Check if this is a GitHub Pages site with a custom domain
+                if (window.location.hostname.indexOf('github.io') > -1) {
+                    repoName = '/' + pathParts[1];
+                }
+            }
+            
+            // Calculate relative path to root
+            var pathToRoot = './';
+            var depth = path.split('/').filter(function(p) { return p !== ''; }).length;
+            // If we're at root level, depth will be 0 or 1 (depending on trailing slash)
+            if (depth > 1) {
+                pathToRoot = '';
+                for (var i = 0; i < depth - 1; i++) {
+                    pathToRoot += '../';
+                }
+            }
+            
+            // Store the path for use by other elements
+            window.pathToRoot = pathToRoot;
+            
+            // Create and inject CSS link with correct path
+            var cssLink = document.createElement('link');
+            cssLink.rel = 'stylesheet';
+            cssLink.href = pathToRoot + 'effetune.css';
+            document.head.appendChild(cssLink);
+            
+            // Create and inject favicon with correct path
+            var favicon = document.createElement('link');
+            favicon.rel = 'icon';
+            favicon.href = pathToRoot + 'favicon.ico';
+            favicon.type = 'image/x-icon';
+            document.head.appendChild(favicon);
+            
+            // After DOM is loaded, update all relative URLs
+            document.addEventListener('DOMContentLoaded', function() {
+                // Update image sources
+                var images = document.querySelectorAll('img');
+                images.forEach(function(img) {
+                    if (img.src.indexOf('http') !== 0) { // Only fix relative URLs
+                        var srcPath = img.getAttribute('src');
+                        if (srcPath.indexOf('/') !== 0) { // Not already root-relative
+                            img.src = pathToRoot + srcPath;
+                        }
+                    }
+                });
+                
+                // Update links
+                var links = document.querySelectorAll('a');
+                links.forEach(function(link) {
+                    if (link.href.indexOf('http') !== 0) { // Only fix relative URLs
+                        var hrefPath = link.getAttribute('href');
+                        if (hrefPath && hrefPath.indexOf('/') !== 0) { // Not already root-relative
+                            link.href = pathToRoot + hrefPath;
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
 </head>
 <body>
     <div class="title-container">
