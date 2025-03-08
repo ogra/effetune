@@ -132,12 +132,15 @@
 </head>
 <body>
     <div class="title-container">
-        <h1>Frieve EffeTune<img src="images/icon_64x64.png" class="title-icon" alt="EffeTune Icon"><div class="message-display error-message">404 Page not found</div></h1>
+        <h1>Frieve EffeTune<img id="title-icon" class="title-icon" alt="EffeTune Icon"><div class="message-display error-message">404 Page not found</div></h1>
         <div style="margin-top: 20px;">
             <a href="#" class="download-link" id="return-link">Return to EffeTune App</a>
             <script>
                 // Set the return link immediately to avoid showing incorrect href even for a moment
                 document.getElementById('return-link').href = window.resolvePath('effetune.html');
+                
+                // Set the image source immediately to avoid showing broken image
+                document.getElementById('title-icon').src = window.resolvePath('images/icon_64x64.png');
             </script>
         </div>
     </div>
