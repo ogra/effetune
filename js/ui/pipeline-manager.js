@@ -15,6 +15,12 @@ export class PipelineManager {
         this.savePresetButton = document.getElementById('savePresetButton');
         this.deletePresetButton = document.getElementById('deletePresetButton');
         
+        // Undo/Redo history
+        this.history = [];
+        this.historyIndex = -1;
+        this.maxHistorySize = 100;
+        this.isUndoRedoOperation = false;
+        
         // Initialize keyboard events
         this.initKeyboardEvents();
         
@@ -23,6 +29,11 @@ export class PipelineManager {
         
         // Initialize preset management
         this.initPresetManagement();
+        
+        // Save initial state after a short delay to ensure Volume and Level Meter are initialized
+        setTimeout(() => {
+            this.saveState();
+        }, 1000);
     }
 
     initPresetManagement() {
@@ -153,8 +164,9 @@ export class PipelineManager {
         
         // Update UI
         this.updatePipelineUI();
-        this.audioManager.rebuildPipeline();
-        this.updateURL();
+        
+        // Update worklet directly without rebuilding pipeline
+        this.updateWorkletPlugins();
         
         // Update preset list to ensure all presets are available
         this.loadPresetList();
@@ -166,6 +178,9 @@ export class PipelineManager {
         if (masterToggle) {
             masterToggle.classList.remove('off');
         }
+        
+        // Save state for undo/redo after loading preset
+        this.saveState();
         
         if (window.uiManager) {
             window.uiManager.setError(`Preset "${name}" loaded!`);
@@ -191,6 +206,24 @@ export class PipelineManager {
     initKeyboardEvents() {
         // Handle keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Handle Ctrl+Z (Undo) and Ctrl+Y (Redo)
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+                // Skip Undo/Redo if focus is on an input/textarea element, but allow for range inputs (sliders)
+                if (!e.target.matches('input, textarea') || e.target.matches('input[type="range"]')) {
+                    if (e.key === 'z') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.undo();
+                        return;
+                    } else if (e.key === 'y') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.redo();
+                        return;
+                    }
+                }
+            }
+            
             // Handle Ctrl+S and Ctrl+Shift+S first
             // Always handle Ctrl+S regardless of focus
             if (e.key && e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
@@ -227,12 +260,70 @@ export class PipelineManager {
                     this.selectedPlugins.add(plugin);
                 });
                 this.updateSelectionClasses();
+            } else if (e.key === 'x' && (e.ctrlKey || e.metaKey)) {
+                // Cut selected plugin settings to clipboard (copy + delete)
+                if (this.selectedPlugins.size > 0) {
+                    const selectedPluginsArray = Array.from(this.selectedPlugins);
+                    const states = selectedPluginsArray.map(plugin => {
+                        const params = plugin.getSerializableParameters ?
+                            plugin.getSerializableParameters() : {};
+                        // Remove id from params if it exists
+                        const { id, ...cleanParams } = params;
+                        return {
+                            ...cleanParams,
+                            nm: plugin.name,
+                            en: plugin.enabled
+                        };
+                    });
+                    navigator.clipboard.writeText(JSON.stringify(states, null, 2))
+                        .then(() => {
+                            // After copying, delete the selected plugins
+                            // Convert to array and sort in reverse order (delete from highest index)
+                            const selectedIndices = Array.from(this.selectedPlugins)
+                                .map(plugin => this.audioManager.pipeline.indexOf(plugin))
+                                .sort((a, b) => b - a);
+                            
+                            // Delete selected plugins
+                            selectedIndices.forEach(index => {
+                                if (index > -1) {
+                                    const plugin = this.audioManager.pipeline[index];
+                                    
+                                    // Clean up plugin resources before removing
+                                    if (typeof plugin.cleanup === 'function') {
+                                        plugin.cleanup();
+                                    }
+                                    
+                                    this.audioManager.pipeline.splice(index, 1);
+                                    this.selectedPlugins.delete(plugin);
+                                }
+                            });
+                            
+                            this.updatePipelineUI();
+                            
+                            // Update worklet directly without rebuilding pipeline
+                            this.updateWorkletPlugins();
+                            
+                            // Save state for undo/redo
+                            this.saveState();
+                            
+                            if (window.uiManager) {
+                                window.uiManager.setError('Plugin settings cut to clipboard!');
+                                setTimeout(() => window.uiManager.clearError(), 3000);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Failed to cut settings:', err);
+                            if (window.uiManager) {
+                                window.uiManager.setError('Failed to cut settings to clipboard', true);
+                            }
+                        });
+                }
             } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
                 // Copy selected plugin settings to clipboard
                 if (this.selectedPlugins.size > 0) {
                     const selectedPluginsArray = Array.from(this.selectedPlugins);
                     const states = selectedPluginsArray.map(plugin => {
-                        const params = plugin.getSerializableParameters ? 
+                        const params = plugin.getSerializableParameters ?
                             plugin.getSerializableParameters() : {};
                         // Remove id from params if it exists
                         const { id, ...cleanParams } = params;
@@ -319,8 +410,12 @@ export class PipelineManager {
                             });
                             
                             this.updatePipelineUI();
-                            this.audioManager.rebuildPipeline();
-                            this.updateURL();
+                            
+                            // Update worklet directly without rebuilding pipeline
+                            this.updateWorkletPlugins();
+                            
+                            // Save state for undo/redo
+                            this.saveState();
 
                             // If plugins were inserted at the end, scroll to bottom
                             if (insertIndex === this.audioManager.pipeline.length - newPlugins.length) {
@@ -373,8 +468,12 @@ export class PipelineManager {
                     });
                     
                     this.updatePipelineUI();
-                    this.audioManager.rebuildPipeline();
-                    this.updateURL();
+                    
+                    // Update worklet directly without rebuilding pipeline
+                    this.updateWorkletPlugins();
+                    
+                    // Save state for undo/redo
+                    this.saveState();
                 }
             }
         });
@@ -443,8 +542,11 @@ export class PipelineManager {
             this.selectedPlugins.add(plugin);
             this.updateSelectionClasses();
             
-            this.audioManager.rebuildPipeline();
-            this.updateURL();
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugin(plugin);
+            
+            // Save state for undo/redo
+            this.saveState();
         };
         header.appendChild(toggle);
 
@@ -466,9 +568,25 @@ export class PipelineManager {
                 const anchor = plugin.name.toLowerCase()
                     .replace(/[^\w\s-]/g, '')
                     .replace(/\s+/g, '-');
-                const path = `/plugins/${category.toLowerCase().replace(/-/g, '')}.html#${anchor}`;
+                // Use direct path without extension, let getLocalizedDocPath handle it
+                const path = `/plugins/${category.toLowerCase().replace(/-/g, '')}#${anchor}`;
+                // Get the full URL from getLocalizedDocPath (which will convert .md to .html)
                 const localizedPath = this.getLocalizedDocPath(path);
-                window.open(localizedPath, '_blank');
+                
+                
+                // For both Electron and web, open the URL in external browser
+                if (window.electronAPI) {
+                    // In Electron, use shell.openExternal to open in default browser
+                    window.electronAPI.openExternalUrl(localizedPath)
+                        .catch(err => {
+                            console.error('Error opening external URL:', err);
+                            // Fallback to window.open
+                            window.open(localizedPath, '_blank');
+                        });
+                } else {
+                    // Regular browser environment, open the URL
+                    window.open(localizedPath, '_blank');
+                }
             }
             
             if (!e.ctrlKey && !e.metaKey) {
@@ -500,8 +618,12 @@ export class PipelineManager {
                 this.audioManager.pipeline.splice(index, 1);
                 this.selectedPlugins.delete(plugin);
                 this.updatePipelineUI();
-                this.audioManager.rebuildPipeline();
-                this.updateURL();
+                
+                // Update worklet directly without rebuilding pipeline
+                this.updateWorkletPlugins();
+                
+                // Save state for undo/redo
+                this.saveState();
             }
         };
         header.appendChild(deleteBtn);
@@ -512,17 +634,46 @@ export class PipelineManager {
         const ui = document.createElement('div');
         ui.className = 'plugin-ui' + (this.expandedPlugins.has(plugin) ? ' expanded' : '');
         
-        // Restore parameter update handling to original implementation only
+        // Optimize parameter update handling to avoid unnecessary pipeline rebuilds
         if (plugin.updateParameters) {
             const originalUpdateParameters = plugin.updateParameters;
+            // Add lastSaveTime property to track when the state was last saved
+            plugin.lastSaveTime = 0;
+            plugin.paramChangeStarted = false;
+            
             plugin.updateParameters = function(...args) {
                 originalUpdateParameters.apply(this, args);
-                if (this.audioManager) {
-                    this.audioManager.rebuildPipeline();
-                    if (window.uiManager) {
-                        window.uiManager.updateURL();
+                // Only update URL without rebuilding pipeline
+                if (window.uiManager) {
+                    window.uiManager.updateURL();
+                }
+                
+                const now = Date.now();
+                
+                // If this is the first parameter change or it's been more than 500ms since the last save
+                if (!this.paramChangeStarted || (now - this.lastSaveTime > 500)) {
+                    // Save state immediately for the first parameter change
+                    if (this.audioManager && this.audioManager.pipelineManager) {
+                        this.audioManager.pipelineManager.saveState();
+                        this.lastSaveTime = now;
+                        this.paramChangeStarted = true;
                     }
                 }
+                
+                // Reset the timer for parameter changes that happen in quick succession
+                if (this.saveStateTimeout) {
+                    clearTimeout(this.saveStateTimeout);
+                }
+                
+                // Set a timeout to mark the end of a parameter change session
+                // and save the final state
+                this.saveStateTimeout = setTimeout(() => {
+                    // Save the final state at the end of parameter changes
+                    if (this.audioManager && this.audioManager.pipelineManager) {
+                        this.audioManager.pipelineManager.saveState();
+                    }
+                    this.paramChangeStarted = false;
+                }, 500);
             }.bind(plugin);
             plugin.audioManager = this.audioManager;
         }
@@ -631,7 +782,7 @@ export class PipelineManager {
                 
                 this.pluginListManager.updateInsertionIndicator(touch.clientY);
             }
-        });
+        }, { passive: false }); // Add passive: false to allow preventDefault
 
         handle.addEventListener('touchend', (e) => {
             if (isDragging) {
@@ -640,9 +791,9 @@ export class PipelineManager {
                 const pipeline = document.getElementById('pipeline');
                 const pipelineRect = pipeline.getBoundingClientRect();
                 
-                if (touch.clientX >= pipelineRect.left && 
-                    touch.clientX <= pipelineRect.right && 
-                    touch.clientY >= pipelineRect.top && 
+                if (touch.clientX >= pipelineRect.left &&
+                    touch.clientX <= pipelineRect.right &&
+                    touch.clientY >= pipelineRect.top &&
                     touch.clientY <= pipelineRect.bottom) {
                     
                     const dropEvent = new Event('drop', { bubbles: true });
@@ -666,7 +817,7 @@ export class PipelineManager {
             }
             
             isDragging = false;
-        });
+        }, { passive: false }); // Add passive: false to allow preventDefault
     }
 
     createMasterToggle() {
@@ -676,7 +827,23 @@ export class PipelineManager {
         toggle.onclick = () => {
             this.enabled = !this.enabled;
             toggle.classList.toggle('off', !this.enabled);
-            this.audioManager.setMasterBypass(!this.enabled);
+            
+            // Update master bypass state directly without rebuilding pipeline
+            this.audioManager.masterBypass = !this.enabled;
+            
+            // Use helper method but override masterBypass value
+            if (window.workletNode) {
+                window.workletNode.port.postMessage({
+                    type: 'updatePlugins',
+                    plugins: this.audioManager.pipeline.map(plugin => ({
+                        id: plugin.id,
+                        type: plugin.constructor.name,
+                        enabled: plugin.enabled,
+                        parameters: plugin.getParameters()
+                    })),
+                    masterBypass: !this.enabled
+                });
+            }
             this.updateURL();
         };
     }
@@ -716,20 +883,39 @@ export class PipelineManager {
         // Create drop area
         const dropArea = document.createElement('div');
         dropArea.className = 'file-drop-area';
-        dropArea.innerHTML = `
-            <div class="drop-message">
-                <span>Drop audio file here to process with current effects</span>
-                <span class="or-text">or</span>
-                <span class="select-files">specify files to process</span>
-            </div>
-            <div class="progress-container" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress"></div>
+        
+        // Check if running in Electron environment
+        if (window.electronIntegration && window.electronIntegration.isElectron) {
+            // For Electron, only show the link
+            dropArea.innerHTML = `
+                <div class="drop-message">
+                    <span class="select-files">Specify the audio files to process using the current effects.</span>
                 </div>
-            <div class="progress-text">Processing...</div>
-            <button class="cancel-button">Cancel</button>
-        </div>
-        `;
+                <div class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                <div class="progress-text">Processing...</div>
+                <button class="cancel-button">Cancel</button>
+            </div>
+            `;
+        } else {
+            // For web app, show both drop area and link
+            dropArea.innerHTML = `
+                <div class="drop-message">
+                    <span>Drop audio files here to process with current effects</span>
+                    <span class="or-text">or</span>
+                    <span class="select-files">specify audio files to process</span>
+                </div>
+                <div class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                <div class="progress-text">Processing...</div>
+                <button class="cancel-button">Cancel</button>
+            </div>
+            `;
+        }
 
         // Add click handler for file selection
         const selectFiles = dropArea.querySelector('.select-files');
@@ -811,14 +997,16 @@ export class PipelineManager {
             }
         });
 
-        // Create download container
+        // Create download container inside the drop area
         const downloadContainer = document.createElement('div');
         downloadContainer.className = 'download-container';
         downloadContainer.style.display = 'none';
 
-        // Add to pipeline container
+        // Add download container to drop area
+        dropArea.appendChild(downloadContainer);
+
+        // Add drop area to pipeline container
         pipelineElement.appendChild(dropArea);
-        pipelineElement.appendChild(downloadContainer);
 
         // Store references
         this.dropArea = dropArea;
@@ -859,123 +1047,67 @@ export class PipelineManager {
             }
         });
 
-        // Handle file drag and drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, (e) => {
-                // Only prevent default if it's a file being dragged
-                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+        // Handle file drag and drop for audio files only
+        dropArea.addEventListener('dragenter', (e) => {
+            // Only handle audio files
+            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+                const items = Array.from(e.dataTransfer.items);
+                const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
+                
+                if (hasAudioFiles) {
                     e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, false);
-            
-            document.body.addEventListener(eventName, (e) => {
-                // Only prevent default if it's a file being dragged
-                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, false);
-        });
-
-        // Handle file drag enter/leave visual feedback
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, (e) => {
-                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                     dropArea.classList.add('drag-active');
                 }
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, (e) => {
-                if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-                    dropArea.classList.remove('drag-active');
+            }
+        }, { passive: false });
+        
+        dropArea.addEventListener('dragover', (e) => {
+            // Only handle audio files
+            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+                const items = Array.from(e.dataTransfer.items);
+                const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
+                
+                if (hasAudioFiles) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    dropArea.classList.add('drag-active');
                 }
-            }, false);
-        });
-
-            // Handle dropped files
-            dropArea.addEventListener('drop', async (e) => {
-                // Check if this is a file drop
-                if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) {
-                    return;
-                }
-
-            // Ensure insertion indicator is hidden for file drops
-            this.pluginListManager.getInsertionIndicator().style.display = 'none';
-
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('audio/'));
-            if (files.length === 0) {
-                window.uiManager.setError('Please drop audio files', true);
+            }
+        }, { passive: false });
+        
+        dropArea.addEventListener('dragleave', (e) => {
+            dropArea.classList.remove('drag-active');
+        }, false);
+        
+        dropArea.addEventListener('drop', async (e) => {
+            // Check if this is a file drop
+            if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) {
                 return;
             }
-
-            // Show progress UI
-            this.showProgress();
-
-            try {
-                // Process multiple files
-                const processedFiles = [];
-                const totalFiles = files.length;
-
-                // Process each file
-                for (let i = 0; i < totalFiles; i++) {
-                    const file = files[i];
-                    try {
-                        // Create progress callback for this file
-                        const progressCallback = (percent) => {
-                            const totalPercent = (i + percent / 100) / totalFiles * 100;
-                            this.progressBar.style.width = `${Math.round(totalPercent)}%`;
-                            this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
-                        };
-
-                        // Process the file with progress updates
-                        const blob = await this.audioManager.processAudioFile(file, progressCallback);
-                        if (blob) {
-                            const processedName = this.getProcessedFileName(file.name);
-                            processedFiles.push({
-                                blob,
-                                name: processedName
-                            });
-                        } else {
-                            // Processing was cancelled
-                            this.setProgressText('Processing canceled');
-                            return;
-                        }
-                    } catch (error) {
-                        console.error('Error processing file:', error);
-                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
-                    }
-                }
-
-                // Set progress to 100%
-                this.progressBar.style.width = '100%';
-                this.setProgressText('Processing complete');
-
-                // Create zip if multiple files were processed
-                if (processedFiles.length > 0) {
-                    if (processedFiles.length === 1) {
-                        this.showDownloadLink(processedFiles[0].blob, files[0].name);
-                    } else {
-                        this.setProgressText('Creating zip file...');
-                        const zip = new JSZip();
-                        processedFiles.forEach(({blob, name}) => {
-                            zip.file(name, blob);
-                        });
-                        const zipBlob = await zip.generateAsync({type: 'blob'});
-                        this.showDownloadLink(zipBlob, 'processed_audio.zip', true);
-                    }
-                }
-            } catch (error) {
-                console.error('Error processing files:', error);
-                window.uiManager.setError('Failed to process audio files: ' + error.message, true);
-            } finally {
-                this.hideProgress();
+            
+            // Get audio files only
+            const audioFiles = Array.from(e.dataTransfer.files).filter(file =>
+                file.type.startsWith('audio/')
+            );
+            
+            // Only handle audio files
+            if (audioFiles.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Ensure insertion indicator is hidden for file drops
+                this.pluginListManager.getInsertionIndicator().style.display = 'none';
+                
+                // Process audio files
+                this.processDroppedAudioFiles(audioFiles);
+                
+                // Remove drag active class
+                dropArea.classList.remove('drag-active');
+            } else {
+                // Don't show error for non-audio files to allow preset files to be handled by global handler
+                dropArea.classList.remove('drag-active');
             }
-            e.preventDefault();
-            e.stopPropagation();
-        }, false);
+        }, { passive: false });
 
         // Handle dropped plugins
         pipelineElement.addEventListener('drop', (e) => {
@@ -1012,8 +1144,11 @@ export class PipelineManager {
                 this.selectedPlugins.add(plugin);
                 this.updateSelectionClasses();
                 
-                this.audioManager.rebuildPipeline();
-                this.updateURL();
+                // Update worklet directly without rebuilding pipeline
+                this.updateWorkletPlugins();
+                
+                // Save state for undo/redo
+                this.saveState();
                 
                 requestAnimationFrame(() => {
                     this.updatePipelineUI();
@@ -1041,8 +1176,11 @@ export class PipelineManager {
                 this.selectedPlugins.add(plugin);
                 this.updateSelectionClasses();
                 
-                this.audioManager.rebuildPipeline();
-                this.updateURL();
+                // Update worklet directly without rebuilding pipeline
+                this.updateWorkletPlugins();
+                
+                // Save state for undo/redo
+                this.saveState();
                 
                 requestAnimationFrame(() => {
                     this.updatePipelineUI();
@@ -1055,6 +1193,12 @@ export class PipelineManager {
         this.progressContainer.style.display = 'block';
         this.downloadContainer.style.display = 'none';
         this.progressBar.style.width = '0%';
+        
+        // Make sure drop message is hidden during processing
+        const dropMessage = this.dropArea.querySelector('.drop-message');
+        if (dropMessage) {
+            dropMessage.style.display = 'none';
+        }
         
         // Add cancel button handler
         const cancelButton = this.progressContainer.querySelector('.cancel-button');
@@ -1069,6 +1213,12 @@ export class PipelineManager {
 
     hideProgress() {
         this.progressContainer.style.display = 'none';
+        
+        // Show drop message again when progress is hidden
+        const dropMessage = this.dropArea.querySelector('.drop-message');
+        if (dropMessage) {
+            dropMessage.style.display = 'block';
+        }
     }
 
     setProgressText(text) {
@@ -1088,29 +1238,301 @@ export class PipelineManager {
 
         // Create download link
         const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = filename;
-        downloadLink.className = 'download-link';
-        downloadLink.innerHTML = `
-            <span class="download-icon">⭳</span>
-            Download ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
-        `;
+        
+        // Check if running in Electron environment
+        if (window.electronIntegration && window.electronIntegration.isElectron) {
+            // For Electron, use save dialog instead of download
+            downloadLink.href = '#';
+            downloadLink.className = 'download-link';
+            downloadLink.innerHTML = `
+                <span class="download-icon">⭳</span>
+                Save ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
+            `;
+            
+            // Add click handler to show save dialog
+            downloadLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // Show save dialog
+                const result = await window.electronAPI.showSaveDialog({
+                    title: 'Save Processed Audio',
+                    defaultPath: filename,
+                    filters: [
+                        { name: isZip ? 'ZIP Archive' : 'WAV Audio', extensions: [isZip ? 'zip' : 'wav'] },
+                        { name: 'All Files', extensions: ['*'] }
+                    ]
+                });
+                
+                if (!result.canceled && result.filePath) {
+                    try {
+                        // Convert blob to base64 string for IPC transfer
+                        const reader = new FileReader();
+                        reader.onload = async () => {
+                            // Get base64 data (remove data URL prefix)
+                            const base64data = reader.result.split(',')[1];
+                            
+                            // Save file using Electron API
+                            const saveResult = await window.electronAPI.saveFile(
+                                result.filePath,
+                                base64data
+                            );
+                            
+                            if (saveResult.success) {
+                                window.uiManager.setError(`File saved successfully to ${result.filePath}`);
+                                setTimeout(() => window.uiManager.clearError(), 3000);
+                            } else {
+                                window.uiManager.setError(`Failed to save file: ${saveResult.error}`, true);
+                            }
+                        };
+                        
+                        reader.onerror = (error) => {
+                            console.error('Error reading file:', error);
+                            window.uiManager.setError(`Error reading file: ${error.message}`, true);
+                        };
+                        
+                        // Start reading the blob as data URL
+                        reader.readAsDataURL(blob);
+                    } catch (error) {
+                        console.error('Error saving file:', error);
+                        window.uiManager.setError(`Error saving file: ${error.message}`, true);
+                    }
+                }
+            });
+        } else {
+            // For web browser, use standard download
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = filename;
+            downloadLink.className = 'download-link';
+            downloadLink.innerHTML = `
+                <span class="download-icon">⭳</span>
+                Download ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
+            `;
+            
+            // Clean up object URL when downloaded
+            downloadLink.addEventListener('click', () => {
+                setTimeout(() => {
+                    URL.revokeObjectURL(downloadLink.href);
+                }, 100);
+            });
+        }
+
+        // Hide drop message when showing download link
+        const dropMessage = this.dropArea.querySelector('.drop-message');
+        if (dropMessage) {
+            dropMessage.style.display = 'none';
+        }
 
         // Add to container
         this.downloadContainer.appendChild(downloadLink);
         this.downloadContainer.style.display = 'block';
+    }
 
-        // Clean up object URL when downloaded
-        downloadLink.addEventListener('click', () => {
-            setTimeout(() => {
-                URL.revokeObjectURL(downloadLink.href);
-            }, 100);
-        });
+    // Helper method to update worklet without rebuilding pipeline
+    updateWorkletPlugins() {
+        if (window.workletNode) {
+            window.workletNode.port.postMessage({
+                type: 'updatePlugins',
+                plugins: this.audioManager.pipeline.map(plugin => ({
+                    id: plugin.id,
+                    type: plugin.constructor.name,
+                    enabled: plugin.enabled,
+                    parameters: plugin.getParameters()
+                })),
+                masterBypass: this.audioManager.masterBypass
+            });
+        }
+        this.updateURL();
+    }
+
+    // Helper method to update a single plugin in worklet
+    updateWorkletPlugin(plugin) {
+        if (window.workletNode) {
+            window.workletNode.port.postMessage({
+                type: 'updatePlugin',
+                plugin: {
+                    id: plugin.id,
+                    type: plugin.constructor.name,
+                    enabled: plugin.enabled,
+                    parameters: plugin.getParameters()
+                }
+            });
+        }
+        this.updateURL();
+    }
+
+    /**
+     * Process dropped audio files
+     * @param {File[]} files - Array of audio files to process
+     */
+    async processDroppedAudioFiles(files) {
+        // Show progress UI
+        this.showProgress();
+
+        try {
+            // Process multiple files
+            const processedFiles = [];
+            const totalFiles = files.length;
+
+            // Process each file
+            for (let i = 0; i < totalFiles; i++) {
+                const file = files[i];
+                try {
+                    // Create progress callback for this file
+                    const progressCallback = (percent) => {
+                        const totalPercent = (i + percent / 100) / totalFiles * 100;
+                        this.progressBar.style.width = `${Math.round(totalPercent)}%`;
+                        this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                    };
+
+                    // Process the file with progress updates
+                    const blob = await this.audioManager.processAudioFile(file, progressCallback);
+                    if (blob) {
+                        const processedName = this.getProcessedFileName(file.name);
+                        processedFiles.push({
+                            blob,
+                            name: processedName
+                        });
+                    } else {
+                        // Processing was cancelled
+                        this.setProgressText('Processing canceled');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
+                }
+            }
+
+            // Set progress to 100%
+            this.progressBar.style.width = '100%';
+            this.setProgressText('Processing complete');
+
+            // Create zip if multiple files were processed
+            if (processedFiles.length > 0) {
+                if (processedFiles.length === 1) {
+                    this.showDownloadLink(processedFiles[0].blob, files[0].name);
+                } else {
+                    this.setProgressText('Creating zip file...');
+                    const zip = new JSZip();
+                    processedFiles.forEach(({blob, name}) => {
+                        zip.file(name, blob);
+                    });
+                    const zipBlob = await zip.generateAsync({type: 'blob'});
+                    this.showDownloadLink(zipBlob, 'processed_audio.zip', true);
+                }
+            }
+        } catch (error) {
+            console.error('Error processing files:', error);
+            window.uiManager.setError('Failed to process audio files: ' + error.message, true);
+        } finally {
+            this.hideProgress();
+        }
     }
 
     updateURL() {
         if (window.uiManager) {
             window.uiManager.updateURL();
+        }
+    }
+    
+    // Save current pipeline state to history
+    saveState() {
+        // Skip if this is an undo/redo operation
+        if (this.isUndoRedoOperation) return;
+        
+        // Create a deep copy of the current pipeline state
+        const state = this.audioManager.pipeline.map(plugin => {
+            const params = plugin.getSerializableParameters ?
+                plugin.getSerializableParameters() : {};
+            const { id, ...cleanParams } = params;
+            return {
+                ...cleanParams,
+                nm: plugin.name,
+                en: plugin.enabled
+            };
+        });
+        
+        // If we're not at the end of the history, truncate it
+        if (this.historyIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.historyIndex + 1);
+        }
+        
+        // Add new state to history
+        this.history.push(state);
+        this.historyIndex = this.history.length - 1;
+        
+        // Limit history size
+        if (this.history.length > this.maxHistorySize) {
+            this.history.shift();
+            this.historyIndex--;
+        }
+    }
+    
+    // Undo the last operation
+    undo() {
+        if (this.historyIndex <= 0) return; // Nothing to undo
+        
+        this.historyIndex--;
+        this.loadStateFromHistory();
+    }
+    
+    // Redo the last undone operation
+    redo() {
+        if (this.historyIndex >= this.history.length - 1) return; // Nothing to redo
+        
+        this.historyIndex++;
+        this.loadStateFromHistory();
+    }
+    
+    // Load a state from history
+    loadStateFromHistory() {
+        this.isUndoRedoOperation = true;
+        
+        try {
+            const state = this.history[this.historyIndex];
+            
+            // Clean up existing plugins before removing them
+            this.audioManager.pipeline.forEach(plugin => {
+                if (typeof plugin.cleanup === 'function') {
+                    plugin.cleanup();
+                }
+            });
+            
+            // Clear current pipeline and expanded plugins
+            this.audioManager.pipeline.length = 0;
+            this.expandedPlugins.clear();
+            
+            // Load plugins from state
+            state.forEach(pluginState => {
+                const plugin = this.pluginManager.createPlugin(pluginState.nm);
+                if (plugin) {
+                    plugin.enabled = pluginState.en;
+                    const { nm, en, ...params } = pluginState;
+                    if (plugin.setParameters) {
+                        plugin.setParameters(params);
+                    }
+                    this.audioManager.pipeline.push(plugin);
+                    // Expand all plugins (same as loadPreset)
+                    this.expandedPlugins.add(plugin);
+                }
+            });
+            
+            // Update UI
+            this.updatePipelineUI();
+            
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugins();
+            
+            // Ensure master bypass is OFF after loading state (same as loadPreset)
+            this.enabled = true;
+            this.audioManager.setMasterBypass(false);
+            const masterToggle = document.querySelector('.toggle-button.master-toggle');
+            if (masterToggle) {
+                masterToggle.classList.remove('off');
+            }
+            
+        } finally {
+            this.isUndoRedoOperation = false;
         }
     }
 }

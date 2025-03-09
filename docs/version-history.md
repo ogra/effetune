@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.25 (Mar 9, 2025)
+- Added Windows desktop app version
+  - Mac and Linux versions can also be built from code
+- Various minor improvements
+
 ### Version 1.24 (Mar 4, 2025)
 - Added sleep mode when there is no sound for more than one minute
 - Various minor improvements

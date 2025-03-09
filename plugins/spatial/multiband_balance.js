@@ -497,7 +497,6 @@ class MultibandBalancePlugin extends PluginBase {
             return row;
         };
 
-        // バンドを逆順で表示(Band 5から1)
         bandBalances.appendChild(createBalanceSlider('Band 5 Bal. (%):', 4));
         bandBalances.appendChild(createBalanceSlider('Band 4 Bal. (%):', 3));
         bandBalances.appendChild(createBalanceSlider('Band 3 Bal. (%):', 2));

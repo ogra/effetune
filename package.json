@@ -1,0 +1,86 @@
+{
+  "name": "effetune",
+  "version": "1.25.0",
+  "description": "Desktop Audio Effect Processor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "clean": "rimraf dist",
+    "build": "npm run clean && electron-builder --win --publish never",
+    "build:portable": "npm run clean && electron-builder --win portable --publish never",
+    "build:installer": "npm run clean && electron-builder --win nsis --publish never",
+    "pack": "npm run clean && electron-builder --dir"
+  },
+  "author": "Frieve",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^24.13.3",
+    "rimraf": "^6.0.1"
+  },
+  "build": {
+    "appId": "com.frieve.effetune",
+    "productName": "EffeTune",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "!node_modules/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "effetune_preset",
+        "name": "EffeTune Preset",
+        "description": "EffeTune Preset File",
+        "icon": "favicon.ico",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EffeTune",
+      "installerIcon": "favicon.ico",
+      "uninstallerIcon": "favicon.ico",
+      "installerHeaderIcon": "favicon.ico",
+      "artifactName": "${productName}-${version}-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "favicon.png",
+      "category": "public.app-category.music",
+      "darkModeSupport": true
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "favicon.png"
+    },
+    "asar": true,
+    "asarUnpack": [],
+    "npmRebuild": false,
+    "forceCodeSigning": false,
+    "electronDownload": {
+      "strictSSL": false
+    }
+  }
+}

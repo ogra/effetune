@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1440">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com blob: data:; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' blob:;">
     <title>EffeTune</title>
     <link rel="stylesheet" href="effetune.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -15,7 +16,7 @@
         <button class="header-button reset-button" id="resetButton">Reset Audio</button>
         <div class="subtitle-container">
             <span class="subtitle">Color the music, unleash your senses. Craft your own signature sound.</span>
-            <a href="./" class="whats-this" target="_blank">What's this app?</a>
+            <a href="javascript:void(0);" class="whats-this" id="whatsThisLink">What's this app?</a>
         </div>
     </div>
     <div class="header">
@@ -37,7 +38,9 @@
                 <h2>Effect Pipeline</h2>
                 <div class="sample-rate" id="sampleRate"></div>
                 <div class="pipeline-header-right">
-                    <input type="text" class="preset-select" id="presetSelect" list="presetList" placeholder="">
+                    <div class="select-container">
+                        <input type="text" class="preset-select" id="presetSelect" list="presetList" placeholder="">
+                    </div>
                     <datalist id="presetList"></datalist>
                     <button class="header-button save-button" id="savePresetButton">💾</button>
                     <button class="header-button delete-preset-button" id="deletePresetButton">✖</button>
@@ -54,7 +57,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="module" src="js/app.js"></script>
     <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-        EffeTune version 1.24 (C) Frieve 2025
+        EffeTune version <span id="app-version"></span> (C) Frieve 2025
     </div>
 </body>
 </html>

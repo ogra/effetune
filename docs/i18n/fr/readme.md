@@ -1,8 +1,8 @@
-# Frieve EffeTune <img src="../../../images/icon_64x64.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
+# Frieve EffeTune <img src="../../../images/icon_64x64.png" alt="EffeTune Icon" width="30" height="30" align="bottom">
 
-[Open App](https://frieve-a.github.io/effetune/effetune.html)
+[Open Web App](https://frieve-a.github.io/effetune/effetune.html)  [Download Desktop App](https://github.com/Frieve-A/effetune/releases/)
 
-Un processeur d'effets audio en temps réel basé sur le web, conçu pour les passionnés de musique afin d'améliorer leur expérience d'écoute. EffeTune vous permet de traiter n'importe quelle source audio via divers effets de haute qualité, vous offrant la possibilité de personnaliser et de perfectionner votre expérience d'écoute en temps réel.
+Un processeur d'effets audio en temps réel, conçu pour les passionnés de musique afin d'améliorer leur expérience d'écoute. EffeTune vous permet de traiter n'importe quelle source audio via divers effets de haute qualité, vous offrant la possibilité de personnaliser et de perfectionner votre expérience d'écoute en temps réel.
 
 [![Screenshot](../../../images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
 
@@ -34,8 +34,10 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
    - Configurer votre service de streaming pour envoyer l'audio vers le périphérique audio virtuel
 
 2. Configuration :
-   - Ouvrez EffeTune dans un navigateur
-   - Sélectionnez le périphérique audio virtuel comme source d'entrée dans le navigateur
+   - Ouvrez l'application web EffeTune dans votre navigateur, ou lancez l'application de bureau EffeTune
+   - Sélectionnez le périphérique audio virtuel comme source d'entrée
+     - Dans Chrome, la première fois que vous l'ouvrez, une boîte de dialogue apparaît vous demandant de sélectionner et d'autoriser l'entrée audio
+     - Dans l'application de bureau, configurez-la en cliquant sur le bouton Config Audio en haut à droite de l'écran
    - Lancez la lecture de la musique depuis votre service de streaming
    - Vérifiez que l'audio circule via EffeTune
 
@@ -43,9 +45,10 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
 
 1. Configuration :
    - Connectez votre interface audio à votre ordinateur
-   - Ouvrez EffeTune dans un navigateur
-   - Sélectionnez votre interface audio comme source d'entrée dans le navigateur
-   - Configurez la sortie audio de votre navigateur vers votre interface audio
+   - Ouvrez l'application web EffeTune dans votre navigateur, ou lancez l'application de bureau EffeTune
+   - Sélectionnez votre interface audio comme source d'entrée et de sortie
+     - Dans Chrome, la première fois que vous l'ouvrez, une boîte de dialogue apparaît vous demandant de sélectionner et d'autoriser l'entrée audio
+     - Dans l'application de bureau, configurez-la en cliquant sur le bouton Config Audio en haut à droite de l'écran
    - Votre interface audio fonctionne désormais comme un processeur multi-effets :
      * Entrée : Votre lecteur CD, lecteur réseau ou autre source audio
      * Traitement : Effets en temps réel via EffeTune
@@ -96,17 +99,21 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
    - Cliquez sur un espace vide dans la zone Pipeline pour désélectionner tous les effets
 
 2. Raccourcis clavier :
-   - Ctrl + A : Sélectionner tous les effets dans l'Effect Pipeline
-   - Ctrl + C : Copier les effets sélectionnés
-   - Ctrl + V : Coller les effets depuis le presse-papiers
-   - Ctrl + F : Rechercher des effets
-   - Ctrl + S : Enregistrer la pipeline actuelle
-   - Ctrl + Shift + S : Enregistrer la pipeline actuelle sous
-   - ESC : Désélectionner tous les effets
+   - Ctrl + Z: Annuler
+   - Ctrl + Y: Rétablir
+   - Ctrl + S: Enregistrer le pipeline actuel
+   - Ctrl + Shift + S: Enregistrer le pipeline actuel sous
+   - Ctrl + X: Couper les effets sélectionnés
+   - Ctrl + C: Copier les effets sélectionnés
+   - Ctrl + V: Coller les effets depuis le presse-papiers
+   - Ctrl + F: Rechercher des effets
+   - Ctrl + A: Sélectionner tous les effets du pipeline
+   - Delete: Supprimer les effets sélectionnés
+   - ESC: Désélectionner tous les effets
 
 ### Traitement des fichiers audio
 
-1. Zone de dépôt de fichiers :
+1. Zone de dépôt ou de spécification de fichiers :
    - Une zone de dépôt dédiée est toujours visible sous l'Effect Pipeline
    - Prend en charge un ou plusieurs fichiers audio
    - Les fichiers sont traités en utilisant les paramètres actuels de la Pipeline
@@ -126,12 +133,14 @@ Vous pouvez partager la configuration de votre chaîne d'effets avec d'autres ut
 1. Après avoir configuré la chaîne d'effets souhaitée, cliquez sur le bouton "Share" dans le coin supérieur droit de la zone Effect Pipeline
 2. L'URL sera automatiquement copiée dans votre presse-papiers
 3. Partagez l'URL copiée avec d'autres - ils pourront recréer exactement votre chaîne d'effets en l'ouvrant
-4. Tous les paramètres des effets sont stockés dans l'URL, ce qui les rend faciles à sauvegarder et à partager
+4. Dans l'application web, tous les paramètres des effets sont stockés dans l'URL, ce qui les rend faciles à sauvegarder et à partager
+5. Dans la version application de bureau, exportez les paramètres vers un fichier effetune_preset depuis le menu Fichier
+6. Partagez le fichier effetune_preset exporté. Le fichier effetune_preset peut également être chargé en le faisant glisser dans la fenêtre de l'application web
 
 ### Réinitialisation audio
 
 Si vous rencontrez des problèmes audio (coupures, interférences) :
-1. Cliquez sur le bouton "Reset Audio" dans le coin supérieur gauche
+1. Dans l'application web, cliquez sur le bouton "Reset Audio" dans le coin supérieur gauche, ou dans l'application de bureau, sélectionnez Reload dans le menu View
 2. La pipeline audio sera reconstruite automatiquement
 3. La configuration de votre chaîne d'effets sera préservée
 
@@ -169,7 +178,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 
 ### Problèmes audio
 1. Coupures ou interférences
-   - Cliquez sur "Reset Audio" pour reconstruire la pipeline audio
+   - Dans l'application web, cliquez sur le bouton "Reset Audio", ou dans l'application de bureau, sélectionnez Reload dans le menu View pour reconstruire la pipeline audio
    - Essayez de réduire le nombre d'effets actifs
    - Fermez les autres onglets du navigateur utilisant l'audio
 
@@ -177,34 +186,33 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
    - Désactivez les effets que vous n'utilisez pas activement
    - Envisagez d'utiliser moins d'effets dans votre chaîne
 
+3. Écho se produit
+   - Il est probable que vos entrées et sorties audio ne soient pas configurées correctement
+   - Si vous souhaitez traiter la sortie audio de votre navigateur, envisagez d'installer un navigateur séparé uniquement pour EffeTune, ou d'utiliser l'application de bureau au lieu de l'application web
+
 ### Problèmes de configuration courants
 1. Pas d'entrée audio
-   - Vérifiez la sélection du périphérique d'entrée dans le navigateur
-   - Vérifiez les autorisations du microphone dans le navigateur
-   - Assurez-vous que l'audio est lu depuis votre source
+   - Vérifiez qu'une source audio est en cours de lecture et qu'elle est dirigée vers un périphérique audio virtuel
+   - Pour la version application web, assurez-vous que les autorisations d'entrée audio sont accordées dans votre navigateur et que le périphérique audio virtuel est sélectionné comme périphérique d'entrée
+   - Pour la version application de bureau, allez dans Config Audio dans le coin supérieur droit de l'écran et assurez-vous que le périphérique audio virtuel est sélectionné comme périphérique d'entrée
 
 2. Effet ne fonctionne pas
    - Vérifiez que l'effet est activé (bouton ON/OFF)
    - Vérifiez les paramètres
-   - Essayez de supprimer et de réajouter l'effet
 
-3. Problèmes de partage
-   - Utilisez le bouton "Share" pour générer une URL
-   - Copiez l'intégralité de l'URL lors du partage
-   - Testez le lien partagé dans une nouvelle fenêtre de navigateur
+3. Pas de sortie audio
+   - Pour la version application web, assurez-vous que la sortie audio du système d'exploitation est définie comme périphérique de sortie
+   - Pour la version application de bureau, allez dans "Config Audio" dans le coin supérieur droit de l'écran et assurez-vous que le périphérique de sortie correct est sélectionné
 
 ## FAQ
 
 **Q. Cette application prend-elle en charge le son surround ?**  
 **R.** Actuellement, en raison des limitations du navigateur, nous ne pouvons pas gérer plus de 2 canaux dans le navigateur, et il n'existe aucune preuve concrète de la prise en charge du son surround. Bien que l'implémentation des effets supporte le son surround, il faudra attendre une prise en charge future par les navigateurs.
 
-**Q. Quelle est la longueur recommandée pour la chaîne d'effets ?**  
+**Q. Quelle est la longueur recommandée pour la chaîne d'effets ?**
 **R.** Bien qu'il n'y ait pas de limite stricte, nous recommandons de limiter votre chaîne d'effets à 8-10 effets pour des performances optimales. Des chaînes plus complexes peuvent impacter les performances du système.
 
-**Q. Puis-je sauvegarder mes combinaisons d'effets préférées ?**  
-**R.** Oui ! Utilisez le bouton "Share" pour générer une URL contenant la configuration complète de votre chaîne d'effets. Mettez cette URL en favori pour sauvegarder vos réglages.
-
-**Q. Comment obtenir la meilleure qualité sonore ?**  
+**Q. Comment obtenir la meilleure qualité sonore ?**
 **R.** Utilisez des fréquences d'échantillonnage de 96 kHz ou plus lorsque c'est possible, commencez par des réglages d'effets subtils et construisez votre chaîne progressivement. Surveillez les niveaux pour éviter la distorsion.
 
 **Q. Cela fonctionnera-t-il avec n'importe quelle source audio ?**  
@@ -271,9 +279,10 @@ Frieve EffeTune a été testé et vérifié pour fonctionner sur Google Chrome. 
 
 Pour des performances optimales avec des effets non linéaires, il est recommandé d'utiliser EffeTune à une fréquence d'échantillonnage de 96 kHz ou plus. Cette fréquence d'échantillonnage élevée permet d'obtenir des caractéristiques idéales lors du traitement de l'audio via des effets non linéaires tels que la saturation et la compression.
 
-## Développement de plugins
+## Guide de développement
 
 Vous souhaitez créer vos propres plugins audio ? Consultez notre [Guide de développement de plugins](../../plugin-development.md).
+Vous souhaitez créer une application de bureau ? Consultez notre [Guide de construction](../../build.md).
 
 ## Liens
 
