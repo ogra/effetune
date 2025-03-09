@@ -41,7 +41,7 @@ export class PluginListManager {
         this.dragMessage = document.createElement('div');
         this.dragMessage.className = 'drag-message';
         this.dragMessage.style.position = 'absolute';
-        this.dragMessage.style.top = '50%';
+        this.dragMessage.style.top = '640px';
         this.dragMessage.style.left = '50%';
         this.dragMessage.style.transform = 'translate(-50%, -50%)';
         this.dragMessage.style.textAlign = 'center';

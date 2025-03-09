@@ -4,14 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1440">
     <title>404 - Page Not Found | EffeTune</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="effetune.css">
+    <!-- Dynamic path resolution script -->
+    <script>
+        // Calculate path to root based on current URL
+        (function() {
+            // Get the current path (excluding domain and protocol)
+            var path = window.location.pathname;
+            var hostname = window.location.hostname;
+            
+            // For GitHub Pages, we need special handling
+            var isGitHubPages = hostname.indexOf('github.io') > -1;
+            var repoPath = '';
+            
+            // Determine the repository path for GitHub Pages
+            if (isGitHubPages) {
+                var pathParts = path.split('/');
+                if (pathParts.length > 1 && pathParts[1] !== '') {
+                    // For user/organization pages, the repo name is in the first segment
+                    repoPath = '/' + pathParts[1];
+                }
+            }
+            
+            // Calculate the absolute path to the repository root
+            var absoluteRepoRoot = '';
+            if (isGitHubPages) {
+                absoluteRepoRoot = '/' + path.split('/')[1];
+            }
+            
+            // Calculate relative path to root based on current URL depth
+            var pathToRoot = '';
+            var segments = path.split('/').filter(function(p) { return p !== ''; });
+            
+            // For GitHub Pages, we need to handle the repository name specially
+            if (isGitHubPages) {
+                // Skip the repository name in the path calculation
+                var effectiveDepth = segments.length;
+                if (effectiveDepth > 1) { // If we're deeper than the repo root
+                    for (var i = 0; i < effectiveDepth - 1; i++) {
+                        pathToRoot += '../';
+                    }
+                } else {
+                    pathToRoot = './';
+                }
+            } else {
+                // Standard path calculation for non-GitHub Pages
+                var depth = segments.length;
+                if (depth > 0) {
+                    for (var i = 0; i < depth; i++) {
+                        pathToRoot += '../';
+                    }
+                } else {
+                    pathToRoot = './';
+                }
+            }
+            
+            // Debug information (can be removed in production)
+            console.log('Path: ' + path);
+            console.log('Hostname: ' + hostname);
+            console.log('Is GitHub Pages: ' + isGitHubPages);
+            console.log('Repo Path: ' + repoPath);
+            console.log('Path to Root: ' + pathToRoot);
+            
+            // Store the paths for use by other elements
+            window.pathToRoot = pathToRoot;
+            window.absoluteRepoRoot = absoluteRepoRoot;
+            
+            // Function to resolve a path correctly for the current environment
+            function resolvePath(relativePath) {
+                // For GitHub Pages with repository name
+                if (isGitHubPages && absoluteRepoRoot) {
+                    // Ensure we're using the absolute path from the repository root
+                    return absoluteRepoRoot + '/' + relativePath;
+                } else {
+                    // For other environments, use the calculated relative path
+                    return pathToRoot + relativePath;
+                }
+            }
+            
+            // Store the resolve function for use by other scripts
+            window.resolvePath = resolvePath;
+            
+            // Create and inject CSS link with correct path
+            var cssLink = document.createElement('link');
+            cssLink.rel = 'stylesheet';
+            cssLink.href = resolvePath('effetune.css');
+            document.head.appendChild(cssLink);
+            
+            // Create and inject favicon with correct path
+            var favicon = document.createElement('link');
+            favicon.rel = 'icon';
+            favicon.href = resolvePath('favicon.ico');
+            favicon.type = 'image/x-icon';
+            document.head.appendChild(favicon);
+            
+            // After DOM is loaded, update all relative URLs
+            document.addEventListener('DOMContentLoaded', function() {
+                // Update image sources
+                var images = document.querySelectorAll('img');
+                images.forEach(function(img) {
+                    if (img.src.indexOf('http') !== 0) { // Only fix relative URLs
+                        var srcPath = img.getAttribute('src');
+                        if (srcPath && srcPath.indexOf('/') !== 0) { // Not already absolute
+                            img.src = resolvePath(srcPath);
+                        }
+                    }
+                });
+                
+                // Update links
+                var links = document.querySelectorAll('a');
+                links.forEach(function(link) {
+                    if (link.href.indexOf('http') !== 0) { // Only fix relative URLs
+                        var hrefPath = link.getAttribute('href');
+                        if (hrefPath && hrefPath.indexOf('/') !== 0 && hrefPath.indexOf('#') !== 0) { // Not already absolute or anchor
+                            link.href = resolvePath(hrefPath);
+                        }
+                    }
+                });
+                
+                // Explicitly update the "Return to EffeTune App" link to ensure it's correctly set
+                var returnLink = document.querySelector('.download-link');
+                if (returnLink) {
+                    returnLink.href = resolvePath('effetune.html');
+                }
+            });
+        })();
+    </script>
 </head>
 <body>
     <div class="title-container">
-        <h1>Frieve EffeTune<img src="images/icon_64x64.png" class="title-icon" alt="EffeTune Icon"><div class="message-display error-message">404 Page not found</div></h1>
+        <h1>Frieve EffeTune<img id="title-icon" class="title-icon" alt="EffeTune Icon"><div class="message-display error-message">404 Page not found</div></h1>
         <div style="margin-top: 20px;">
-            <a href="effetune.html" class="download-link">Return to EffeTune App</a>
+            <a href="#" class="download-link" id="return-link">Return to EffeTune App</a>
+            <script>
+                // Set the return link immediately to avoid showing incorrect href even for a moment
+                document.getElementById('return-link').href = window.resolvePath('effetune.html');
+                
+                // Set the image source immediately to avoid showing broken image
+                document.getElementById('title-icon').src = window.resolvePath('images/icon_64x64.png');
+            </script>
         </div>
     </div>
 </body>

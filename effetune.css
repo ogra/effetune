@@ -47,6 +47,7 @@ body {
     color: #ffffff;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-app-region: no-drag;
     -moz-user-select: none;
     -ms-user-select: none;
 }
@@ -338,19 +339,60 @@ input {
 }
 
 .preset-select {
-    padding: 4px 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 4px;
     background-color: #3d3d3d;
     border: 1px solid #4d4d4d;
     color: #ffffff;
     border-radius: 4px;
     width: 300px;
     margin-right: 5px;
-    height: 16px;
+    height: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 .preset-select:focus {
     outline: none;
     border-color: #4a9eff;
+    background-color: #3d3d3d;
+}
+
+.select-container {
+    position: relative;
+    display: inline-block;
+}
+
+.select-container::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #ffffff;
+    font-size: 12px;
+    z-index: 2;
+}
+
+.preset-select:-webkit-autofill,
+.preset-select:-webkit-autofill:hover,
+.preset-select:-webkit-autofill:focus,
+.preset-select:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff;
+}
+
+.preset-select::spelling-error {
+    color: #ffffff !important;
+}
+
+.preset-select option {
+    background-color: #3d3d3d;
+    color: #ffffff;
 }
 
 .pipeline-header-right {
@@ -365,6 +407,15 @@ input {
     font-weight: normal;
     margin-left: 10px;
     display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.sample-rate.low-sample-rate {
+    background-color: rgba(255, 165, 0, 0.2);
+    color: #ff9900;
+    border: 1px solid rgba(255, 165, 0, 0.3);
 }
 
 .pipeline-empty {
@@ -640,20 +691,27 @@ input {
 
 /* Download link styles */
 .download-container {
-    margin-top: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
     text-align: center;
+    width: 100%;
 }
 
 .download-link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background-color: #4a9eff;
     color: white;
     text-decoration: none;
     border-radius: 4px;
     transition: background-color 0.3s;
+    font-weight: bold;
+    width: 80%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .download-link:hover {
@@ -661,7 +719,7 @@ input {
 }
 
 .download-icon {
-    font-size: 18px;
+    font-size: 20px;
 }
 
 /* Cancel button styles */
@@ -691,4 +749,41 @@ input {
 
 .parameter-row label {
     width: 120px;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4d4d4d;
+    border-radius: 4px;
+    border: 1px solid #3d3d3d;
+    transition: background 0.3s ease;
+    box-shadow: inset 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5d5d5d;
+    border-color: #4a9eff;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #4a9eff;
+}
+
+::-webkit-scrollbar-corner {
+    background: #2d2d2d;
+}
+
+/* Firefox用スクロールバースタイル */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: #4d4d4d #2d2d2d;
 }

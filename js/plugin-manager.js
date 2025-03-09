@@ -1,5 +1,3 @@
-import { loadScript, loadCSS } from './script-loader.js';
-
 export class PluginManager {
     constructor() {
         this.pluginClasses = {};
@@ -15,7 +13,7 @@ export class PluginManager {
 
     async loadPlugins() {
         try {
-            console.time('load-resources');
+            // Start loading resources
             
             // First load and parse plugins.txt to know what to load
             const pluginsText = await fetch('plugins/plugins.txt').then(r => r.text());
@@ -44,85 +42,97 @@ export class PluginManager {
                 if (window.uiManager) window.uiManager.updateLoadingProgress(percent);
             };
 
-            // Load all resources in parallel with progress tracking
-            const [jsContents, cssContents] = await Promise.all([
-                // Load all JS files
-                Promise.all(jsUrls.map(url =>
-                    fetch(url)
-                        .then(r => r.text())
-                        .then(text => {
-                            updateProgress();
-                            return text;
-                        })
-                        .catch(error => {
-                            console.error(`Failed to load JS: ${url}`, error);
-                            updateProgress();
-                            return '';
-                        })
-                )),
-                // Load all CSS files
-                Promise.all(cssUrls.map(url =>
-                    fetch(url)
-                        .then(r => r.text())
-                        .then(text => {
-                            updateProgress();
-                            return text;
-                        })
-                        .catch(error => {
-                            console.error(`Failed to load CSS: ${url}`, error);
-                            updateProgress();
-                            return '';
-                        })
-                ))
-            ]);
-
-            // Create and load bundles
-            const jsBlob = new Blob([jsContents.join('\n')], { type: 'text/javascript' });
-            const cssBlob = new Blob([cssContents.join('\n')], { type: 'text/css' });
-
-            // Load bundles in parallel
-            await Promise.all([
-                new Promise((resolve, reject) => {
+            // Custom script loader with progress tracking
+            const loadScriptWithProgress = async (url) => {
+                return new Promise((resolve) => {
                     const script = document.createElement('script');
-                    script.src = URL.createObjectURL(jsBlob);
+                    script.src = url;
                     script.onload = () => {
-                        URL.revokeObjectURL(script.src);
+                        updateProgress();
                         resolve();
                     };
-                    script.onerror = reject;
+                    script.onerror = (error) => {
+                        console.error(`Failed to load script: ${url}`, error);
+                        updateProgress();
+                        resolve(); // Continue even if a single script fails
+                    };
                     document.head.appendChild(script);
-                }),
-                cssUrls.length > 0 ? new Promise((resolve, reject) => {
+                });
+            };
+
+            // Custom CSS loader with progress tracking
+            const loadCSSWithProgress = async (url) => {
+                return new Promise((resolve) => {
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
-                    link.href = URL.createObjectURL(cssBlob);
+                    link.href = url;
                     link.onload = () => {
-                        URL.revokeObjectURL(link.href);
+                        updateProgress();
                         resolve();
                     };
-                    link.onerror = reject;
+                    link.onerror = (error) => {
+                        console.error(`Failed to load CSS: ${url}`, error);
+                        updateProgress();
+                        resolve(); // Continue even if a single CSS file fails
+                    };
                     document.head.appendChild(link);
-                }) : Promise.resolve()
-            ]);
+                });
+            };
 
-            console.timeEnd('load-resources');
+            // Load plugin-base.js first as it's a dependency for other plugins
+            try {
+                const baseJsUrl = jsUrls.shift(); // Remove and get the first item (plugin-base.js)
+                await loadScriptWithProgress(baseJsUrl);
+            } catch (error) {
+                console.error('Error loading base plugin file:', error);
+                // Continue with application
+            }
+            
+            // Load remaining JS files in parallel with error handling
+            try {
+                // Create batches of JS files to load in parallel (6 at a time to respect browser connection limits)
+                const batchSize = 6;
+                for (let i = 0; i < jsUrls.length; i += batchSize) {
+                    const batch = jsUrls.slice(i, i + batchSize);
+                    await Promise.all(batch.map(url => loadScriptWithProgress(url)));
+                }
+            } catch (error) {
+                console.error('Error loading JS files:', error);
+                // Continue with application
+            }
+            
+            // Load CSS files in parallel with error handling
+            try {
+                // Create batches of CSS files to load in parallel (6 at a time to respect browser connection limits)
+                const batchSize = 6;
+                for (let i = 0; i < cssUrls.length; i += batchSize) {
+                    const batch = cssUrls.slice(i, i + batchSize);
+                    await Promise.all(batch.map(url => loadCSSWithProgress(url)));
+                }
+            } catch (error) {
+                console.error('Error loading CSS files:', error);
+                // Continue with application
+            }
 
-            // Initialize plugins in parallel
-            await Promise.all(
-                Array.from(pluginDefinitions.entries()).map(async ([displayName, {className}]) => {
+            // Resources loaded
+
+            // Initialize plugins sequentially to avoid Promise.all rejection on error
+            for (const [displayName, {className}] of pluginDefinitions.entries()) {
+                try {
                     if (!window[className]) {
                         console.error(`Plugin class ${className} not found`);
-                        return;
+                        continue;
                     }
                     this.pluginClasses[displayName] = window[className];
-                })
-            );
+                } catch (error) {
+                    console.error(`Failed to initialize plugin ${displayName}:`, error);
+                    // Continue with other plugins
+                }
+            }
 
             // Store categories
             this.effectCategories = categories;
 
-            console.log('Loaded plugin classes:', Object.keys(this.pluginClasses));
-            console.log('Available categories:', categories);
 
             return {
                 pluginClasses: this.pluginClasses,

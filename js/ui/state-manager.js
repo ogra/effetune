@@ -8,13 +8,40 @@ export class StateManager {
         this.shareButton = document.getElementById('shareButton');
         this.sampleRate = document.getElementById('sampleRate');
         
+        // More robust detection of Electron environment
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isElectronUA = userAgent.indexOf(' electron/') > -1;
+        const isElectron = (window.electronAPI !== undefined) ||
+                          (window.electronIntegration && window.electronIntegration.isElectronEnvironment()) ||
+                          isElectronUA;
+        
+        // Update button text if running in Electron
+        if (isElectron) {
+            this.resetButton.textContent = 'Config Audio';
+        }
+        
         this.initEventListeners();
     }
 
     initEventListeners() {
         this.resetButton.addEventListener('click', () => {
-            this.setError('Reloading...');
-            window.location.reload();
+            // More robust detection of Electron environment
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isElectronUA = userAgent.indexOf(' electron/') > -1;
+            const isElectron = (window.electronAPI !== undefined) ||
+                              (window.electronIntegration && window.electronIntegration.isElectronEnvironment()) ||
+                              isElectronUA;
+            
+            // If running in Electron, show audio config dialog
+            if (isElectron && window.electronIntegration) {
+                this.setError('Configuring audio devices...');
+                // Just show the dialog - the dialog itself will handle reloading
+                window.electronIntegration.showAudioConfigDialog();
+            } else {
+                // Default behavior for web version
+                this.setError('Reloading...');
+                window.location.reload();
+            }
         });
     }
 

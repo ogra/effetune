@@ -1,10 +1,10 @@
-# Frieve EffeTune <img src="images/icon_64x64.png" alt="EffeTune Icon" width="30" heignt="30" align="bottom">
+# Frieve EffeTune <img src="images/icon_64x64.png" alt="EffeTune Icon" width="30" height="30" align="bottom">
 
 [[中文 (简体)](docs/i18n/zh/readme.md)] [[Español](docs/i18n/es/readme.md)] [[हिन्दी](docs/i18n/hi/readme.md)] [[العربية](docs/i18n/ar/readme.md)] [[Português](docs/i18n/pt/readme.md)] [[Русский](docs/i18n/ru/readme.md)] [[日本語](docs/i18n/ja/readme.md)] [[한국어](docs/i18n/ko/readme.md)] [[Français](docs/i18n/fr/readme.md)]
 
-[Open App](https://frieve-a.github.io/effetune/effetune.html)
+[Open Web App](https://frieve-a.github.io/effetune/effetune.html)  [Download Desktop App](https://github.com/Frieve-A/effetune/releases/)
 
-A web-based real-time audio effect processor designed for audio enthusiasts to enhance their music listening experience. EffeTune allows you to process any audio source through various high-quality effects, enabling you to customize and perfect your listening experience in real-time.
+A real-time audio effect processor designed for audio enthusiasts to enhance their music listening experience. EffeTune allows you to process any audio source through various high-quality effects, enabling you to customize and perfect your listening experience in real-time.
 
 [![Screenshot](images/screenshot.png)](https://frieve-a.github.io/effetune/effetune.html)
 
@@ -40,8 +40,10 @@ To process audio from streaming services (Spotify, YouTube Music, etc.):
    - Configure your streaming service to output audio to the virtual audio device
 
 2. Configuration:
-   - Open EffeTune in a browser
-   - Select the virtual audio device as the input source in the browser
+   - Open the EffeTune web app in your browser, or launch the EffeTune desktop app
+   - Select the virtual audio device as the input source
+     - In Chrome, the first time you open it, a dialog box appears asking you to select and allow audio input
+     - In the desktop app, set it up by clicking the Config Audio button in the top right of the screen
    - Start playing music from your streaming service
    - Verify that audio is flowing through EffeTune
 
@@ -51,9 +53,10 @@ To use EffeTune with CD players, network players, or other physical sources:
 
 1. Configuration:
    - Connect your audio interface to your computer
-   - Open EffeTune in a browser
-   - Select your audio interface as the input source in the browser
-   - Configure your browser's audio output to your audio interface
+   - Open the EffeTune web app in your browser, or launch the EffeTune desktop app
+   - Select your audio interface as the input and output source
+     - In Chrome, the first time you open it, a dialog box appears asking you to select and allow audio input
+     - In the desktop app, set it up by clicking the Config Audio button in the top right of the screen
    - Your audio interface now functions as a multi-effects processor:
      * Input: Your CD player, network player, or other audio source
      * Processing: Real-time effects through EffeTune
@@ -104,17 +107,21 @@ To use EffeTune with CD players, network players, or other physical sources:
    - Click on empty space in the Pipeline area to deselect all effects
 
 2. Keyboard Shortcuts:
-   - Ctrl + A: Select all effects in the pipeline
+   - Ctrl + Z: Undo
+   - Ctrl + Y: Redo
+   - Ctrl + S: Save the current pipeline
+   - Ctrl + Shift + S: Save current pipeline as
+   - Ctrl + X: Cut selected effects
    - Ctrl + C: Copy selected effects
    - Ctrl + V: Paste effects from clipboard
    - Ctrl + F: Search for effects
-   - Ctrl + S: Save the current pipeline
-   - Ctrl + Shift + S: Save current pipeline as
+   - Ctrl + A: Select all effects in the pipeline
+   - Delete: Delete selected effects
    - ESC: Deselect all effects
 
 ### Processing Audio Files
 
-1. File Drop Area:
+1. File Drop or File Specification Area:
    - A dedicated drop area is always visible below the Effect Pipeline
    - Supports single or multiple audio files
    - Files are processed using the current Pipeline settings
@@ -124,22 +131,24 @@ To use EffeTune with CD players, network players, or other physical sources:
    - Progress bar shows current processing status
    - Processing time depends on file size and effect chain complexity
 
-3. Download Options:
-   - Single files are downloaded as WAV format
+3. Download or Save Options:
+   - The processed file is output in WAV format
    - Multiple files are automatically packaged in a ZIP file
 
 ### Sharing Effect Chains
 
 You can share your effect chain configuration with other users:
 1. After setting up your desired effect chain, click the "Share" button in the top-right corner of the Effect Pipeline area
-2. The URL will be automatically copied to your clipboard
+2. The web app URL will be automatically copied to your clipboard
 3. Share the copied URL with others - they can recreate your exact effect chain by opening it
-4. All effect settings are stored in the URL, making them easy to save and share
+4. In the web app, all effect settings are stored in the URL, making them easy to save and share
+5. In the desktop app version, export the settings to an effetune_preset file from the File menu
+6. Share the exported effetune_preset file. The effetune_preset file can also be loaded by dragging it into the web app window
 
 ### Audio Reset
 
 If you experience audio issues (dropouts, glitches):
-1. Click the "Reset Audio" button in the top-left corner
+1. Click the "Reset Audio" button in the top-left corner on the web app or select Reload from the View menu on the desktop app
 2. The audio pipeline will be rebuilt automatically
 3. Your effect chain configuration will be preserved
 
@@ -177,29 +186,30 @@ Here are some popular effect combinations to enhance your listening experience:
 
 ### Audio Issues
 1. Dropouts or Glitches
-   - Click "Reset Audio" to rebuild the audio pipeline
+   - Click the "Reset Audio" button in the top-left corner on the web app or select Reload from the View menu on the desktop app to rebuild the audio pipeline
    - Try reducing the number of active effects
-   - Close other browser tabs using audio
 
 2. High CPU Usage
    - Disable effects you're not actively using
    - Consider using fewer effects in your chain
 
+3. Echo Occurs
+   - It's likely that your audio inputs and outputs are not configured correctly
+   - If you want to process the audio output of your browser, please consider installing a separate browser just for EffeTune, or using the desktop app instead of the web app
+
 ### Common Setup Issues
 1. No Audio Input
-   - Check input device selection in browser
-   - Verify browser microphone permissions
-   - Ensure audio is playing from your source
+   - Verify that audio is playing from a source and outputting to a virtual audio device
+   - For the web app version, make sure audio input permissions are allowed in your browser and that the virtual audio device is selected as the input device
+   - For the desktop app version, go to Config Audio in the top right corner of the screen and make sure the virtual audio device is selected as the input device
 
 2. Effect Not Working
    - Verify effect is enabled (ON/OFF button)
    - Check parameter settings
-   - Try removing and re-adding the effect
 
-3. Sharing Issues
-   - Use the "Share" button to generate a URL
-   - Copy the entire URL when sharing
-   - Test the shared link in a new browser window
+3. No Audio Output
+   - For the web app version, make sure that the audio output of the OS is set as the output device
+   - For the desktop app version, go to "Config Audio" in the top right corner of the screen and make sure the correct output device is selected.
 
 ## FAQ
 
@@ -208,9 +218,6 @@ A. Currently, due to browser limitations, we cannot handle more than 2 channels 
 
 Q. What's the recommended effect chain length?
 A. While there's no strict limit, we recommend keeping your effect chain to 8-10 effects for optimal performance. More complex chains may impact system performance.
-
-Q. Can I save my favorite effect combinations?
-A. Yes! Use the "Share" button to generate a URL that contains your entire effect chain configuration. Bookmark this URL to save your settings.
 
 Q. How do I achieve the best sound quality?
 A. Use sample rates of 96kHz or higher when possible, start with subtle effect settings, and build your chain gradually. Monitor levels to avoid distortion.
@@ -279,9 +286,10 @@ Frieve EffeTune has been tested and verified to work on Google Chrome. The appli
 
 For optimal performance with nonlinear effects, it is recommended to use EffeTune at a sample rate of 96kHz or higher. This higher sample rate helps achieve ideal characteristics when processing audio through nonlinear effects such as saturation and compression.
 
-## Plugin Development
+## Development Guide
 
 Want to create your own audio plugins? Check out our [Plugin Development Guide](docs/plugin-development.md).
+Want to build a desktop app? Check out our [Build Guide](build.md).
 
 ## Links
 

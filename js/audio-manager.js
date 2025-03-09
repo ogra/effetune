@@ -12,6 +12,12 @@ export class AudioManager {
         this.isOfflineProcessing = false;
         this.isCancelled = false;
         
+        // Flag to control audio initialization during sample rate adjustment
+        this._skipInitOnNextReset = false;
+        
+        // Flag for first launch audio workaround
+        this.isFirstLaunch = false;
+        
         // Setup user activity detection
         this.setupUserActivityDetection();
     }
@@ -42,11 +48,60 @@ export class AudioManager {
 
     async initAudio() {
         try {
+            // Check if this is the first launch
+            if (window.electronAPI && window.electronAPI.isFirstLaunch) {
+                try {
+                    const firstLaunchPromise = window.electronAPI.isFirstLaunch();
+                    if (firstLaunchPromise && typeof firstLaunchPromise.then === 'function') {
+                        this.isFirstLaunch = await firstLaunchPromise;
+                    } else {
+                        this.isFirstLaunch = false;
+                    }
+                } catch (error) {
+                    this.isFirstLaunch = false;
+                }
+            } else if (window.isFirstLaunchConfirmed !== undefined) {
+                this.isFirstLaunch = window.isFirstLaunchConfirmed;
+            }
+            
             // Create audio context if not exists
             if (!this.audioContext) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                this.audioContext = new AudioContext({ latencyHint: 'playback' });
+                
+                // Default audio context options
+                let audioContextOptions = { latencyHint: 'playback' };
+                
+                // If running in Electron, try to use saved sample rate preference
+                if (window.electronAPI && window.electronIntegration) {
+                    const preferences = await window.electronIntegration.loadAudioPreferences();
+                    if (preferences && preferences.sampleRate) {
+                        audioContextOptions.sampleRate = preferences.sampleRate;
+                    }
+                }
+                
+                // Create audio context with options
+                this.audioContext = new AudioContext(audioContextOptions);
                 window.audioContext = this.audioContext; // Global reference
+                
+                // If this is the first launch, create a gain node with zero gain to ensure silence
+                if (this.isFirstLaunch) {
+                    // Create a gain node with zero gain
+                    const silenceGain = this.audioContext.createGain();
+                    silenceGain.gain.value = 0;
+                    this.silenceGain = silenceGain;
+                    
+                    // Store original connect method
+                    AudioManager.originalConnect = AudioNode.prototype.connect;
+                    
+                    // Override connect method to force all connections through the silence gain
+                    AudioNode.prototype.connect = function() {
+                        // Connect to silence gain instead
+                        return AudioManager.originalConnect.call(this, silenceGain);
+                    };
+                    
+                    // Connect silence gain to destination
+                    AudioManager.originalConnect.call(silenceGain, this.audioContext.destination);
+                }
             }
 
             // Load audio worklet with absolute path
@@ -54,14 +109,38 @@ export class AudioManager {
             const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
             await this.audioContext.audioWorklet.addModule(`${basePath}/plugins/audio-processor.js`);
 
-            // Get user media with audio constraints
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: false,
-                    noiseSuppression: false,
-                    autoGainControl: false
+            // Check if we're running in Electron and have audio preferences
+            let audioConstraints = {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            };
+
+            // If running in Electron, try to use saved audio preferences
+            if (window.electronAPI && window.electronIntegration) {
+                const preferences = await window.electronIntegration.loadAudioPreferences();
+                if (preferences && preferences.inputDeviceId) {
+                    audioConstraints.deviceId = { exact: preferences.inputDeviceId };
                 }
-            });
+            }
+
+            // Get user media with audio constraints
+            try {
+                this.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (error) {
+                // If failed with saved device, try again with default device
+                if (audioConstraints.deviceId) {
+                    console.warn('Failed to use saved audio input device, falling back to default:', error);
+                    delete audioConstraints.deviceId;
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        audio: audioConstraints
+                    });
+                } else {
+                    throw error;
+                }
+            }
 
             // Create source and worklet nodes
             this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
@@ -82,15 +161,19 @@ export class AudioManager {
                                 sampleRateElement.textContent += ' - Sleep Mode';
                             }
                         } else {
-                            // Remove sleep mode indicator
+                            // Remove sleep mode indicator and ensure sample rate is displayed correctly
                             sampleRateElement.textContent = sampleRateElement.textContent.replace(' - Sleep Mode', '');
+                            // Make sure the sample rate is still displayed correctly
+                            if (!sampleRateElement.textContent.includes('Hz')) {
+                                sampleRateElement.textContent = `${this.audioContext.sampleRate} Hz`;
+                            }
                         }
                     }
                 }
             };
 
-            // Build initial pipeline
-            await this.rebuildPipeline();
+            // Build initial pipeline with initialization flag
+            await this.rebuildPipeline(true);
 
             // Resume context if suspended
             if (this.audioContext.state === 'suspended') {
@@ -102,7 +185,9 @@ export class AudioManager {
         }
     }
 
-    async rebuildPipeline() {
+    // Add isInitializing flag to control logging
+    async rebuildPipeline(isInitializing = false) {
+        console.log('Rebuild Pipeline')
         if (!this.audioContext || !this.sourceNode) return;
 
         // Disconnect existing connections
@@ -111,9 +196,123 @@ export class AudioManager {
             this.workletNode.disconnect();
         }
 
-        // Connect source to worklet and worklet to destination
+        // Connect source to worklet
         this.sourceNode.connect(this.workletNode);
-        this.workletNode.connect(this.audioContext.destination);
+        
+        // Create a MediaStreamDestination to get a MediaStream
+        this.destinationNode = this.audioContext.createMediaStreamDestination();
+        
+        // Connect worklet to the MediaStreamDestination
+        this.workletNode.connect(this.destinationNode);
+        
+        // Store the connection to default destination so we can disconnect it later if needed
+        this.defaultDestinationConnection = null;
+        // If this is the first launch, set up a processor to mute audio output
+        if (this.isFirstLaunch && window.electronIntegration && window.electronIntegration.isElectron) {
+            
+            // Create a script processor node to zero-fill audio output
+            const bufferSize = 4096;
+            const silenceNode = this.audioContext.createScriptProcessor(bufferSize, 2, 2);
+            
+            silenceNode.onaudioprocess = (e) => {
+                // Get output buffer
+                const outputL = e.outputBuffer.getChannelData(0);
+                const outputR = e.outputBuffer.getChannelData(1);
+                
+                // Fill with zeros (silence)
+                for (let i = 0; i < outputL.length; i++) {
+                    outputL[i] = 0;
+                    outputR[i] = 0;
+                }
+            };
+            
+            // Insert the silence node between worklet and destination
+            this.workletNode.disconnect(this.destinationNode);
+            this.workletNode.connect(silenceNode);
+            silenceNode.connect(this.destinationNode);
+            
+            // Store reference to remove on cleanup
+            this.silenceNode = silenceNode;
+        }
+        
+        // For web app (non-Electron), always connect to default destination
+        if (!window.electronAPI || !window.electronIntegration) {
+            // Only log during initialization
+            if (isInitializing) {
+            }
+            this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+            
+            // Skip the Electron-specific code and continue with the rest of the method
+            // Don't return early, let the method continue to update the worklet
+        } else {
+            // If running in Electron, try to use saved output device
+            const preferences = await window.electronIntegration.loadAudioPreferences();
+            if (preferences && preferences.outputDeviceId) {
+                
+                try {
+                    // Create a new audio element for actual use
+                    if (this.audioElement) {
+                        this.audioElement.pause();
+                        this.audioElement.srcObject = null;
+                    }
+                    
+                    this.audioElement = new Audio();
+                    this.audioElement.autoplay = true;
+                    this.audioElement.volume = 1.0;
+                    this.audioElement.muted = false;
+                    
+                    
+                    // Try to set sinkId
+                    if (typeof this.audioElement.setSinkId === 'function') {
+                        try {
+                            await this.audioElement.setSinkId(preferences.outputDeviceId);
+                            
+                            // Now set the srcObject after sinkId is set
+                            this.audioElement.srcObject = this.destinationNode.stream;
+                            
+                            // Explicitly call play()
+                            try {
+                                await this.audioElement.play();
+                            } catch (playError) {
+                                // Fall back to default output
+                                this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                                if (isInitializing) {
+                                }
+                            }
+                        } catch (sinkError) {
+                            if (isInitializing) {
+                            }
+                            this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                            // Still try to use the audio element as a fallback
+                            this.audioElement.srcObject = this.destinationNode.stream;
+                        }
+                    } else {
+                        if (isInitializing) {
+                        }
+                        // Fall back to default output
+                        this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                        if (isInitializing) {
+                        }
+                        // Still try to use the audio element as a fallback
+                        this.audioElement.srcObject = this.destinationNode.stream;
+                    }
+                    
+                    // Add event listeners for debugging
+                    
+                    this.audioElement.addEventListener('error', (e) => {
+                        // If there's an error with the audio element, make sure we're using the default output
+                        if (!this.defaultDestinationConnection) {
+                            this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                        }
+                    });
+                } catch (error) {
+                    // Ensure we have audio output in case of error
+                    if (!this.defaultDestinationConnection) {
+                        this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                    }
+                }
+            }
+        }
 
         // Update worklet with current pipeline state
         if (this.pipeline.length === 0 || this.masterBypass) {
@@ -125,43 +324,182 @@ export class AudioManager {
             return;
         }
 
-        this.workletNode.port.postMessage({
-            type: 'updatePlugins',
-            plugins: this.pipeline.map(plugin => ({
+        // Remove excessive logging
+        // console.log(`Updating pipeline with ${this.pipeline.length} plugins:`,
+        //    this.pipeline.map(p => `${p.name} (${p.enabled ? 'enabled' : 'disabled'})`));
+        
+        // Send plugin data to worklet
+        const pluginData = this.pipeline.map(plugin => {
+            const params = plugin.getParameters();
+            // Remove excessive logging
+            // console.log(`Plugin ${plugin.name} parameters:`, params);
+            
+            return {
                 id: plugin.id,
                 type: plugin.constructor.name,
                 enabled: plugin.enabled,
-                parameters: plugin.getParameters()
-            })),
+                parameters: params
+            };
+        });
+        
+        // Add message handler if not already added
+        if (!this.workletNode.port.onmessage) {
+            this.workletNode.port.onmessage = (event) => {
+                const data = event.data;
+                // Remove excessive logging
+                // console.log('Message from worklet:', data);
+            };
+        }
+        
+        // Send message to worklet
+        this.workletNode.port.postMessage({
+            type: 'updatePlugins',
+            plugins: pluginData,
             masterBypass: this.masterBypass
         });
+        
+        // Remove excessive logging
+        // console.log('Pipeline update message sent to worklet');
     }
 
-    async reset() {
+    async reset(audioPreferences = null) {
+        console.log('Reset')
+        // Stop audio element if it exists
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.srcObject = null;
+            this.audioElement = null;
+        }
+        
+        // Disconnect from default destination if connected
+        if (this.defaultDestinationConnection && this.workletNode && this.audioContext) {
+            try {
+                this.workletNode.disconnect(this.audioContext.destination);
+            } catch (error) {
+            }
+        }
+        
+        // Disconnect silence node if it exists
+        if (this.silenceNode && this.audioContext) {
+            try {
+                this.silenceNode.disconnect();
+                this.silenceNode = null;
+            } catch (error) {
+            }
+        }
+        
+        // Restore original connect method if it was overridden
+        if (AudioManager.originalConnect) {
+            try {
+                // Restore original connect method
+                AudioNode.prototype.connect = AudioManager.originalConnect;
+                AudioManager.originalConnect = null;
+            } catch (error) {
+            }
+        }
+        
+        // Disconnect silence gain if it exists
+        if (this.silenceGain) {
+            try {
+                this.silenceGain.disconnect();
+                this.silenceGain = null;
+            } catch (error) {
+            }
+        }
+        
+        // Clear default destination connection
+        this.defaultDestinationConnection = null;
+        
         // Close audio context and clear global reference
         if (this.audioContext) {
             await this.audioContext.close();
             this.audioContext = null;
             window.audioContext = null;
         }
+        
         // Stop all media tracks
         if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop());
             this.stream = null;
         }
+        
+        // Clear nodes
         this.sourceNode = null;
         this.workletNode = null;
-        return this.initAudio();
+        this.destinationNode = null;
+        
+        // If audio preferences were provided, save them first
+        if (audioPreferences && window.electronAPI && window.electronIntegration) {
+            await window.electronIntegration.saveAudioPreferences(audioPreferences);
+        }
+        
+        // Skip initialization if we're being called from the sample rate adjustment code
+        if (this._skipInitOnNextReset) {
+            this._skipInitOnNextReset = false;
+            return '';
+        }
+        
+        // Get current sample rate before reinitializing
+        let currentSampleRate = null;
+        if (window.electronAPI && window.electronIntegration) {
+            const preferences = await window.electronIntegration.loadAudioPreferences();
+            if (preferences && preferences.sampleRate) {
+                currentSampleRate = preferences.sampleRate;
+            }
+        }
+        
+        // Initialize audio and rebuild pipeline
+        await this.initAudio();
+        
+        // Make sure pipeline is rebuilt with the new audio context
+        if (this.pipeline && this.pipeline.length > 0) {
+            await this.rebuildPipeline(true);
+        }
+        
+        return '';
     }
 
+    // Only rebuild pipeline when necessary (when pipeline structure changes)
     setPipeline(pipeline) {
+        // Check if pipeline structure has changed
+        const needsRebuild = this.pipeline.length !== pipeline.length ||
+            pipeline.some((plugin, index) =>
+                this.pipeline[index]?.id !== plugin.id ||
+                this.pipeline[index]?.enabled !== plugin.enabled
+            );
+        
         this.pipeline = pipeline;
-        return this.rebuildPipeline();
+        
+        // Only rebuild if necessary
+        if (needsRebuild) {
+            return this.rebuildPipeline();
+        } else {
+            // Just update parameters without rebuilding
+            if (window.workletNode) {
+                const pluginData = this.pipeline.map(plugin => ({
+                    id: plugin.id,
+                    type: plugin.constructor.name,
+                    enabled: plugin.enabled,
+                    parameters: plugin.getParameters()
+                }));
+                
+                window.workletNode.port.postMessage({
+                    type: 'updatePlugins',
+                    plugins: pluginData,
+                    masterBypass: this.masterBypass
+                });
+            }
+            return Promise.resolve();
+        }
     }
 
+    // Only rebuild pipeline when bypass state changes
     setMasterBypass(bypass) {
-        this.masterBypass = bypass;
-        return this.rebuildPipeline();
+        if (this.masterBypass !== bypass) {
+            this.masterBypass = bypass;
+            return this.rebuildPipeline();
+        }
+        return Promise.resolve();
     }
 
     // Process an audio file offline

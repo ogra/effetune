@@ -1,6 +1,7 @@
 import { PluginListManager } from './ui/plugin-list-manager.js';
 import { PipelineManager } from './ui/pipeline-manager.js';
 import { StateManager } from './ui/state-manager.js';
+import { electronIntegration } from './electron-integration.js';
 
 export class UIManager {
     constructor(pluginManager, audioManager) {
@@ -35,6 +36,7 @@ export class UIManager {
         this.initWhatsThisLink();
         this.initPipelineManager();
         this.initShareButton();
+        this.initPresetManagement();
     }
 
     // Delegate to PluginListManager
@@ -162,7 +164,53 @@ export class UIManager {
     // Call this method after audio context is initialized
     initAudio() {
         if (this.audioManager.audioContext) {
-            this.sampleRate.textContent = `${this.audioManager.audioContext.sampleRate} Hz`;
+            this.updateSampleRateDisplay();
+            
+            // Set up a MutationObserver to watch for changes to the sampleRate element
+            // This ensures the sample rate is always displayed correctly, even after sleep mode changes
+            if (!this._sampleRateObserver) {
+                this._sampleRateObserver = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                            // If the content doesn't end with Hz, update it
+                            const content = this.sampleRate.textContent;
+                            if (!content.includes('Hz')) {
+                                this.updateSampleRateDisplay();
+                            }
+                        }
+                    }
+                });
+                
+                this._sampleRateObserver.observe(this.sampleRate, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                });
+            }
+        }
+    }
+    
+    // Update the sample rate display with the current audio context sample rate
+    updateSampleRateDisplay() {
+        if (this.audioManager.audioContext && this.sampleRate) {
+            // Get the current sample rate from the audio context
+            const currentSampleRate = this.audioManager.audioContext.sampleRate;
+            
+            // Preserve sleep mode indicator if present
+            const isSleepMode = this.sampleRate.textContent.includes('Sleep Mode');
+            this.sampleRate.textContent = `${currentSampleRate} Hz`;
+            if (isSleepMode) {
+                this.sampleRate.textContent += ' - Sleep Mode';
+            }
+            
+            // Add a visual indicator if the sample rate is below recommended value
+            if (currentSampleRate < 88200) {
+                this.sampleRate.classList.add('low-sample-rate');
+                this.sampleRate.title = 'Sample rate is below recommended 88.2kHz. Audio quality may be affected.';
+            } else {
+                this.sampleRate.classList.remove('low-sample-rate');
+                this.sampleRate.title = '';
+            }
         }
     }
 
@@ -180,24 +228,89 @@ export class UIManager {
     }
 
     getLocalizedDocPath(basePath) {
-        // If basePath is '/readme.md', convert it to root directory
-        if (basePath === '/readme.md') {
-            if (this.userLanguage) {
-                return `/effetune/docs/i18n/${this.userLanguage}/`;
-            }
-            return `/effetune/`;
+        // Always use GitHub Pages paths for both web and Electron
+        const baseUrl = 'https://frieve-a.github.io/effetune';
+        
+        // Ensure we're working with a clean path
+        let cleanPath = basePath;
+        
+        // Convert .md to .html if needed
+        if (cleanPath.endsWith('.md')) {
+            cleanPath = cleanPath.replace(/\.md$/, '.html');
         }
         
-        if (this.userLanguage) {
-            return `/effetune/docs/i18n/${this.userLanguage}${basePath}`;
+        // If path is '/readme.md' or '/readme.html', convert it to root directory
+        if (cleanPath === '/readme.html' || cleanPath === '/readme.md' || cleanPath === '/') {
+            if (this.userLanguage) {
+                return `${baseUrl}/docs/i18n/${this.userLanguage}/`;
+            }
+            return `${baseUrl}/`;
         }
-        return `/effetune/docs${basePath}`;
+        
+        // Handle plugin documentation
+        if (cleanPath.startsWith('/plugins/')) {
+            // Extract anchor if present
+            let anchor = '';
+            if (cleanPath.includes('#')) {
+                const parts = cleanPath.split('#');
+                cleanPath = parts[0];
+                anchor = '#' + parts[1];
+            }
+            
+            // Remove any existing extension
+            cleanPath = cleanPath.replace(/\.[^/.]+$/, '');
+            
+            // Add .html extension
+            cleanPath = cleanPath + '.html' + anchor;
+            
+            if (this.userLanguage) {
+                return `${baseUrl}/docs/i18n/${this.userLanguage}${cleanPath}`;
+            }
+            return `${baseUrl}/docs${cleanPath}`;
+        }
+        
+        // Handle index.html or empty path
+        if (cleanPath === '/index.html' || cleanPath === './') {
+            if (this.userLanguage) {
+                return `${baseUrl}/docs/i18n/${this.userLanguage}/`;
+            }
+            return `${baseUrl}/`;
+        }
+        
+        // For other paths
+        if (this.userLanguage) {
+            return `${baseUrl}/docs/i18n/${this.userLanguage}${cleanPath}`;
+        }
+        return `${baseUrl}/docs${cleanPath}`;
     }
 
     initWhatsThisLink() {
         const whatsThisLink = document.querySelector('.whats-this');
         if (whatsThisLink) {
-            whatsThisLink.href = this.getLocalizedDocPath('/readme.md');
+            // Get the localized path (now always returns a web URL)
+            const localizedPath = this.getLocalizedDocPath('/readme.md');
+            
+            // For both Electron and web, open the URL in external browser
+            whatsThisLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // In Electron, use shell.openExternal to open in default browser
+                if (window.electronAPI) {
+                    window.electronAPI.openExternalUrl(localizedPath)
+                        .catch(err => {
+                            console.error('Error opening external URL:', err);
+                            // Fallback to window.open
+                            window.open(localizedPath, '_blank');
+                        });
+                } else {
+                    // For web, just open in new tab
+                    window.open(localizedPath, '_blank');
+                }
+            });
+            
+            // Set href for right-click "Open in new tab" functionality
+            whatsThisLink.href = localizedPath;
+            whatsThisLink.target = '_blank';
         }
     }
 
@@ -209,7 +322,7 @@ export class UIManager {
     initShareButton() {
         this.shareButton.addEventListener('click', () => {
             const state = this.getPipelineState();
-            const newURL = new URL(window.location.href);
+            const newURL = new URL('https://frieve-a.github.io/effetune/effetune.html');
             newURL.searchParams.set('p', state);
             navigator.clipboard.writeText(newURL.toString())
                 .then(() => {
@@ -223,4 +336,233 @@ export class UIManager {
         });
     }
 
+    /**
+     * Initialize preset management functionality
+     * Adds support for saving and loading presets in Electron environment
+     */
+    initPresetManagement() {
+        // Get preset UI elements
+        this.presetSelect = document.getElementById('presetSelect');
+        this.presetList = document.getElementById('presetList');
+        this.savePresetButton = document.getElementById('savePresetButton');
+        this.deletePresetButton = document.getElementById('deletePresetButton');
+        
+        // Initialize preset storage
+        this.presets = this.loadPresetsFromStorage() || {};
+        this.updatePresetList();
+        
+        // Set up event listeners
+        this.savePresetButton.addEventListener('click', () => this.saveCurrentPreset());
+        this.deletePresetButton.addEventListener('click', () => this.deleteCurrentPreset());
+        this.presetSelect.addEventListener('change', () => this.loadSelectedPreset());
+    }
+    
+    /**
+     * Load presets from local storage
+     * @returns {Object} Saved presets or empty object if none found
+     */
+    loadPresetsFromStorage() {
+        try {
+            const presetsJson = localStorage.getItem('effetune-presets');
+            return presetsJson ? JSON.parse(presetsJson) : {};
+        } catch (error) {
+            console.error('Failed to load presets:', error);
+            return {};
+        }
+    }
+    
+    /**
+     * Save presets to local storage
+     */
+    savePresetsToStorage() {
+        try {
+            localStorage.setItem('effetune-presets', JSON.stringify(this.presets));
+        } catch (error) {
+            console.error('Failed to save presets:', error);
+        }
+    }
+    
+    /**
+     * Update the preset dropdown list
+     */
+    updatePresetList() {
+        // Clear existing options
+        this.presetList.innerHTML = '';
+        
+        // Add each preset to the datalist
+        Object.keys(this.presets).forEach(presetName => {
+            const option = document.createElement('option');
+            option.value = presetName;
+            this.presetList.appendChild(option);
+        });
+    }
+    
+    /**
+     * Save the current pipeline state as a preset
+     */
+    saveCurrentPreset() {
+        const presetName = this.presetSelect.value.trim();
+        if (!presetName) {
+            this.setError('Please enter a preset name');
+            return;
+        }
+        
+        // Get current pipeline state
+        const pipelineState = this.audioManager.pipeline.map(plugin => {
+            // Get serializable parameters
+            let params = plugin.getSerializableParameters ?
+                plugin.getSerializableParameters() :
+                (plugin.getParameters ? plugin.getParameters() : plugin.parameters);
+            
+            // Create a deep copy
+            params = JSON.parse(JSON.stringify(params || {}));
+            
+            return {
+                name: plugin.name,
+                enabled: plugin.enabled,
+                parameters: params
+            };
+        });
+        
+        // Save preset
+        this.presets[presetName] = {
+            name: presetName,
+            pipeline: pipelineState,
+            timestamp: Date.now()
+        };
+        
+        // Update storage and UI
+        this.savePresetsToStorage();
+        this.updatePresetList();
+        this.setError(`Preset "${presetName}" saved`);
+        setTimeout(() => this.clearError(), 3000);
+    }
+    
+    /**
+     * Delete the currently selected preset
+     */
+    deleteCurrentPreset() {
+        const presetName = this.presetSelect.value.trim();
+        if (!presetName || !this.presets[presetName]) {
+            this.setError('No preset selected');
+            return;
+        }
+        
+        // Delete preset
+        delete this.presets[presetName];
+        
+        // Update storage and UI
+        this.savePresetsToStorage();
+        this.updatePresetList();
+        this.presetSelect.value = '';
+        this.setError(`Preset "${presetName}" deleted`);
+        setTimeout(() => this.clearError(), 3000);
+    }
+    
+    /**
+     * Load the selected preset
+     */
+    loadSelectedPreset() {
+        const presetName = this.presetSelect.value.trim();
+        if (!presetName || !this.presets[presetName]) {
+            return;
+        }
+        
+        this.loadPreset(this.presets[presetName]);
+    }
+    
+    /**
+     * Load a preset into the pipeline
+     * @param {Object} preset The preset to load
+     */
+    loadPreset(preset) {
+        if (!preset || !preset.pipeline || !Array.isArray(preset.pipeline)) {
+            this.setError('Invalid preset data');
+            return;
+        }
+        
+        try {
+            // Clear current pipeline
+            this.audioManager.pipeline = [];
+            
+            // Create new plugins from preset data
+            const plugins = preset.pipeline.map(pluginState => {
+                const plugin = this.pluginManager.createPlugin(pluginState.name);
+                plugin.enabled = pluginState.enabled;
+                
+                // Restore parameters
+                if (plugin.setSerializedParameters) {
+                    plugin.setSerializedParameters(pluginState.parameters);
+                } else if (plugin.setParameters) {
+                    plugin.setParameters({
+                        ...pluginState.parameters,
+                        enabled: pluginState.enabled
+                    });
+                } else if (plugin.parameters) {
+                    Object.assign(plugin.parameters, pluginState.parameters);
+                }
+                
+                plugin.updateParameters();
+                this.expandedPlugins.add(plugin);
+                return plugin;
+            });
+            
+            // Update pipeline without rebuilding
+            this.audioManager.pipeline = plugins;
+            
+            // Update worklet directly without rebuilding pipeline
+            if (window.workletNode) {
+                window.workletNode.port.postMessage({
+                    type: 'updatePlugins',
+                    plugins: this.audioManager.pipeline.map(plugin => ({
+                        id: plugin.id,
+                        type: plugin.constructor.name,
+                        enabled: plugin.enabled,
+                        parameters: plugin.getParameters()
+                    })),
+                    masterBypass: this.audioManager.masterBypass
+                });
+            }
+            
+            // Update UI
+            this.updatePipelineUI();
+            this.updateURL();
+            this.setError(`Preset "${preset.name}" loaded`);
+            setTimeout(() => this.clearError(), 3000);
+        } catch (error) {
+            console.error('Failed to load preset:', error);
+            this.setError('Failed to load preset');
+        }
+    }
+    
+    /**
+     * Get current preset data for export
+     * @returns {Object} Current preset data
+     */
+    getCurrentPresetData() {
+        const presetName = this.presetSelect.value.trim() || 'My Preset';
+        
+        // Get current pipeline state
+        const pipelineState = this.audioManager.pipeline.map(plugin => {
+            // Get serializable parameters
+            let params = plugin.getSerializableParameters ?
+                plugin.getSerializableParameters() :
+                (plugin.getParameters ? plugin.getParameters() : plugin.parameters);
+            
+            // Create a deep copy
+            params = JSON.parse(JSON.stringify(params || {}));
+            
+            return {
+                name: plugin.name,
+                enabled: plugin.enabled,
+                parameters: params
+            };
+        });
+        
+        return {
+            name: presetName,
+            pipeline: pipelineState,
+            timestamp: Date.now()
+        };
+    }
 }
