@@ -6,6 +6,19 @@ import { electronIntegration } from './electron-integration.js';
 // Make electronIntegration globally accessible first
 window.electronIntegration = electronIntegration;
 
+// Set up event listener for preset file opening from command line arguments
+if (window.electronAPI && window.electronAPI.onOpenPresetFile) {
+  window.electronAPI.onOpenPresetFile((filePath) => {
+    console.log('Received open-preset-file event from main process:', filePath);
+    if (window.electronIntegration) {
+      window.electronIntegration.openPresetFile(filePath);
+    } else {
+      console.error('electronIntegration not available for opening preset file');
+    }
+  });
+  console.log('Registered open-preset-file event listener');
+}
+
 // Add a style to hide the UI immediately during first launch
 // This will be removed after the splash screen is closed
 const tempStyle = document.createElement('style');
@@ -297,6 +310,73 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+/**
+ * Process preset file data and load it into the application
+ * @param {Object} fileData - The parsed JSON data from the preset file
+ * @param {string} fileName - The name of the preset file without extension
+ */
+function processPresetFileData(fileData, fileName) {
+    let presetData;
+    
+    if (fileData.pipeline) {
+        // New format: complete preset object
+        presetData = fileData;
+        // Update timestamp to current time
+        presetData.timestamp = Date.now();
+
+        presetData.name = fileName;
+    } else {
+        // Unknown format
+        window.uiManager.setError('Unknown preset format');
+        setTimeout(() => window.uiManager.clearError(), 3000);
+        return;
+    }
+    
+    // Load the preset
+    window.uiManager.loadPreset(presetData);
+    window.uiManager.setError(`Preset "${fileName}" loaded!`);
+    setTimeout(() => window.uiManager.clearError(), 3000);
+}
+
+/**
+ * Handle errors during preset file loading
+ * @param {Error} error - The error that occurred
+ * @param {string} message - Custom error message to display
+ */
+function handlePresetFileError(error, message) {
+    console.error(message, error);
+    window.uiManager.setError(message);
+    setTimeout(() => window.uiManager.clearError(), 3000);
+}
+
+/**
+ * Read the content of a preset file and process it
+ * @param {File} presetFile - The preset file to read
+ * @param {string} fileName - The name of the preset file without extension
+ */
+function readPresetFileContent(presetFile, fileName) {
+    try {
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+            try {
+                const fileData = JSON.parse(event.target.result);
+                processPresetFileData(fileData, fileName);
+            } catch (error) {
+                handlePresetFileError(error, 'Failed to parse preset file');
+            }
+        };
+        
+        reader.onerror = () => {
+            handlePresetFileError(new Error('FileReader error'), 'Failed to read preset file');
+        };
+        
+        reader.readAsText(presetFile);
+    } catch (error) {
+        handlePresetFileError(error, 'Failed to read preset file');
+    }
+}
+
 document.addEventListener('drop', async (e) => {
     // Check for preset files
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
@@ -311,130 +391,26 @@ document.addEventListener('drop', async (e) => {
             // Remove visual feedback
             document.body.classList.remove('drag-over');
             
-            
             // Handle preset file
             const presetFile = presetFiles[0]; // Take the first preset file if multiple are dropped
-        
-        if (window.electronIntegration && window.electronIntegration.isElectron) {
-            // In Electron environment, use the file path
-            // In Electron, the File object has a path property in some environments
-            // but we need to handle cases where it might not be available
-            if (presetFile.path) {
-                window.electronIntegration.openPresetFile(presetFile.path);
-                window.uiManager.setError(`Preset "${presetFile.name}" loaded!`);
-                setTimeout(() => window.uiManager.clearError(), 3000);
-            } else {
-                // If path is not available, read the file content and pass it to openPresetFile
-                try {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        try {
-                            const fileData = JSON.parse(event.target.result);
-                            
-                            let presetData;
-                            
-                            // Handle different formats for backward compatibility
-                            if (Array.isArray(fileData)) {
-                                // Old format: direct array of pipeline plugins
-                                presetData = {
-                                    name: presetFile.name.replace('.effetune_preset', ''),
-                                    timestamp: Date.now(),
-                                    pipeline: fileData
-                                };
-                            } else if (fileData.pipeline) {
-                                // New format: complete preset object
-                                presetData = fileData;
-                                // Update timestamp to current time
-                                presetData.timestamp = Date.now();
-                                // If no name is provided, use the filename
-                                if (!presetData.name) {
-                                    presetData.name = presetFile.name.replace('.effetune_preset', '');
-                                }
-                            } else {
-                                // Unknown format
-                                window.uiManager.setError('Unknown preset format');
-                                setTimeout(() => window.uiManager.clearError(), 3000);
-                                return;
-                            }
-                            
-                            // Load the preset
-                            window.uiManager.loadPreset(presetData);
-                            window.uiManager.setError(`Preset "${presetData.name}" loaded!`);
-                            setTimeout(() => window.uiManager.clearError(), 3000);
-                        } catch (error) {
-                            console.error('Error parsing preset file:', error);
-                            window.uiManager.setError('Failed to parse preset file');
-                            setTimeout(() => window.uiManager.clearError(), 3000);
-                        }
-                    };
-                    reader.onerror = () => {
-                        window.uiManager.setError('Failed to read preset file');
-                        setTimeout(() => window.uiManager.clearError(), 3000);
-                    };
-                    reader.readAsText(presetFile);
-                } catch (error) {
-                    console.error('Error reading preset file:', error);
-                    window.uiManager.setError('Failed to read preset file');
+            const fileName = presetFile.name.replace('.effetune_preset', '');
+            
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                // In Electron environment, use the file path if available
+                if (presetFile.path) {
+                    window.electronIntegration.openPresetFile(presetFile.path);
+                    window.uiManager.setError(`Preset "${fileName}" loaded!`);
                     setTimeout(() => window.uiManager.clearError(), 3000);
+                } else {
+                    // If path is not available, read the file content
+                    readPresetFileContent(presetFile, fileName);
                 }
-            }
-        } else {
-            // In browser environment, read the file content
-            try {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const fileData = JSON.parse(event.target.result);
-                        
-                        let presetData;
-                        
-                        // Handle different formats for backward compatibility
-                        if (Array.isArray(fileData)) {
-                            // Old format: direct array of pipeline plugins
-                            presetData = {
-                                name: presetFile.name.replace('.effetune_preset', ''),
-                                timestamp: Date.now(),
-                                pipeline: fileData
-                            };
-                        } else if (fileData.pipeline) {
-                            // New format: complete preset object
-                            presetData = fileData;
-                            // Update timestamp to current time
-                            presetData.timestamp = Date.now();
-                            // If no name is provided, use the filename
-                            if (!presetData.name) {
-                                presetData.name = presetFile.name.replace('.effetune_preset', '');
-                            }
-                        } else {
-                            // Unknown format
-                            window.uiManager.setError('Unknown preset format');
-                            setTimeout(() => window.uiManager.clearError(), 3000);
-                            return;
-                        }
-                        
-                        // Load the preset
-                        window.uiManager.loadPreset(presetData);
-                        window.uiManager.setError(`Preset "${presetData.name}" loaded!`);
-                        setTimeout(() => window.uiManager.clearError(), 3000);
-                    } catch (error) {
-                        console.error('Error parsing preset file:', error);
-                        window.uiManager.setError('Failed to parse preset file');
-                        setTimeout(() => window.uiManager.clearError(), 3000);
-                    }
-                };
-                reader.onerror = () => {
-                    window.uiManager.setError('Failed to read preset file');
-                    setTimeout(() => window.uiManager.clearError(), 3000);
-                };
-                reader.readAsText(presetFile);
-            } catch (error) {
-                console.error('Error reading preset file:', error);
-                window.uiManager.setError('Failed to read preset file');
-                setTimeout(() => window.uiManager.clearError(), 3000);
+            } else {
+                // In browser environment, read the file content
+                readPresetFileContent(presetFile, fileName);
             }
         }
     }
-}
 }, true); // Use capture phase to ensure this handler runs first
 
 // app.initialize() is now called inside the isFirstLaunchPromise.then() block

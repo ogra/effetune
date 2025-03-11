@@ -4,6 +4,15 @@ export class PluginManager {
         this.nextPluginId = 1;
         this.effectCategories = {};
     }
+    
+    /**
+     * Check if a plugin is available in the current configuration
+     * @param {string} name - The name of the plugin to check
+     * @returns {boolean} - True if the plugin is available, false otherwise
+     */
+    isPluginAvailable(name) {
+        return name && typeof name === 'string' && Object.prototype.hasOwnProperty.call(this.pluginClasses, name);
+    }
 
     createPlugin(name) {
         const plugin = new this.pluginClasses[name]();

@@ -13,10 +13,15 @@ export class AudioManager {
         this.isCancelled = false;
         
         // Flag to control audio initialization during sample rate adjustment
-        this._skipInitOnNextReset = false;
+        this._skipAudioInitDuringSampleRateChange = false;
         
         // Flag for first launch audio workaround
         this.isFirstLaunch = false;
+        
+        // Event listeners for audio state changes
+        this.eventListeners = {
+            sleepModeChanged: []
+        };
         
         // Setup user activity detection
         this.setupUserActivityDetection();
@@ -45,6 +50,30 @@ export class AudioManager {
             });
         }
     }
+    
+    // Event listener management methods
+    addEventListener(eventName, callback) {
+        if (this.eventListeners[eventName]) {
+            this.eventListeners[eventName].push(callback);
+        }
+    }
+    
+    removeEventListener(eventName, callback) {
+        if (this.eventListeners[eventName]) {
+            this.eventListeners[eventName] = this.eventListeners[eventName].filter(
+                listener => listener !== callback
+            );
+        }
+    }
+    
+    // Trigger event listeners for a specific event
+    dispatchEvent(eventName, data) {
+        if (this.eventListeners[eventName]) {
+            for (const listener of this.eventListeners[eventName]) {
+                listener(data);
+            }
+        }
+    }
 
     async initAudio() {
         try {
@@ -66,7 +95,15 @@ export class AudioManager {
             
             // Create audio context if not exists
             if (!this.audioContext) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                // Enhanced browser compatibility for AudioContext
+                const AudioContext = window.AudioContext ||
+                                    window.webkitAudioContext ||
+                                    window.mozAudioContext ||
+                                    window.msAudioContext;
+                
+                if (!AudioContext) {
+                    throw new Error('Web Audio API is not supported in this browser');
+                }
                 
                 // Default audio context options
                 let audioContextOptions = { latencyHint: 'playback' };
@@ -107,7 +144,18 @@ export class AudioManager {
             // Load audio worklet with absolute path
             const currentPath = window.location.pathname;
             const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-            await this.audioContext.audioWorklet.addModule(`${basePath}/plugins/audio-processor.js`);
+            
+            // Check if AudioWorklet is supported
+            if (this.audioContext.audioWorklet) {
+                try {
+                    await this.audioContext.audioWorklet.addModule(`${basePath}/plugins/audio-processor.js`);
+                } catch (error) {
+                    console.error('Failed to load audio worklet module:', error);
+                    throw new Error(`AudioWorklet failed to load: ${error.message}`);
+                }
+            } else {
+                throw new Error('AudioWorklet is not supported in this browser. Please use a modern browser.');
+            }
 
             // Check if we're running in Electron and have audio preferences
             let audioConstraints = {
@@ -152,23 +200,11 @@ export class AudioManager {
             this.workletNode.port.onmessage = (event) => {
                 const data = event.data;
                 if (data.type === 'sleepModeChanged') {
-                    // Update UI with sleep mode status
-                    const sampleRateElement = document.getElementById('sampleRate');
-                    if (sampleRateElement) {
-                        if (data.isSleepMode) {
-                            // Add sleep mode indicator if not already present
-                            if (!sampleRateElement.textContent.includes('Sleep Mode')) {
-                                sampleRateElement.textContent += ' - Sleep Mode';
-                            }
-                        } else {
-                            // Remove sleep mode indicator and ensure sample rate is displayed correctly
-                            sampleRateElement.textContent = sampleRateElement.textContent.replace(' - Sleep Mode', '');
-                            // Make sure the sample rate is still displayed correctly
-                            if (!sampleRateElement.textContent.includes('Hz')) {
-                                sampleRateElement.textContent = `${this.audioContext.sampleRate} Hz`;
-                            }
-                        }
-                    }
+                    // Dispatch sleep mode changed event instead of directly updating UI
+                    this.dispatchEvent('sleepModeChanged', {
+                        isSleepMode: data.isSleepMode,
+                        sampleRate: this.audioContext.sampleRate
+                    });
                 }
             };
 
@@ -187,7 +223,6 @@ export class AudioManager {
 
     // Add isInitializing flag to control logging
     async rebuildPipeline(isInitializing = false) {
-        console.log('Rebuild Pipeline')
         if (!this.audioContext || !this.sourceNode) return;
 
         // Disconnect existing connections
@@ -200,10 +235,17 @@ export class AudioManager {
         this.sourceNode.connect(this.workletNode);
         
         // Create a MediaStreamDestination to get a MediaStream
-        this.destinationNode = this.audioContext.createMediaStreamDestination();
-        
-        // Connect worklet to the MediaStreamDestination
-        this.workletNode.connect(this.destinationNode);
+        // Check if createMediaStreamDestination is supported
+        if (typeof this.audioContext.createMediaStreamDestination === 'function') {
+            this.destinationNode = this.audioContext.createMediaStreamDestination();
+            
+            // Connect worklet to the MediaStreamDestination
+            this.workletNode.connect(this.destinationNode);
+        } else {
+            console.warn('createMediaStreamDestination is not supported in this browser');
+            // Fall back to default destination only
+            this.destinationNode = null;
+        }
         
         // Store the connection to default destination so we can disconnect it later if needed
         this.defaultDestinationConnection = null;
@@ -212,7 +254,18 @@ export class AudioManager {
             
             // Create a script processor node to zero-fill audio output
             const bufferSize = 4096;
-            const silenceNode = this.audioContext.createScriptProcessor(bufferSize, 2, 2);
+            // Handle vendor prefixes for ScriptProcessorNode (deprecated but still used)
+            let silenceNode;
+            if (typeof this.audioContext.createScriptProcessor === 'function') {
+                silenceNode = this.audioContext.createScriptProcessor(bufferSize, 2, 2);
+            } else if (typeof this.audioContext.createJavaScriptNode === 'function') {
+                // Older browsers used createJavaScriptNode
+                silenceNode = this.audioContext.createJavaScriptNode(bufferSize, 2, 2);
+            } else {
+                console.warn('ScriptProcessorNode is not supported in this browser');
+                // Skip silence node creation and continue with normal audio output
+                return;
+            }
             
             silenceNode.onaudioprocess = (e) => {
                 // Get output buffer
@@ -262,39 +315,66 @@ export class AudioManager {
                     this.audioElement.muted = false;
                     
                     
-                    // Try to set sinkId
-                    if (typeof this.audioElement.setSinkId === 'function') {
+                    // Check for Audio Output Devices API support
+                    // The setSinkId method is part of the Audio Output Devices API
+                    const hasSinkIdSupport =
+                        typeof this.audioElement.setSinkId === 'function' &&
+                        typeof navigator.mediaDevices !== 'undefined' &&
+                        typeof navigator.mediaDevices.enumerateDevices === 'function';
+                    
+                    if (hasSinkIdSupport) {
                         try {
-                            await this.audioElement.setSinkId(preferences.outputDeviceId);
+                            // Check if the requested device is available
+                            const devices = await navigator.mediaDevices.enumerateDevices();
+                            const outputDevice = devices.find(device =>
+                                device.kind === 'audiooutput' &&
+                                device.deviceId === preferences.outputDeviceId
+                            );
+                            
+                            if (outputDevice) {
+                                await this.audioElement.setSinkId(preferences.outputDeviceId);
+                                console.log(`Audio output set to: ${outputDevice.label || 'unnamed device'}`);
+                            } else {
+                                console.warn('Requested audio output device not found, using default');
+                                // Fall back to default device
+                                await this.audioElement.setSinkId('default');
+                            }
                             
                             // Now set the srcObject after sinkId is set
-                            this.audioElement.srcObject = this.destinationNode.stream;
+                            if (this.destinationNode && this.destinationNode.stream) {
+                                this.audioElement.srcObject = this.destinationNode.stream;
+                            } else {
+                                console.warn('No destination stream available');
+                                // Fall back to default output
+                                this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                            }
                             
                             // Explicitly call play()
                             try {
                                 await this.audioElement.play();
                             } catch (playError) {
+                                console.warn('Failed to play audio:', playError);
                                 // Fall back to default output
                                 this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
-                                if (isInitializing) {
-                                }
                             }
                         } catch (sinkError) {
-                            if (isInitializing) {
-                            }
+                            console.warn('Failed to set audio output device:', sinkError);
                             this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                            
                             // Still try to use the audio element as a fallback
-                            this.audioElement.srcObject = this.destinationNode.stream;
+                            if (this.destinationNode && this.destinationNode.stream) {
+                                this.audioElement.srcObject = this.destinationNode.stream;
+                            }
                         }
                     } else {
-                        if (isInitializing) {
-                        }
+                        console.warn('Audio Output Devices API not supported in this browser');
                         // Fall back to default output
                         this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
-                        if (isInitializing) {
-                        }
+                        
                         // Still try to use the audio element as a fallback
-                        this.audioElement.srcObject = this.destinationNode.stream;
+                        if (this.destinationNode && this.destinationNode.stream) {
+                            this.audioElement.srcObject = this.destinationNode.stream;
+                        }
                     }
                     
                     // Add event listeners for debugging
@@ -324,16 +404,9 @@ export class AudioManager {
             return;
         }
 
-        // Remove excessive logging
-        // console.log(`Updating pipeline with ${this.pipeline.length} plugins:`,
-        //    this.pipeline.map(p => `${p.name} (${p.enabled ? 'enabled' : 'disabled'})`));
-        
         // Send plugin data to worklet
         const pluginData = this.pipeline.map(plugin => {
             const params = plugin.getParameters();
-            // Remove excessive logging
-            // console.log(`Plugin ${plugin.name} parameters:`, params);
-            
             return {
                 id: plugin.id,
                 type: plugin.constructor.name,
@@ -346,8 +419,6 @@ export class AudioManager {
         if (!this.workletNode.port.onmessage) {
             this.workletNode.port.onmessage = (event) => {
                 const data = event.data;
-                // Remove excessive logging
-                // console.log('Message from worklet:', data);
             };
         }
         
@@ -357,13 +428,9 @@ export class AudioManager {
             plugins: pluginData,
             masterBypass: this.masterBypass
         });
-        
-        // Remove excessive logging
-        // console.log('Pipeline update message sent to worklet');
     }
 
     async reset(audioPreferences = null) {
-        console.log('Reset')
         // Stop audio element if it exists
         if (this.audioElement) {
             this.audioElement.pause();
@@ -434,8 +501,8 @@ export class AudioManager {
         }
         
         // Skip initialization if we're being called from the sample rate adjustment code
-        if (this._skipInitOnNextReset) {
-            this._skipInitOnNextReset = false;
+        if (this._skipAudioInitDuringSampleRateChange) {
+            this._skipAudioInitDuringSampleRateChange = false;
             return '';
         }
         
@@ -518,12 +585,33 @@ export class AudioManager {
             }
 
             const { numberOfChannels, length: totalSamples, sampleRate } = audioBuffer;
+            
+            // Handle browser compatibility for OfflineAudioContext
+            const OfflineAudioCtx = window.OfflineAudioContext ||
+                                   window.webkitOfflineAudioContext ||
+                                   window.mozOfflineAudioContext;
+            
+            if (!OfflineAudioCtx) {
+                throw new Error('OfflineAudioContext is not supported in this browser');
+            }
+            
             // Create offline context for final rendering
-            this.offlineContext = new OfflineAudioContext({
-                numberOfChannels,
-                length: totalSamples,
-                sampleRate
-            });
+            // Different browsers may have different constructor signatures
+            try {
+                // Modern constructor with options object
+                this.offlineContext = new OfflineAudioCtx({
+                    numberOfChannels,
+                    length: totalSamples,
+                    sampleRate
+                });
+            } catch (error) {
+                try {
+                    // Legacy constructor with separate arguments
+                    this.offlineContext = new OfflineAudioCtx(numberOfChannels, totalSamples, sampleRate);
+                } catch (legacyError) {
+                    throw new Error(`Failed to create OfflineAudioContext: ${legacyError.message}`);
+                }
+            }
 
             const BLOCK_SIZE = 128;
             // Create buffer for processed audio

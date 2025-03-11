@@ -94,29 +94,41 @@ export class PipelineManager {
     }
 
     getPresets() {
-        const presetsJson = localStorage.getItem('effetune_presets');
-        return presetsJson ? JSON.parse(presetsJson) : {};
+        try {
+            // Use the original storage key for presets
+            const presetsJson = localStorage.getItem('effetune_presets');
+            return presetsJson ? JSON.parse(presetsJson) : {};
+        } catch (error) {
+            console.error('Failed to load presets:', error);
+            return {};
+        }
     }
 
     savePreset(name) {
         const presets = this.getPresets();
         
-        // Create preset data
-        const presetData = {
-            plugins: this.audioManager.pipeline.map(plugin => {
-                const params = plugin.getSerializableParameters ?
-                    plugin.getSerializableParameters() : {};
-                const { id, ...cleanParams } = params;
-                return {
-                    ...cleanParams,
-                    nm: plugin.name,
-                    en: plugin.enabled
-                };
-            })
+        // Create preset data with original format (plugins array)
+        const pluginsData = this.audioManager.pipeline.map(plugin => {
+            const params = plugin.getSerializableParameters ?
+                plugin.getSerializableParameters() : {};
+            
+            // Remove id from params if it exists
+            const { id, enabled, ...cleanParams } = params;
+            
+            // Use nm and en for name and enabled to maintain original format
+            return {
+                ...cleanParams,
+                nm: plugin.name,
+                en: plugin.enabled
+            };
+        });
+        
+        // Save preset with original format
+        presets[name] = {
+            plugins: pluginsData
         };
         
-        // Save to local storage
-        presets[name] = presetData;
+        // Save to local storage with original key
         localStorage.setItem('effetune_presets', JSON.stringify(presets));
         
         // Update UI
@@ -129,67 +141,152 @@ export class PipelineManager {
         }
     }
 
-    loadPreset(name) {
-        const presets = this.getPresets();
-        const preset = presets[name];
+    /**
+     * Load a preset into the pipeline
+     * @param {string|Object} nameOrPreset - The name of the preset to load from localStorage, or a preset object
+     */
+    loadPreset(nameOrPreset) {
+        let preset;
+        let name;
         
-        if (!preset) return;
+        // No need for isLoadingPreset flag anymore
         
-        // Clean up existing plugins before removing them
-        this.audioManager.pipeline.forEach(plugin => {
-            if (typeof plugin.cleanup === 'function') {
-                plugin.cleanup();
-            }
-        });
-        
-        // Clear current pipeline and expanded plugins
-        this.audioManager.pipeline.length = 0;
-        this.expandedPlugins.clear();
-        
-        // Load plugins
-        preset.plugins.forEach(state => {
-            const plugin = this.pluginManager.createPlugin(state.nm);
-            if (plugin) {
-                plugin.enabled = state.en;
-                const { nm, en, ...params } = state;
-                if (plugin.setParameters) {
-                    plugin.setParameters(params);
+        // Check if nameOrPreset is a string (preset name) or an object (preset data)
+        if (typeof nameOrPreset === 'string') {
+            // It's a preset name, load from localStorage
+            name = nameOrPreset;
+            const presets = this.getPresets();
+            preset = presets[name];
+            
+            if (!preset) {
+                if (window.uiManager) {
+                    window.uiManager.setError('Invalid preset data');
                 }
-                this.audioManager.pipeline.push(plugin);
-                // Expand all plugins
-                this.expandedPlugins.add(plugin);
+                return;
             }
-        });
-        
-        
-        // Update UI
-        this.updatePipelineUI();
-        
-        // Update worklet directly without rebuilding pipeline
-        this.updateWorkletPlugins();
-        
-        // Update preset list to ensure all presets are available
-        this.loadPresetList();
-        
-        // Ensure master bypass is OFF after loading preset
-        this.enabled = true;
-        this.audioManager.setMasterBypass(false);
-        const masterToggle = document.querySelector('.toggle-button.master-toggle');
-        if (masterToggle) {
-            masterToggle.classList.remove('off');
+        } else if (typeof nameOrPreset === 'object' && nameOrPreset !== null) {
+            // It's a preset object, use directly
+            preset = nameOrPreset;
+            name = preset.name || 'Imported Preset';
+        } else {
+            if (window.uiManager) {
+                window.uiManager.setError('Invalid preset data');
+            }
+            return;
         }
         
-        // Save state for undo/redo after loading preset
-        this.saveState();
-        
-        if (window.uiManager) {
-            window.uiManager.setError(`Preset "${name}" loaded!`);
-            setTimeout(() => window.uiManager.clearError(), 3000);
+        try {
+            // Clean up existing plugins before removing them
+            this.audioManager.pipeline.forEach(plugin => {
+                if (typeof plugin.cleanup === 'function') {
+                    plugin.cleanup();
+                }
+            });
+            
+            // Clear current pipeline and expanded plugins
+            this.audioManager.pipeline.length = 0;
+            this.expandedPlugins.clear();
+            
+            let plugins = [];
+            
+            // Handle both old format (plugins array) and new format (pipeline array)
+            if (preset.pipeline && Array.isArray(preset.pipeline)) {
+                // New format
+                plugins = preset.pipeline.map(pluginState => {
+                    const plugin = this.pluginManager.createPlugin(pluginState.name);
+                    if (!plugin) return null;
+                    
+                    plugin.enabled = pluginState.enabled;
+                    
+                    // Restore parameters
+                    if (plugin.setSerializedParameters) {
+                        plugin.setSerializedParameters(pluginState.parameters);
+                    } else if (plugin.setParameters) {
+                        plugin.setParameters(pluginState.parameters);
+                    } else if (plugin.parameters) {
+                        Object.assign(plugin.parameters, pluginState.parameters);
+                    }
+                    
+                    if (plugin.updateParameters) {
+                        plugin.updateParameters();
+                    }
+                    
+                    this.expandedPlugins.add(plugin);
+                    return plugin;
+                }).filter(plugin => plugin !== null);
+            } else if (preset.plugins && Array.isArray(preset.plugins)) {
+                // Old format
+                plugins = preset.plugins.map(state => {
+                    const plugin = this.pluginManager.createPlugin(state.nm);
+                    if (!plugin) return null;
+                    
+                    plugin.enabled = state.en;
+                    
+                    // Extract parameters from old format
+                    const { nm, en, ...params } = state;
+                    
+                    if (plugin.setParameters) {
+                        plugin.setParameters(params);
+                    }
+                    
+                    if (plugin.updateParameters) {
+                        plugin.updateParameters();
+                    }
+                    
+                    this.expandedPlugins.add(plugin);
+                    return plugin;
+                }).filter(plugin => plugin !== null);
+            } else {
+                throw new Error('Unrecognized preset format');
+            }
+            
+            // Update pipeline without rebuilding
+            this.audioManager.pipeline = plugins;
+            
+            // Update UI with force rebuild flag
+            this.updatePipelineUI(true);
+            
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugins();
+            
+            // Update preset list to ensure all presets are available
+            this.loadPresetList();
+            
+            // Ensure master bypass is OFF after loading preset
+            this.enabled = true;
+            this.audioManager.setMasterBypass(false);
+            const masterToggle = document.querySelector('.toggle-button.master-toggle');
+            if (masterToggle) {
+                masterToggle.classList.remove('off');
+            }
+            
+            // Save state for undo/redo after loading preset
+            this.saveState();
+            
+            // Display message only when loading from preset combo box (string name)
+            if (window.uiManager && typeof nameOrPreset === 'string') {
+                window.uiManager.setError(`Preset "${name}" loaded!`);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+        } catch (error) {
+            console.error('Failed to load preset:', error);
+            if (window.uiManager) {
+                window.uiManager.setError('Failed to load preset');
+            }
+        } finally {
+            // No need to reset isLoadingPreset flag anymore
         }
     }
 
     deletePreset(name) {
         const presets = this.getPresets();
+        if (!presets[name]) {
+            if (window.uiManager) {
+                window.uiManager.setError('No preset selected');
+            }
+            return;
+        }
+        
         delete presets[name];
         localStorage.setItem('effetune_presets', JSON.stringify(presets));
         
@@ -201,6 +298,63 @@ export class PipelineManager {
             window.uiManager.setError(`Preset "${name}" deleted!`);
             setTimeout(() => window.uiManager.clearError(), 3000);
         }
+    }
+    
+    /**
+     * Get serializable state for a plugin
+     * @param {Object} plugin - The plugin to get state for
+     * @param {boolean} useShortNames - Whether to use short names (nm/en) for name/enabled
+     * @param {boolean} useFullFallback - Not used, kept for backward compatibility
+     * @param {boolean} useDeepCopy - Whether to create a deep copy of parameters
+     * @returns {Object} Serializable plugin state
+     */
+    getSerializablePluginState(plugin, useShortNames = false, useFullFallback = false, useDeepCopy = false) {
+        // Get serializable parameters - all plugins inherit from PluginBase
+        // which defines getSerializableParameters
+        let params = plugin.getSerializableParameters();
+        
+        // Create a deep copy if requested
+        if (useDeepCopy) {
+            params = JSON.parse(JSON.stringify(params));
+        }
+        
+        // Remove id and enabled from params if they exist
+        const { id, enabled, ...cleanParams } = params;
+        
+        if (useShortNames) {
+            // Old format with nm/en
+            return {
+                ...cleanParams,
+                nm: plugin.name,
+                en: plugin.enabled
+            };
+        } else {
+            // New format with name/enabled/parameters
+            return {
+                name: plugin.name,
+                enabled: plugin.enabled,
+                parameters: cleanParams
+            };
+        }
+    }
+
+    /**
+     * Get current preset data for export
+     * @returns {Object} Current preset data
+     */
+    getCurrentPresetData() {
+        const presetName = this.presetSelect.value.trim() || 'My Preset';
+        
+        // Get current pipeline state in the original export format (pipeline array)
+        const pipelineState = this.audioManager.pipeline.map(plugin =>
+            this.getSerializablePluginState(plugin, false, true, true)
+        );
+        
+        return {
+            name: presetName,
+            pipeline: pipelineState,
+            timestamp: Date.now()
+        };
     }
 
     initKeyboardEvents() {
@@ -264,17 +418,9 @@ export class PipelineManager {
                 // Cut selected plugin settings to clipboard (copy + delete)
                 if (this.selectedPlugins.size > 0) {
                     const selectedPluginsArray = Array.from(this.selectedPlugins);
-                    const states = selectedPluginsArray.map(plugin => {
-                        const params = plugin.getSerializableParameters ?
-                            plugin.getSerializableParameters() : {};
-                        // Remove id from params if it exists
-                        const { id, ...cleanParams } = params;
-                        return {
-                            ...cleanParams,
-                            nm: plugin.name,
-                            en: plugin.enabled
-                        };
-                    });
+                    const states = selectedPluginsArray.map(plugin =>
+                        this.getSerializablePluginState(plugin, true, false, false)
+                    );
                     navigator.clipboard.writeText(JSON.stringify(states, null, 2))
                         .then(() => {
                             // After copying, delete the selected plugins
@@ -322,17 +468,9 @@ export class PipelineManager {
                 // Copy selected plugin settings to clipboard
                 if (this.selectedPlugins.size > 0) {
                     const selectedPluginsArray = Array.from(this.selectedPlugins);
-                    const states = selectedPluginsArray.map(plugin => {
-                        const params = plugin.getSerializableParameters ?
-                            plugin.getSerializableParameters() : {};
-                        // Remove id from params if it exists
-                        const { id, ...cleanParams } = params;
-                        return {
-                            ...cleanParams,
-                            nm: plugin.name,
-                            en: plugin.enabled
-                        };
-                    });
+                    const states = selectedPluginsArray.map(plugin =>
+                        this.getSerializablePluginState(plugin, true, false, false)
+                    );
                     navigator.clipboard.writeText(JSON.stringify(states, null, 2))
                         .then(() => {
                             if (window.uiManager) {
@@ -848,10 +986,13 @@ export class PipelineManager {
         };
     }
 
-    updatePipelineUI() {
-        this.pipelineList.innerHTML = '';
+    updatePipelineUI(forceRebuild = false) {
+        // Show/hide empty message based on pipeline length
         this.pipelineEmpty.style.display = this.audioManager.pipeline.length ? 'none' : 'block';
 
+        // Always rebuild the entire UI to ensure proper updates
+        // Note: We've removed the differential update approach for now to fix UI update issues
+        this.pipelineList.innerHTML = '';
         this.audioManager.pipeline.forEach(plugin => {
             const item = this.createPipelineItem(plugin);
             if (this.selectedPlugins.has(plugin)) {
@@ -871,7 +1012,24 @@ export class PipelineManager {
     initDragAndDrop() {
         const pipelineElement = document.getElementById('pipeline');
 
-        // Create file drop area
+        // Create file drop area and setup file input
+        this.createFileDropArea(pipelineElement);
+        
+        // Setup plugin selection and drag handlers
+        this.setupPluginSelectionHandlers(pipelineElement);
+        
+        // Setup plugin drag and drop handlers
+        this.setupPluginDragHandlers(pipelineElement);
+        
+        // Setup file drag and drop handlers
+        this.setupFileDropHandlers();
+    }
+    
+    /**
+     * Creates the file drop area and file input element
+     * @param {HTMLElement} pipelineElement - The pipeline container element
+     */
+    createFileDropArea(pipelineElement) {
         // Create file input element
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -923,7 +1081,33 @@ export class PipelineManager {
             fileInput.click();
         });
 
-        // Handle selected files
+        // Setup file input change handler
+        this.setupFileInputHandlers(fileInput);
+
+        // Create download container inside the drop area
+        const downloadContainer = document.createElement('div');
+        downloadContainer.className = 'download-container';
+        downloadContainer.style.display = 'none';
+
+        // Add download container to drop area
+        dropArea.appendChild(downloadContainer);
+
+        // Add drop area to pipeline container
+        pipelineElement.appendChild(dropArea);
+
+        // Store references
+        this.dropArea = dropArea;
+        this.downloadContainer = downloadContainer;
+        this.progressContainer = dropArea.querySelector('.progress-container');
+        this.progressBar = dropArea.querySelector('.progress');
+        this.progressText = dropArea.querySelector('.progress-text');
+    }
+    
+    /**
+     * Sets up handlers for file input element
+     * @param {HTMLInputElement} fileInput - The file input element
+     */
+    setupFileInputHandlers(fileInput) {
         fileInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
             if (files.length === 0) {
@@ -996,26 +1180,13 @@ export class PipelineManager {
                 fileInput.value = '';
             }
         });
-
-        // Create download container inside the drop area
-        const downloadContainer = document.createElement('div');
-        downloadContainer.className = 'download-container';
-        downloadContainer.style.display = 'none';
-
-        // Add download container to drop area
-        dropArea.appendChild(downloadContainer);
-
-        // Add drop area to pipeline container
-        pipelineElement.appendChild(dropArea);
-
-        // Store references
-        this.dropArea = dropArea;
-        this.downloadContainer = downloadContainer;
-        this.progressContainer = dropArea.querySelector('.progress-container');
-        this.progressBar = dropArea.querySelector('.progress');
-        this.progressText = dropArea.querySelector('.progress-text');
-
-        // Handle plugin drag and drop
+    }
+    
+    /**
+     * Sets up plugin selection handlers
+     * @param {HTMLElement} pipelineElement - The pipeline container element
+     */
+    setupPluginSelectionHandlers(pipelineElement) {
         pipelineElement.addEventListener('click', (e) => {
             const pipelineHeader = pipelineElement.querySelector('.pipeline-header');
             if (e.target === pipelineElement ||
@@ -1026,7 +1197,13 @@ export class PipelineManager {
                 this.updateSelectionClasses();
             }
         });
-        
+    }
+    
+    /**
+     * Sets up plugin drag and drop handlers
+     * @param {HTMLElement} pipelineElement - The pipeline container element
+     */
+    setupPluginDragHandlers(pipelineElement) {
         // Handle plugin drag over
         pipelineElement.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -1046,9 +1223,111 @@ export class PipelineManager {
                 this.pluginListManager.getInsertionIndicator().style.display = 'none';
             }
         });
+        
+        // Handle dropped plugins
+        pipelineElement.addEventListener('drop', (e) => {
+            // Skip if this is a file drop
+            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+                return;
+            }
+            
+            e.preventDefault();
 
+            // Check for plugin reordering
+            const sourceIndex = e.dataTransfer.getData('application/x-pipeline-index');
+            if (sourceIndex !== '') {
+                this.handlePluginReordering(e, sourceIndex);
+                return;
+            }
+
+            // Handle new plugin creation
+            this.handleNewPluginDrop(e);
+        });
+    }
+    
+    /**
+     * Handles plugin reordering on drop
+     * @param {DragEvent} e - The drop event
+     * @param {string} sourceIndex - The source index of the plugin being moved
+     */
+    handlePluginReordering(e, sourceIndex) {
+        const parsedSourceIndex = parseInt(sourceIndex);
+        const plugin = this.audioManager.pipeline[parsedSourceIndex];
+        
+        const items = Array.from(this.pipelineList.children);
+        const targetItem = items.find(item => {
+            const rect = item.getBoundingClientRect();
+            return e.clientY < rect.top + (rect.height / 2);
+        });
+        
+        let targetIndex = targetItem ? items.indexOf(targetItem) : items.length;
+        if (targetIndex > parsedSourceIndex) {
+            targetIndex--;
+        }
+        
+        this.audioManager.pipeline.splice(parsedSourceIndex, 1);
+        this.audioManager.pipeline.splice(targetIndex, 0, plugin);
+        
+        if (!e.ctrlKey && !e.metaKey) {
+            this.selectedPlugins.clear();
+        }
+        this.selectedPlugins.add(plugin);
+        this.updateSelectionClasses();
+        
+        // Update worklet directly without rebuilding pipeline
+        this.updateWorkletPlugins();
+        
+        // Save state for undo/redo
+        this.saveState();
+        
+        requestAnimationFrame(() => {
+            this.updatePipelineUI();
+        });
+    }
+    
+    /**
+     * Handles dropping a new plugin
+     * @param {DragEvent} e - The drop event
+     */
+    handleNewPluginDrop(e) {
+        const pluginName = e.dataTransfer.getData('text/plain');
+        if (pluginName && this.pluginManager.pluginClasses[pluginName]) {
+            const plugin = this.pluginManager.createPlugin(pluginName);
+            this.expandedPlugins.add(plugin);
+
+            const items = Array.from(this.pipelineList.children);
+            const targetItem = items.find(item => {
+                const rect = item.getBoundingClientRect();
+                return e.clientY < rect.top + (rect.height / 2);
+            });
+            
+            const targetIndex = targetItem ? items.indexOf(targetItem) : items.length;
+            this.audioManager.pipeline.splice(targetIndex, 0, plugin);
+            
+            if (!e.ctrlKey && !e.metaKey) {
+                this.selectedPlugins.clear();
+            }
+            this.selectedPlugins.add(plugin);
+            this.updateSelectionClasses();
+            
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugins();
+            
+            // Save state for undo/redo
+            this.saveState();
+            
+            requestAnimationFrame(() => {
+                this.updatePipelineUI();
+            });
+        }
+    }
+    
+    /**
+     * Sets up file drag and drop handlers
+     */
+    setupFileDropHandlers() {
         // Handle file drag and drop for audio files only
-        dropArea.addEventListener('dragenter', (e) => {
+        this.dropArea.addEventListener('dragenter', (e) => {
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
@@ -1056,12 +1335,12 @@ export class PipelineManager {
                 
                 if (hasAudioFiles) {
                     e.preventDefault();
-                    dropArea.classList.add('drag-active');
+                    this.dropArea.classList.add('drag-active');
                 }
             }
         }, { passive: false });
         
-        dropArea.addEventListener('dragover', (e) => {
+        this.dropArea.addEventListener('dragover', (e) => {
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
@@ -1070,16 +1349,16 @@ export class PipelineManager {
                 if (hasAudioFiles) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'copy';
-                    dropArea.classList.add('drag-active');
+                    this.dropArea.classList.add('drag-active');
                 }
             }
         }, { passive: false });
         
-        dropArea.addEventListener('dragleave', (e) => {
-            dropArea.classList.remove('drag-active');
+        this.dropArea.addEventListener('dragleave', (e) => {
+            this.dropArea.classList.remove('drag-active');
         }, false);
         
-        dropArea.addEventListener('drop', async (e) => {
+        this.dropArea.addEventListener('drop', async (e) => {
             // Check if this is a file drop
             if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) {
                 return;
@@ -1102,91 +1381,12 @@ export class PipelineManager {
                 this.processDroppedAudioFiles(audioFiles);
                 
                 // Remove drag active class
-                dropArea.classList.remove('drag-active');
+                this.dropArea.classList.remove('drag-active');
             } else {
                 // Don't show error for non-audio files to allow preset files to be handled by global handler
-                dropArea.classList.remove('drag-active');
+                this.dropArea.classList.remove('drag-active');
             }
         }, { passive: false });
-
-        // Handle dropped plugins
-        pipelineElement.addEventListener('drop', (e) => {
-            // Skip if this is a file drop
-            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-                return;
-            }
-            
-            e.preventDefault();
-
-            // Check for plugin reordering
-            const sourceIndex = e.dataTransfer.getData('application/x-pipeline-index');
-            if (sourceIndex !== '') {
-                const parsedSourceIndex = parseInt(sourceIndex);
-                const plugin = this.audioManager.pipeline[parsedSourceIndex];
-                
-                const items = Array.from(this.pipelineList.children);
-                const targetItem = items.find(item => {
-                    const rect = item.getBoundingClientRect();
-                    return e.clientY < rect.top + (rect.height / 2);
-                });
-                
-                let targetIndex = targetItem ? items.indexOf(targetItem) : items.length;
-                if (targetIndex > parsedSourceIndex) {
-                    targetIndex--;
-                }
-                
-                this.audioManager.pipeline.splice(parsedSourceIndex, 1);
-                this.audioManager.pipeline.splice(targetIndex, 0, plugin);
-                
-                if (!e.ctrlKey && !e.metaKey) {
-                    this.selectedPlugins.clear();
-                }
-                this.selectedPlugins.add(plugin);
-                this.updateSelectionClasses();
-                
-                // Update worklet directly without rebuilding pipeline
-                this.updateWorkletPlugins();
-                
-                // Save state for undo/redo
-                this.saveState();
-                
-                requestAnimationFrame(() => {
-                    this.updatePipelineUI();
-                });
-                return;
-            }
-
-            const pluginName = e.dataTransfer.getData('text/plain');
-            if (pluginName && this.pluginManager.pluginClasses[pluginName]) {
-                const plugin = this.pluginManager.createPlugin(pluginName);
-                this.expandedPlugins.add(plugin);
-
-                const items = Array.from(this.pipelineList.children);
-                const targetItem = items.find(item => {
-                    const rect = item.getBoundingClientRect();
-                    return e.clientY < rect.top + (rect.height / 2);
-                });
-                
-                const targetIndex = targetItem ? items.indexOf(targetItem) : items.length;
-                this.audioManager.pipeline.splice(targetIndex, 0, plugin);
-                
-                if (!e.ctrlKey && !e.metaKey) {
-                    this.selectedPlugins.clear();
-                }
-                this.selectedPlugins.add(plugin);
-                this.updateSelectionClasses();
-                
-                // Update worklet directly without rebuilding pipeline
-                this.updateWorkletPlugins();
-                
-                // Save state for undo/redo
-                this.saveState();
-                
-                requestAnimationFrame(() => {
-                    this.updatePipelineUI();
-                });
-            }
-        });
     }
 
     showProgress() {
@@ -1441,16 +1641,9 @@ export class PipelineManager {
         if (this.isUndoRedoOperation) return;
         
         // Create a deep copy of the current pipeline state
-        const state = this.audioManager.pipeline.map(plugin => {
-            const params = plugin.getSerializableParameters ?
-                plugin.getSerializableParameters() : {};
-            const { id, ...cleanParams } = params;
-            return {
-                ...cleanParams,
-                nm: plugin.name,
-                en: plugin.enabled
-            };
-        });
+        const state = this.audioManager.pipeline.map(plugin =>
+            this.getSerializablePluginState(plugin, true, false, false)
+        );
         
         // If we're not at the end of the history, truncate it
         if (this.historyIndex < this.history.length - 1) {
@@ -1517,8 +1710,8 @@ export class PipelineManager {
                 }
             });
             
-            // Update UI
-            this.updatePipelineUI();
+            // Update UI with force rebuild flag
+            this.updatePipelineUI(true);
             
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugins();

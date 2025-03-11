@@ -81,14 +81,44 @@ export class UIManager {
         if (!pipelineParam) return null;
         
         try {
+            // Validate base64 format using regex
+            if (!/^[A-Za-z0-9+/=]+$/.test(pipelineParam)) {
+                throw new Error('Invalid base64 characters in pipeline parameter');
+            }
+            
             // Convert base64 back to JSON
             const jsonStr = atob(pipelineParam);
             const state = JSON.parse(jsonStr);
             
-            // Convert serialized state back to plugin format
+            // Validate that state is an array
+            if (!Array.isArray(state)) {
+                throw new Error('Pipeline state must be an array');
+            }
+            
+            // Validate each plugin in the state
             const result = state.map(serializedParams => {
-                // Extract plugin name and enabled state
+                // Validate required fields
+                if (typeof serializedParams !== 'object' || serializedParams === null) {
+                    throw new Error('Each plugin state must be an object');
+                }
+                
                 const { nm: name, en: enabled, ...allParams } = serializedParams;
+                
+                // Validate plugin name
+                if (typeof name !== 'string' || name.trim() === '') {
+                    throw new Error('Plugin name is required and must be a string');
+                }
+                
+                // Validate that the plugin exists in the plugin manager
+                if (this.pluginManager && !this.pluginManager.isPluginAvailable(name)) {
+                    console.warn(`Plugin "${name}" is not available in the current configuration`);
+                    // We don't throw here to allow for backward compatibility with older configs
+                }
+                
+                // Validate enabled state
+                if (enabled !== undefined && typeof enabled !== 'boolean') {
+                    throw new Error('Plugin enabled state must be a boolean');
+                }
                 
                 // Create a deep copy of all parameters
                 const paramsCopy = JSON.parse(JSON.stringify(allParams));
@@ -96,13 +126,19 @@ export class UIManager {
                 // Return the complete plugin state
                 return {
                     name,
-                    enabled,
+                    enabled: enabled === undefined ? true : enabled, // Default to enabled if not specified
                     parameters: paramsCopy
                 };
             });
+            
             return result;
         } catch (error) {
             console.error('Failed to parse pipeline state:', error);
+            // Show error to user
+            if (this.stateManager) {
+                this.stateManager.setError(`Invalid URL parameters: ${error.message}`);
+                setTimeout(() => this.stateManager.clearError(), 5000);
+            }
             return null;
         }
     }
@@ -186,6 +222,30 @@ export class UIManager {
                     characterData: true,
                     subtree: true
                 });
+            }
+            
+            // Listen for sleep mode changes from AudioManager
+            this.audioManager.addEventListener('sleepModeChanged', (data) => {
+                this.updateSleepModeDisplay(data.isSleepMode, data.sampleRate);
+            });
+        }
+    }
+    
+    // Update the sleep mode display based on the sleep mode state
+    updateSleepModeDisplay(isSleepMode, sampleRate) {
+        if (!this.sampleRate) return;
+        
+        if (isSleepMode) {
+            // Add sleep mode indicator if not already present
+            if (!this.sampleRate.textContent.includes('Sleep Mode')) {
+                this.sampleRate.textContent += ' - Sleep Mode';
+            }
+        } else {
+            // Remove sleep mode indicator and ensure sample rate is displayed correctly
+            this.sampleRate.textContent = this.sampleRate.textContent.replace(' - Sleep Mode', '');
+            // Make sure the sample rate is still displayed correctly
+            if (!this.sampleRate.textContent.includes('Hz') && sampleRate) {
+                this.sampleRate.textContent = `${sampleRate} Hz`;
             }
         }
     }
@@ -340,229 +400,86 @@ export class UIManager {
      * Initialize preset management functionality
      * Adds support for saving and loading presets in Electron environment
      */
+    /**
+     * Initialize preset management by delegating to PipelineManager
+     */
     initPresetManagement() {
-        // Get preset UI elements
+        // Get preset UI elements for reference
         this.presetSelect = document.getElementById('presetSelect');
         this.presetList = document.getElementById('presetList');
         this.savePresetButton = document.getElementById('savePresetButton');
         this.deletePresetButton = document.getElementById('deletePresetButton');
         
-        // Initialize preset storage
-        this.presets = this.loadPresetsFromStorage() || {};
-        this.updatePresetList();
-        
-        // Set up event listeners
-        this.savePresetButton.addEventListener('click', () => this.saveCurrentPreset());
-        this.deletePresetButton.addEventListener('click', () => this.deleteCurrentPreset());
-        this.presetSelect.addEventListener('change', () => this.loadSelectedPreset());
+        // Delegate preset management to PipelineManager
+        // PipelineManager already initializes these elements in its constructor
     }
     
     /**
-     * Load presets from local storage
-     * @returns {Object} Saved presets or empty object if none found
+     * Get current preset data for export
+     * Delegates to PipelineManager
+     * @returns {Object} Current preset data
      */
-    loadPresetsFromStorage() {
-        try {
-            const presetsJson = localStorage.getItem('effetune-presets');
-            return presetsJson ? JSON.parse(presetsJson) : {};
-        } catch (error) {
-            console.error('Failed to load presets:', error);
-            return {};
-        }
-    }
-    
-    /**
-     * Save presets to local storage
-     */
-    savePresetsToStorage() {
-        try {
-            localStorage.setItem('effetune-presets', JSON.stringify(this.presets));
-        } catch (error) {
-            console.error('Failed to save presets:', error);
-        }
-    }
-    
-    /**
-     * Update the preset dropdown list
-     */
-    updatePresetList() {
-        // Clear existing options
-        this.presetList.innerHTML = '';
-        
-        // Add each preset to the datalist
-        Object.keys(this.presets).forEach(presetName => {
-            const option = document.createElement('option');
-            option.value = presetName;
-            this.presetList.appendChild(option);
-        });
-    }
-    
-    /**
-     * Save the current pipeline state as a preset
-     */
-    saveCurrentPreset() {
-        const presetName = this.presetSelect.value.trim();
-        if (!presetName) {
-            this.setError('Please enter a preset name');
-            return;
-        }
-        
-        // Get current pipeline state
-        const pipelineState = this.audioManager.pipeline.map(plugin => {
-            // Get serializable parameters
-            let params = plugin.getSerializableParameters ?
-                plugin.getSerializableParameters() :
-                (plugin.getParameters ? plugin.getParameters() : plugin.parameters);
-            
-            // Create a deep copy
-            params = JSON.parse(JSON.stringify(params || {}));
-            
-            return {
-                name: plugin.name,
-                enabled: plugin.enabled,
-                parameters: params
-            };
-        });
-        
-        // Save preset
-        this.presets[presetName] = {
-            name: presetName,
-            pipeline: pipelineState,
-            timestamp: Date.now()
-        };
-        
-        // Update storage and UI
-        this.savePresetsToStorage();
-        this.updatePresetList();
-        this.setError(`Preset "${presetName}" saved`);
-        setTimeout(() => this.clearError(), 3000);
-    }
-    
-    /**
-     * Delete the currently selected preset
-     */
-    deleteCurrentPreset() {
-        const presetName = this.presetSelect.value.trim();
-        if (!presetName || !this.presets[presetName]) {
-            this.setError('No preset selected');
-            return;
-        }
-        
-        // Delete preset
-        delete this.presets[presetName];
-        
-        // Update storage and UI
-        this.savePresetsToStorage();
-        this.updatePresetList();
-        this.presetSelect.value = '';
-        this.setError(`Preset "${presetName}" deleted`);
-        setTimeout(() => this.clearError(), 3000);
-    }
-    
-    /**
-     * Load the selected preset
-     */
-    loadSelectedPreset() {
-        const presetName = this.presetSelect.value.trim();
-        if (!presetName || !this.presets[presetName]) {
-            return;
-        }
-        
-        this.loadPreset(this.presets[presetName]);
+    getCurrentPresetData() {
+        return this.pipelineManager.getCurrentPresetData();
     }
     
     /**
      * Load a preset into the pipeline
+     * Delegates to PipelineManager
      * @param {Object} preset The preset to load
      */
     loadPreset(preset) {
-        if (!preset || !preset.pipeline || !Array.isArray(preset.pipeline)) {
+        if (!preset) {
             this.setError('Invalid preset data');
             return;
         }
         
         try {
-            // Clear current pipeline
-            this.audioManager.pipeline = [];
-            
-            // Create new plugins from preset data
-            const plugins = preset.pipeline.map(pluginState => {
-                const plugin = this.pluginManager.createPlugin(pluginState.name);
-                plugin.enabled = pluginState.enabled;
-                
-                // Restore parameters
-                if (plugin.setSerializedParameters) {
-                    plugin.setSerializedParameters(pluginState.parameters);
-                } else if (plugin.setParameters) {
-                    plugin.setParameters({
-                        ...pluginState.parameters,
-                        enabled: pluginState.enabled
-                    });
-                } else if (plugin.parameters) {
-                    Object.assign(plugin.parameters, pluginState.parameters);
-                }
-                
-                plugin.updateParameters();
-                this.expandedPlugins.add(plugin);
-                return plugin;
-            });
-            
-            // Update pipeline without rebuilding
-            this.audioManager.pipeline = plugins;
-            
-            // Update worklet directly without rebuilding pipeline
-            if (window.workletNode) {
-                window.workletNode.port.postMessage({
-                    type: 'updatePlugins',
-                    plugins: this.audioManager.pipeline.map(plugin => ({
-                        id: plugin.id,
-                        type: plugin.constructor.name,
-                        enabled: plugin.enabled,
-                        parameters: plugin.getParameters()
-                    })),
-                    masterBypass: this.audioManager.masterBypass
+            // Handle different preset formats
+            if (preset.pipeline && Array.isArray(preset.pipeline)) {
+                // New format with pipeline array
+                // Convert to the format expected by PipelineManager
+                const presetName = preset.name || 'Imported Preset';
+                const pluginsData = preset.pipeline.map(pluginState => {
+                    return {
+                        nm: pluginState.name,
+                        en: pluginState.enabled,
+                        ...pluginState.parameters
+                    };
                 });
+                
+                // Create a preset object in the format expected by PipelineManager
+                const pipelineManagerPreset = {
+                    name: presetName,
+                    plugins: pluginsData
+                };
+                
+                // Load the preset directly without affecting localStorage
+                this.pipelineManager.loadPreset(pipelineManagerPreset);
+                
+                // Clear the preset combo box after loading from file
+                this.presetSelect.value = '';
+            } else if (preset.plugins && Array.isArray(preset.plugins)) {
+                // Old format with plugins array - can be passed directly
+                const presetName = preset.name || 'Imported Preset';
+                
+                // Ensure the preset has a name
+                const pipelineManagerPreset = {
+                    ...preset,
+                    name: presetName
+                };
+                
+                // Load the preset directly without affecting localStorage
+                this.pipelineManager.loadPreset(pipelineManagerPreset);
+                
+                // Clear the preset combo box after loading from file
+                this.presetSelect.value = '';
+            } else {
+                this.setError('Invalid preset format');
             }
-            
-            // Update UI
-            this.updatePipelineUI();
-            this.updateURL();
-            this.setError(`Preset "${preset.name}" loaded`);
-            setTimeout(() => this.clearError(), 3000);
         } catch (error) {
             console.error('Failed to load preset:', error);
             this.setError('Failed to load preset');
         }
-    }
-    
-    /**
-     * Get current preset data for export
-     * @returns {Object} Current preset data
-     */
-    getCurrentPresetData() {
-        const presetName = this.presetSelect.value.trim() || 'My Preset';
-        
-        // Get current pipeline state
-        const pipelineState = this.audioManager.pipeline.map(plugin => {
-            // Get serializable parameters
-            let params = plugin.getSerializableParameters ?
-                plugin.getSerializableParameters() :
-                (plugin.getParameters ? plugin.getParameters() : plugin.parameters);
-            
-            // Create a deep copy
-            params = JSON.parse(JSON.stringify(params || {}));
-            
-            return {
-                name: plugin.name,
-                enabled: plugin.enabled,
-                parameters: params
-            };
-        });
-        
-        return {
-            name: presetName,
-            pipeline: pipelineState,
-            timestamp: Date.now()
-        };
     }
 }
