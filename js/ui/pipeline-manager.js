@@ -136,7 +136,7 @@ export class PipelineManager {
         this.presetSelect.value = name;
         
         if (window.uiManager) {
-            window.uiManager.setError(`Preset "${name}" saved!`);
+            window.uiManager.setError('success.presetSaved', false, { name });
             setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
@@ -160,7 +160,7 @@ export class PipelineManager {
             
             if (!preset) {
                 if (window.uiManager) {
-                    window.uiManager.setError('Invalid preset data');
+                    window.uiManager.setError('error.invalidPresetData');
                 }
                 return;
             }
@@ -170,7 +170,7 @@ export class PipelineManager {
             name = preset.name || 'Imported Preset';
         } else {
             if (window.uiManager) {
-                window.uiManager.setError('Invalid preset data');
+                window.uiManager.setError('error.invalidPresetData');
             }
             return;
         }
@@ -265,13 +265,13 @@ export class PipelineManager {
             
             // Display message only when loading from preset combo box (string name)
             if (window.uiManager && typeof nameOrPreset === 'string') {
-                window.uiManager.setError(`Preset "${name}" loaded!`);
+                window.uiManager.setError('success.presetLoaded', false, { name });
                 setTimeout(() => window.uiManager.clearError(), 3000);
             }
         } catch (error) {
             console.error('Failed to load preset:', error);
             if (window.uiManager) {
-                window.uiManager.setError('Failed to load preset');
+                window.uiManager.setError('error.failedToLoadPreset');
             }
         } finally {
             // No need to reset isLoadingPreset flag anymore
@@ -282,7 +282,7 @@ export class PipelineManager {
         const presets = this.getPresets();
         if (!presets[name]) {
             if (window.uiManager) {
-                window.uiManager.setError('No preset selected');
+                window.uiManager.setError('error.noPresetSelected');
             }
             return;
         }
@@ -295,7 +295,7 @@ export class PipelineManager {
         this.presetSelect.value = '';
         
         if (window.uiManager) {
-            window.uiManager.setError(`Preset "${name}" deleted!`);
+            window.uiManager.setError('success.presetDeleted', false, { name });
             setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
@@ -453,14 +453,14 @@ export class PipelineManager {
                             this.saveState();
                             
                             if (window.uiManager) {
-                                window.uiManager.setError('Plugin settings cut to clipboard!');
+                                window.uiManager.setError('success.settingsCut', false);
                                 setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         })
                         .catch(err => {
                             console.error('Failed to cut settings:', err);
                             if (window.uiManager) {
-                                window.uiManager.setError('Failed to cut settings to clipboard', true);
+                                window.uiManager.setError('error.failedToCutSettings', true);
                             }
                         });
                 }
@@ -474,14 +474,14 @@ export class PipelineManager {
                     navigator.clipboard.writeText(JSON.stringify(states, null, 2))
                         .then(() => {
                             if (window.uiManager) {
-                                window.uiManager.setError('Plugin settings copied to clipboard!');
+                                window.uiManager.setError('success.settingsCopied', false);
                                 setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         })
                         .catch(err => {
                             console.error('Failed to copy settings:', err);
                             if (window.uiManager) {
-                                window.uiManager.setError('Failed to copy settings to clipboard', true);
+                                window.uiManager.setError('error.failedToCopySettings', true);
                             }
                         });
                 }
@@ -566,20 +566,20 @@ export class PipelineManager {
                             }
 
                             if (window.uiManager) {
-                                window.uiManager.setError('Plugin settings pasted successfully!');
+                                window.uiManager.setError('success.settingsPasted', false);
                                 setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         } catch (err) {
                             console.error('Failed to paste plugin settings:', err);
                             if (window.uiManager) {
-                                window.uiManager.setError('Failed to paste plugin settings', true);
+                                window.uiManager.setError('error.failedToPasteSettings', true);
                             }
                         }
                     })
                     .catch(err => {
                         console.error('Failed to read clipboard:', err);
                         if (window.uiManager) {
-                            window.uiManager.setError('Failed to read clipboard', true);
+                            window.uiManager.setError('error.failedToReadClipboard', true);
                         }
                     });
             } else if (e.key === 'Delete') {
@@ -1045,32 +1045,58 @@ export class PipelineManager {
         // Check if running in Electron environment
         if (window.electronIntegration && window.electronIntegration.isElectron) {
             // For Electron, only show the link
+            const specifyAudioText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.specifyAudioFiles') :
+                'Specify the audio files to process using the current effects.';
+            const processingText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.processing') :
+                'Processing...';
+            const cancelText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.cancelButton') :
+                'Cancel';
+                
             dropArea.innerHTML = `
                 <div class="drop-message">
-                    <span class="select-files">Specify the audio files to process using the current effects.</span>
+                    <span class="select-files">${specifyAudioText}</span>
                 </div>
                 <div class="progress-container" style="display: none;">
                     <div class="progress-bar">
                         <div class="progress"></div>
                     </div>
-                <div class="progress-text">Processing...</div>
-                <button class="cancel-button">Cancel</button>
+                <div class="progress-text">${processingText}</div>
+                <button class="cancel-button">${cancelText}</button>
             </div>
             `;
         } else {
             // For web app, show both drop area and link
+            const dropAudioText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.dropAudioFiles') :
+                'Drop audio files here to process with current effects';
+            const orText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.orText') :
+                'or';
+            const selectFilesText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.selectFiles') :
+                'specify audio files to process';
+            const processingText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.processing') :
+                'Processing...';
+            const cancelText = window.uiManager && window.uiManager.t ?
+                window.uiManager.t('ui.cancelButton') :
+                'Cancel';
+                
             dropArea.innerHTML = `
                 <div class="drop-message">
-                    <span>Drop audio files here to process with current effects</span>
-                    <span class="or-text">or</span>
-                    <span class="select-files">specify audio files to process</span>
+                    <span>${dropAudioText}</span>
+                    <span class="or-text">${orText}</span>
+                    <span class="select-files">${selectFilesText}</span>
                 </div>
                 <div class="progress-container" style="display: none;">
                     <div class="progress-bar">
                         <div class="progress"></div>
                     </div>
-                <div class="progress-text">Processing...</div>
-                <button class="cancel-button">Cancel</button>
+                <div class="progress-text">${processingText}</div>
+                <button class="cancel-button">${cancelText}</button>
             </div>
             `;
         }
@@ -1131,7 +1157,15 @@ export class PipelineManager {
                         const progressCallback = (percent) => {
                             const totalPercent = (i + percent / 100) / totalFiles * 100;
                             this.progressBar.style.width = `${Math.round(totalPercent)}%`;
-                            this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                            if (window.uiManager && window.uiManager.t) {
+                                this.setProgressText(window.uiManager.t('status.processingFile', {
+                                    current: i + 1,
+                                    total: totalFiles,
+                                    percent: Math.round(percent)
+                                }));
+                            } else {
+                                this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                            }
                         };
 
                         // Process the file with progress updates
@@ -1144,25 +1178,28 @@ export class PipelineManager {
                             });
                         } else {
                             // Processing was cancelled
-                            this.setProgressText('Processing canceled');
+                            this.setProgressText(window.uiManager && window.uiManager.t ?
+                                window.uiManager.t('status.processingCanceled') : 'Processing canceled');
                             return;
                         }
                     } catch (error) {
                         console.error('Error processing file:', error);
-                        window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
+                        window.uiManager.setError('error.failedToProcessFile', true, { fileName: file.name, errorMessage: error.message });
                     }
                 }
 
                 // Set progress to 100%
                 this.progressBar.style.width = '100%';
-                this.setProgressText('Processing complete');
+                this.setProgressText(window.uiManager && window.uiManager.t ?
+                    window.uiManager.t('status.processingComplete') : 'Processing complete');
 
                 // Create zip if multiple files were processed
                 if (processedFiles.length > 0) {
                     if (processedFiles.length === 1) {
                         this.showDownloadLink(processedFiles[0].blob, files[0].name);
                     } else {
-                        this.setProgressText('Creating zip file...');
+                        this.setProgressText(window.uiManager && window.uiManager.t ?
+                            window.uiManager.t('status.creatingZipFile') : 'Creating zip file...');
                         const zip = new JSZip();
                         processedFiles.forEach(({blob, name}) => {
                             zip.file(name, blob);
@@ -1173,7 +1210,7 @@ export class PipelineManager {
                 }
             } catch (error) {
                 console.error('Error processing files:', error);
-                window.uiManager.setError('Failed to process audio files: ' + error.message, true);
+                window.uiManager.setError('error.failedToProcessAudioFiles', true, { errorMessage: error.message });
             } finally {
                 this.hideProgress();
                 // Reset file input
@@ -1444,9 +1481,14 @@ export class PipelineManager {
             // For Electron, use save dialog instead of download
             downloadLink.href = '#';
             downloadLink.className = 'download-link';
+            const saveText = window.uiManager && window.uiManager.t ?
+                (isZip ? window.uiManager.t('ui.saveMultipleFiles', { size: (blob.size / (1024 * 1024)).toFixed(1) }) :
+                window.uiManager.t('ui.saveSingleFile', { size: (blob.size / (1024 * 1024)).toFixed(1) })) :
+                `Save ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)`;
+                
             downloadLink.innerHTML = `
                 <span class="download-icon">⭳</span>
-                Save ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
+                ${saveText}
             `;
             
             // Add click handler to show save dialog
@@ -1503,9 +1545,14 @@ export class PipelineManager {
             downloadLink.href = URL.createObjectURL(blob);
             downloadLink.download = filename;
             downloadLink.className = 'download-link';
+            const downloadText = window.uiManager && window.uiManager.t ?
+                (isZip ? window.uiManager.t('ui.downloadMultipleFiles', { size: (blob.size / (1024 * 1024)).toFixed(1) }) :
+                window.uiManager.t('ui.downloadSingleFile', { size: (blob.size / (1024 * 1024)).toFixed(1) })) :
+                `Download ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)`;
+                
             downloadLink.innerHTML = `
                 <span class="download-icon">⭳</span>
-                Download ${isZip ? 'processed files' : 'processed file'} (${(blob.size / (1024 * 1024)).toFixed(1)} MB)
+                ${downloadText}
             `;
             
             // Clean up object URL when downloaded
@@ -1594,25 +1641,28 @@ export class PipelineManager {
                         });
                     } else {
                         // Processing was cancelled
-                        this.setProgressText('Processing canceled');
+                        this.setProgressText(window.uiManager && window.uiManager.t ?
+                            window.uiManager.t('status.processingCanceled') : 'Processing canceled');
                         return;
                     }
                 } catch (error) {
                     console.error('Error processing file:', error);
-                    window.uiManager.setError(`Failed to process ${file.name}: ${error.message}`, true);
+                    window.uiManager.setError('error.failedToProcessFile', true, { fileName: file.name, errorMessage: error.message });
                 }
             }
 
             // Set progress to 100%
             this.progressBar.style.width = '100%';
-            this.setProgressText('Processing complete');
+            this.setProgressText(window.uiManager && window.uiManager.t ?
+                window.uiManager.t('status.processingComplete') : 'Processing complete');
 
             // Create zip if multiple files were processed
             if (processedFiles.length > 0) {
                 if (processedFiles.length === 1) {
                     this.showDownloadLink(processedFiles[0].blob, files[0].name);
                 } else {
-                    this.setProgressText('Creating zip file...');
+                    this.setProgressText(window.uiManager && window.uiManager.t ?
+                        window.uiManager.t('status.creatingZipFile') : 'Creating zip file...');
                     const zip = new JSZip();
                     processedFiles.forEach(({blob, name}) => {
                         zip.file(name, blob);
@@ -1623,7 +1673,7 @@ export class PipelineManager {
             }
         } catch (error) {
             console.error('Error processing files:', error);
-            window.uiManager.setError('Failed to process audio files: ' + error.message, true);
+            window.uiManager.setError('error.failedToProcessAudioFiles', true, { errorMessage: error.message });
         } finally {
             this.hideProgress();
         }

@@ -1,0 +1,101 @@
+{
+  // 오류 및 알림 메시지
+  "error.invalidUrl": "잘못된 URL 매개변수: {message}",
+  "error.invalidPresetData": "잘못된 프리셋 데이터",
+  "error.failedToLoadPreset": "프리셋 로드 실패",
+  "error.noPresetSelected": "선택된 프리셋이 없습니다",
+  "error.failedToCutSettings": "설정을 클립보드로 잘라내기 실패",
+  "error.failedToCopySettings": "설정을 클립보드로 복사 실패",
+  "error.failedToPasteSettings": "플러그인 설정 붙여넣기 실패",
+  "error.failedToReadClipboard": "클립보드 읽기 실패",
+  "error.unknownPresetFormat": "알 수 없는 프리셋 형식",
+  "error.failedToParsePresetFile": "프리셋 파일 구문 분석 실패",
+  "error.failedToReadPresetFile": "프리셋 파일 읽기 실패",
+  "error.failedToProcessFile": "{fileName} 처리 실패: {errorMessage}",
+  "error.failedToProcessAudioFiles": "오디오 파일 처리 실패: {errorMessage}",
+  "error.lowSampleRate": "샘플링 속도가 너무 낮습니다 ({sampleRate}Hz). 오디오 품질이 낮을 수 있습니다. 88.2kHz 이상 권장합니다.",
+  "error.sampleRateWarning": "샘플링 속도가 88.2kHz 미만입니다. 오디오 품질에 영향을 줄 수 있습니다.",
+
+  // 성공 메시지
+  "success.urlCopied": "URL이 클립보드에 복사되었습니다!",
+  "success.presetSaved": "프리셋 \"{name}\" 저장됨!",
+  "success.presetLoaded": "프리셋 \"{name}\" 불러옴!",
+  "success.presetDeleted": "프리셋 \"{name}\" 삭제됨!",
+  "success.settingsCut": "플러그인 설정이 클립보드에 잘라내어졌습니다!",
+  "success.settingsCopied": "플러그인 설정이 클립보드에 복사되었습니다!",
+  "success.settingsPasted": "플러그인 설정이 성공적으로 붙여넣어졌습니다!",
+
+  // 상태 메시지
+  "status.configuringAudio": "오디오 장치 설정 중...",
+  "status.reloading": "다시 로드 중...",
+  "status.processingFile": "파일 처리 중 {current}/{total} ({percent}%)",
+  "status.processingCanceled": "처리 취소됨",
+  "status.processingComplete": "처리 완료",
+  "status.creatingZipFile": "ZIP 파일 생성 중...",
+
+  // UI 요소
+  "ui.resetButton": "오디오 재설정",
+  "ui.configAudioButton": "오디오 설정",
+  "ui.shareButton": "공유",
+  "ui.dragEffectMessage": "이 효과를 원하는 위치로 드래그하여 체인에 추가하세요.\n또는 더블클릭하여 추가할 수 있습니다.",
+  "ui.dragPluginsHere": "효과 체인 구성을 위해 플러그인을 여기에 드래그하세요",
+  "ui.effectsAvailable": "{count}개의 효과 사용 가능",
+  "ui.effectsFound": "{count}개의 효과 검색됨",
+  "ui.searchEffectsPlaceholder": "효과 검색...",
+  "ui.sleepMode": "절전 모드",
+  "ui.whatsThisApp": "이 앱은 무엇인가요?",
+
+  // 파일 처리 UI
+  "ui.dropAudioFiles": "현재 효과로 처리할 오디오 파일을 여기에 드롭하세요",
+  "ui.orText": "또는",
+  "ui.selectFiles": "처리할 오디오 파일 선택",
+  "ui.specifyAudioFiles": "현재 효과로 처리할 오디오 파일을 지정하세요.",
+  "ui.processing": "처리 중...",
+  "ui.cancelButton": "취소",
+  "ui.downloadSingleFile": "처리된 파일 다운로드 ({size} MB)",
+  "ui.downloadMultipleFiles": "처리된 파일들 다운로드 ({size} MB)",
+  "ui.saveSingleFile": "처리된 파일 저장 ({size} MB)",
+  "ui.saveMultipleFiles": "처리된 파일들 저장 ({size} MB)",
+
+  // 메인 메뉴
+  "menu.file": "파일",
+  "menu.file.save": "저장",
+  "menu.file.saveAs": "다른 이름으로 저장...",
+  "menu.file.processAudioFiles": "효과로 오디오 파일 처리...",
+  "menu.file.exportPreset": "프리셋 내보내기...",
+  "menu.file.importPreset": "프리셋 가져오기...",
+  "menu.file.quit": "종료",
+
+  "menu.edit": "편집",
+  "menu.edit.undo": "실행 취소",
+  "menu.edit.redo": "다시 실행",
+  "menu.edit.cut": "잘라내기",
+  "menu.edit.copy": "복사",
+  "menu.edit.paste": "붙여넣기",
+  "menu.edit.delete": "삭제",
+  "menu.edit.selectAll": "전체 선택",
+
+  "menu.view": "보기",
+  "menu.view.reload": "다시 로드",
+  "menu.view.resetZoom": "줌 초기화",
+  "menu.view.zoomIn": "확대",
+  "menu.view.zoomOut": "축소",
+  "menu.view.toggleFullscreen": "전체 화면 전환",
+
+  "menu.settings": "설정",
+  "menu.settings.audioDevices": "오디오 장치...",
+
+  "menu.help": "도움말",
+  "menu.help.help": "도움말",
+  "menu.help.about": "정보",
+
+  // 오디오 설정 대화상자
+  "dialog.audioConfig.title": "오디오 설정",
+  "dialog.audioConfig.inputDevice": "입력 장치:",
+  "dialog.audioConfig.outputDevice": "출력 장치:",
+  "dialog.audioConfig.sampleRate": "샘플링 속도:",
+  "dialog.audioConfig.cancel": "취소",
+  "dialog.audioConfig.apply": "적용",
+  "dialog.audioConfig.updatedTitle": "오디오 설정 업데이트됨",
+  "dialog.audioConfig.updatedMessage": "변경 사항 적용을 위해 앱을 다시 로드합니다..."
+}

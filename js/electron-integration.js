@@ -24,6 +24,88 @@ class ElectronIntegration {
   }
 
   /**
+   * Update the application menu with translated labels
+   * This method is called when translations are loaded
+   */
+  updateApplicationMenu() {
+    if (!this.isElectron || !window.uiManager) return;
+    
+    try {
+      // Get the t function from UIManager
+      const t = window.uiManager.t.bind(window.uiManager);
+      
+      // Create a menu template with translated labels
+      const menuTemplate = {
+        file: {
+          label: t('menu.file'),
+          submenu: [
+            { label: t('menu.file.save') },
+            { label: t('menu.file.saveAs') },
+            { type: 'separator' },
+            { label: t('menu.file.processAudioFiles') },
+            { type: 'separator' },
+            { label: t('menu.file.exportPreset') },
+            { label: t('menu.file.importPreset') },
+            { type: 'separator' },
+            { label: t('menu.file.quit') }
+          ]
+        },
+        edit: {
+          label: t('menu.edit'),
+          submenu: [
+            { label: t('menu.edit.undo') },
+            { label: t('menu.edit.redo') },
+            { type: 'separator' },
+            { label: t('menu.edit.cut') },
+            { label: t('menu.edit.copy') },
+            { label: t('menu.edit.paste') },
+            { type: 'separator' },
+            { label: t('menu.edit.delete') },
+            { label: t('menu.edit.selectAll') }
+          ]
+        },
+        view: {
+          label: t('menu.view'),
+          submenu: [
+            { label: t('menu.view.reload') },
+            { type: 'separator' },
+            { label: t('menu.view.resetZoom') },
+            { label: t('menu.view.zoomIn') },
+            { label: t('menu.view.zoomOut') },
+            { type: 'separator' },
+            { label: t('menu.view.toggleFullscreen') }
+          ]
+        },
+        settings: {
+          label: t('menu.settings'),
+          submenu: [
+            { label: t('menu.settings.audioDevices') }
+          ]
+        },
+        help: {
+          label: t('menu.help'),
+          submenu: [
+            { label: t('menu.help.help') },
+            { type: 'separator' },
+            { label: t('menu.help.about') }
+          ]
+        }
+      };
+      
+      // Send the translated menu template to the main process
+      if (window.electronAPI) {
+        window.electronAPI.updateApplicationMenu(menuTemplate)
+          .catch(error => {
+            // Only log errors, not success
+            console.error('Failed to update application menu:', error);
+          });
+      }
+    } catch (error) {
+      console.error('Error updating application menu:', error);
+    }
+  }
+
+  /**
    * Patch document links to use local markdown files in Electron
    */
   patchDocumentationLinks() {
@@ -307,7 +389,7 @@ class ElectronIntegration {
     try {
       // Show "Configuring audio devices..." message
       if (window.uiManager) {
-        window.uiManager.setError('Configuring audio devices...');
+        window.uiManager.setError('status.configuringAudio');
       }
       
       // Get available audio devices
@@ -329,12 +411,19 @@ class ElectronIntegration {
       };
       window.addEventListener('beforeunload', clearErrorOnClose);
       
+      // Get translation function from UIManager
+      if (!window.uiManager) {
+        console.error('UIManager not available for translations');
+        return;
+      }
+      const t = window.uiManager.t.bind(window.uiManager);
+      
       // Create dialog HTML
       const dialogHTML = `
         <div class="audio-config-dialog">
-          <h2>Audio Configuration</h2>
+          <h2>${t('dialog.audioConfig.title')}</h2>
           <div class="device-section">
-            <label for="input-device">Input Device:</label>
+            <label for="input-device">${t('dialog.audioConfig.inputDevice')}</label>
             <select id="input-device">
               ${inputDevices.map(device =>
                 `<option value="${device.deviceId}" ${this.audioPreferences?.inputDeviceId === device.deviceId ? 'selected' : ''}>${device.label}</option>`
@@ -342,7 +431,7 @@ class ElectronIntegration {
             </select>
           </div>
           <div class="device-section">
-            <label for="output-device">Output Device:</label>
+            <label for="output-device">${t('dialog.audioConfig.outputDevice')}</label>
             <select id="output-device">
               ${outputDevices.map(device =>
                 `<option value="${device.deviceId}" ${this.audioPreferences?.outputDeviceId === device.deviceId ? 'selected' : ''}>${device.label}</option>`
@@ -350,7 +439,7 @@ class ElectronIntegration {
             </select>
           </div>
           <div class="device-section">
-            <label for="sample-rate">Sample Rate:</label>
+            <label for="sample-rate">${t('dialog.audioConfig.sampleRate')}</label>
             <select id="sample-rate">
               <option value="44100" ${currentSampleRate === 44100 ? 'selected' : ''}>44.1 kHz</option>
               <option value="48000" ${currentSampleRate === 48000 ? 'selected' : ''}>48 kHz</option>
@@ -363,8 +452,8 @@ class ElectronIntegration {
             </select>
           </div>
           <div class="dialog-buttons">
-            <button id="cancel-button">Cancel</button>
-            <button id="apply-button">Apply</button>
+            <button id="cancel-button">${t('dialog.audioConfig.cancel')}</button>
+            <button id="apply-button">${t('dialog.audioConfig.apply')}</button>
           </div>
         </div>
       `;
@@ -485,6 +574,13 @@ class ElectronIntegration {
         // Note: We don't clear the error message here because we're about to show a new message
         // and reload the page. The error will be cleared when the page reloads.
         
+        // Get translation function from UIManager
+        if (!window.uiManager) {
+          console.error('UIManager not available for translations');
+          return;
+        }
+        const t = window.uiManager.t.bind(window.uiManager);
+        
         // Show message about reloading
         const messageElement = document.createElement('div');
         messageElement.style.position = 'fixed';
@@ -497,7 +593,7 @@ class ElectronIntegration {
         messageElement.style.borderRadius = '8px';
         messageElement.style.zIndex = '1000';
         messageElement.style.textAlign = 'center';
-        messageElement.innerHTML = '<h3>Audio Configuration Updated</h3><p>Reloading application to apply changes...</p>';
+        messageElement.innerHTML = `<h3>${t('dialog.audioConfig.updatedTitle')}</h3><p>${t('dialog.audioConfig.updatedMessage')}</p>`;
         document.body.appendChild(messageElement);
         
         // Wait a moment to show the message, then reload using Electron's API

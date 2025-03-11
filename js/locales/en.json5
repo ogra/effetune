@@ -1,0 +1,101 @@
+{
+  // Error and notification messages
+  "error.invalidUrl": "Invalid URL parameters: {message}",
+  "error.invalidPresetData": "Invalid preset data",
+  "error.failedToLoadPreset": "Failed to load preset",
+  "error.noPresetSelected": "No preset selected",
+  "error.failedToCutSettings": "Failed to cut settings to clipboard",
+  "error.failedToCopySettings": "Failed to copy settings to clipboard",
+  "error.failedToPasteSettings": "Failed to paste plugin settings",
+  "error.failedToReadClipboard": "Failed to read clipboard",
+  "error.unknownPresetFormat": "Unknown preset format",
+  "error.failedToParsePresetFile": "Failed to parse preset file",
+  "error.failedToReadPresetFile": "Failed to read preset file",
+  "error.failedToProcessFile": "Failed to process {fileName}: {errorMessage}",
+  "error.failedToProcessAudioFiles": "Failed to process audio files: {errorMessage}",
+  "error.lowSampleRate": "Sample rate is too low ({sampleRate}Hz). Audio quality may be insufficient. 88.2kHz or higher is recommended.",
+  "error.sampleRateWarning": "Sample rate is below recommended 88.2kHz. Audio quality may be affected.",
+
+  // Success messages
+  "success.urlCopied": "URL copied to clipboard!",
+  "success.presetSaved": "Preset \"{name}\" saved!",
+  "success.presetLoaded": "Preset \"{name}\" loaded!",
+  "success.presetDeleted": "Preset \"{name}\" deleted!",
+  "success.settingsCut": "Plugin settings cut to clipboard!",
+  "success.settingsCopied": "Plugin settings copied to clipboard!",
+  "success.settingsPasted": "Plugin settings pasted successfully!",
+
+  // Status messages
+  "status.configuringAudio": "Configuring audio devices...",
+  "status.reloading": "Reloading...",
+  "status.processingFile": "Processing file {current}/{total} ({percent}%)",
+  "status.processingCanceled": "Processing canceled",
+  "status.processingComplete": "Processing complete",
+  "status.creatingZipFile": "Creating zip file...",
+
+  // UI elements
+  "ui.resetButton": "Reset Audio",
+  "ui.configAudioButton": "Config Audio",
+  "ui.shareButton": "Share",
+  "ui.dragEffectMessage": "Drag this effect to add it at your desired position in the Effect Pipeline.\nAlternatively, you can double-click this effect to add it to the Effect Pipeline.",
+  "ui.dragPluginsHere": "Drag plugins here to build your effect pipeline",
+  "ui.effectsAvailable": "{count} effects available",
+  "ui.effectsFound": "{count} effects found",
+  "ui.searchEffectsPlaceholder": "Search effects...",
+  "ui.sleepMode": "Sleep Mode",
+  "ui.whatsThisApp": "What's this app?",
+
+  // File processing UI
+  "ui.dropAudioFiles": "Drop audio files here to process with current effects",
+  "ui.orText": "or",
+  "ui.selectFiles": "specify audio files to process",
+  "ui.specifyAudioFiles": "Specify the audio files to process using the current effects.", // The text to be displayed in the drag area
+  "ui.processing": "Processing...",
+  "ui.cancelButton": "Cancel",
+  "ui.downloadSingleFile": "Download processed file ({size} MB)",
+  "ui.downloadMultipleFiles": "Download processed files ({size} MB)",
+  "ui.saveSingleFile": "Save processed file ({size} MB)",
+  "ui.saveMultipleFiles": "Save processed files ({size} MB)",
+
+  // Main menu
+  "menu.file": "File",
+  "menu.file.save": "Save",
+  "menu.file.saveAs": "Save As...",
+  "menu.file.processAudioFiles": "Process Audio Files with Effects...",
+  "menu.file.exportPreset": "Export Preset...",
+  "menu.file.importPreset": "Import Preset...",
+  "menu.file.quit": "Quit",
+
+  "menu.edit": "Edit",
+  "menu.edit.undo": "Undo",
+  "menu.edit.redo": "Redo",
+  "menu.edit.cut": "Cut",
+  "menu.edit.copy": "Copy",
+  "menu.edit.paste": "Paste",
+  "menu.edit.delete": "Delete",
+  "menu.edit.selectAll": "Select All",
+
+  "menu.view": "View",
+  "menu.view.reload": "Reload",
+  "menu.view.resetZoom": "Reset Zoom",
+  "menu.view.zoomIn": "Zoom In",
+  "menu.view.zoomOut": "Zoom Out",
+  "menu.view.toggleFullscreen": "Toggle Fullscreen",
+
+  "menu.settings": "Settings",
+  "menu.settings.audioDevices": "Audio Devices...",
+
+  "menu.help": "Help",
+  "menu.help.help": "Help",
+  "menu.help.about": "About",
+
+  // Audio Configuration Dialog
+  "dialog.audioConfig.title": "Audio Configuration",
+  "dialog.audioConfig.inputDevice": "Input Device:",
+  "dialog.audioConfig.outputDevice": "Output Device:",
+  "dialog.audioConfig.sampleRate": "Sample Rate:",
+  "dialog.audioConfig.cancel": "Cancel",
+  "dialog.audioConfig.apply": "Apply",
+  "dialog.audioConfig.updatedTitle": "Audio Configuration Updated",
+  "dialog.audioConfig.updatedMessage": "Reloading application to apply changes..."
+}

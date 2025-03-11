@@ -1,0 +1,101 @@
+{
+  // エラーおよび通知メッセージ
+  "error.invalidUrl": "無効なURLパラメータ: {message}",
+  "error.invalidPresetData": "無効なプリセットデータ",
+  "error.failedToLoadPreset": "プリセットの読み込みに失敗しました",
+  "error.noPresetSelected": "プリセットが選択されていません",
+  "error.failedToCutSettings": "クリップボードへの設定の切り取りに失敗しました",
+  "error.failedToCopySettings": "クリップボードへの設定のコピーに失敗しました",
+  "error.failedToPasteSettings": "プラグイン設定の貼り付けに失敗しました",
+  "error.failedToReadClipboard": "クリップボードの読み取りに失敗しました",
+  "error.unknownPresetFormat": "不明なプリセット形式",
+  "error.failedToParsePresetFile": "プリセットファイルの解析に失敗しました",
+  "error.failedToReadPresetFile": "プリセットファイルの読み込みに失敗しました",
+  "error.failedToProcessFile": "{fileName} の処理に失敗しました: {errorMessage}",
+  "error.failedToProcessAudioFiles": "オーディオファイルの処理に失敗しました: {errorMessage}",
+  "error.lowSampleRate": "サンプルレートが低すぎます ({sampleRate}Hz)。オーディオ品質が不十分な可能性があります。88.2kHz以上が推奨されます。",
+  "error.sampleRateWarning": "サンプルレートが推奨の88.2kHzを下回っています。オーディオ品質に影響がある可能性があります。",
+
+  // 成功メッセージ
+  "success.urlCopied": "URLがクリップボードにコピーされました！",
+  "success.presetSaved": "プリセット「{name}」が保存されました！",
+  "success.presetLoaded": "プリセット「{name}」が読み込まれました！",
+  "success.presetDeleted": "プリセット「{name}」が削除されました！",
+  "success.settingsCut": "プラグイン設定がクリップボードに切り取られました！",
+  "success.settingsCopied": "プラグイン設定がクリップボードにコピーされました！",
+  "success.settingsPasted": "プラグイン設定が正常に貼り付けられました！",
+
+  // ステータスメッセージ
+  "status.configuringAudio": "オーディオデバイスを設定中...",
+  "status.reloading": "リロード中...",
+  "status.processingFile": "ファイルを処理中 {current}/{total} ({percent}%)",
+  "status.processingCanceled": "処理がキャンセルされました",
+  "status.processingComplete": "処理が完了しました",
+  "status.creatingZipFile": "ZIPファイルを作成中...",
+
+  // UI要素
+  "ui.resetButton": "オーディオをリセット",
+  "ui.configAudioButton": "オーディオ設定",
+  "ui.shareButton": "共有",
+  "ui.dragEffectMessage": "エフェクトをドラッグして、エフェクトパイプライン内の希望する位置に追加してください。\nまたは、エフェクトをダブルクリックしてエフェクトパイプラインに追加できます。",
+  "ui.dragPluginsHere": "プラグインをここにドラッグしてエフェクトパイプラインを構築",
+  "ui.effectsAvailable": "{count}個のエフェクトが利用可能です",
+  "ui.effectsFound": "{count}個のエフェクトが見つかりました",
+  "ui.searchEffectsPlaceholder": "エフェクトを検索...",
+  "ui.sleepMode": "スリープモード",
+  "ui.whatsThisApp": "このアプリは何？",
+
+  // ファイル処理UI
+  "ui.dropAudioFiles": "オーディオファイルをここにドロップして、現在のエフェクトで処理",
+  "ui.orText": "または",
+  "ui.selectFiles": "処理するオーディオファイルを指定",
+  "ui.specifyAudioFiles": "オーディオファイルを指定して、現在のエフェクトで処理",
+  "ui.processing": "処理中...",
+  "ui.cancelButton": "キャンセル",
+  "ui.downloadSingleFile": "処理済みファイルをダウンロード ({size} MB)",
+  "ui.downloadMultipleFiles": "処理済みファイルをダウンロード ({size} MB)",
+  "ui.saveSingleFile": "処理済みファイルを保存 ({size} MB)",
+  "ui.saveMultipleFiles": "処理済みファイルを保存 ({size} MB)",
+
+  // メインメニュー
+  "menu.file": "ファイル",
+  "menu.file.save": "保存",
+  "menu.file.saveAs": "名前を付けて保存...",
+  "menu.file.processAudioFiles": "エフェクトでオーディオファイルを処理...",
+  "menu.file.exportPreset": "プリセットをエクスポート...",
+  "menu.file.importPreset": "プリセットをインポート...",
+  "menu.file.quit": "終了",
+
+  "menu.edit": "編集",
+  "menu.edit.undo": "元に戻す",
+  "menu.edit.redo": "やり直す",
+  "menu.edit.cut": "切り取り",
+  "menu.edit.copy": "コピー",
+  "menu.edit.paste": "貼り付け",
+  "menu.edit.delete": "削除",
+  "menu.edit.selectAll": "すべて選択",
+
+  "menu.view": "表示",
+  "menu.view.reload": "リロード",
+  "menu.view.resetZoom": "ズームリセット",
+  "menu.view.zoomIn": "ズームイン",
+  "menu.view.zoomOut": "ズームアウト",
+  "menu.view.toggleFullscreen": "全画面切替",
+
+  "menu.settings": "設定",
+  "menu.settings.audioDevices": "オーディオデバイス...",
+
+  "menu.help": "ヘルプ",
+  "menu.help.help": "ヘルプ",
+  "menu.help.about": "アプリについて",
+
+  // オーディオ設定ダイアログ
+  "dialog.audioConfig.title": "オーディオ設定",
+  "dialog.audioConfig.inputDevice": "入力デバイス:",
+  "dialog.audioConfig.outputDevice": "出力デバイス:",
+  "dialog.audioConfig.sampleRate": "サンプルレート:",
+  "dialog.audioConfig.cancel": "キャンセル",
+  "dialog.audioConfig.apply": "適用",
+  "dialog.audioConfig.updatedTitle": "オーディオ設定が更新されました",
+  "dialog.audioConfig.updatedMessage": "変更を適用するためにアプリケーションをリロードしています..."
+}

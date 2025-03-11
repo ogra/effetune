@@ -1,0 +1,101 @@
+{
+  // Mensagens de erro e notificações
+  "error.invalidUrl": "Parâmetros de URL inválidos: {message}",
+  "error.invalidPresetData": "Dados do predefinido inválidos",
+  "error.failedToLoadPreset": "Falha ao carregar o predefinido",
+  "error.noPresetSelected": "Nenhum predefinido selecionado",
+  "error.failedToCutSettings": "Falha ao recortar configurações para a área de transferência",
+  "error.failedToCopySettings": "Falha ao copiar configurações para a área de transferência",
+  "error.failedToPasteSettings": "Falha ao colar configurações do plugin",
+  "error.failedToReadClipboard": "Falha ao ler a área de transferência",
+  "error.unknownPresetFormat": "Formato de predefinido desconhecido",
+  "error.failedToParsePresetFile": "Falha ao analisar o arquivo do predefinido",
+  "error.failedToReadPresetFile": "Falha ao ler o arquivo do predefinido",
+  "error.failedToProcessFile": "Falha ao processar {fileName}: {errorMessage}",
+  "error.failedToProcessAudioFiles": "Falha ao processar arquivos de áudio: {errorMessage}",
+  "error.lowSampleRate": "Taxa de amostragem muito baixa ({sampleRate}Hz). A qualidade do áudio pode ser insuficiente. Recomenda-se 88.2kHz ou superior.",
+  "error.sampleRateWarning": "Taxa de amostragem abaixo dos 88.2kHz recomendados. A qualidade do áudio pode ser afetada.",
+
+  // Mensagens de sucesso
+  "success.urlCopied": "URL copiada para a área de transferência!",
+  "success.presetSaved": "Predefinido \"{name}\" salvo!",
+  "success.presetLoaded": "Predefinido \"{name}\" carregado!",
+  "success.presetDeleted": "Predefinido \"{name}\" excluído!",
+  "success.settingsCut": "Configurações do plugin recortadas para a área de transferência!",
+  "success.settingsCopied": "Configurações do plugin copiadas para a área de transferência!",
+  "success.settingsPasted": "Configurações do plugin coladas com sucesso!",
+
+  // Mensagens de status
+  "status.configuringAudio": "Configurando dispositivos de áudio...",
+  "status.reloading": "Recarregando...",
+  "status.processingFile": "Processando arquivo {current}/{total} ({percent}%)",
+  "status.processingCanceled": "Processamento cancelado",
+  "status.processingComplete": "Processamento concluído",
+  "status.creatingZipFile": "Criando arquivo zip...",
+
+  // Elementos da interface
+  "ui.resetButton": "Redefinir Áudio",
+  "ui.configAudioButton": "Configurar Áudio",
+  "ui.shareButton": "Compartilhar",
+  "ui.dragEffectMessage": "Arraste este efeito para a posição desejada na cadeia de efeitos.\nOu clique duas vezes para adicioná-lo.",
+  "ui.dragPluginsHere": "Arraste plugins aqui para montar sua cadeia de efeitos",
+  "ui.effectsAvailable": "{count} efeitos disponíveis",
+  "ui.effectsFound": "{count} efeitos encontrados",
+  "ui.searchEffectsPlaceholder": "Pesquisar efeitos...",
+  "ui.sleepMode": "Modo de Suspensão",
+  "ui.whatsThisApp": "O que é este aplicativo?",
+
+  // Interface de processamento de arquivos
+  "ui.dropAudioFiles": "Arraste os arquivos de áudio aqui para processá-los com os efeitos atuais",
+  "ui.orText": "ou",
+  "ui.selectFiles": "especifique os arquivos de áudio para processar",
+  "ui.specifyAudioFiles": "Especifique os arquivos de áudio a serem processados com os efeitos atuais.",
+  "ui.processing": "Processando...",
+  "ui.cancelButton": "Cancelar",
+  "ui.downloadSingleFile": "Baixar arquivo processado ({size} MB)",
+  "ui.downloadMultipleFiles": "Baixar arquivos processados ({size} MB)",
+  "ui.saveSingleFile": "Salvar arquivo processado ({size} MB)",
+  "ui.saveMultipleFiles": "Salvar arquivos processados ({size} MB)",
+
+  // Menu principal
+  "menu.file": "Arquivo",
+  "menu.file.save": "Salvar",
+  "menu.file.saveAs": "Salvar como...",
+  "menu.file.processAudioFiles": "Processar Arquivos de Áudio com Efeitos...",
+  "menu.file.exportPreset": "Exportar Predefinido...",
+  "menu.file.importPreset": "Importar Predefinido...",
+  "menu.file.quit": "Sair",
+
+  "menu.edit": "Editar",
+  "menu.edit.undo": "Desfazer",
+  "menu.edit.redo": "Refazer",
+  "menu.edit.cut": "Cortar",
+  "menu.edit.copy": "Copiar",
+  "menu.edit.paste": "Colar",
+  "menu.edit.delete": "Excluir",
+  "menu.edit.selectAll": "Selecionar Tudo",
+
+  "menu.view": "Visualizar",
+  "menu.view.reload": "Recarregar",
+  "menu.view.resetZoom": "Redefinir Zoom",
+  "menu.view.zoomIn": "Ampliar",
+  "menu.view.zoomOut": "Reduzir",
+  "menu.view.toggleFullscreen": "Alternar Tela Cheia",
+
+  "menu.settings": "Configurações",
+  "menu.settings.audioDevices": "Dispositivos de Áudio...",
+
+  "menu.help": "Ajuda",
+  "menu.help.help": "Ajuda",
+  "menu.help.about": "Sobre",
+
+  // Diálogo de configuração de áudio
+  "dialog.audioConfig.title": "Configuração de Áudio",
+  "dialog.audioConfig.inputDevice": "Dispositivo de Entrada:",
+  "dialog.audioConfig.outputDevice": "Dispositivo de Saída:",
+  "dialog.audioConfig.sampleRate": "Taxa de Amostragem:",
+  "dialog.audioConfig.cancel": "Cancelar",
+  "dialog.audioConfig.apply": "Aplicar",
+  "dialog.audioConfig.updatedTitle": "Configuração de Áudio Atualizada",
+  "dialog.audioConfig.updatedMessage": "Recarregando o aplicativo para aplicar as alterações..."
+}

@@ -1,6 +1,6 @@
 # Frieve EffeTune <img src="../../../images/icon_64x64.png" alt="EffeTune Icon" width="30" height="30" align="bottom">
 
-[Open Web App](https://frieve-a.github.io/effetune/effetune.html)  [Download Desktop App](https://github.com/Frieve-A/effetune/releases/)
+🔗[**Webアプリを開く**](https://frieve-a.github.io/effetune/effetune.html)  🔗[**デスクトップアプリをダウンロード**](https://github.com/Frieve-A/effetune/releases/)
 
 オーディオ愛好家のために設計されたリアルタイムオーディオエフェクトプロセッサです。EffeTuneを使用すると、あらゆるオーディオソースを高品質なエフェクトで処理し、リアルタイムでリスニング体験を自由にカスタマイズして完璧に調整することができます。
 

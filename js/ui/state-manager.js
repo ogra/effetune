@@ -34,12 +34,21 @@ export class StateManager {
             
             // If running in Electron, show audio config dialog
             if (isElectron && window.electronIntegration) {
-                this.setError('Configuring audio devices...');
+                // Use translation key if UIManager is available
+                if (window.uiManager && window.uiManager.t) {
+                    this.setError(window.uiManager.t('status.configuringAudio'));
+                } else {
+                    this.setError('Configuring audio devices...');
+                }
                 // Just show the dialog - the dialog itself will handle reloading
                 window.electronIntegration.showAudioConfigDialog();
             } else {
                 // Default behavior for web version
-                this.setError('Reloading...');
+                if (window.uiManager && window.uiManager.t) {
+                    this.setError(window.uiManager.t('status.reloading'));
+                } else {
+                    this.setError('Reloading...');
+                }
                 window.location.reload();
             }
         });
