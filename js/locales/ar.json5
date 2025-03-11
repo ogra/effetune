@@ -1,0 +1,102 @@
+{
+  // رسائل الخطأ والإشعارات
+  "error.invalidUrl": "معلمات URL غير صالحة: {message}",
+  "error.invalidPresetData": "بيانات الإعداد المسبق غير صالحة",
+  "error.failedToLoadPreset": "فشل تحميل الإعداد المسبق",
+  "error.noPresetSelected": "لم يتم اختيار إعداد مسبق",
+  "error.failedToCutSettings": "فشل قص الإعدادات إلى الحافظة",
+  "error.failedToCopySettings": "فشل نسخ الإعدادات إلى الحافظة",
+  "error.failedToPasteSettings": "فشل لصق إعدادات الإضافة",
+  "error.failedToReadClipboard": "فشل قراءة الحافظة",
+  "error.unknownPresetFormat": "تنسيق الإعداد المسبق غير معروف",
+  "error.failedToParsePresetFile": "فشل تحليل ملف الإعداد المسبق",
+  "error.failedToReadPresetFile": "فشل قراءة ملف الإعداد المسبق",
+  "error.failedToProcessFile": "فشل معالجة {fileName}: {errorMessage}",
+  "error.failedToProcessAudioFiles": "فشل معالجة ملفات الصوت: {errorMessage}",
+  "error.lowSampleRate": "معدل العينة منخفض جدًا ({sampleRate}Hz). قد تكون جودة الصوت غير كافية. يُوصى بـ 88.2kHz أو أعلى.",
+  "error.sampleRateWarning": "معدل العينة أقل من 88.2kHz الموصى به. قد تتأثر جودة الصوت.",
+
+  // رسائل النجاح
+  "success.urlCopied": "تم نسخ URL إلى الحافظة!",
+  "success.presetSaved": "تم حفظ الإعداد المسبق \"{name}\"!",
+  "success.presetLoaded": "تم تحميل الإعداد المسبق \"{name}\"!",
+  "success.presetDeleted": "تم حذف الإعداد المسبق \"{name}\"!",
+  "success.settingsCut": "تم قص إعدادات الإضافة إلى الحافظة!",
+  "success.settingsCopied": "تم نسخ إعدادات الإضافة إلى الحافظة!",
+  "success.settingsPasted": "تم لصق إعدادات الإضافة بنجاح!",
+
+  // رسائل الحالة
+  "status.configuringAudio": "جاري إعداد أجهزة الصوت...",
+  "status.reloading": "جاري إعادة التحميل...",
+  "status.processingFile": "جاري معالجة الملف {current}/{total} ({percent}%)",
+  "status.processingCanceled": "تم إلغاء المعالجة",
+  "status.processingComplete": "اكتملت المعالجة",
+  "status.creatingZipFile": "جاري إنشاء ملف مضغوط...",
+
+  // عناصر واجهة المستخدم
+  "ui.resetButton": "إعادة تعيين الصوت",
+  "ui.configAudioButton": "إعداد الصوت",
+  "ui.shareButton": "مشاركة",
+  "ui.dragEffectMessage": "اسحب هذا التأثير لإضافته في الموقع المطلوب بسلسلة التأثيرات.\nأو انقر نقراً مزدوجاً لإضافته.",
+  "ui.dragPluginsHere": "اسحب الإضافات هنا لبناء سلسلة التأثيرات",
+  "ui.effectsAvailable": "{count} تأثيرات متاحة",
+  "ui.effectsFound": "{count} تأثيرات تم العثور عليها",
+  "ui.searchEffectsPlaceholder": "ابحث عن التأثيرات...",
+  "ui.sleepMode": "وضع السكون",
+  "ui.whatsThisApp": "ما هذا التطبيق؟",
+
+  // واجهة معالجة الملفات
+  "ui.dropAudioFiles": "أسقط ملفات الصوت هنا لمعالجتها بالتأثيرات الحالية",
+  "ui.orText": "أو",
+  "ui.selectFiles": "حدد ملفات الصوت للمعالجة",
+  "ui.specifyAudioFiles": "حدد ملفات الصوت التي ستُعالج باستخدام التأثيرات الحالية.",
+  "ui.processing": "جاري المعالجة...",
+  "ui.cancelButton": "إلغاء",
+  "ui.downloadSingleFile": "تنزيل الملف المعالج ({size} MB)",
+  "ui.downloadMultipleFiles": "تنزيل الملفات المعالجة ({size} MB)",
+  "ui.saveSingleFile": "حفظ الملف المعالج ({size} MB)",
+  "ui.saveMultipleFiles": "حفظ الملفات المعالجة ({size} MB)",
+
+  // القائمة الرئيسية
+  "menu.file": "ملف",
+  "menu.file.save": "حفظ",
+  "menu.file.saveAs": "حفظ باسم...",
+  "menu.file.processAudioFiles": "معالجة ملفات الصوت بالتأثيرات...",
+  "menu.file.exportPreset": "تصدير الإعداد المسبق...",
+  "menu.file.importPreset": "استيراد الإعداد المسبق...",
+  "menu.file.quit": "خروج",
+
+  "menu.edit": "تحرير",
+  "menu.edit.undo": "تراجع",
+  "menu.edit.redo": "إعادة",
+  "menu.edit.cut": "قص",
+  "menu.edit.copy": "نسخ",
+  "menu.edit.paste": "لصق",
+  "menu.edit.delete": "حذف",
+  "menu.edit.selectAll": "تحديد الكل",
+
+  "menu.view": "عرض",
+  "menu.view.reload": "إعادة تحميل",
+  "menu.view.resetZoom": "إعادة ضبط التكبير",
+  "menu.view.zoomIn": "تكبير",
+  "menu.view.zoomOut": "تصغير",
+  "menu.view.toggleFullscreen": "تبديل وضع الشاشة الكاملة",
+
+  "menu.settings": "الإعدادات",
+  "menu.settings.audioDevices": "أجهزة الصوت...",
+
+  "menu.help": "مساعدة",
+  "menu.help.help": "مساعدة",
+  "menu.help.about": "حول",
+
+  // حوار إعدادات الصوت
+  "dialog.audioConfig.title": "إعدادات الصوت",
+  "dialog.audioConfig.inputDevice": "جهاز الإدخال:",
+  "dialog.audioConfig.outputDevice": "جهاز الإخراج:",
+  "dialog.audioConfig.sampleRate": "معدل العينة:",
+  "dialog.audioConfig.cancel": "إلغاء",
+  "dialog.audioConfig.apply": "تطبيق",
+  "dialog.audioConfig.updatedTitle": "تم تحديث إعدادات الصوت",
+  "dialog.audioConfig.updatedMessage": "جاري إعادة تحميل التطبيق لتطبيق التغييرات..."
+}
+

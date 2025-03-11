@@ -1,0 +1,101 @@
+{
+  // Сообщения об ошибках и уведомления
+  "error.invalidUrl": "Неверные параметры URL: {message}",
+  "error.invalidPresetData": "Неверные данные предустановки",
+  "error.failedToLoadPreset": "Не удалось загрузить предустановку",
+  "error.noPresetSelected": "Предустановка не выбрана",
+  "error.failedToCutSettings": "Не удалось вырезать настройки в буфер обмена",
+  "error.failedToCopySettings": "Не удалось скопировать настройки в буфер обмена",
+  "error.failedToPasteSettings": "Не удалось вставить настройки плагина",
+  "error.failedToReadClipboard": "Не удалось прочитать буфер обмена",
+  "error.unknownPresetFormat": "Неизвестный формат предустановки",
+  "error.failedToParsePresetFile": "Не удалось разобрать файл предустановки",
+  "error.failedToReadPresetFile": "Не удалось прочитать файл предустановки",
+  "error.failedToProcessFile": "Не удалось обработать {fileName}: {errorMessage}",
+  "error.failedToProcessAudioFiles": "Не удалось обработать аудиофайлы: {errorMessage}",
+  "error.lowSampleRate": "Частота дискретизации слишком низкая ({sampleRate}Гц). Качество звука может быть недостаточным. Рекомендуется 88,2кГц или выше.",
+  "error.sampleRateWarning": "Частота дискретизации ниже рекомендуемой 88,2кГц. Качество звука может пострадать.",
+
+  // Сообщения об успехе
+  "success.urlCopied": "URL скопирован в буфер обмена!",
+  "success.presetSaved": "Предустановка \"{name}\" сохранена!",
+  "success.presetLoaded": "Предустановка \"{name}\" загружена!",
+  "success.presetDeleted": "Предустановка \"{name}\" удалена!",
+  "success.settingsCut": "Настройки плагина вырезаны в буфер обмена!",
+  "success.settingsCopied": "Настройки плагина скопированы в буфер обмена!",
+  "success.settingsPasted": "Настройки плагина успешно вставлены!",
+
+  // Сообщения о состоянии
+  "status.configuringAudio": "Настройка аудиоустройств...",
+  "status.reloading": "Перезагрузка...",
+  "status.processingFile": "Обработка файла {current}/{total} ({percent}%)",
+  "status.processingCanceled": "Обработка отменена",
+  "status.processingComplete": "Обработка завершена",
+  "status.creatingZipFile": "Создание zip-архива...",
+
+  // Элементы интерфейса
+  "ui.resetButton": "Сбросить аудио",
+  "ui.configAudioButton": "Настроить аудио",
+  "ui.shareButton": "Поделиться",
+  "ui.dragEffectMessage": "Перетащите этот эффект в нужное место в цепочке эффектов.\nИли дважды кликните, чтобы добавить его.",
+  "ui.dragPluginsHere": "Перетащите плагины сюда для создания цепочки эффектов",
+  "ui.effectsAvailable": "{count} доступных эффектов",
+  "ui.effectsFound": "{count} эффектов найдено",
+  "ui.searchEffectsPlaceholder": "Поиск эффектов...",
+  "ui.sleepMode": "Режим сна",
+  "ui.whatsThisApp": "Что это за приложение?",
+
+  // Интерфейс обработки файлов
+  "ui.dropAudioFiles": "Перетащите аудиофайлы сюда для обработки текущими эффектами",
+  "ui.orText": "или",
+  "ui.selectFiles": "укажите аудиофайлы для обработки",
+  "ui.specifyAudioFiles": "Укажите аудиофайлы для обработки текущими эффектами.",
+  "ui.processing": "Обработка...",
+  "ui.cancelButton": "Отмена",
+  "ui.downloadSingleFile": "Скачать обработанный файл ({size} МБ)",
+  "ui.downloadMultipleFiles": "Скачать обработанные файлы ({size} МБ)",
+  "ui.saveSingleFile": "Сохранить обработанный файл ({size} МБ)",
+  "ui.saveMultipleFiles": "Сохранить обработанные файлы ({size} МБ)",
+
+  // Главное меню
+  "menu.file": "Файл",
+  "menu.file.save": "Сохранить",
+  "menu.file.saveAs": "Сохранить как...",
+  "menu.file.processAudioFiles": "Обработать аудиофайлы с эффектами...",
+  "menu.file.exportPreset": "Экспортировать предустановку...",
+  "menu.file.importPreset": "Импортировать предустановку...",
+  "menu.file.quit": "Выход",
+
+  "menu.edit": "Правка",
+  "menu.edit.undo": "Отменить",
+  "menu.edit.redo": "Повторить",
+  "menu.edit.cut": "Вырезать",
+  "menu.edit.copy": "Копировать",
+  "menu.edit.paste": "Вставить",
+  "menu.edit.delete": "Удалить",
+  "menu.edit.selectAll": "Выделить всё",
+
+  "menu.view": "Вид",
+  "menu.view.reload": "Перезагрузить",
+  "menu.view.resetZoom": "Сбросить масштаб",
+  "menu.view.zoomIn": "Увеличить",
+  "menu.view.zoomOut": "Уменьшить",
+  "menu.view.toggleFullscreen": "Переключить полноэкранный режим",
+
+  "menu.settings": "Настройки",
+  "menu.settings.audioDevices": "Аудиоустройства...",
+
+  "menu.help": "Помощь",
+  "menu.help.help": "Помощь",
+  "menu.help.about": "О программе",
+
+  // Диалог настройки аудио
+  "dialog.audioConfig.title": "Настройка аудио",
+  "dialog.audioConfig.inputDevice": "Входное устройство:",
+  "dialog.audioConfig.outputDevice": "Выходное устройство:",
+  "dialog.audioConfig.sampleRate": "Частота дискретизации:",
+  "dialog.audioConfig.cancel": "Отмена",
+  "dialog.audioConfig.apply": "Применить",
+  "dialog.audioConfig.updatedTitle": "Аудиоконфигурация обновлена",
+  "dialog.audioConfig.updatedMessage": "Перезагрузка приложения для применения изменений..."
+}

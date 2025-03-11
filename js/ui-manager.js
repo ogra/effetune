@@ -23,7 +23,11 @@ export class UIManager {
         // Initialize supported languages
         this.supportedLanguages = ['ar', 'es', 'fr', 'hi', 'ja', 'ko', 'pt', 'ru', 'zh'];
         this.userLanguage = this.determineUserLanguage();
-
+        
+        // Initialize localization
+        this.translations = {}; // Current language translations
+        this.englishTranslations = {}; // English translations for fallback
+        
         // Initialize managers
         this.pluginListManager = new PluginListManager(pluginManager);
         this.pipelineManager = new PipelineManager(audioManager, pluginManager, this.expandedPlugins, this.pluginListManager);
@@ -37,6 +41,16 @@ export class UIManager {
         this.initPipelineManager();
         this.initShareButton();
         this.initPresetManagement();
+        
+        // Initialize localization after everything else is set up
+        // This is an async operation, but we can't make the constructor async
+        this.initLocalization().then(() => {
+            // Update UI texts after translations are loaded
+            this.updateUITexts();
+            console.log('UI texts updated with translations');
+        }).catch(error => {
+            console.error('Failed to initialize localization:', error);
+        });
     }
 
     // Delegate to PluginListManager
@@ -65,9 +79,15 @@ export class UIManager {
         this.pipelineManager.updatePipelineUI();
     }
 
-    // Delegate to StateManager
-    setError(message) {
-        this.stateManager.setError(message);
+    // Delegate to StateManager with translation
+    setError(message, isError = false, params = {}) {
+        // Check if the message is a translation key
+        if (message && (message.startsWith('error.') || message.startsWith('success.') || message.startsWith('status.'))) {
+            // Translate the message with provided parameters
+            message = this.t(message, params);
+        }
+        
+        this.stateManager.setError(message, isError);
     }
 
     clearError() {
@@ -136,7 +156,7 @@ export class UIManager {
             console.error('Failed to parse pipeline state:', error);
             // Show error to user
             if (this.stateManager) {
-                this.stateManager.setError(`Invalid URL parameters: ${error.message}`);
+                this.stateManager.setError(this.t('error.invalidUrl', { message: error.message }));
                 setTimeout(() => this.stateManager.clearError(), 5000);
             }
             return null;
@@ -235,14 +255,16 @@ export class UIManager {
     updateSleepModeDisplay(isSleepMode, sampleRate) {
         if (!this.sampleRate) return;
         
+        const sleepModeText = this.t('ui.sleepMode');
+        
         if (isSleepMode) {
             // Add sleep mode indicator if not already present
-            if (!this.sampleRate.textContent.includes('Sleep Mode')) {
-                this.sampleRate.textContent += ' - Sleep Mode';
+            if (!this.sampleRate.textContent.includes(sleepModeText)) {
+                this.sampleRate.textContent += ` - ${sleepModeText}`;
             }
         } else {
             // Remove sleep mode indicator and ensure sample rate is displayed correctly
-            this.sampleRate.textContent = this.sampleRate.textContent.replace(' - Sleep Mode', '');
+            this.sampleRate.textContent = this.sampleRate.textContent.replace(` - ${sleepModeText}`, '');
             // Make sure the sample rate is still displayed correctly
             if (!this.sampleRate.textContent.includes('Hz') && sampleRate) {
                 this.sampleRate.textContent = `${sampleRate} Hz`;
@@ -257,16 +279,17 @@ export class UIManager {
             const currentSampleRate = this.audioManager.audioContext.sampleRate;
             
             // Preserve sleep mode indicator if present
-            const isSleepMode = this.sampleRate.textContent.includes('Sleep Mode');
+            const sleepModeText = this.t('ui.sleepMode');
+            const isSleepMode = this.sampleRate.textContent.includes(sleepModeText);
             this.sampleRate.textContent = `${currentSampleRate} Hz`;
             if (isSleepMode) {
-                this.sampleRate.textContent += ' - Sleep Mode';
+                this.sampleRate.textContent += ` - ${sleepModeText}`;
             }
             
             // Add a visual indicator if the sample rate is below recommended value
             if (currentSampleRate < 88200) {
                 this.sampleRate.classList.add('low-sample-rate');
-                this.sampleRate.title = 'Sample rate is below recommended 88.2kHz. Audio quality may be affected.';
+                this.sampleRate.title = this.t('error.sampleRateWarning');
             } else {
                 this.sampleRate.classList.remove('low-sample-rate');
                 this.sampleRate.title = '';
@@ -284,7 +307,185 @@ export class UIManager {
         }
         
         // Default to English (use default docs) if language is not supported
-        return null;
+        return 'en';
+    }
+
+    /**
+     * Initialize localization system
+     */
+    async initLocalization() {
+        try {
+            console.log(`Initializing localization for language: ${this.userLanguage}`);
+            
+            // Always load English translations first for fallback
+            await this.loadEnglishTranslations();
+            
+            // If user language is not English, load that language's translations
+            if (this.userLanguage !== 'en') {
+                await this.loadTranslations(this.userLanguage);
+            }
+            
+            // Update Electron menu if in Electron environment
+            if (window.electronIntegration && window.electronIntegration.isElectronEnvironment()) {
+                window.electronIntegration.updateApplicationMenu();
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize localization:', error);
+            // Initialize with empty translations to avoid errors
+            this.translations = {};
+            this.englishTranslations = {};
+            return false;
+        }
+    }
+    
+    /**
+     * Load English translations for fallback
+     */
+    async loadEnglishTranslations() {
+        try {
+            // Try to load the English locale file
+            const response = await fetch('js/locales/en.json5');
+            
+            // If the English file doesn't exist, initialize with empty object
+            if (!response.ok) {
+                console.error('English translation file not found');
+                this.englishTranslations = {};
+                return;
+            }
+            
+            // Get the JSON5 content as text
+            const json5Content = await response.text();
+            
+            // Remove comments from JSON5 (simple approach)
+            const jsonContent = json5Content
+                .replace(/\/\/.*$/gm, '') // Remove single-line comments
+                .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
+            
+            // Parse the JSON content
+            this.englishTranslations = JSON.parse(jsonContent);
+            console.log('English translations loaded successfully');
+            
+            // If user language is English, set translations to English
+            if (this.userLanguage === 'en') {
+                this.translations = { ...this.englishTranslations };
+            }
+        } catch (error) {
+            console.error('Error loading English translations:', error);
+            // If English file cannot be loaded, initialize with empty object
+            this.englishTranslations = {};
+        }
+    }
+
+    /**
+     * Load translations for the specified language
+     * @param {string} locale - The language code to load
+     */
+    async loadTranslations(locale) {
+        // Default to English if locale is not specified
+        const targetLocale = locale || 'en';
+        
+        // If loading English, use the already loaded English translations
+        if (targetLocale === 'en') {
+            this.translations = this.englishTranslations;
+            this.updateUITexts();
+            return;
+        }
+        
+        try {
+            // Try to load the specified locale file
+            const response = await fetch(`js/locales/${targetLocale}.json5`);
+            
+            // If the locale file doesn't exist, fall back to English
+            if (!response.ok) {
+                console.warn(`Translation file for ${targetLocale} not found, falling back to English`);
+                this.translations = this.englishTranslations;
+                this.updateUITexts();
+                return;
+            }
+            
+            // Get the JSON5 content as text
+            const json5Content = await response.text();
+            
+            // Remove comments from JSON5 (simple approach)
+            const jsonContent = json5Content
+                .replace(/\/\/.*$/gm, '') // Remove single-line comments
+                .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
+            
+            // Parse the JSON content
+            this.translations = JSON.parse(jsonContent);
+            
+            // Update UI texts with new translations
+            this.updateUITexts();
+            
+            // Update Electron menu if in Electron environment
+            if (window.electronIntegration && window.electronIntegration.isElectronEnvironment()) {
+                window.electronIntegration.updateApplicationMenu();
+            }
+        } catch (error) {
+            console.error(`Error loading translations for ${targetLocale}:`, error);
+            // Fall back to English translations
+            this.translations = this.englishTranslations;
+            this.updateUITexts();
+        }
+    }
+
+    /**
+     * Get a translated string by key
+     * @param {string} key - The translation key
+     * @param {Object} params - Parameters to replace in the string
+     * @returns {string} The translated string
+     */
+    t(key, params = {}) {
+        // First try to get the translation from the current language
+        let text;
+        
+        // If the key exists in current language translations, use it
+        if (this.translations && this.translations[key]) {
+            text = this.translations[key];
+        }
+        // If not found in current language but exists in English, use English translation
+        else if (this.englishTranslations && this.englishTranslations[key]) {
+            text = this.englishTranslations[key];
+        }
+        // If not found in either language, use the key itself
+        else {
+            text = key;
+        }
+        
+        // Replace parameters in the string
+        if (params && Object.keys(params).length > 0) {
+            Object.entries(params).forEach(([param, value]) => {
+                const placeholder = `{${param}}`;
+                text = text.replace(new RegExp(placeholder, 'g'), value);
+            });
+        }
+        
+        return text;
+    }
+
+    /**
+     * Update UI elements with translated text
+     */
+    updateUITexts() {
+        // Update static UI elements
+        document.querySelector('.subtitle').textContent = "Color the music, unleash your senses. Craft your own signature sound.";
+        document.querySelector('.whats-this').textContent = this.t('ui.whatsThisApp');
+        document.getElementById('availableEffectsTitle').textContent = "Available Effects";
+        document.querySelector('.pipeline-header h2').textContent = "Effect Pipeline";
+        document.getElementById('pipelineEmpty').textContent = this.t('ui.dragPluginsHere');
+        document.getElementById('shareButton').textContent = this.t('ui.shareButton');
+        document.getElementById('effectSearchInput').placeholder = this.t('ui.searchEffectsPlaceholder');
+        
+        // Update reset button text based on environment
+        const isElectron = window.electronIntegration && window.electronIntegration.isElectronEnvironment();
+        this.resetButton.textContent = isElectron ? this.t('ui.configAudioButton') : this.t('ui.resetButton');
+        
+        // Update drag message in plugin list manager
+        if (this.pluginListManager && this.pluginListManager.dragMessage) {
+            this.pluginListManager.dragMessage.textContent = this.t('ui.dragEffectMessage');
+        }
     }
 
     getLocalizedDocPath(basePath) {
@@ -386,12 +587,12 @@ export class UIManager {
             newURL.searchParams.set('p', state);
             navigator.clipboard.writeText(newURL.toString())
                 .then(() => {
-                    this.setError('URL copied to clipboard!');
+                    this.setError('success.urlCopied', false);
                     setTimeout(() => this.clearError(), 3000);
                 })
                 .catch(err => {
                     console.error('Failed to copy URL:', err);
-                    this.setError('Failed to copy URL to clipboard');
+                    this.setError('error.failedToCopyUrl', true);
                 });
         });
     }
@@ -430,7 +631,7 @@ export class UIManager {
      */
     loadPreset(preset) {
         if (!preset) {
-            this.setError('Invalid preset data');
+            this.setError('error.invalidPresetData', true);
             return;
         }
         
@@ -475,11 +676,11 @@ export class UIManager {
                 // Clear the preset combo box after loading from file
                 this.presetSelect.value = '';
             } else {
-                this.setError('Invalid preset format');
+                this.setError('error.invalidPresetFormat', true);
             }
         } catch (error) {
             console.error('Failed to load preset:', error);
-            this.setError('Failed to load preset');
+            this.setError('error.failedToLoadPreset', true);
         }
     }
 }

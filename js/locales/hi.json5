@@ -1,0 +1,101 @@
+{
+  // त्रुटि और सूचना संदेश
+  "error.invalidUrl": "अमान्य URL पैरामीटर: {message}",
+  "error.invalidPresetData": "अमान्य प्रीसेट डेटा",
+  "error.failedToLoadPreset": "प्रीसेट लोड करने में विफल",
+  "error.noPresetSelected": "कोई प्रीसेट चयनित नहीं",
+  "error.failedToCutSettings": "क्लिपबोर्ड पर सेटिंग्स काटने में विफल",
+  "error.failedToCopySettings": "क्लिपबोर्ड पर सेटिंग्स कॉपी करने में विफल",
+  "error.failedToPasteSettings": "प्लगइन सेटिंग्स चिपकाने में विफल",
+  "error.failedToReadClipboard": "क्लिपबोर्ड पढ़ने में विफल",
+  "error.unknownPresetFormat": "अज्ञात प्रीसेट फॉर्मेट",
+  "error.failedToParsePresetFile": "प्रीसेट फ़ाइल पार्स करने में विफल",
+  "error.failedToReadPresetFile": "प्रीसेट फ़ाइल पढ़ने में विफल",
+  "error.failedToProcessFile": "{fileName} संसाधित करने में विफल: {errorMessage}",
+  "error.failedToProcessAudioFiles": "ऑडियो फ़ाइलें संसाधित करने में विफल: {errorMessage}",
+  "error.lowSampleRate": "नमूना दर बहुत कम है ({sampleRate}Hz)। ऑडियो गुणवत्ता अपर्याप्त हो सकती है। 88.2kHz या अधिक की सिफारिश है।",
+  "error.sampleRateWarning": "नमूना दर 88.2kHz की सिफारिश से कम है। ऑडियो गुणवत्ता प्रभावित हो सकती है।",
+
+  // सफलता संदेश
+  "success.urlCopied": "URL क्लिपबोर्ड में कॉपी हुई!",
+  "success.presetSaved": "प्रीसेट \"{name}\" सहेजा गया!",
+  "success.presetLoaded": "प्रीसेट \"{name}\" लोड किया गया!",
+  "success.presetDeleted": "प्रीसेट \"{name}\" हटा दिया गया!",
+  "success.settingsCut": "प्लगइन सेटिंग्स क्लिपबोर्ड में काटी गई!",
+  "success.settingsCopied": "प्लगइन सेटिंग्स क्लिपबोर्ड में कॉपी हुई!",
+  "success.settingsPasted": "प्लगइन सेटिंग्स सफलतापूर्वक चिपकाई गई!",
+
+  // स्थिति संदेश
+  "status.configuringAudio": "ऑडियो उपकरण विन्यस्त कर रहे हैं...",
+  "status.reloading": "पुनः लोड कर रहे हैं...",
+  "status.processingFile": "फ़ाइल संसाधित हो रही है {current}/{total} ({percent}%)",
+  "status.processingCanceled": "संसाधन रद्द किया गया",
+  "status.processingComplete": "संसाधन पूर्ण",
+  "status.creatingZipFile": "ज़िप फ़ाइल बना रहे हैं...",
+
+  // यूआई तत्व
+  "ui.resetButton": "ऑडियो रीसेट करें",
+  "ui.configAudioButton": "ऑडियो विन्यास",
+  "ui.shareButton": "साझा करें",
+  "ui.dragEffectMessage": "इफेक्ट जोड़ने के लिए इसे खींचें अपनी इच्छित स्थिति पर।\nया इसे डबल-क्लिक करें।",
+  "ui.dragPluginsHere": "अपनी इफेक्ट पाइपलाइन बनाने हेतु प्लगइन खींचें",
+  "ui.effectsAvailable": "{count} प्रभाव उपलब्ध",
+  "ui.effectsFound": "{count} प्रभाव मिले",
+  "ui.searchEffectsPlaceholder": "प्रभाव खोजें...",
+  "ui.sleepMode": "स्लीप मोड",
+  "ui.whatsThisApp": "यह एप्लिकेशन क्या है?",
+
+  // फ़ाइल प्रसंस्करण यूआई
+  "ui.dropAudioFiles": "वर्तमान प्रभावों के साथ संसाधित करने हेतु ऑडियो फ़ाइलें यहाँ छोड़ें",
+  "ui.orText": "या",
+  "ui.selectFiles": "संसाधन के लिए ऑडियो फ़ाइलें चुनें",
+  "ui.specifyAudioFiles": "वर्तमान प्रभावों के साथ संसाधित करने हेतु ऑडियो फ़ाइलें चुनें।",
+  "ui.processing": "संसाधन हो रहा है...",
+  "ui.cancelButton": "रद्द करें",
+  "ui.downloadSingleFile": "संसाधित फ़ाइल डाउनलोड करें ({size} MB)",
+  "ui.downloadMultipleFiles": "संसाधित फ़ाइलें डाउनलोड करें ({size} MB)",
+  "ui.saveSingleFile": "संसाधित फ़ाइल सहेजें ({size} MB)",
+  "ui.saveMultipleFiles": "संसाधित फ़ाइलें सहेजें ({size} MB)",
+
+  // मुख्य मेनू
+  "menu.file": "फ़ाइल",
+  "menu.file.save": "सहेजें",
+  "menu.file.saveAs": "के रूप में सहेजें...",
+  "menu.file.processAudioFiles": "प्रभावों के साथ ऑडियो फ़ाइलें संसाधित करें...",
+  "menu.file.exportPreset": "प्रीसेट निर्यात करें...",
+  "menu.file.importPreset": "प्रीसेट आयात करें...",
+  "menu.file.quit": "बंद करें",
+
+  "menu.edit": "संपादन",
+  "menu.edit.undo": "पूर्ववत करें",
+  "menu.edit.redo": "दोबारा करें",
+  "menu.edit.cut": "काटें",
+  "menu.edit.copy": "कॉपी करें",
+  "menu.edit.paste": "पेस्ट करें",
+  "menu.edit.delete": "हटाएँ",
+  "menu.edit.selectAll": "सभी चुनें",
+
+  "menu.view": "देखें",
+  "menu.view.reload": "पुनः लोड करें",
+  "menu.view.resetZoom": "ज़ूम रीसेट करें",
+  "menu.view.zoomIn": "ज़ूम इन करें",
+  "menu.view.zoomOut": "ज़ूम आउट करें",
+  "menu.view.toggleFullscreen": "पूर्ण स्क्रीन टॉगल करें",
+
+  "menu.settings": "सेटिंग्स",
+  "menu.settings.audioDevices": "ऑडियो उपकरण...",
+
+  "menu.help": "सहायता",
+  "menu.help.help": "सहायता",
+  "menu.help.about": "इस बारे में",
+
+  // ऑडियो विन्यास संवाद
+  "dialog.audioConfig.title": "ऑडियो विन्यास",
+  "dialog.audioConfig.inputDevice": "इनपुट डिवाइस:",
+  "dialog.audioConfig.outputDevice": "आउटपुट डिवाइस:",
+  "dialog.audioConfig.sampleRate": "नमूना दर:",
+  "dialog.audioConfig.cancel": "रद्द करें",
+  "dialog.audioConfig.apply": "लागू करें",
+  "dialog.audioConfig.updatedTitle": "ऑडियो विन्यास अपडेट हुआ",
+  "dialog.audioConfig.updatedMessage": "परिवर्तनों को लागू करने हेतु एप्लिकेशन पुनः लोड हो रहा है..."
+}

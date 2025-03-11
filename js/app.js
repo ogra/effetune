@@ -182,7 +182,7 @@ document.addEventListener('keydown', (event) => {
 
 // Check sample rate after initialization
 if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
-    this.uiManager.setError(`Sample rate is too low (${this.audioManager.audioContext.sampleRate}Hz). Audio quality may be insufficient. 88.2kHz or higher is recommended.`, true);
+    this.uiManager.setError('error.lowSampleRate', true, { sampleRate: this.audioManager.audioContext.sampleRate });
 }
 
 // Auto-resume audio context when page gains focus
@@ -327,14 +327,14 @@ function processPresetFileData(fileData, fileName) {
         presetData.name = fileName;
     } else {
         // Unknown format
-        window.uiManager.setError('Unknown preset format');
+        window.uiManager.setError('error.unknownPresetFormat');
         setTimeout(() => window.uiManager.clearError(), 3000);
         return;
     }
     
     // Load the preset
     window.uiManager.loadPreset(presetData);
-    window.uiManager.setError(`Preset "${fileName}" loaded!`);
+    window.uiManager.setError('success.presetLoaded', false, { name: fileName });
     setTimeout(() => window.uiManager.clearError(), 3000);
 }
 
@@ -345,7 +345,14 @@ function processPresetFileData(fileData, fileName) {
  */
 function handlePresetFileError(error, message) {
     console.error(message, error);
-    window.uiManager.setError(message);
+    // Check if message is a translation key
+    if (message === 'Failed to parse preset file') {
+        window.uiManager.setError('error.failedToParsePresetFile');
+    } else if (message === 'Failed to read preset file') {
+        window.uiManager.setError('error.failedToReadPresetFile');
+    } else {
+        window.uiManager.setError(message);
+    }
     setTimeout(() => window.uiManager.clearError(), 3000);
 }
 

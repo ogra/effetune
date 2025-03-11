@@ -948,6 +948,238 @@ ipcMain.handle('reload-window', () => {
   return { success: false, error: 'Main window not available' };
 });
 
+// Handle application menu update request
+ipcMain.handle('update-application-menu', (event, menuTemplate) => {
+  try {
+    // Get the current menu template
+    const currentTemplate = Menu.getApplicationMenu().items.map(item => item.submenu.items);
+    
+    // Create a new menu template with the same structure but updated labels
+    const template = [
+      {
+        label: menuTemplate.file.label,
+        submenu: [
+          {
+            label: menuTemplate.file.submenu[0].label, // Save
+            accelerator: 'CommandOrControl+S',
+            click: () => simulateKeyboardShortcut('S', ['control'])
+          },
+          {
+            label: menuTemplate.file.submenu[1].label, // Save As...
+            accelerator: 'CommandOrControl+Shift+S',
+            click: () => simulateKeyboardShortcut('S', ['control', 'shift'])
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.file.submenu[3].label, // Process Audio Files with Effects...
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('process-audio-files');
+              }
+            }
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.file.submenu[5].label, // Export Preset...
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('export-preset');
+              }
+            }
+          },
+          {
+            label: menuTemplate.file.submenu[6].label, // Import Preset...
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('import-preset');
+              }
+            }
+          },
+          { type: 'separator' },
+          { role: 'quit', label: menuTemplate.file.submenu[8].label } // Quit
+        ]
+      },
+      {
+        label: menuTemplate.edit.label,
+        submenu: [
+          {
+            label: menuTemplate.edit.submenu[0].label, // Undo
+            accelerator: 'CommandOrControl+Z',
+            click: () => simulateKeyboardShortcut('Z', ['control'])
+          },
+          {
+            label: menuTemplate.edit.submenu[1].label, // Redo
+            accelerator: 'CommandOrControl+Y',
+            click: () => simulateKeyboardShortcut('Y', ['control'])
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.edit.submenu[3].label, // Cut
+            accelerator: 'CommandOrControl+X',
+            click: () => simulateKeyboardShortcut('X', ['control'])
+          },
+          {
+            label: menuTemplate.edit.submenu[4].label, // Copy
+            accelerator: 'CommandOrControl+C',
+            click: () => simulateKeyboardShortcut('C', ['control'])
+          },
+          {
+            label: menuTemplate.edit.submenu[5].label, // Paste
+            accelerator: 'CommandOrControl+V',
+            click: () => simulateKeyboardShortcut('V', ['control'])
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.edit.submenu[7].label, // Delete
+            accelerator: 'Delete',
+            click: () => simulateKeyboardShortcut('Delete')
+          },
+          {
+            label: menuTemplate.edit.submenu[8].label, // Select All
+            accelerator: 'CommandOrControl+A',
+            click: () => simulateKeyboardShortcut('A', ['control'])
+          }
+        ]
+      },
+      {
+        label: menuTemplate.view.label,
+        submenu: [
+          {
+            label: menuTemplate.view.submenu[0].label, // Reload
+            accelerator: 'CommandOrControl+R',
+            click: () => {
+              if (mainWindow) {
+                // First ensure we reset any custom zoom
+                mainWindow.webContents.executeJavaScript(`
+                  // Reset zoom before reload
+                  document.body.style.zoom = 1.0;
+                `).catch(err => {
+                  console.error('Error resetting zoom before reload:', err);
+                }).finally(() => {
+                  // Then reload the window
+                  mainWindow.reload();
+                });
+              }
+            }
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.view.submenu[2].label, // Reset Zoom
+            accelerator: 'CommandOrControl+0',
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.executeJavaScript(`
+                  (function() {
+                    document.body.style.zoom = 1.0;
+                  })();
+                `).catch(err => {
+                  console.error('Error executing zoom reset script:', err);
+                });
+              }
+            }
+          },
+          {
+            label: menuTemplate.view.submenu[3].label, // Zoom In
+            accelerator: 'CommandOrControl+=',
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.executeJavaScript(`
+                  (function() {
+                    const zoom = parseFloat(document.body.style.zoom || '1');
+                    const newZoom = Math.min(zoom + 0.1, 3.0);
+                    document.body.style.zoom = newZoom;
+                  })();
+                `).catch(err => {
+                  console.error('Error executing zoom in script:', err);
+                });
+              }
+            }
+          },
+          {
+            label: menuTemplate.view.submenu[4].label, // Zoom Out
+            accelerator: 'CommandOrControl+-',
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.executeJavaScript(`
+                  (function() {
+                    const zoom = parseFloat(document.body.style.zoom || '1');
+                    const newZoom = Math.max(zoom - 0.1, 0.3);
+                    document.body.style.zoom = newZoom;
+                  })();
+                `).catch(err => {
+                  console.error('Error executing zoom out script:', err);
+                });
+              }
+            }
+          },
+          { type: 'separator' },
+          {
+            role: 'togglefullscreen',
+            label: menuTemplate.view.submenu[6].label // Toggle Fullscreen
+          }
+        ]
+      },
+      {
+        label: menuTemplate.settings.label,
+        submenu: [
+          {
+            label: menuTemplate.settings.submenu[0].label, // Audio Devices...
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('config-audio');
+              }
+            }
+          }
+        ]
+      },
+      {
+        label: menuTemplate.help.label,
+        submenu: [
+          {
+            label: menuTemplate.help.submenu[0].label, // Help
+            accelerator: 'F1', // Add F1 as the keyboard shortcut
+            click: () => {
+              // Simply click the "What's this app" link in the renderer process
+              // This ensures the same behavior in both web and Electron environments
+              if (mainWindow && mainWindow.webContents) {
+                mainWindow.webContents.executeJavaScript(`
+                  const whatsThisLink = document.querySelector('.whats-this');
+                  if (whatsThisLink) {
+                    whatsThisLink.click();
+                  }
+                `).catch(error => {
+                  console.error('Error executing Help menu action:', error);
+                });
+              }
+            }
+          },
+          { type: 'separator' },
+          {
+            label: menuTemplate.help.submenu[2].label, // About
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('show-about-dialog', {
+                  version: appVersion,
+                  icon: path.join(__dirname, 'favicon.ico')
+                });
+              }
+            }
+          }
+        ]
+      }
+    ];
+
+    // Build and set the new menu
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating application menu:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Handle opening documentation
 ipcMain.handle('open-documentation', async (event, docPath) => {
   try {

@@ -49,6 +49,7 @@ export class PluginListManager {
         this.dragMessage.style.fontSize = '16px';
         this.dragMessage.style.lineHeight = '1.8';
         this.dragMessage.style.maxWidth = '100%';
+        // Set drag message text (will be updated by UIManager.updateUITexts)
         this.dragMessage.textContent = 'Drag this effect to add it at your desired position in the Effect Pipeline.\nAlternatively, you can double-click this effect to add it to the Effect Pipeline.';
         document.getElementById('pipeline').appendChild(this.dragMessage);
 
@@ -170,9 +171,15 @@ export class PluginListManager {
         // Update effect count text based on search state
         const effectCountDiv = this.pluginList.querySelector('#effectCount');
         if (effectCountDiv) {
-            effectCountDiv.textContent = searchText ? 
-                `${totalVisibleEffects} effects found` : 
-                `${totalVisibleEffects} effects available`;
+            if (window.uiManager && window.uiManager.t) {
+                effectCountDiv.textContent = searchText ?
+                    window.uiManager.t('ui.effectsFound', { count: totalVisibleEffects }) :
+                    window.uiManager.t('ui.effectsAvailable', { count: totalVisibleEffects });
+            } else {
+                effectCountDiv.textContent = searchText ?
+                    `${totalVisibleEffects} effects found` :
+                    `${totalVisibleEffects} effects available`;
+            }
         }
     }
 
@@ -222,7 +229,11 @@ export class PluginListManager {
         this.pluginList.appendChild(contentContainer);
 
         // Add effect count at the end of the list
-        effectCountDiv.textContent = `${totalEffects} effects available`;
+        if (window.uiManager && window.uiManager.t) {
+            effectCountDiv.textContent = window.uiManager.t('ui.effectsAvailable', { count: totalEffects });
+        } else {
+            effectCountDiv.textContent = `${totalEffects} effects available`;
+        }
         this.pluginList.appendChild(effectCountDiv);
 
         // Hide spinner after plugin list is fully initialized

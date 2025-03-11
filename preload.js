@@ -60,7 +60,10 @@ contextBridge.exposeInMainWorld(
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     
     // Reload window
-    reloadWindow: () => ipcRenderer.invoke('reload-window')
+    reloadWindow: () => ipcRenderer.invoke('reload-window'),
+    
+    // Update application menu with translations
+    updateApplicationMenu: (menuTemplate) => ipcRenderer.invoke('update-application-menu', menuTemplate)
   }
 );
 

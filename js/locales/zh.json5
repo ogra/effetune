@@ -1,0 +1,101 @@
+{
+  // 错误和通知信息
+  "error.invalidUrl": "无效的URL参数：{message}",
+  "error.invalidPresetData": "预设数据无效",
+  "error.failedToLoadPreset": "加载预设失败",
+  "error.noPresetSelected": "未选择预设",
+  "error.failedToCutSettings": "剪切设置到剪贴板失败",
+  "error.failedToCopySettings": "复制设置到剪贴板失败",
+  "error.failedToPasteSettings": "粘贴插件设置失败",
+  "error.failedToReadClipboard": "读取剪贴板失败",
+  "error.unknownPresetFormat": "未知的预设格式",
+  "error.failedToParsePresetFile": "解析预设文件失败",
+  "error.failedToReadPresetFile": "读取预设文件失败",
+  "error.failedToProcessFile": "处理 {fileName} 失败：{errorMessage}",
+  "error.failedToProcessAudioFiles": "处理音频文件失败：{errorMessage}",
+  "error.lowSampleRate": "采样率过低（{sampleRate}Hz），可能影响音质，建议88.2kHz以上。",
+  "error.sampleRateWarning": "采样率低于建议的88.2kHz，音质可能受影响。",
+
+  // 成功信息
+  "success.urlCopied": "URL已复制到剪贴板！",
+  "success.presetSaved": "预设 \"{name}\" 已保存！",
+  "success.presetLoaded": "预设 \"{name}\" 已加载！",
+  "success.presetDeleted": "预设 \"{name}\" 已删除！",
+  "success.settingsCut": "插件设置已剪切到剪贴板！",
+  "success.settingsCopied": "插件设置已复制到剪贴板！",
+  "success.settingsPasted": "插件设置粘贴成功！",
+
+  // 状态信息
+  "status.configuringAudio": "配置音频设备中……",
+  "status.reloading": "重新加载中……",
+  "status.processingFile": "处理文件 {current}/{total} （{percent}%）",
+  "status.processingCanceled": "处理已取消",
+  "status.processingComplete": "处理完成",
+  "status.creatingZipFile": "创建压缩文件中……",
+
+  // 界面元素
+  "ui.resetButton": "重置音频",
+  "ui.configAudioButton": "配置音频",
+  "ui.shareButton": "分享",
+  "ui.dragEffectMessage": "拖动此效果至效果管线的所需位置，或双击以添加。",
+  "ui.dragPluginsHere": "拖动插件到此处构建效果管线",
+  "ui.effectsAvailable": "{count} 个效果可用",
+  "ui.effectsFound": "找到 {count} 个效果",
+  "ui.searchEffectsPlaceholder": "搜索效果...",
+  "ui.sleepMode": "休眠模式",
+  "ui.whatsThisApp": "这是什么应用？",
+
+  // 文件处理界面
+  "ui.dropAudioFiles": "将音频文件拖至此处，以使用当前效果处理",
+  "ui.orText": "或",
+  "ui.selectFiles": "选择要处理的音频文件",
+  "ui.specifyAudioFiles": "请选择要使用当前效果处理的音频文件",
+  "ui.processing": "处理中……",
+  "ui.cancelButton": "取消",
+  "ui.downloadSingleFile": "下载处理后的文件 ({size} MB)",
+  "ui.downloadMultipleFiles": "下载处理后的所有文件 ({size} MB)",
+  "ui.saveSingleFile": "保存处理后的文件 ({size} MB)",
+  "ui.saveMultipleFiles": "保存处理后的所有文件 ({size} MB)",
+
+  // 主菜单
+  "menu.file": "文件",
+  "menu.file.save": "保存",
+  "menu.file.saveAs": "另存为…",
+  "menu.file.processAudioFiles": "用效果处理音频文件…",
+  "menu.file.exportPreset": "导出预设…",
+  "menu.file.importPreset": "导入预设…",
+  "menu.file.quit": "退出",
+
+  "menu.edit": "编辑",
+  "menu.edit.undo": "撤销",
+  "menu.edit.redo": "重做",
+  "menu.edit.cut": "剪切",
+  "menu.edit.copy": "复制",
+  "menu.edit.paste": "粘贴",
+  "menu.edit.delete": "删除",
+  "menu.edit.selectAll": "全选",
+
+  "menu.view": "视图",
+  "menu.view.reload": "重新加载",
+  "menu.view.resetZoom": "重置缩放",
+  "menu.view.zoomIn": "放大",
+  "menu.view.zoomOut": "缩小",
+  "menu.view.toggleFullscreen": "切换全屏",
+
+  "menu.settings": "设置",
+  "menu.settings.audioDevices": "音频设备…",
+
+  "menu.help": "帮助",
+  "menu.help.help": "帮助",
+  "menu.help.about": "关于",
+
+  // 音频配置对话框
+  "dialog.audioConfig.title": "音频设置",
+  "dialog.audioConfig.inputDevice": "输入设备：",
+  "dialog.audioConfig.outputDevice": "输出设备：",
+  "dialog.audioConfig.sampleRate": "采样率：",
+  "dialog.audioConfig.cancel": "取消",
+  "dialog.audioConfig.apply": "应用",
+  "dialog.audioConfig.updatedTitle": "音频设置已更新",
+  "dialog.audioConfig.updatedMessage": "正在重新加载应用以应用更改……"
+}
