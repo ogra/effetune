@@ -137,6 +137,8 @@ function createWindow() {
 
   // Combined event handler for page load
   mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Main window did-finish-load event fired');
+    
     // 1. Disable Electron's built-in zoom functionality
     mainWindow.webContents.setZoomFactor(1.0);
     
@@ -186,6 +188,29 @@ function createWindow() {
     `).catch(err => {
       console.error('Error setting up wheel zoom:', err);
     });
+    
+    // 4. Handle file to open if specified via command line
+    if (fileToOpen) {
+      console.log('Processing fileToOpen in did-finish-load event:', fileToOpen);
+      // Use a flag to ensure we only process the file once
+      let fileProcessed = false;
+      
+      // Only process if not already processed
+      if (!fileProcessed && fileToOpen) {
+        console.log('Opening preset file from command line:', fileToOpen);
+        fileProcessed = true;
+        
+        // Wait for the page to fully load before sending the file path
+        // Increased timeout to ensure the app is fully initialized
+        setTimeout(() => {
+          if (fileToOpen) {
+            console.log('Sending open-preset-file event to renderer process:', fileToOpen);
+            mainWindow.webContents.send('open-preset-file', fileToOpen);
+            fileToOpen = null; // Reset after use
+          }
+        }, 2000);
+      }
+    }
   });
 
   // Enable file drop events
@@ -202,16 +227,7 @@ function createWindow() {
   // Set up the application menu
   createMenu();
   
-  // Handle file to open if specified via command line
-  if (fileToOpen) {
-    mainWindow.webContents.on('did-finish-load', () => {
-      // Wait for the page to fully load before sending the file path
-      setTimeout(() => {
-        mainWindow.webContents.send('open-preset-file', fileToOpen);
-        fileToOpen = null; // Reset after use
-      }, 1000);
-    });
-  }
+  // Note: File opening from command line is now handled in the combined did-finish-load event handler
 
   // Open DevTools in development mode
   // if (process.env.NODE_ENV === 'development') {
@@ -256,13 +272,13 @@ function createMenu() {
           click: () => simulateKeyboardShortcut('S', ['control'])
         },
         {
-          label: 'Save As',
+          label: 'Save As...',
           accelerator: 'CommandOrControl+Shift+S',
           click: () => simulateKeyboardShortcut('S', ['control', 'shift'])
         },
         { type: 'separator' },
         {
-          label: 'Process Audio Files with Effects',
+          label: 'Process Audio Files with Effects...',
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.send('process-audio-files');
@@ -271,7 +287,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Export Preset',
+          label: 'Export Preset...',
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.send('export-preset');
@@ -279,7 +295,7 @@ function createMenu() {
           }
         },
         {
-          label: 'Import Preset',
+          label: 'Import Preset...',
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.send('import-preset');
@@ -443,7 +459,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'About...',
+          label: 'About',
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.send('show-about-dialog', {
@@ -464,16 +480,87 @@ function createMenu() {
 // Disable hardware acceleration to avoid DXGI errors
 app.disableHardwareAcceleration();
 
-// Handle file associations on Windows
-if (process.platform === 'win32') {
-  // Get the first command line argument (excluding the app path and the script path)
-  const args = process.argv.slice(2);
+// Debug: Log the raw process.argv to understand what's being passed
+console.log('DEBUG: Raw process.argv:', process.argv);
+
+/**
+ * Process command line arguments to find preset files
+ * @param {string[]} argv - Command line arguments array
+ */
+function processCommandLineArgs(argv) {
+  // Log all command line arguments for debugging
+  console.log('Processing command line arguments:', argv);
+  
+  // Get the arguments (excluding the app path and the script path)
+  // In packaged apps, the first argument is the app path
+  // In development, the first two arguments are electron and the script path
+  const args = process.defaultApp ? argv.slice(2) : argv.slice(1);
+  console.log('Filtered command line arguments:', args);
+  
   if (args.length > 0) {
-    const filePath = args[0];
-    if (filePath.endsWith('.effetune_preset')) {
-      fileToOpen = filePath;
+    // Process each argument to find preset files
+    for (const arg of args) {
+      console.log('Checking argument:', arg);
+      
+      // Check if the argument is a file path that ends with .effetune_preset
+      if (arg && arg.endsWith('.effetune_preset')) {
+        try {
+          // Check if file exists
+          if (fs.existsSync(arg)) {
+            console.log('Found valid preset file in command line arguments:', arg);
+            fileToOpen = arg;
+            
+            // If the app is already running, send the file path to the renderer
+            if (mainWindow && mainWindow.webContents) {
+              console.log('App is already running, sending file path to renderer');
+              mainWindow.webContents.send('open-preset-file', arg);
+            } else {
+              console.log('App is not yet running, storing file path for later');
+            }
+            
+            // Only process the first valid preset file
+            break;
+          } else {
+            console.error('Preset file does not exist:', arg);
+          }
+        } catch (error) {
+          console.error('Error checking preset file:', error);
+        }
+      } else {
+        console.log('Argument is not a preset file:', arg);
+      }
     }
+  } else {
+    console.log('No command line arguments found');
   }
+}
+
+// Process command line arguments on startup
+processCommandLineArgs(process.argv);
+
+// Handle second instance (when user tries to open another instance of the app)
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  // If we couldn't get the lock, it means another instance is already running
+  // so we quit this one
+  console.log('Another instance is already running, quitting this one');
+  app.quit();
+} else {
+  // This is the first instance
+  // Listen for second-instance event (when user opens a file with the app)
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    console.log('Second instance detected with command line:', commandLine);
+    
+    // Process the command line arguments from the second instance
+    processCommandLineArgs(commandLine);
+    
+    // Focus the main window if it exists
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
 }
 
 // Register the app as the default handler for effetune:// protocol
@@ -486,14 +573,31 @@ app.setAsDefaultProtocolClient('effetune');
 // Handle macOS file open events
 app.on('open-file', (event, path) => {
   event.preventDefault();
+  console.log('macOS open-file event:', path);
+  
   if (path.endsWith('.effetune_preset')) {
-    if (mainWindow && mainWindow.webContents) {
-      // If app is already running, send the file path to the renderer
-      mainWindow.webContents.send('open-preset-file', path);
-    } else {
-      // If app is not yet running, store the path to be opened when the app is ready
-      fileToOpen = path;
+    try {
+      // Check if file exists
+      if (fs.existsSync(path)) {
+        console.log('Valid preset file from open-file event:', path);
+        
+        if (mainWindow && mainWindow.webContents) {
+          // If app is already running, send the file path to the renderer
+          console.log('App is running, sending file path to renderer');
+          mainWindow.webContents.send('open-preset-file', path);
+        } else {
+          // If app is not yet running, store the path to be opened when the app is ready
+          console.log('App not yet running, storing file path for later');
+          fileToOpen = path;
+        }
+      } else {
+        console.error('Preset file does not exist:', path);
+      }
+    } catch (error) {
+      console.error('Error checking preset file:', error);
     }
+  } else {
+    console.log('File is not a preset file:', path);
   }
 });
 
