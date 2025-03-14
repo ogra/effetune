@@ -27,8 +27,10 @@ export class PipelineManager {
         // Create master toggle button
         this.createMasterToggle();
         
-        // Initialize preset management
-        this.initPresetManagement();
+        // Initialize preset management (async)
+        this.initPresetManagement().catch(error => {
+            console.error('Failed to initialize preset management:', error);
+        });
         
         // Save initial state after a short delay to ensure Volume and Level Meter are initialized
         setTimeout(() => {
@@ -36,39 +38,40 @@ export class PipelineManager {
         }, 1000);
     }
 
-    initPresetManagement() {
-        // Load presets from local storage
-        this.loadPresetList();
+    async initPresetManagement() {
+        // Load presets from local storage or file
+        await this.loadPresetList();
         
         // Save preset button
-        this.savePresetButton.addEventListener('click', () => {
+        this.savePresetButton.addEventListener('click', async () => {
             const name = this.presetSelect.value.trim();
             if (name) {
-                this.savePreset(name);
+                await this.savePreset(name);
             }
         });
         
         // Delete preset button
-        this.deletePresetButton.addEventListener('click', () => {
+        this.deletePresetButton.addEventListener('click', async () => {
             const name = this.presetSelect.value.trim();
-            if (name && this.getPresets()[name] && confirm('Delete this preset?')) {
-                this.deletePreset(name);
+            const presets = await this.getPresets();
+            if (name && presets[name] && confirm('Delete this preset?')) {
+                await this.deletePreset(name);
             }
         });
         
         // Preset selection change
-        this.presetSelect.addEventListener('change', (e) => {
+        this.presetSelect.addEventListener('change', async (e) => {
             const name = e.target.value.trim();
-            const presets = this.getPresets();
+            const presets = await this.getPresets();
             if (presets[name]) {
-                this.loadPreset(name);
+                await this.loadPreset(name);
                 // Ensure datalist is up to date
-                this.loadPresetList();
+                await this.loadPresetList();
             }
         });
     }
 
-    loadPresetList() {
+    async loadPresetList() {
         // Get datalist element
         const datalist = document.getElementById('presetList');
         if (!datalist) return;
@@ -79,8 +82,8 @@ export class PipelineManager {
         // Clear existing options
         datalist.innerHTML = '';
         
-        // Get presets from local storage
-        const presets = this.getPresets();
+        // Get presets from local storage or file
+        const presets = await this.getPresets();
         
         // Add preset options
         Object.keys(presets).forEach(name => {
@@ -93,19 +96,46 @@ export class PipelineManager {
         this.presetSelect.value = currentValue;
     }
 
-    getPresets() {
+    async getPresets() {
         try {
-            // Use the original storage key for presets
-            const presetsJson = localStorage.getItem('effetune_presets');
-            return presetsJson ? JSON.parse(presetsJson) : {};
+            // Check if running in Electron environment
+            if (window.electronAPI && window.electronIntegration && window.electronIntegration.isElectron) {
+                // Get app path from Electron
+                const appPath = await window.electronAPI.getPath('userData');
+                
+                // Use path.join for cross-platform compatibility
+                const filePath = await window.electronAPI.joinPaths(appPath, 'effetune_presets.json');
+                
+                // Check if file exists
+                const fileExists = await window.electronAPI.fileExists(filePath);
+                
+                if (!fileExists) {
+                    return {};
+                }
+                
+                // Read presets from file
+                const result = await window.electronAPI.readFile(filePath);
+                
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+                
+                // Parse presets
+                return JSON.parse(result.content);
+            } else {
+                // Fallback to localStorage for web version
+                const presetsJson = localStorage.getItem('effetune_presets');
+                return presetsJson ? JSON.parse(presetsJson) : {};
+            }
         } catch (error) {
             console.error('Failed to load presets:', error);
+            // Failed to load presets, return empty object
             return {};
         }
     }
 
-    savePreset(name) {
-        const presets = this.getPresets();
+    async savePreset(name) {
+        const presets = await this.getPresets();
         
         // Create preset data with original format (plugins array)
         const pluginsData = this.audioManager.pipeline.map(plugin => {
@@ -128,34 +158,56 @@ export class PipelineManager {
             plugins: pluginsData
         };
         
-        // Save to local storage with original key
-        localStorage.setItem('effetune_presets', JSON.stringify(presets));
-        
-        // Update UI
-        this.loadPresetList();
-        this.presetSelect.value = name;
-        
-        if (window.uiManager) {
-            window.uiManager.setError('success.presetSaved', false, { name });
-            setTimeout(() => window.uiManager.clearError(), 3000);
+        try {
+            // Check if running in Electron environment
+            if (window.electronAPI && window.electronIntegration && window.electronIntegration.isElectron) {
+                // Get app path from Electron
+                const appPath = await window.electronAPI.getPath('userData');
+                
+                // Use path.join for cross-platform compatibility
+                const filePath = await window.electronAPI.joinPaths(appPath, 'effetune_presets.json');
+                
+                // Save presets to file
+                await window.electronAPI.saveFile(
+                    filePath,
+                    JSON.stringify(presets, null, 2)
+                );
+            } else {
+                // Fallback to localStorage for web version
+                localStorage.setItem('effetune_presets', JSON.stringify(presets));
+            }
+            
+            // Update UI
+            this.loadPresetList();
+            this.presetSelect.value = name;
+            
+            if (window.uiManager) {
+                window.uiManager.setError('success.presetSaved', false, { name });
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+        } catch (error) {
+            console.error('Failed to save preset:', error);
+            if (window.uiManager) {
+                window.uiManager.setError('error.failedToSavePreset', true);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
         }
     }
 
     /**
      * Load a preset into the pipeline
-     * @param {string|Object} nameOrPreset - The name of the preset to load from localStorage, or a preset object
+     * @param {string|Object} nameOrPreset - The name of the preset to load from file/localStorage, or a preset object
      */
-    loadPreset(nameOrPreset) {
+    async loadPreset(nameOrPreset) {
         let preset;
         let name;
         
-        // No need for isLoadingPreset flag anymore
         
         // Check if nameOrPreset is a string (preset name) or an object (preset data)
         if (typeof nameOrPreset === 'string') {
-            // It's a preset name, load from localStorage
+            // It's a preset name, load from file/localStorage
             name = nameOrPreset;
-            const presets = this.getPresets();
+            const presets = await this.getPresets();
             preset = presets[name];
             
             if (!preset) {
@@ -269,17 +321,16 @@ export class PipelineManager {
                 setTimeout(() => window.uiManager.clearError(), 3000);
             }
         } catch (error) {
-            console.error('Failed to load preset:', error);
+            // Failed to load preset
             if (window.uiManager) {
                 window.uiManager.setError('error.failedToLoadPreset');
             }
         } finally {
-            // No need to reset isLoadingPreset flag anymore
         }
     }
 
-    deletePreset(name) {
-        const presets = this.getPresets();
+    async deletePreset(name) {
+        const presets = await this.getPresets();
         if (!presets[name]) {
             if (window.uiManager) {
                 window.uiManager.setError('error.noPresetSelected');
@@ -288,15 +339,40 @@ export class PipelineManager {
         }
         
         delete presets[name];
-        localStorage.setItem('effetune_presets', JSON.stringify(presets));
         
-        // Update UI
-        this.loadPresetList();
-        this.presetSelect.value = '';
-        
-        if (window.uiManager) {
-            window.uiManager.setError('success.presetDeleted', false, { name });
-            setTimeout(() => window.uiManager.clearError(), 3000);
+        try {
+            // Check if running in Electron environment
+            if (window.electronAPI && window.electronIntegration && window.electronIntegration.isElectron) {
+                // Get app path from Electron
+                const appPath = await window.electronAPI.getPath('userData');
+                
+                // Use path.join for cross-platform compatibility
+                const filePath = await window.electronAPI.joinPaths(appPath, 'effetune_presets.json');
+                
+                // Save presets to file
+                await window.electronAPI.saveFile(
+                    filePath,
+                    JSON.stringify(presets, null, 2)
+                );
+            } else {
+                // Fallback to localStorage for web version
+                localStorage.setItem('effetune_presets', JSON.stringify(presets));
+            }
+            
+            // Update UI
+            this.loadPresetList();
+            this.presetSelect.value = '';
+            
+            if (window.uiManager) {
+                window.uiManager.setError('success.presetDeleted', false, { name });
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+        } catch (error) {
+            console.error('Failed to delete preset:', error);
+            if (window.uiManager) {
+                window.uiManager.setError('error.failedToDeletePreset', true);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
         }
     }
     
@@ -458,7 +534,7 @@ export class PipelineManager {
                             }
                         })
                         .catch(err => {
-                            console.error('Failed to cut settings:', err);
+                            // Failed to cut settings
                             if (window.uiManager) {
                                 window.uiManager.setError('error.failedToCutSettings', true);
                             }
@@ -479,7 +555,7 @@ export class PipelineManager {
                             }
                         })
                         .catch(err => {
-                            console.error('Failed to copy settings:', err);
+                            // Failed to copy settings
                             if (window.uiManager) {
                                 window.uiManager.setError('error.failedToCopySettings', true);
                             }
@@ -570,14 +646,14 @@ export class PipelineManager {
                                 setTimeout(() => window.uiManager.clearError(), 3000);
                             }
                         } catch (err) {
-                            console.error('Failed to paste plugin settings:', err);
+                            // Failed to paste plugin settings
                             if (window.uiManager) {
                                 window.uiManager.setError('error.failedToPasteSettings', true);
                             }
                         }
                     })
                     .catch(err => {
-                        console.error('Failed to read clipboard:', err);
+                        // Failed to read clipboard
                         if (window.uiManager) {
                             window.uiManager.setError('error.failedToReadClipboard', true);
                         }
@@ -717,7 +793,7 @@ export class PipelineManager {
                     // In Electron, use shell.openExternal to open in default browser
                     window.electronAPI.openExternalUrl(localizedPath)
                         .catch(err => {
-                            console.error('Error opening external URL:', err);
+                            // Error opening external URL
                             // Fallback to window.open
                             window.open(localizedPath, '_blank');
                         });
@@ -1183,7 +1259,7 @@ export class PipelineManager {
                             return;
                         }
                     } catch (error) {
-                        console.error('Error processing file:', error);
+                        // Error processing file
                         window.uiManager.setError('error.failedToProcessFile', true, { fileName: file.name, errorMessage: error.message });
                     }
                 }
@@ -1209,7 +1285,7 @@ export class PipelineManager {
                     }
                 }
             } catch (error) {
-                console.error('Error processing files:', error);
+                // Error processing files
                 window.uiManager.setError('error.failedToProcessAudioFiles', true, { errorMessage: error.message });
             } finally {
                 this.hideProgress();
@@ -1528,14 +1604,14 @@ export class PipelineManager {
                         };
                         
                         reader.onerror = (error) => {
-                            console.error('Error reading file:', error);
+                            // Error reading file
                             window.uiManager.setError(`Error reading file: ${error.message}`, true);
                         };
                         
                         // Start reading the blob as data URL
                         reader.readAsDataURL(blob);
                     } catch (error) {
-                        console.error('Error saving file:', error);
+                        // Error saving file
                         window.uiManager.setError(`Error saving file: ${error.message}`, true);
                     }
                 }
@@ -1646,7 +1722,7 @@ export class PipelineManager {
                         return;
                     }
                 } catch (error) {
-                    console.error('Error processing file:', error);
+                    // Error processing file
                     window.uiManager.setError('error.failedToProcessFile', true, { fileName: file.name, errorMessage: error.message });
                 }
             }
@@ -1672,7 +1748,7 @@ export class PipelineManager {
                 }
             }
         } catch (error) {
-            console.error('Error processing files:', error);
+            // Error processing files
             window.uiManager.setError('error.failedToProcessAudioFiles', true, { errorMessage: error.message });
         } finally {
             this.hideProgress();
@@ -1688,7 +1764,28 @@ export class PipelineManager {
     // Save current pipeline state to history
     saveState() {
         // Skip if this is an undo/redo operation
-        if (this.isUndoRedoOperation) return;
+        if (this.isUndoRedoOperation) {
+            return;
+        }
+        
+        // Check if pipeline is empty
+        if (this.audioManager.pipeline.length === 0) {
+            // Create default plugins
+            const defaultPlugins = [
+                { name: 'Volume', enabled: true, parameters: { volume: -6 } },
+                { name: 'Level Meter', enabled: true, parameters: {} }
+            ];
+            
+            // Save default plugins state
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                // Save to file using the savePipelineState function from app.js
+                if (window.savePipelineState) {
+                    window.savePipelineState(defaultPlugins);
+                }
+            }
+            
+            return;
+        }
         
         // Create a deep copy of the current pipeline state
         const state = this.audioManager.pipeline.map(plugin =>
@@ -1708,6 +1805,19 @@ export class PipelineManager {
         if (this.history.length > this.maxHistorySize) {
             this.history.shift();
             this.historyIndex--;
+        }
+        
+        // Save pipeline state to file if in Electron environment
+        if (window.electronIntegration && window.electronIntegration.isElectron) {
+            // Get current pipeline state in the new format (with name/enabled/parameters)
+            const pipelineState = this.audioManager.pipeline.map(plugin =>
+                this.getSerializablePluginState(plugin, false, true, true)
+            );
+            
+            // Save to file using the savePipelineState function from app.js
+            if (window.savePipelineState) {
+                window.savePipelineState(pipelineState);
+            }
         }
     }
     

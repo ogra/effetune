@@ -16,7 +16,7 @@ class ElectronIntegration {
     
     // Initialize event listeners if running in Electron
     if (this.isElectron) {
-      console.log('Running in Electron environment, initializing event listeners');
+      // Initialize event listeners
       this.initEventListeners();
       this.loadAudioPreferences();
       this.patchDocumentationLinks();
@@ -117,7 +117,7 @@ class ElectronIntegration {
         window.uiManager.getLocalizedDocPath = (basePath) => {
           // If we're in Electron, convert paths to local markdown files
           if (this.isElectron) {
-            console.log('Converting doc path for Electron:', basePath);
+            // Convert doc path for Electron
             
             // Handle the main readme
             if (basePath === '/readme.md' || basePath === '/') {
@@ -203,35 +203,35 @@ class ElectronIntegration {
     
     // Listen for process audio files request from main process
     window.electronAPI.onProcessAudioFiles(() => {
-      console.log('Process audio files menu item clicked');
+      // Process audio files menu item clicked
       this.processAudioFiles();
     });
     
     // Listen for save preset request from main process
     window.electronAPI.onSavePreset(() => {
-      console.log('Save preset menu item clicked');
+      // Save preset menu item clicked
       this.exportPreset(); // Reuse export preset functionality
     });
     
     // Listen for save preset as request from main process
     window.electronAPI.onSavePresetAs(() => {
-      console.log('Save preset as menu item clicked');
+      // Save preset as menu item clicked
       this.exportPreset(); // Reuse export preset functionality
     });
     
     // Listen for config audio request from main process
     window.electronAPI.onConfigAudio(() => {
-      console.log('Config audio menu item clicked');
+      // Config audio menu item clicked
       this.showAudioConfigDialog();
     });
     
     // Listen for show about dialog request from main process
     window.electronAPI.onShowAboutDialog((data) => {
-      console.log('About menu item clicked');
+      // About menu item clicked
       this.showAboutDialog(data);
     });
     
-    console.log('Electron event listeners initialized');
+    // Electron event listeners initialized
   }
   
   /**
@@ -245,7 +245,26 @@ class ElectronIntegration {
     }
     
     try {
-      console.log('Opening preset file:', filePath);
+      // Try to set both pipelineStateLoaded and ORIGINAL_PIPELINE_STATE_LOADED to false
+      try {
+        // First try to set the ORIGINAL value if it exists
+        if (typeof window.ORIGINAL_PIPELINE_STATE_LOADED !== 'undefined') {
+          // We need to use Object.defineProperty to override the protection
+          Object.defineProperty(window, 'ORIGINAL_PIPELINE_STATE_LOADED', {
+            value: false,
+            writable: true,
+            configurable: true
+          });
+        }
+        
+        // Then set the regular flag
+        window.pipelineStateLoaded = false;
+        
+        // Force app.js to skip loading previous state by setting a direct flag
+        window.__FORCE_SKIP_PIPELINE_STATE_LOAD = true;
+      } catch (err) {
+        console.error('Error setting pipeline state flags:', err);
+      }
       
       // Verify file exists and has correct extension
       if (!filePath.endsWith('.effetune_preset')) {
@@ -256,7 +275,7 @@ class ElectronIntegration {
       }
       
       // Read file
-      console.log('Reading preset file...');
+      // Reading preset file
       const readResult = await window.electronAPI.readFile(filePath);
       
       if (!readResult.success) {
@@ -267,7 +286,7 @@ class ElectronIntegration {
       }
       
       // Parse the file content
-      console.log('Parsing preset file content...');
+      // Parsing preset file content
       let fileData;
       try {
         fileData = JSON.parse(readResult.content);
@@ -282,7 +301,7 @@ class ElectronIntegration {
       
       // Handle different formats for backward compatibility
       if (Array.isArray(fileData)) {
-        console.log('Detected old preset format (array)');
+        // Detected old preset format (array)
         // Old format: direct array of pipeline plugins
         presetData = {
           name: path.basename(filePath, '.effetune_preset'),
@@ -290,7 +309,7 @@ class ElectronIntegration {
           pipeline: fileData
         };
       } else if (fileData.pipeline) {
-        console.log('Detected new preset format (object with pipeline)');
+        // Detected new preset format (object with pipeline)
         // New format: complete preset object
         presetData = fileData;
         // Update timestamp to current time
@@ -312,7 +331,7 @@ class ElectronIntegration {
       presetData.name = fileName;
       
       // Load the preset
-      console.log('Loading preset into UI:', fileName);
+      // Loading preset into UI
       window.uiManager.loadPreset(presetData);
       
       // Display message with filename
@@ -598,12 +617,13 @@ class ElectronIntegration {
         
         // Wait a moment to show the message, then reload using Electron's API
         setTimeout(() => {
-          // Save preferences to localStorage as a backup
+          // Save preferences to file as a backup
           try {
-            localStorage.setItem('temp_audio_preferences', JSON.stringify(preferences));
-            console.log('Audio preferences saved to localStorage');
+            // We'll use the userData path to save a backup of the preferences
+            // This is already being done by the main process, so we don't need to do it here
+            console.log('Audio preferences saved to file');
           } catch (e) {
-            console.error('Failed to save preferences to localStorage:', e);
+            console.error('Failed to save preferences backup:', e);
           }
           
           console.log('Requesting reload via Electron IPC...');
@@ -763,7 +783,7 @@ class ElectronIntegration {
   processAudioFiles() {
     if (!this.isElectron) return;
     
-    console.log('Processing audio files from menu...');
+    // Processing audio files from menu
     
     try {
       // Use Electron's dialog to select files directly
@@ -781,7 +801,7 @@ class ElectronIntegration {
           return;
         }
         
-        console.log(`Selected ${result.filePaths.length} files:`, result.filePaths);
+        // Selected files for processing
         
         // Find the pipeline manager
         if (!window.uiManager || !window.uiManager.pipelineManager) {
@@ -807,7 +827,7 @@ class ElectronIntegration {
         // We want the drop area to be in the lower part of the screen, but still fully visible
         const targetScrollPosition = window.scrollY + dropAreaRect.top - (windowHeight * 0.3);
         
-        console.log('Scrolling to position:', targetScrollPosition);
+        // Scrolling to position for drop area
         
         // Scroll to the calculated position
         window.scrollTo({
@@ -853,7 +873,7 @@ class ElectronIntegration {
           
           // Process the files
           setTimeout(() => {
-            console.log('Processing files with pipeline manager');
+            // Processing files with pipeline manager
             window.uiManager.pipelineManager.processDroppedAudioFiles(validFiles);
           }, 300);
         }).catch(error => {
@@ -1041,7 +1061,7 @@ class ElectronIntegration {
     
     // Update isElectron property with more robust detection
     this.isElectron = window.electronAPI !== undefined || isElectronUA;
-    console.log('Electron environment detected:', this.isElectron);
+    // Update isElectron property
     
     return this.isElectron;
   }

@@ -6,17 +6,110 @@ import { electronIntegration } from './electron-integration.js';
 // Make electronIntegration globally accessible first
 window.electronIntegration = electronIntegration;
 
+// Store the latest pipeline state in memory
+let latestPipelineState = null;
+
+// Function to save pipeline state to memory, only write to file on app exit
+async function savePipelineState(pipelineState) {
+    if (!window.electronAPI || !window.electronIntegration || !window.electronIntegration.isElectron) {
+        return;
+    }
+    
+    // Skip saving during first launch (splash screen)
+    if (window.isFirstLaunch === true) {
+        return;
+    }
+    
+    // Skip saving if pipeline state is empty
+    if (!pipelineState || !Array.isArray(pipelineState) || pipelineState.length === 0) {
+        return;
+    }
+    
+    // Store the latest state in memory
+    latestPipelineState = pipelineState;
+}
+
+// Function to write the latest pipeline state to file
+async function writePipelineStateToFile() {
+    if (!window.electronAPI || !window.electronIntegration || !window.electronIntegration.isElectron) {
+        return;
+    }
+    
+    // Skip if no state to save
+    if (!latestPipelineState) {
+        return;
+    }
+    
+    try {
+        // Use the IPC method to save pipeline state to file
+        const result = await window.electronAPI.savePipelineStateToFile(latestPipelineState);
+        
+        if (result.success) {
+            console.log('Pipeline state saved to file on app exit');
+        } else {
+            console.error('Failed to save pipeline state to file:', result.error);
+        }
+    } catch (error) {
+        console.error('Failed to save pipeline state to file:', error);
+    }
+}
+
+// Function to load pipeline state from file when in Electron environment
+async function loadPipelineState() {
+    if (!window.electronAPI || !window.electronIntegration || !window.electronIntegration.isElectron) {
+        return null;
+    }
+    
+    // Double-check that we should load the pipeline state
+    if (window.__FORCE_SKIP_PIPELINE_STATE_LOAD === true) {
+        return null;
+    }
+    
+    // Check the pipelineStateLoaded flag again
+    if (window.pipelineStateLoaded !== true) {
+        return null;
+    }
+    
+    try {
+        // Get app path from Electron
+        const appPath = await window.electronAPI.getPath('userData');
+        
+        // Use path.join for cross-platform compatibility
+        const filePath = await window.electronAPI.joinPaths(appPath, 'pipeline-state.json');
+        
+        // Check if file exists
+        const fileExists = await window.electronAPI.fileExists(filePath);
+        
+        if (!fileExists) {
+            return null;
+        }
+        
+        // Read pipeline state from file
+        const result = await window.electronAPI.readFile(filePath);
+        
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        // Parse pipeline state
+        const pipelineState = JSON.parse(result.content);
+        
+        return pipelineState;
+    } catch (error) {
+        console.error('Error loading pipeline state:', error);
+        return null;
+    }
+}
+
 // Set up event listener for preset file opening from command line arguments
 if (window.electronAPI && window.electronAPI.onOpenPresetFile) {
   window.electronAPI.onOpenPresetFile((filePath) => {
-    console.log('Received open-preset-file event from main process:', filePath);
     if (window.electronIntegration) {
       window.electronIntegration.openPresetFile(filePath);
     } else {
-      console.error('electronIntegration not available for opening preset file');
+      console.error('Cannot open preset file: electronIntegration not available');
     }
   });
-  console.log('Registered open-preset-file event listener');
 }
 
 // Add a style to hide the UI immediately during first launch
@@ -69,7 +162,7 @@ isFirstLaunchPromise.then(isFirstLaunch => {
     // Store the first launch status for other components
     window.isFirstLaunchConfirmed = isFirstLaunch;
 }).catch(error => {
-    console.error('Error checking first launch status:', error);
+    console.error('Error checking launch status:', error);
     // In case of error, show the UI
     if (tempStyle.parentNode) {
         tempStyle.parentNode.removeChild(tempStyle);
@@ -114,11 +207,57 @@ class App {
             this.uiManager.initAudio();
 
             // Initialize pipeline
-            const savedState = this.uiManager.parsePipelineState();
+            let savedState = null;
             const plugins = [];
             
-            if (savedState) {
-                // Restore pipeline from URL
+            // Check if running in Electron environment
+            const isElectron = window.electronIntegration && window.electronIntegration.isElectron;
+            
+            // Check if this is first launch (during splash screen)
+            const isFirstLaunch = window.isFirstLaunch === true;
+            
+            // If this is the first launch (during splash screen), don't initialize pipeline
+            // This prevents overwriting existing settings during splash screen
+            if (isFirstLaunch && isElectron) {
+                this.uiManager.hideLoadingSpinner();
+                return;
+            }
+            
+            // Try to load pipeline state from file if in Electron environment and no preset file was specified via command line
+            // Check for the force skip flag first
+            if (window.__FORCE_SKIP_PIPELINE_STATE_LOAD === true) {
+                // Clear the flag after using it
+                window.__FORCE_SKIP_PIPELINE_STATE_LOAD = false;
+                return null;
+            }
+            
+            // Use the ORIGINAL_PIPELINE_STATE_LOADED value if available, as it can't be changed
+            const shouldLoadPipeline = window.ORIGINAL_PIPELINE_STATE_LOADED !== undefined
+                ? window.ORIGINAL_PIPELINE_STATE_LOADED === true
+                : window.pipelineStateLoaded === true;
+                
+            if (isElectron && shouldLoadPipeline) {
+                try {
+                    savedState = await loadPipelineState();
+                } catch (error) {
+                    // Error loading pipeline state, will use default
+                    console.error('Error loading pipeline state:', error);
+                }
+            }
+            
+            // If no saved state from file, try URL state (for web version)
+            if (!savedState) {
+                savedState = this.uiManager.parsePipelineState();
+            }
+            
+            // Check if savedState is empty array but file exists
+            // This could happen if the file was just created with empty content
+            if (savedState && Array.isArray(savedState) && savedState.length === 0) {
+                savedState = null; // Force default plugin initialization
+            }
+            
+            if (savedState && savedState.length > 0) {
+                // Restore pipeline from saved state
                 plugins.push(...savedState.map(pluginState => {
                     const plugin = this.pluginManager.createPlugin(pluginState.name);
                     plugin.enabled = pluginState.enabled;
@@ -237,6 +376,15 @@ if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate 
         }
     }
 }
+
+// Make savePipelineState globally accessible for pipeline manager
+window.savePipelineState = savePipelineState;
+
+// Add event listener to save pipeline state to file when the app is closing
+window.addEventListener('beforeunload', async (event) => {
+    // Write the latest pipeline state to file on app exit
+    await writePipelineStateToFile();
+});
 
 // Initialize application after first launch check is complete
 isFirstLaunchPromise.then(isFirstLaunch => {

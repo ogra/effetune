@@ -63,7 +63,19 @@ contextBridge.exposeInMainWorld(
     reloadWindow: () => ipcRenderer.invoke('reload-window'),
     
     // Update application menu with translations
-    updateApplicationMenu: (menuTemplate) => ipcRenderer.invoke('update-application-menu', menuTemplate)
+    updateApplicationMenu: (menuTemplate) => ipcRenderer.invoke('update-application-menu', menuTemplate),
+    
+    // Get path
+    getPath: (name) => ipcRenderer.invoke('getPath', name),
+    
+    // Join paths (platform-specific)
+    joinPaths: (basePath, ...paths) => ipcRenderer.invoke('joinPaths', basePath, ...paths),
+    
+    // Check if file exists
+    fileExists: (filePath) => ipcRenderer.invoke('fileExists', filePath),
+    
+    // Save pipeline state to file
+    savePipelineStateToFile: (pipelineState) => ipcRenderer.invoke('save-pipeline-state-to-file', pipelineState)
   }
 );
 

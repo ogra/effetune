@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { systemPreferences } = require('electron');
@@ -11,18 +11,159 @@ const packageJson = require('./package.json');
 const appVersion = packageJson.version;
 
 // Handle file associations and command line arguments
-let fileToOpen = null;
+// commandLinePresetFile is defined below
+
+// Store window state
+let windowState = {
+  width: 1440,
+  height: 900,
+  x: undefined,
+  y: undefined
+};
+
+// Set up logging to file for debugging (disabled for release)
+function setupFileLogging() {
+  // Disabled for release
+}
+
+// Get the actual executable path for packaged apps
+function getActualExePath() {
+  // In packaged apps, process.execPath points to the actual executable
+  return process.execPath;
+}
+
+// Get user data path (portable or standard)
+function getUserDataPath() {
+  // According to the requirements:
+  // 1. If there's an effetune_settings folder in the same directory as the exe, use it (portable mode)
+  // 2. Otherwise, use the standard userData path (installed mode)
+  
+  // Check in the executable directory using process.execPath
+  const execPath = getActualExePath();
+  const execDir = path.dirname(execPath);
+  let portableSettingsPath = path.join(execDir, 'effetune_settings');
+  
+  // If the settings folder exists in the exe directory, use it (portable mode)
+  if (fs.existsSync(portableSettingsPath)) {
+    return portableSettingsPath;
+  }
+  
+  // If no portable settings folder found, use standard userData path
+  return app.getPath('userData');
+}
+
+// Load saved window state
+function loadWindowState() {
+  try {
+    const userDataPath = getUserDataPath();
+    const stateFilePath = path.join(userDataPath, 'window-state.json');
+    
+    if (fs.existsSync(stateFilePath)) {
+      const savedState = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
+      
+      // Validate the saved state
+      if (savedState.width && savedState.height) {
+        // Ensure we have a scale factor property
+        if (!savedState.scaleFactor) {
+          savedState.scaleFactor = 1.0;
+        }
+        
+        windowState = savedState;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load window state:', error);
+  }
+}
+
+// Get display scaling factor
+function getDisplayScaleFactor() {
+  if (!mainWindow) return 1.0;
+  const currentDisplay = screen.getDisplayMatching(mainWindow.getBounds());
+  return currentDisplay.scaleFactor || 1.0;
+}
+
+// Save window state
+function saveWindowState() {
+  if (!mainWindow) return;
+  
+  try {
+    // Only save window state if the window is not maximized
+    // This prevents the window from growing on high DPI displays
+    if (!mainWindow.isMaximized()) {
+      // Get current window bounds
+      const bounds = mainWindow.getBounds();
+      
+      // Get display scaling factor
+      const scaleFactor = getDisplayScaleFactor();
+      
+      // Update window state - store physical pixels by dividing by scale factor
+      windowState = {
+        width: Math.round(bounds.width / scaleFactor),
+        height: Math.round(bounds.height / scaleFactor),
+        x: bounds.x,
+        y: bounds.y,
+        isMaximized: false,
+        scaleFactor: scaleFactor // Store the scale factor used when saving
+      };
+    } else {
+      // If window is maximized, just save that state
+      windowState = {
+        width: windowState.width || 1440,
+        height: windowState.height || 900,
+        x: windowState.x,
+        y: windowState.y,
+        isMaximized: true,
+        scaleFactor: getDisplayScaleFactor() // Store current scale factor
+      };
+    }
+    
+    // Save to file
+    const userDataPath = getUserDataPath();
+    const stateFilePath = path.join(userDataPath, 'window-state.json');
+    
+    // Ensure the directory exists
+    if (!fs.existsSync(userDataPath)) {
+      fs.mkdirSync(userDataPath, { recursive: true });
+    }
+    
+    fs.writeFileSync(stateFilePath, JSON.stringify(windowState, null, 2));
+  } catch (error) {
+    console.error('Failed to save window state:', error);
+  }
+}
 
 // Create the main application window
 function createWindow() {
+  // Load saved window state
+  loadWindowState();
+  
+  // Get current display scaling factor
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const currentScaleFactor = primaryDisplay.scaleFactor || 1.0;
+  
+  // Adjust window size based on scale factor difference
+  let adjustedWidth = windowState.width;
+  let adjustedHeight = windowState.height;
+  
+  // If we have a saved scale factor and it's different from current
+  if (windowState.scaleFactor && windowState.scaleFactor !== currentScaleFactor) {
+     // Convert from physical to logical pixels
+    adjustedWidth = Math.round(windowState.width * currentScaleFactor);
+    adjustedHeight = Math.round(windowState.height * currentScaleFactor);
+  }
+  
   // Create the browser window
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    width: adjustedWidth,
+    height: adjustedHeight,
+    x: windowState.x,
+    y: windowState.y,
     minWidth: 1024,
     minHeight: 768,
     icon: path.join(__dirname, 'favicon.ico'),
     acceptFirstMouse: true, // Accept mouse events on window activation
+    show: false, // Don't show the window until it's ready
     webPreferences: {
       nodeIntegration: false, // Security: Keep Node.js integration disabled
       contextIsolation: true, // Security: Enable context isolation
@@ -132,29 +273,61 @@ function createWindow() {
   // F1 key is now handled in the renderer process (js/app.js)
   // This allows the same behavior in both web and Electron environments
 
+  // When the window is ready to show
+  mainWindow.once('ready-to-show', () => {
+    // Restore maximized state if needed
+    if (windowState.isMaximized) {
+      mainWindow.maximize();
+    }
+    // Show the window
+    mainWindow.show();
+  });
+  
   // Load the app's HTML file
   mainWindow.loadFile('effetune.html');
 
   // Combined event handler for page load
   mainWindow.webContents.on('did-finish-load', () => {
-    console.log('Main window did-finish-load event fired');
-    
+     
     // 1. Disable Electron's built-in zoom functionality
     mainWindow.webContents.setZoomFactor(1.0);
     
-    // 2. Set initial zoom level to 1.0 (100%) on every page load
+    // If this is a splash reload, restore the saved command line preset file path
+    if (isSplashReload && savedCommandLinePresetFile) {
+      commandLinePresetFile = savedCommandLinePresetFile;
+      savedCommandLinePresetFile = null;
+    }
+    
+    // 2. Set initial zoom level to 1.0 (100%) on every page load and set critical flags
     mainWindow.webContents.executeJavaScript(`
       // Ensure zoom is always reset to 100% on page load
       document.body.style.zoom = 1.0;
       
-      // Store the initial zoom in localStorage for reference
-      localStorage.setItem('initialZoom', '1.0');
+      // Set initial zoom value (will be stored in settings file for portable mode)
+      window.initialZoom = 1.0;
       
       // Set first launch flag for audio workaround
       window.isFirstLaunch = ${isFirstLaunch};
-      console.log('Setting window.isFirstLaunch to:', ${isFirstLaunch});
+      
+      // Set pipeline state loaded flag based on commandLinePresetFile
+      // If commandLinePresetFile is set, don't load previous pipeline state
+      window.pipelineStateLoaded = ${commandLinePresetFile ? false : shouldLoadPipelineState};
+      
+      // Store this in a global constant that can't be changed
+      window.ORIGINAL_PIPELINE_STATE_LOADED = window.pipelineStateLoaded;
+      
+      // Override the pipelineStateLoaded property with a getter/setter
+      Object.defineProperty(window, 'pipelineStateLoaded', {
+        get: function() {
+          return window.ORIGINAL_PIPELINE_STATE_LOADED;
+        },
+        set: function(value) {
+          // Ignore attempts to change the value
+        },
+        configurable: false
+      });
     `).catch(err => {
-      console.error('Error setting initial zoom:', err);
+      console.error('Error setting initial zoom and flags:', err);
     });
 
     // 3. Enable wheel-based zooming by injecting JavaScript
@@ -190,26 +363,50 @@ function createWindow() {
     });
     
     // 4. Handle file to open if specified via command line
-    if (fileToOpen) {
-      console.log('Processing fileToOpen in did-finish-load event:', fileToOpen);
-      // Use a flag to ensure we only process the file once
-      let fileProcessed = false;
+    if (commandLinePresetFile) {
+      // Set pipelineStateLoaded to false immediately to prevent loading previous state
+      mainWindow.webContents.executeJavaScript(`
+        window.pipelineStateLoaded = false;
+      `).catch(err => {
+        console.error('Error setting pipelineStateLoaded flag:', err);
+      });
       
-      // Only process if not already processed
-      if (!fileProcessed && fileToOpen) {
-        console.log('Opening preset file from command line:', fileToOpen);
-        fileProcessed = true;
+      // Wait for the page to fully load before sending the file path
+      // Increased timeout to ensure the app is fully initialized
+      setTimeout(() => {
+        if (commandLinePresetFile) {
+          // Double-check that pipelineStateLoaded is still false
+          mainWindow.webContents.executeJavaScript(`
+            if (window.pipelineStateLoaded !== false) {
+              window.pipelineStateLoaded = false;
+            }
+          `).catch(err => {
+            console.error('Error checking pipelineStateLoaded flag:', err);
+          });
+          
+          // Send the file path to the renderer process
+          mainWindow.webContents.send('open-preset-file', commandLinePresetFile);
+          
+          // Always reset commandLinePresetFile after use to prevent it from being loaded again on manual reload
+          commandLinePresetFile = null;
+          savedCommandLinePresetFile = null;
+        }
         
-        // Wait for the page to fully load before sending the file path
-        // Increased timeout to ensure the app is fully initialized
-        setTimeout(() => {
-          if (fileToOpen) {
-            console.log('Sending open-preset-file event to renderer process:', fileToOpen);
-            mainWindow.webContents.send('open-preset-file', fileToOpen);
-            fileToOpen = null; // Reset after use
-          }
-        }, 2000);
-      }
+        // Reset the splash reload flag if it was set
+        if (isSplashReload) {
+          isSplashReload = false;
+        }
+      }, 2000);
+    } else if (isSplashReload) {
+      // If there's no file to open but this is a splash screen reload, reset the flag
+      // Make sure we set pipelineStateLoaded to the correct value based on shouldLoadPipelineState
+      mainWindow.webContents.executeJavaScript(`
+        window.pipelineStateLoaded = ${shouldLoadPipelineState};
+      `).catch(err => {
+        console.error('Error setting pipelineStateLoaded flag:', err);
+      });
+      
+      isSplashReload = false;
     }
   });
 
@@ -234,9 +431,25 @@ function createWindow() {
   //   mainWindow.webContents.openDevTools();
   // }
 
+  // Save window state when window is moved or resized
+  mainWindow.on('resize', () => saveWindowState());
+  mainWindow.on('move', () => saveWindowState());
+  
   // Handle window close event
-  mainWindow.on('closed', () => {
+  mainWindow.on('close', () => {
+    saveWindowState();
     globalShortcut.unregisterAll();
+    
+    // Request the renderer process to save pipeline state to file
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.executeJavaScript('if (typeof writePipelineStateToFile === "function") { writePipelineStateToFile(); }')
+        .catch(err => {
+          console.error('Error requesting pipeline state save:', err);
+        });
+    }
+  });
+  
+  mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
@@ -477,61 +690,74 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+// Flag to track if this is the first launch (for audio workaround)
+let isFirstLaunch = true;
+
+// Flag to track if the current reload is from the splash screen
+let isSplashReload = false;
+
+// Flag to track if pipeline state should be loaded
+// Set to true by default, will be set to false if command line preset file is provided
+let shouldLoadPipelineState = true;
+
+// Store command line preset file path
+let commandLinePresetFile = null;
+
+// Store command line preset file path for splash reload
+// This ensures the value is preserved across the splash screen reload
+let savedCommandLinePresetFile = null;
+
 // Disable hardware acceleration to avoid DXGI errors
 app.disableHardwareAcceleration();
-
-// Debug: Log the raw process.argv to understand what's being passed
-console.log('DEBUG: Raw process.argv:', process.argv);
 
 /**
  * Process command line arguments to find preset files
  * @param {string[]} argv - Command line arguments array
  */
 function processCommandLineArgs(argv) {
-  // Log all command line arguments for debugging
-  console.log('Processing command line arguments:', argv);
-  
   // Get the arguments (excluding the app path and the script path)
   // In packaged apps, the first argument is the app path
   // In development, the first two arguments are electron and the script path
   const args = process.defaultApp ? argv.slice(2) : argv.slice(1);
-  console.log('Filtered command line arguments:', args);
   
   if (args.length > 0) {
     // Process each argument to find preset files
     for (const arg of args) {
-      console.log('Checking argument:', arg);
-      
       // Check if the argument is a file path that ends with .effetune_preset
       if (arg && arg.endsWith('.effetune_preset')) {
         try {
           // Check if file exists
           if (fs.existsSync(arg)) {
-            console.log('Found valid preset file in command line arguments:', arg);
-            fileToOpen = arg;
+            // Store the command line preset file path
+            commandLinePresetFile = arg;
+            
+            // Also store in savedCommandLinePresetFile for splash reload
+            savedCommandLinePresetFile = arg;
+            
+            // If a preset file is specified via command line, don't load previous pipeline state
+            shouldLoadPipelineState = false;
             
             // If the app is already running, send the file path to the renderer
-            if (mainWindow && mainWindow.webContents) {
-              console.log('App is already running, sending file path to renderer');
+            // But only if we're not in the initial launch phase (not during splash screen)
+            if (mainWindow && mainWindow.webContents && !isFirstLaunch) {
               mainWindow.webContents.send('open-preset-file', arg);
-            } else {
-              console.log('App is not yet running, storing file path for later');
+              
+              // Also set pipelineStateLoaded to false in the renderer
+              mainWindow.webContents.executeJavaScript(`
+                window.pipelineStateLoaded = false;
+              `).catch(err => {
+                console.error('Error setting pipelineStateLoaded flag:', err);
+              });
             }
             
             // Only process the first valid preset file
             break;
-          } else {
-            console.error('Preset file does not exist:', arg);
           }
         } catch (error) {
           console.error('Error checking preset file:', error);
         }
-      } else {
-        console.log('Argument is not a preset file:', arg);
       }
     }
-  } else {
-    console.log('No command line arguments found');
   }
 }
 
@@ -544,15 +770,13 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   // If we couldn't get the lock, it means another instance is already running
   // so we quit this one
-  console.log('Another instance is already running, quitting this one');
   app.quit();
 } else {
   // This is the first instance
   // Listen for second-instance event (when user opens a file with the app)
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    console.log('Second instance detected with command line:', commandLine);
-    
     // Process the command line arguments from the second instance
+    // This will set shouldLoadPipelineState to false if a preset file is specified
     processCommandLineArgs(commandLine);
     
     // Focus the main window if it exists
@@ -573,22 +797,20 @@ app.setAsDefaultProtocolClient('effetune');
 // Handle macOS file open events
 app.on('open-file', (event, path) => {
   event.preventDefault();
-  console.log('macOS open-file event:', path);
   
   if (path.endsWith('.effetune_preset')) {
     try {
       // Check if file exists
       if (fs.existsSync(path)) {
-        console.log('Valid preset file from open-file event:', path);
+        // If a preset file is specified, don't load previous pipeline state
+        shouldLoadPipelineState = false;
         
         if (mainWindow && mainWindow.webContents) {
           // If app is already running, send the file path to the renderer
-          console.log('App is running, sending file path to renderer');
           mainWindow.webContents.send('open-preset-file', path);
         } else {
           // If app is not yet running, store the path to be opened when the app is ready
-          console.log('App not yet running, storing file path for later');
-          fileToOpen = path;
+          commandLinePresetFile = path;
         }
       } else {
         console.error('Preset file does not exist:', path);
@@ -597,15 +819,30 @@ app.on('open-file', (event, path) => {
       console.error('Error checking preset file:', error);
     }
   } else {
-    console.log('File is not a preset file:', path);
+    // Not a preset file, ignore
   }
 });
 
-// Flag to track if this is the first launch (for audio workaround)
-let isFirstLaunch = true;
+// Create portable settings folder if it doesn't exist
+// This function is disabled as we now include effetune_settings in the win-unpacked folder
+function createPortableSettingsFolder() {
+  // Disabled for release
+  return false;
+}
 
 // Initialize the app when Electron is ready
 app.whenReady().then(() => {
+  // Set up file logging first to capture all logs
+  setupFileLogging();
+  
+  // Get user data path
+  const userDataPath = getUserDataPath();
+  const isPortable = userDataPath !== app.getPath('userData');
+  
+  // Create portable settings folder if it doesn't exist
+  // This will enable portable mode if the folder is created successfully
+  createPortableSettingsFolder();
+  
   createWindow();
 
   // Create splash window with About dialog content
@@ -615,7 +852,6 @@ app.whenReady().then(() => {
     frame: false,
     transparent: true,
     resizable: false,
-    center: true,
     parent: mainWindow,
     modal: true,
     show: false,
@@ -719,6 +955,20 @@ app.whenReady().then(() => {
   
   // Show splash window when ready
   splashWindow.once('ready-to-show', () => {
+    // Position splash window in the center of the main window
+    if (mainWindow) {
+      const mainBounds = mainWindow.getBounds();
+      const splashBounds = splashWindow.getBounds();
+      
+      // Calculate the center position
+      const x = Math.round(mainBounds.x + (mainBounds.width - splashBounds.width) / 2);
+      const y = Math.round(mainBounds.y + (mainBounds.height - splashBounds.height) / 2);
+      
+      // Set the position
+      splashWindow.setPosition(x, y);
+    }
+    
+    // Show the splash window
     splashWindow.show();
   });
   
@@ -727,12 +977,19 @@ app.whenReady().then(() => {
     if (mainWindow) {
       isFirstLaunch = false;
       
+      // Set flag to indicate this is a splash screen reload
+      isSplashReload = true;
+      
+      // Save command line preset file path before reload
+      savedCommandLinePresetFile = commandLinePresetFile;
+      
       // Close splash window and reload main window
       if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.close();
         splashWindow = null;
       }
       
+      // Reload the main window
       mainWindow.reload();
       
       // Clean up temporary splash file
@@ -851,8 +1108,6 @@ ipcMain.handle('get-audio-devices', async () => {
         });
     `);
     
-    // Remove excessive logging
-    // console.log('Available audio devices with sample rates:', devices);
     return { success: true, devices };
   } catch (error) {
     console.error('Error getting audio devices:', error);
@@ -863,15 +1118,18 @@ ipcMain.handle('get-audio-devices', async () => {
 // Save audio device preferences
 ipcMain.handle('save-audio-preferences', async (event, preferences) => {
   try {
-    // Remove excessive logging
-    // console.log('Main process: Saving audio preferences:', preferences);
-    const prefsPath = path.join(app.getPath('userData'), 'audio-preferences.json');
-    // console.log('Main process: Preferences path:', prefsPath);
+    const userDataPath = getUserDataPath();
+    const prefsPath = path.join(userDataPath, 'audio-preferences.json');
+    
+    // Ensure the directory exists
+    if (!fs.existsSync(userDataPath)) {
+      fs.mkdirSync(userDataPath, { recursive: true });
+    }
+    
     fs.writeFileSync(prefsPath, JSON.stringify(preferences, null, 2));
-    // console.log('Main process: Preferences saved successfully');
     return { success: true };
   } catch (error) {
-    console.error('Main process: Error saving preferences:', error);
+    console.error('Error saving preferences:', error);
     return { success: false, error: error.message };
   }
 });
@@ -879,23 +1137,18 @@ ipcMain.handle('save-audio-preferences', async (event, preferences) => {
 // Load audio device preferences
 ipcMain.handle('load-audio-preferences', async () => {
   try {
-    // Remove excessive logging
-    // console.log('Main process: Loading audio preferences');
-    const prefsPath = path.join(app.getPath('userData'), 'audio-preferences.json');
-    // console.log('Main process: Preferences path:', prefsPath);
+    const userDataPath = getUserDataPath();
+    const prefsPath = path.join(userDataPath, 'audio-preferences.json');
     
     if (fs.existsSync(prefsPath)) {
-      // console.log('Main process: Preferences file exists');
       const content = fs.readFileSync(prefsPath, 'utf8');
       const preferences = JSON.parse(content);
-      // console.log('Main process: Loaded preferences:', preferences);
       return { success: true, preferences };
     }
     
-    // console.log('Main process: No preferences file found');
     return { success: true, preferences: null };
   } catch (error) {
-    console.error('Main process: Error loading preferences:', error);
+    console.error('Error loading preferences:', error);
     return { success: false, error: error.message };
   }
 });
@@ -937,6 +1190,55 @@ ipcMain.handle('open-external-url', async (event, url) => {
 // Handle get app version request
 ipcMain.handle('get-app-version', () => {
   return appVersion;
+});
+
+// Handle get path request
+ipcMain.handle('getPath', (event, name) => {
+  // If userData path is requested, use our custom function to support portable mode
+  if (name === 'userData') {
+    return getUserDataPath();
+  }
+  return app.getPath(name);
+});
+
+// Handle join paths request
+ipcMain.handle('joinPaths', (event, basePath, ...paths) => {
+  return path.join(basePath, ...paths);
+});
+
+// Handle file exists request
+ipcMain.handle('fileExists', (event, filePath) => {
+  return fs.existsSync(filePath);
+});
+
+// Handle save pipeline state to file request
+ipcMain.handle('save-pipeline-state-to-file', async (event, pipelineState) => {
+  try {
+    // Skip saving if pipeline state is empty
+    if (!pipelineState || !Array.isArray(pipelineState) || pipelineState.length === 0) {
+      return { success: false, error: 'Empty pipeline state' };
+    }
+    
+    // Get app path
+    const appPath = getUserDataPath();
+    
+    // Use path.join for cross-platform compatibility
+    const filePath = path.join(appPath, 'pipeline-state.json');
+    
+    // Ensure the directory exists
+    if (!fs.existsSync(appPath)) {
+      fs.mkdirSync(appPath, { recursive: true });
+    }
+    
+    // Save pipeline state to file
+    fs.writeFileSync(filePath, JSON.stringify(pipelineState, null, 2));
+    console.log('Pipeline state saved to file on app exit');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save pipeline state to file:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // Handle window reload request
