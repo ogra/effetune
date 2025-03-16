@@ -65,8 +65,7 @@ export class PipelineManager {
             const presets = await this.getPresets();
             if (presets[name]) {
                 await this.loadPreset(name);
-                // Ensure datalist is up to date
-                await this.loadPresetList();
+                // loadPresetList is already called inside loadPreset method
             }
         });
     }
@@ -1441,28 +1440,54 @@ export class PipelineManager {
     setupFileDropHandlers() {
         // Handle file drag and drop for audio files only
         this.dropArea.addEventListener('dragenter', (e) => {
+            console.log('Pipeline Manager: dragenter event on dropArea');
+            
+            // Skip in Electron environment
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                console.log('Pipeline Manager: Skipping dragenter in Electron environment');
+                return;
+            }
+            
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
+                console.log('Pipeline Manager dragenter items:', items.map(item => ({
+                    kind: item.kind,
+                    type: item.type,
+                    name: item.getAsFile()?.name || 'unknown'
+                })));
+                
                 const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
+                console.log('Pipeline Manager: hasAudioFiles =', hasAudioFiles);
                 
                 if (hasAudioFiles) {
                     e.preventDefault();
                     this.dropArea.classList.add('drag-active');
+                    console.log('Pipeline Manager: Added drag-active class on dragenter');
                 }
             }
         }, { passive: false });
         
         this.dropArea.addEventListener('dragover', (e) => {
+            console.log('Pipeline Manager: dragover event on dropArea');
+            
+            // Skip in Electron environment
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                console.log('Pipeline Manager: Skipping dragover in Electron environment');
+                return;
+            }
+            
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
                 const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
+                console.log('Pipeline Manager: hasAudioFiles in dragover =', hasAudioFiles);
                 
                 if (hasAudioFiles) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'copy';
                     this.dropArea.classList.add('drag-active');
+                    console.log('Pipeline Manager: Added drag-active class on dragover');
                 }
             }
         }, { passive: false });
@@ -1472,6 +1497,13 @@ export class PipelineManager {
         }, false);
         
         this.dropArea.addEventListener('drop', async (e) => {
+            // Skip in Electron environment
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                // Just remove any active classes that might have been applied
+                this.dropArea.classList.remove('drag-active');
+                return;
+            }
+            
             // Check if this is a file drop
             if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) {
                 return;
@@ -1752,6 +1784,14 @@ export class PipelineManager {
             window.uiManager.setError('error.failedToProcessAudioFiles', true, { errorMessage: error.message });
         } finally {
             this.hideProgress();
+            
+            // Ensure drag-active class is removed
+            this.dropArea.classList.remove('drag-active');
+            
+            // Also remove drag-active class from any other elements
+            document.querySelectorAll('.drag-active').forEach(el => {
+                el.classList.remove('drag-active');
+            });
         }
     }
 
@@ -1765,25 +1805,6 @@ export class PipelineManager {
     saveState() {
         // Skip if this is an undo/redo operation
         if (this.isUndoRedoOperation) {
-            return;
-        }
-        
-        // Check if pipeline is empty
-        if (this.audioManager.pipeline.length === 0) {
-            // Create default plugins
-            const defaultPlugins = [
-                { name: 'Volume', enabled: true, parameters: { volume: -6 } },
-                { name: 'Level Meter', enabled: true, parameters: {} }
-            ];
-            
-            // Save default plugins state
-            if (window.electronIntegration && window.electronIntegration.isElectron) {
-                // Save to file using the savePipelineState function from app.js
-                if (window.savePipelineState) {
-                    window.savePipelineState(defaultPlugins);
-                }
-            }
-            
             return;
         }
         
@@ -1805,6 +1826,23 @@ export class PipelineManager {
         if (this.history.length > this.maxHistorySize) {
             this.history.shift();
             this.historyIndex--;
+        }
+        
+        // Check if pipeline is empty - for Electron file saving only
+        if (this.audioManager.pipeline.length === 0) {
+            // Create default plugins
+            const defaultPlugins = [
+                { name: 'Volume', enabled: true, parameters: { volume: -6 } },
+                { name: 'Level Meter', enabled: true, parameters: {} }
+            ];
+            
+            // Save default plugins state to file (but not to history)
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                // Save to file using the savePipelineState function from app.js
+                if (window.savePipelineState) {
+                    window.savePipelineState(defaultPlugins);
+                }
+            }
         }
         
         // Save pipeline state to file if in Electron environment

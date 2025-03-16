@@ -14,7 +14,7 @@ A real-time audio effect processor designed for audio enthusiasts to enhance the
 
 ## Concept
 
-EffeTune is created for audio enthusiasts who want to take their music listening experience to the next level. Whether you're streaming music or playing from physical media, EffeTune lets you add professional-grade effects to customize the sound to your exact preferences. Transform your computer into a powerful audio effects processor that sits between your audio source and your speakers or amplifier.
+EffeTune was created for audio enthusiasts who want to elevate their music listening experience. Whether you're streaming music or playing from physical media, EffeTune lets you add professional-grade effects to customize the sound to your exact preferences. Transform your computer into a powerful audio effects processor that sits between your audio source and your speakers or amplifier.
 
 No audiophile myths, Just pure science.
 
@@ -30,6 +30,14 @@ No audiophile myths, Just pure science.
 ## Setup Guide
 
 Before using EffeTune, you'll need to set up your audio routing. Here's how to configure different audio sources:
+
+### Music File Player Setup (desktop app only)
+
+- Install and launch the EffeTune desktop app
+- Open and play a music file to ensure proper playback
+   - Open a music file and select EffeTune as the application
+   - Or select Open music file... from the File menu
+   - Or drag the music file into the window
 
 ### Streaming Service Setup
 
@@ -51,16 +59,15 @@ To process audio from streaming services (Spotify, YouTube Music, etc.):
 
 To use EffeTune with CD players, network players, or other physical sources:
 
-1. Configuration:
-   - Connect your audio interface to your computer
-   - Open the EffeTune web app in your browser, or launch the EffeTune desktop app
-   - Select your audio interface as the input and output source
-     - In Chrome, the first time you open it, a dialog box appears asking you to select and allow audio input
-     - In the desktop app, set it up by clicking the Config Audio button in the top right of the screen
-   - Your audio interface now functions as a multi-effects processor:
-     * Input: Your CD player, network player, or other audio source
-     * Processing: Real-time effects through EffeTune
-     * Output: Processed audio to your amplifier or speakers
+- Connect your audio interface to your computer
+- Open the EffeTune web app in your browser, or launch the EffeTune desktop app
+- Select your audio interface as the input and output source
+   - In Chrome, the first time you open it, a dialog box appears asking you to select and allow audio input
+   - In the desktop app, set it up by clicking the Config Audio button in the top right of the screen
+- Your audio interface now functions as a multi-effects processor:
+   * Input: Your CD player, network player, or other audio source
+   * Processing: Real-time effects through EffeTune
+   * Output: Processed audio to your amplifier or speakers
 
 ## Usage
 
@@ -82,8 +89,8 @@ To use EffeTune with CD players, network players, or other physical sources:
 
 1. Save Your Effect Chain:
    - Set up your desired effect chain and parameters
-   - Enter a name in the preset input field
-   - Click the save button to store your preset
+   - Enter a name for your preset into the input field
+   - Click the save button to store it
 
 2. Load a Preset:
    - Type or select a preset name from the dropdown list
@@ -118,6 +125,13 @@ To use EffeTune with CD players, network players, or other physical sources:
    - Ctrl + A: Select all effects in the pipeline
    - Delete: Delete selected effects
    - ESC: Deselect all effects
+
+3. Keyboard Shortcuts (desktop app only):
+   - Space: Play/Pause
+   - Ctrl + → or N: Next track
+   - Ctrl + ← or P: Previous track
+   - Shift + → or F or .: Fast-forward 10 seconds
+   - Shift + ← or B or ,: Rewind 10 seconds
 
 ### Processing Audio Files
 
@@ -195,7 +209,7 @@ Here are some popular effect combinations to enhance your listening experience:
 
 3. Echo Occurs
    - It's likely that your audio inputs and outputs are not configured correctly
-   - If you want to process the audio output of your browser, please consider installing a separate browser just for EffeTune, or using the desktop app instead of the web app
+   - To process browser audio output, consider installing a dedicated browser solely for EffeTune, or use the desktop app instead.
 
 ### Common Setup Issues
 1. No Audio Input
@@ -220,7 +234,7 @@ Q. What's the recommended effect chain length?
 A. While there's no strict limit, we recommend keeping your effect chain to 8-10 effects for optimal performance. More complex chains may impact system performance.
 
 Q. How do I achieve the best sound quality?
-A. Use sample rates of 96kHz or higher when possible, start with subtle effect settings, and build your chain gradually. Monitor levels to avoid distortion.
+A. When possible, use sample rates of 96kHz or higher, begin with subtle effect settings, and gradually build your effect chain. Monitor levels to avoid distortion.
 
 Q. Will this work with any audio source?
 A. Yes, EffeTune can process any audio playing through your selected input device, including streaming services, local files, and physical media.

@@ -1,6 +1,6 @@
 {
   "name": "effetune",
-  "version": "1.27.0",
+  "version": "1.30.0",
   "description": "Desktop Audio Effect Processor",
   "main": "main.js",
   "scripts": {
@@ -38,6 +38,48 @@
         "description": "EffeTune Preset File",
         "icon": "favicon.ico",
         "role": "Editor"
+      },
+      {
+        "ext": "mp3",
+        "name": "MP3 Audio",
+        "description": "MP3 Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
+      },
+      {
+        "ext": "wav",
+        "name": "WAV Audio",
+        "description": "WAV Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
+      },
+      {
+        "ext": "ogg",
+        "name": "OGG Audio",
+        "description": "OGG Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
+      },
+      {
+        "ext": "flac",
+        "name": "FLAC Audio",
+        "description": "FLAC Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
+      },
+      {
+        "ext": "m4a",
+        "name": "M4A Audio",
+        "description": "M4A Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
+      },
+      {
+        "ext": "aac",
+        "name": "AAC Audio",
+        "description": "AAC Audio File",
+        "icon": "favicon.ico",
+        "role": "None"
       }
     ],
     "win": {

@@ -182,9 +182,39 @@ export class AudioManager {
                 if (audioConstraints.deviceId) {
                     console.warn('Failed to use saved audio input device, falling back to default:', error);
                     delete audioConstraints.deviceId;
-                    this.stream = await navigator.mediaDevices.getUserMedia({
-                        audio: audioConstraints
-                    });
+                    try {
+                        this.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    } catch (innerError) {
+                        // If permission is denied, try to clear permission overrides and ask again
+                        if (innerError.name === 'NotAllowedError' || innerError.name === 'PermissionDeniedError') {
+                            if (window.electronAPI && window.electronAPI.clearMicrophonePermission) {
+                                console.log('Microphone permission denied, attempting to clear permission overrides');
+                                await window.electronAPI.clearMicrophonePermission();
+                                // Try one more time after clearing permissions
+                                this.stream = await navigator.mediaDevices.getUserMedia({
+                                    audio: audioConstraints
+                                });
+                            } else {
+                                throw innerError;
+                            }
+                        } else {
+                            throw innerError;
+                        }
+                    }
+                } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    // If permission is denied on first attempt, try to clear permission overrides and ask again
+                    if (window.electronAPI && window.electronAPI.clearMicrophonePermission) {
+                        console.log('Microphone permission denied, attempting to clear permission overrides');
+                        await window.electronAPI.clearMicrophonePermission();
+                        // Try one more time after clearing permissions
+                        this.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    } else {
+                        throw error;
+                    }
                 } else {
                     throw error;
                 }

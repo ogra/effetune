@@ -1,6 +1,7 @@
 import { PluginListManager } from './ui/plugin-list-manager.js';
 import { PipelineManager } from './ui/pipeline-manager.js';
 import { StateManager } from './ui/state-manager.js';
+import { AudioPlayer } from './ui/audio-player.js';
 import { electronIntegration } from './electron-integration.js';
 
 export class UIManager {
@@ -10,6 +11,9 @@ export class UIManager {
         
         // Set directly in UIManager to maintain original behavior
         this.expandedPlugins = new Set();
+        
+        // Audio player reference
+        this.audioPlayer = null;
         
         // UI elements
         this.errorDisplay = document.getElementById('errorDisplay');
@@ -624,6 +628,38 @@ export class UIManager {
         return this.pipelineManager.getCurrentPresetData();
     }
     
+    /**
+     * Create audio player for music file playback
+     * @param {string[]} filePaths - Array of file paths to load
+     * @param {boolean} replaceExisting - Whether to replace existing player or add to it
+     */
+    createAudioPlayer(filePaths, replaceExisting = false) {
+        // If we already have an audio player and we're not replacing it,
+        // just load the new files into the existing player
+        if (this.audioPlayer && !replaceExisting) {
+            // Load files into existing player
+            if (filePaths && filePaths.length > 0) {
+                this.audioPlayer.loadFiles(filePaths, false); // false = replace playlist
+            }
+            return this.audioPlayer;
+        }
+        
+        // Close existing player if any
+        if (this.audioPlayer) {
+            this.audioPlayer.close();
+        }
+        
+        // Create new player
+        this.audioPlayer = new AudioPlayer(this.audioManager);
+        
+        // Load files
+        if (filePaths && filePaths.length > 0) {
+            this.audioPlayer.loadFiles(filePaths, false); // false = replace playlist
+        }
+        
+        return this.audioPlayer;
+    }
+
     /**
      * Load a preset into the pipeline
      * Delegates to PipelineManager

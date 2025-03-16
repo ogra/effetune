@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "Не удалось обработать аудиофайлы: {errorMessage}",
   "error.lowSampleRate": "Частота дискретизации слишком низкая ({sampleRate}Гц). Качество звука может быть недостаточным. Рекомендуется 88,2кГц или выше.",
   "error.sampleRateWarning": "Частота дискретизации ниже рекомендуемой 88,2кГц. Качество звука может пострадать.",
+  "error.cannotPlayBrowserFiles": "Невозможно воспроизвести файлы браузера в среде Electron",
+  "error.browserPlaybackNotSupported": "Воспроизведение локальных файлов в браузере не поддерживается",
+  "error.noMusicFilesFound": "Музыкальные файлы не найдены",
 
   // Сообщения об успехе
   "success.urlCopied": "URL скопирован в буфер обмена!",
@@ -59,8 +62,9 @@
 
   // Главное меню
   "menu.file": "Файл",
-  "menu.file.save": "Сохранить",
+  "menu.file.save": "Сохранить пайплайн",
   "menu.file.saveAs": "Сохранить как...",
+  "menu.file.openMusicFile": "Открыть музыкальный файл...",
   "menu.file.processAudioFiles": "Обработать аудиофайлы с эффектами...",
   "menu.file.exportPreset": "Экспортировать предустановку...",
   "menu.file.importPreset": "Импортировать предустановку...",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "Входное устройство:",
   "dialog.audioConfig.outputDevice": "Выходное устройство:",
   "dialog.audioConfig.sampleRate": "Частота дискретизации:",
+  "dialog.audioConfig.useInputWithPlayer": "Использовать аудиовход даже при использовании проигрывателя",
   "dialog.audioConfig.cancel": "Отмена",
   "dialog.audioConfig.apply": "Применить",
   "dialog.audioConfig.updatedTitle": "Аудиоконфигурация обновлена",

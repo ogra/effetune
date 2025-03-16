@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "处理音频文件失败：{errorMessage}",
   "error.lowSampleRate": "采样率过低（{sampleRate}Hz），可能影响音质，建议88.2kHz以上。",
   "error.sampleRateWarning": "采样率低于建议的88.2kHz，音质可能受影响。",
+  "error.cannotPlayBrowserFiles": "Electron环境下无法播放浏览器文件",
+  "error.browserPlaybackNotSupported": "浏览器不支持播放本地文件",
+  "error.noMusicFilesFound": "未找到音乐文件",
 
   // 成功信息
   "success.urlCopied": "URL已复制到剪贴板！",
@@ -59,8 +62,9 @@
 
   // 主菜单
   "menu.file": "文件",
-  "menu.file.save": "保存",
+  "menu.file.save": "保存流程",
   "menu.file.saveAs": "另存为…",
+  "menu.file.openMusicFile": "打开音乐文件…",
   "menu.file.processAudioFiles": "用效果处理音频文件…",
   "menu.file.exportPreset": "导出预设…",
   "menu.file.importPreset": "导入预设…",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "输入设备：",
   "dialog.audioConfig.outputDevice": "输出设备：",
   "dialog.audioConfig.sampleRate": "采样率：",
+  "dialog.audioConfig.useInputWithPlayer": "使用播放器时仍启用音频输入",
   "dialog.audioConfig.cancel": "取消",
   "dialog.audioConfig.apply": "应用",
   "dialog.audioConfig.updatedTitle": "音频设置已更新",

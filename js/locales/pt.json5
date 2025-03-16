@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "Falha ao processar arquivos de áudio: {errorMessage}",
   "error.lowSampleRate": "Taxa de amostragem muito baixa ({sampleRate}Hz). A qualidade do áudio pode ser insuficiente. Recomenda-se 88.2kHz ou superior.",
   "error.sampleRateWarning": "Taxa de amostragem abaixo dos 88.2kHz recomendados. A qualidade do áudio pode ser afetada.",
+  "error.cannotPlayBrowserFiles": "Não é possível reproduzir arquivos do navegador no ambiente Electron",
+  "error.browserPlaybackNotSupported": "A reprodução de arquivos locais no navegador não é suportada",
+  "error.noMusicFilesFound": "Nenhum arquivo de música encontrado",
 
   // Mensagens de sucesso
   "success.urlCopied": "URL copiada para a área de transferência!",
@@ -59,8 +62,9 @@
 
   // Menu principal
   "menu.file": "Arquivo",
-  "menu.file.save": "Salvar",
+  "menu.file.save": "Salvar pipeline",
   "menu.file.saveAs": "Salvar como...",
+  "menu.file.openMusicFile": "Abrir arquivo de música...",
   "menu.file.processAudioFiles": "Processar Arquivos de Áudio com Efeitos...",
   "menu.file.exportPreset": "Exportar Predefinido...",
   "menu.file.importPreset": "Importar Predefinido...",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "Dispositivo de Entrada:",
   "dialog.audioConfig.outputDevice": "Dispositivo de Saída:",
   "dialog.audioConfig.sampleRate": "Taxa de Amostragem:",
+  "dialog.audioConfig.useInputWithPlayer": "Entrada de áudio mesmo ao usar o Player",
   "dialog.audioConfig.cancel": "Cancelar",
   "dialog.audioConfig.apply": "Aplicar",
   "dialog.audioConfig.updatedTitle": "Configuração de Áudio Atualizada",

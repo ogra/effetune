@@ -410,17 +410,77 @@ isFirstLaunchPromise.then(isFirstLaunch => {
     app.initialize();
 });
 
-// Add global drag and drop support for preset files
+// Add global drag and drop support for preset files and music files
 document.addEventListener('dragover', (e) => {
-    // Check for preset files
+    // Check for files
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
         const items = Array.from(e.dataTransfer.items);
+        
+        // Debug: Log the items being dragged
+        console.log('Drag items:', items.map(item => ({
+            kind: item.kind,
+            type: item.type,
+            name: item.getAsFile()?.name || 'unknown'
+        })));
+        
+        // In Electron environment, always add drag-over class for any file
+        if (window.electronIntegration && window.electronIntegration.isElectron) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            document.body.classList.add('drag-over');
+            console.log('Electron: Added drag-over class to body for any file');
+            return;
+        }
+        
+        // For web environment, continue with normal checks
+        
+        // Check for preset files
         const hasPresetFiles = items.some(item =>
             item.kind === 'file' &&
-            (item.type === '' || item.type === 'application/octet-stream') // Preset files often have no specific MIME type
+            (item.type === '' || item.type === 'application/octet-stream') && // Preset files often have no specific MIME type
+            (item.getAsFile()?.name.endsWith('.effetune_preset') || false)
         );
         
-        if (hasPresetFiles) {
+        // Debug: Log preset detection
+        console.log('Has preset files:', hasPresetFiles);
+        
+        // Check for music files or folders - using similar approach as preset files
+        const hasMusicFiles = items.some(item => {
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                if (!file) return false;
+                
+                // Debug: Log file details
+                console.log('Checking file:', file.name, 'type:', file.type);
+                
+                // First check: file extension for audio files
+                const hasAudioExtension = /\.(mp3|wav|ogg|flac|m4a|aac|aiff|wma|alac)$/i.test(file.name);
+                if (hasAudioExtension) {
+                    console.log('Audio extension match:', file.name);
+                    return true;
+                }
+                
+                // Second check: MIME type for audio files
+                if (file.type.startsWith('audio/')) {
+                    console.log('Audio MIME type match:', file.type);
+                    return true;
+                }
+                
+                // Check for folder (webkitGetAsEntry is only available during dragover/drop)
+                if (item.webkitGetAsEntry && item.webkitGetAsEntry().isDirectory) {
+                    console.log('Directory detected');
+                    return true;
+                }
+            }
+            return false;
+        });
+        
+        // Debug: Log music file detection
+        console.log('Has music files:', hasMusicFiles);
+        
+        // If we have preset files or music files, allow drop
+        if (hasPresetFiles || hasMusicFiles) {
             e.preventDefault();
             e.stopPropagation();
             // Explicitly set dropEffect to 'copy' to show the user that dropping is allowed
@@ -428,6 +488,7 @@ document.addEventListener('dragover', (e) => {
             
             // Add visual feedback
             document.body.classList.add('drag-over');
+            console.log('Added drag-over class to body');
         }
     }
 }, true); // Use capture phase to ensure this handler runs first
@@ -532,40 +593,100 @@ function readPresetFileContent(presetFile, fileName) {
     }
 }
 
+// Audio file handling
+
 document.addEventListener('drop', async (e) => {
-    // Check for preset files
+    // Check for files
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Remove visual feedback
+        document.body.classList.remove('drag-over');
+        
+        // Also remove drag-active class from any drop areas
+        document.querySelectorAll('.drag-active').forEach(el => {
+            el.classList.remove('drag-active');
+        });
+        
+        // Check if we're in a browser environment
+        const isBrowser = !window.electronIntegration || !window.electronIntegration.isElectron;
+        
+        // For preset files, we can handle them in both environments
+        // For music files, we'll check the environment later
+        
+        // Get all dropped files
         const files = Array.from(e.dataTransfer.files);
+        
+        // Check for preset files first
         const presetFiles = files.filter(file => file.name.endsWith('.effetune_preset'));
         
         if (presetFiles.length > 0) {
-            // Prevent default only if we have preset files
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Remove visual feedback
-            document.body.classList.remove('drag-over');
-            
             // Handle preset file
             const presetFile = presetFiles[0]; // Take the first preset file if multiple are dropped
             const fileName = presetFile.name.replace('.effetune_preset', '');
             
-            if (window.electronIntegration && window.electronIntegration.isElectron) {
-                // In Electron environment, use the file path if available
-                if (presetFile.path) {
-                    window.electronIntegration.openPresetFile(presetFile.path);
-                    window.uiManager.setError(`Preset "${fileName}" loaded!`);
-                    setTimeout(() => window.uiManager.clearError(), 3000);
+            // Try to read the preset file directly
+            try {
+                readPresetFileContent(presetFile, fileName);
+            } catch (error) {
+                console.error('Error reading preset file:', error);
+                window.uiManager.setError('error.failedToReadPresetFile', true);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+            
+            return; // Don't process music files if we found a preset file
+        }
+        
+        // Process music files
+        // Filter for audio files
+        const musicFiles = files.filter(file =>
+            file.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)
+        );
+        
+        if (musicFiles.length > 0) {
+            if (isBrowser) {
+                // In browser environment, check if the drop target is the file-drop-area
+                const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
+                console.log('Is dropped on file-drop-area:', isDroppedOnFileDropArea);
+                
+                // Check if we have a drop area for offline processing
+                const dropArea = window.uiManager?.pipelineManager?.dropArea;
+                
+                if (dropArea && isDroppedOnFileDropArea) {
+                    // Only process files if they were dropped on the file-drop-area
+                    console.log('Files dropped on file-drop-area, processing offline');
+                    window.uiManager.pipelineManager.processDroppedAudioFiles(musicFiles);
                 } else {
-                    // If path is not available, read the file content
-                    readPresetFileContent(presetFile, fileName);
+                    // Files were dropped elsewhere, show error
+                    console.log('Files not dropped on file-drop-area, showing error');
+                    window.uiManager.setError('error.browserPlaybackNotSupported', true);
+                    setTimeout(() => window.uiManager.clearError(), 3000);
                 }
             } else {
-                // In browser environment, read the file content
-                readPresetFileContent(presetFile, fileName);
+                // In Electron environment, pass File objects directly to the audio player
+                if (window.uiManager) {
+                    window.uiManager.createAudioPlayer(musicFiles, false);
+                }
             }
+        } else {
+            window.uiManager.setError('error.noMusicFilesFound', true);
+            setTimeout(() => window.uiManager.clearError(), 3000);
         }
     }
 }, true); // Use capture phase to ensure this handler runs first
+
+// Also listen for audio-files-dropped event from main process as a backup
+if (window.electronAPI && window.electronAPI.onAudioFilesDropped) {
+    // Register the callback
+    window.electronAPI.onAudioFilesDropped((filePaths) => {
+        if (filePaths && filePaths.length > 0) {
+            // Play the music files using UIManager
+            if (window.uiManager) {
+                window.uiManager.createAudioPlayer(filePaths, false);
+            }
+        }
+    });
+}
 
 // app.initialize() is now called inside the isFirstLaunchPromise.then() block

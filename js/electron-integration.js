@@ -42,6 +42,7 @@ class ElectronIntegration {
             { label: t('menu.file.save') },
             { label: t('menu.file.saveAs') },
             { type: 'separator' },
+            { label: t('menu.file.openMusicFile') },
             { label: t('menu.file.processAudioFiles') },
             { type: 'separator' },
             { label: t('menu.file.exportPreset') },
@@ -92,16 +93,23 @@ class ElectronIntegration {
         }
       };
       
-      // Send the translated menu template to the main process
-      if (window.electronAPI) {
-        window.electronAPI.updateApplicationMenu(menuTemplate)
-          .catch(error => {
-            // Only log errors, not success
-            console.error('Failed to update application menu:', error);
-          });
-      }
+      // Log the menu template for debugging
+      console.log('Menu template created, sending to main process');
+      
+      // Send the menu template to the main process to update the application menu
+      window.electronAPI.updateApplicationMenu(menuTemplate)
+        .then(result => {
+          if (result.success) {
+            console.log('Application menu updated successfully');
+          } else {
+            console.error('Failed to update application menu:', result.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error updating application menu:', error);
+        });
     } catch (error) {
-      console.error('Error updating application menu:', error);
+      console.error('Error creating menu template:', error);
     }
   }
 
@@ -201,6 +209,22 @@ class ElectronIntegration {
       this.openPresetFile(filePath);
     });
     
+    // Listen for open music file request from main process
+    window.electronAPI.onOpenMusicFile(() => {
+      // Open music file menu item clicked
+      this.openMusicFile();
+    });
+
+    // Listen for open music files request from main process (for command line arguments)
+    window.electronAPI.onOpenMusicFiles((filePaths) => {
+      // Open music files from command line arguments
+      if (filePaths && filePaths.length > 0) {
+        if (window.uiManager) {
+          window.uiManager.createAudioPlayer(filePaths, false);
+        }
+      }
+    });
+
     // Listen for process audio files request from main process
     window.electronAPI.onProcessAudioFiles(() => {
       // Process audio files menu item clicked
@@ -245,25 +269,21 @@ class ElectronIntegration {
     }
     
     try {
-      // Try to set both pipelineStateLoaded and ORIGINAL_PIPELINE_STATE_LOADED to false
+      // Set pipeline state flags to false
       try {
-        // First try to set the ORIGINAL value if it exists
+        // Simply set the flags directly
         if (typeof window.ORIGINAL_PIPELINE_STATE_LOADED !== 'undefined') {
-          // We need to use Object.defineProperty to override the protection
-          Object.defineProperty(window, 'ORIGINAL_PIPELINE_STATE_LOADED', {
-            value: false,
-            writable: true,
-            configurable: true
-          });
+          // Use a direct assignment if possible
+          window.ORIGINAL_PIPELINE_STATE_LOADED = false;
         }
         
-        // Then set the regular flag
+        // Set the regular flag
         window.pipelineStateLoaded = false;
         
         // Force app.js to skip loading previous state by setting a direct flag
         window.__FORCE_SKIP_PIPELINE_STATE_LOAD = true;
       } catch (err) {
-        console.error('Error setting pipeline state flags:', err);
+        console.error('Error setting pipeline state flags:', err.message || String(err));
       }
       
       // Verify file exists and has correct extension
@@ -334,8 +354,8 @@ class ElectronIntegration {
       // Loading preset into UI
       window.uiManager.loadPreset(presetData);
       
-      // Display message with filename
-      window.uiManager.setError(`Preset "${fileName}" loaded!`);
+      // Display message with filename using translation key
+      window.uiManager.setError('success.presetLoaded', false, { name: fileName });
       setTimeout(() => window.uiManager.clearError(), 3000);
     } catch (error) {
       console.error('Error opening preset file:', error);
@@ -448,6 +468,10 @@ class ElectronIntegration {
                 `<option value="${device.deviceId}" ${this.audioPreferences?.inputDeviceId === device.deviceId ? 'selected' : ''}>${device.label}</option>`
               ).join('')}
             </select>
+            <div class="checkbox-container">
+              <input type="checkbox" id="use-input-with-player" ${this.audioPreferences?.useInputWithPlayer ? 'checked' : ''}>
+              <label for="use-input-with-player">${t('dialog.audioConfig.useInputWithPlayer')}</label>
+            </div>
           </div>
           <div class="device-section">
             <label for="output-device">${t('dialog.audioConfig.outputDevice')}</label>
@@ -520,6 +544,18 @@ class ElectronIntegration {
           border: 1px solid #444;
           border-radius: 4px;
         }
+        .checkbox-container {
+          margin-top: 8px;
+          display: flex;
+          align-items: center;
+        }
+        .checkbox-container input[type="checkbox"] {
+          margin-right: 8px;
+        }
+        .checkbox-container label {
+          display: inline;
+          margin-bottom: 0;
+        }
         .dialog-buttons {
           display: flex;
           justify-content: flex-end;
@@ -572,12 +608,17 @@ class ElectronIntegration {
         const sampleRateSelect = document.getElementById('sample-rate');
         const selectedSampleRate = parseInt(sampleRateSelect.value, 10);
         
+        // Get checkbox state
+        const useInputWithPlayerCheckbox = document.getElementById('use-input-with-player');
+        const useInputWithPlayer = useInputWithPlayerCheckbox ? useInputWithPlayerCheckbox.checked : false;
+        
         const preferences = {
           inputDeviceId,
           outputDeviceId,
           inputDeviceLabel: inputDevice?.label || '',
           outputDeviceLabel: outputDevice?.label || '',
-          sampleRate: selectedSampleRate
+          sampleRate: selectedSampleRate,
+          useInputWithPlayer: useInputWithPlayer
         };
         
         console.log('Saving audio preferences');
@@ -768,11 +809,48 @@ class ElectronIntegration {
       // Load the preset
       window.uiManager.loadPreset(presetData);
       
-      // Display message with filename
-      window.uiManager.setError(`Preset "${fileName}" loaded!`);
+      // Display message with filename using translation key
+      window.uiManager.setError('success.presetLoaded', false, { name: fileName });
       setTimeout(() => window.uiManager.clearError(), 3000);
     } catch (error) {
       console.error('Error importing preset:', error);
+    }
+  }
+
+  /**
+   * Open music file(s) for playback
+   * This function is called when the user selects "Open music file..." from the File menu
+   */
+  async openMusicFile() {
+    if (!this.isElectron) return;
+    
+    try {
+      // Use Electron's dialog to select music files
+      const result = await window.electronAPI.showOpenDialog({
+        title: 'Select Music Files',
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+          { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      });
+      
+      if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+        console.log('File selection canceled or no files selected');
+        return;
+      }
+      
+      // Send selected files to the audio player
+      if (window.uiManager) {
+        // Use existing player or create a new one
+        // The createAudioPlayer method now handles both cases
+        window.uiManager.createAudioPlayer(result.filePaths, false); // false = don't replace existing player
+      }
+    } catch (error) {
+      console.error('Error opening music files:', error);
+      if (window.uiManager) {
+        window.uiManager.setError(`Error opening music files: ${error.message}`);
+      }
     }
   }
 
