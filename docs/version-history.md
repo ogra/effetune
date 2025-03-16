@@ -1,6 +1,6 @@
 # Version History
 
-### Version 1.30 (Mar 15, 2025)
+### Version 1.30 (Mar 16, 2025)
 - Added a simple audio file player to the desktop app version (supports MP3, WAV, OGG, FLAC, M4A, and AAC formats).
 - The desktop app now remembers the previous session state.
 - Various minor improvements
