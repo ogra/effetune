@@ -8,7 +8,7 @@ Un procesador de efectos de audio en tiempo real, diseñado para entusiastas del
 
 ## Concepto
 
-EffeTune ha sido creado para los entusiastas del audio que quieren llevar su experiencia musical al siguiente nivel. Ya sea que estés transmitiendo música o reproduciéndola desde un medio físico, EffeTune te permite añadir efectos de nivel profesional para personalizar el sonido según tus preferencias exactas. Transforma tu computadora en un potente procesador de efectos de audio que se sitúa entre tu fuente de audio y tus altavoces o amplificador.
+EffeTune ha sido creado para los entusiastas del audio que quieren elevar su experiencia musical. Ya sea que estés transmitiendo música o reproduciéndola desde un medio físico, EffeTune te permite añadir efectos de nivel profesional para personalizar el sonido según tus preferencias exactas. Transforma tu computadora en un potente procesador de efectos de audio que se sitúa entre tu fuente de audio y tus altavoces o amplificador.
 
 Sin mitos audiophiles, solo pura ciencia.
 
@@ -24,6 +24,14 @@ Sin mitos audiophiles, solo pura ciencia.
 ## Guía de Configuración
 
 Antes de usar EffeTune, deberás configurar el enrutamiento de audio. Aquí se explica cómo configurar diferentes fuentes de audio:
+
+### Configuración del Reproductor de Archivos de Música (solo aplicación de escritorio)
+
+- Instala e inicia la aplicación de escritorio EffeTune
+- Abre y reproduce un archivo de música para asegurar una reproducción adecuada
+   - Abre un archivo de música y selecciona EffeTune como la aplicación
+   - O selecciona Abrir archivo de música... desde el menú Archivo
+   - O arrastra el archivo de música a la ventana
 
 ### Configuración para Servicios de Streaming
 
@@ -45,16 +53,15 @@ Para procesar audio de servicios de streaming (Spotify, YouTube Music, etc.):
 
 Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes físicas:
 
-1. Configuración:
-   - Conecta tu interfaz de audio a tu computadora
-   - Abre la aplicación web EffeTune en tu navegador, o inicia la aplicación de escritorio EffeTune
-   - Selecciona tu interfaz de audio como fuente de entrada y salida
-     - En Chrome, la primera vez que lo abras, aparecerá un cuadro de diálogo pidiéndote que selecciones y permitas la entrada de audio
-     - En la aplicación de escritorio, configúralo haciendo clic en el botón Config Audio en la esquina superior derecha de la pantalla
-   - Tu interfaz de audio ahora funciona como un procesador de múltiples efectos:
-     * **Entrada:** Tu reproductor de CD, reproductor de red u otra fuente de audio
-     * **Procesamiento:** Efectos en tiempo real a través de EffeTune
-     * **Salida:** Audio procesado hacia tu amplificador o altavoces
+- Conecta tu interfaz de audio a tu computadora
+- Abre la aplicación web EffeTune en tu navegador, o inicia la aplicación de escritorio EffeTune
+- Selecciona tu interfaz de audio como fuente de entrada y salida
+   - En Chrome, la primera vez que lo abras, aparecerá un cuadro de diálogo pidiéndote que selecciones y permitas la entrada de audio
+   - En la aplicación de escritorio, configúralo haciendo clic en el botón Config Audio en la esquina superior derecha de la pantalla
+- Tu interfaz de audio ahora funciona como un procesador de múltiples efectos:
+   * **Entrada:** Tu reproductor de CD, reproductor de red u otra fuente de audio
+   * **Procesamiento:** Efectos en tiempo real a través de EffeTune
+   * **Salida:** Audio procesado hacia tu amplificador o altavoces
 
 ## Uso
 
@@ -76,7 +83,7 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
 
 1. Guarda tu cadena de efectos:
    - Configura la cadena de efectos y los parámetros deseados
-   - Ingresa un nombre en el campo de entrada del preset
+   - Ingresa un nombre para tu preset en el campo de entrada
    - Haz clic en el botón de guardar para almacenar tu preset
 
 2. Cargar un Preset:
@@ -112,6 +119,13 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
    - Ctrl + A: Seleccionar todos los efectos en el pipeline
    - Delete: Eliminar los efectos seleccionados
    - ESC: Deseleccionar todos los efectos
+
+3. Atajos de teclado (solo aplicación de escritorio):
+   - Espacio: Reproducir/Pausar
+   - Ctrl + → o N: Pista siguiente
+   - Ctrl + ← o P: Pista anterior
+   - Shift + → o F o .: Avanzar 10 segundos
+   - Shift + ← o B o ,: Retroceder 10 segundos
 
 ### Procesamiento de Archivos de Audio
 
@@ -190,7 +204,7 @@ Aquí hay algunas combinaciones populares de efectos para mejorar tu experiencia
 
 3. **Aparece Eco**
    - Es probable que tus entradas y salidas de audio no estén configuradas correctamente
-   - Si deseas procesar la salida de audio de tu navegador, considera instalar un navegador separado solo para EffeTune, o usar la aplicación de escritorio en lugar de la aplicación web
+   - Para procesar la salida de audio del navegador, considera instalar un navegador dedicado exclusivamente para EffeTune, o usa la aplicación de escritorio en lugar de la aplicación web
 
 ### Problemas Comunes de Configuración
 

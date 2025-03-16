@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "فشل معالجة ملفات الصوت: {errorMessage}",
   "error.lowSampleRate": "معدل العينة منخفض جدًا ({sampleRate}Hz). قد تكون جودة الصوت غير كافية. يُوصى بـ 88.2kHz أو أعلى.",
   "error.sampleRateWarning": "معدل العينة أقل من 88.2kHz الموصى به. قد تتأثر جودة الصوت.",
+  "error.cannotPlayBrowserFiles": "لا يمكن تشغيل ملفات المتصفح في بيئة Electron",
+  "error.browserPlaybackNotSupported": "تشغيل الملفات المحلية في المتصفح غير مدعوم",
+  "error.noMusicFilesFound": "لم يتم العثور على ملفات موسيقية",
 
   // رسائل النجاح
   "success.urlCopied": "تم نسخ URL إلى الحافظة!",
@@ -59,8 +62,9 @@
 
   // القائمة الرئيسية
   "menu.file": "ملف",
-  "menu.file.save": "حفظ",
+  "menu.file.save": "حفظ خط الأنابيب",
   "menu.file.saveAs": "حفظ باسم...",
+  "menu.file.openMusicFile": "فتح ملف موسيقي...",
   "menu.file.processAudioFiles": "معالجة ملفات الصوت بالتأثيرات...",
   "menu.file.exportPreset": "تصدير الإعداد المسبق...",
   "menu.file.importPreset": "استيراد الإعداد المسبق...",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "جهاز الإدخال:",
   "dialog.audioConfig.outputDevice": "جهاز الإخراج:",
   "dialog.audioConfig.sampleRate": "معدل العينة:",
+  "dialog.audioConfig.useInputWithPlayer": "استخدام إدخال الصوت حتى عند استخدام المشغل",
   "dialog.audioConfig.cancel": "إلغاء",
   "dialog.audioConfig.apply": "تطبيق",
   "dialog.audioConfig.updatedTitle": "تم تحديث إعدادات الصوت",

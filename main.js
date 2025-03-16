@@ -194,15 +194,32 @@ function createWindow() {
           e.stopPropagation();
           e.dataTransfer.dropEffect = 'copy';
           
-          // Check for preset files
+          // Check for preset files or music files
           const items = Array.from(e.dataTransfer.items);
+          
+          // Check for preset files
           const hasPresetFiles = items.some(item =>
             item.kind === 'file' &&
             (item.type === '' || item.type === 'application/octet-stream')
           );
           
-          if (hasPresetFiles) {
-            // Add visual feedback for preset files
+          // Check for music files
+          const hasMusicFiles = items.some(item => {
+            if (item.kind === 'file') {
+              const file = item.getAsFile();
+              if (!file) return false;
+              
+              // Check for audio file types
+              if (file.type.startsWith('audio/') ||
+                  /\\.(mp3|wav|ogg|flac|m4a|aac|aiff|wma|alac)$/i.test(file.name)) {
+                return true;
+              }
+            }
+            return false;
+          });
+          
+          // Add visual feedback for preset files or music files
+          if (hasPresetFiles || hasMusicFiles) {
             document.body.classList.add('drag-over');
           }
           
@@ -219,10 +236,19 @@ function createWindow() {
         }
       }, true); // Use capture phase
       
-      // Only prevent default for file drops, allow UI element drops
+      // Only prevent default for file drops, allow UI element drops and specific drop areas
       document.addEventListener('drop', (e) => {
         // Check if this is a file drop
         if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          // Check if the target is the file-drop-area or a child of it
+          const fileDropArea = e.target.closest('.file-drop-area');
+          if (fileDropArea) {
+            // Allow the drop event to propagate to the file-drop-area handler
+            document.body.classList.remove('drag-over');
+            return;
+          }
+          
+          // For other areas, prevent default behavior
           e.preventDefault();
           e.stopPropagation();
           document.body.classList.remove('drag-over');
@@ -252,7 +278,7 @@ function createWindow() {
       }
       
     `).catch(err => {
-      console.error('Failed to initialize drag and drop handlers:', err);
+      console.error('Failed to initialize drag and drop handlers:', err.message || String(err));
     });
   });
   
@@ -298,6 +324,12 @@ function createWindow() {
       savedCommandLinePresetFile = null;
     }
     
+    // If this is a splash reload, process command line arguments
+    if (isSplashReload) {
+      processCommandLineArgs(savedCommandLineMusicFiles);
+      savedCommandLineMusicFiles = [];
+    }
+    
     // 2. Set initial zoom level to 1.0 (100%) on every page load and set critical flags
     mainWindow.webContents.executeJavaScript(`
       // Ensure zoom is always reset to 100% on page load
@@ -316,18 +348,11 @@ function createWindow() {
       // Store this in a global constant that can't be changed
       window.ORIGINAL_PIPELINE_STATE_LOADED = window.pipelineStateLoaded;
       
-      // Override the pipelineStateLoaded property with a getter/setter
-      Object.defineProperty(window, 'pipelineStateLoaded', {
-        get: function() {
-          return window.ORIGINAL_PIPELINE_STATE_LOADED;
-        },
-        set: function(value) {
-          // Ignore attempts to change the value
-        },
-        configurable: false
-      });
+      // Instead of using Object.defineProperty which causes IPC cloning issues,
+      // we'll use a simple variable to track if changes should be allowed
+      window._allowPipelineStateChanges = false;
     `).catch(err => {
-      console.error('Error setting initial zoom and flags:', err);
+      console.error('Error setting initial zoom and flags:', err.message || String(err));
     });
 
     // 3. Enable wheel-based zooming by injecting JavaScript
@@ -359,7 +384,7 @@ function createWindow() {
         }
       });
     `).catch(err => {
-      console.error('Error setting up wheel zoom:', err);
+      console.error('Error setting up wheel zoom:', err.message || String(err));
     });
     
     // 4. Handle file to open if specified via command line
@@ -368,11 +393,11 @@ function createWindow() {
       mainWindow.webContents.executeJavaScript(`
         window.pipelineStateLoaded = false;
       `).catch(err => {
-        console.error('Error setting pipelineStateLoaded flag:', err);
+        console.error('Error setting pipelineStateLoaded flag:', err.message || String(err));
       });
       
-      // Wait for the page to fully load before sending the file path
-      // Increased timeout to ensure the app is fully initialized
+      // Process files immediately after page load
+      // Set a minimal timeout to ensure the app is ready to receive events
       setTimeout(() => {
         if (commandLinePresetFile) {
           // Double-check that pipelineStateLoaded is still false
@@ -381,7 +406,7 @@ function createWindow() {
               window.pipelineStateLoaded = false;
             }
           `).catch(err => {
-            console.error('Error checking pipelineStateLoaded flag:', err);
+            console.error('Error checking pipelineStateLoaded flag:', err.message || String(err));
           });
           
           // Send the file path to the renderer process
@@ -392,18 +417,43 @@ function createWindow() {
           savedCommandLinePresetFile = null;
         }
         
+        // Handle music files after preset file is processed
+        if (commandLineMusicFiles.length > 0) {
+          // Send music files to the renderer process
+          mainWindow.webContents.send('open-music-files', commandLineMusicFiles);
+          
+          // Reset command line music files after use
+          commandLineMusicFiles = [];
+          savedCommandLineMusicFiles = [];
+        }
+        
         // Reset the splash reload flag if it was set
         if (isSplashReload) {
           isSplashReload = false;
         }
-      }, 2000);
+      }, 300);
+    } else if (commandLineMusicFiles.length > 0) {
+      // If there's no preset file but there are music files, send them to the renderer
+      setTimeout(() => {
+        // Send music files to the renderer process
+        mainWindow.webContents.send('open-music-files', commandLineMusicFiles);
+        
+        // Reset command line music files after use
+        commandLineMusicFiles = [];
+        savedCommandLineMusicFiles = [];
+        
+        // Reset the splash reload flag if it was set
+        if (isSplashReload) {
+          isSplashReload = false;
+        }
+      }, 300);
     } else if (isSplashReload) {
       // If there's no file to open but this is a splash screen reload, reset the flag
       // Make sure we set pipelineStateLoaded to the correct value based on shouldLoadPipelineState
       mainWindow.webContents.executeJavaScript(`
         window.pipelineStateLoaded = ${shouldLoadPipelineState};
       `).catch(err => {
-        console.error('Error setting pipelineStateLoaded flag:', err);
+        console.error('Error setting pipelineStateLoaded flag:', err.message || String(err));
       });
       
       isSplashReload = false;
@@ -444,7 +494,7 @@ function createWindow() {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.executeJavaScript('if (typeof writePipelineStateToFile === "function") { writePipelineStateToFile(); }')
         .catch(err => {
-          console.error('Error requesting pipeline state save:', err);
+          console.error('Error requesting pipeline state save:', err.message || String(err));
         });
     }
   });
@@ -490,6 +540,15 @@ function createMenu() {
           click: () => simulateKeyboardShortcut('S', ['control', 'shift'])
         },
         { type: 'separator' },
+        {
+          label: 'Open music file...',
+          accelerator: 'CommandOrControl+O',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.send('open-music-file');
+            }
+          }
+        },
         {
           label: 'Process Audio Files with Effects...',
           click: () => {
@@ -574,7 +633,7 @@ function createMenu() {
                 // Reset zoom before reload
                 document.body.style.zoom = 1.0;
               `).catch(err => {
-                console.error('Error resetting zoom before reload:', err);
+                console.error('Error resetting zoom before reload:', err.message || String(err));
               }).finally(() => {
                 // Then reload the window
                 mainWindow.reload();
@@ -593,7 +652,7 @@ function createMenu() {
                   document.body.style.zoom = 1.0;
                 })();
               `).catch(err => {
-                console.error('Error executing zoom reset script:', err);
+                console.error('Error executing zoom reset script:', err.message || String(err));
               });
             }
           }
@@ -610,7 +669,7 @@ function createMenu() {
                   document.body.style.zoom = newZoom;
                 })();
               `).catch(err => {
-                console.error('Error executing zoom in script:', err);
+                console.error('Error executing zoom in script:', err.message || String(err));
               });
             }
           }
@@ -627,7 +686,7 @@ function createMenu() {
                   document.body.style.zoom = newZoom;
                 })();
               `).catch(err => {
-                console.error('Error executing zoom out script:', err);
+                console.error('Error executing zoom out script:', err.message || String(err));
               });
             }
           }
@@ -707,21 +766,35 @@ let commandLinePresetFile = null;
 // This ensures the value is preserved across the splash screen reload
 let savedCommandLinePresetFile = null;
 
+// Store command line music files
+let commandLineMusicFiles = [];
+
+// Store command line music files for splash reload
+let savedCommandLineMusicFiles = [];
+
 // Disable hardware acceleration to avoid DXGI errors
 app.disableHardwareAcceleration();
 
 /**
- * Process command line arguments to find preset files
+ * Process command line arguments to find preset files and music files
  * @param {string[]} argv - Command line arguments array
  */
 function processCommandLineArgs(argv) {
+  // Skip processing during splash screen (first launch)
+  if (isFirstLaunch) {
+    return;
+  }
+  
   // Get the arguments (excluding the app path and the script path)
   // In packaged apps, the first argument is the app path
   // In development, the first two arguments are electron and the script path
   const args = process.defaultApp ? argv.slice(2) : argv.slice(1);
   
   if (args.length > 0) {
-    // Process each argument to find preset files
+    // Clear previous music files
+    commandLineMusicFiles = [];
+    
+    // Process each argument to find preset files and music files
     for (const arg of args) {
       // Check if the argument is a file path that ends with .effetune_preset
       if (arg && arg.endsWith('.effetune_preset')) {
@@ -738,15 +811,14 @@ function processCommandLineArgs(argv) {
             shouldLoadPipelineState = false;
             
             // If the app is already running, send the file path to the renderer
-            // But only if we're not in the initial launch phase (not during splash screen)
-            if (mainWindow && mainWindow.webContents && !isFirstLaunch) {
+            if (mainWindow && mainWindow.webContents) {
               mainWindow.webContents.send('open-preset-file', arg);
               
               // Also set pipelineStateLoaded to false in the renderer
               mainWindow.webContents.executeJavaScript(`
                 window.pipelineStateLoaded = false;
               `).catch(err => {
-                console.error('Error setting pipelineStateLoaded flag:', err);
+                console.error('Error setting pipelineStateLoaded flag:', err.message || String(err));
               });
             }
             
@@ -757,12 +829,30 @@ function processCommandLineArgs(argv) {
           console.error('Error checking preset file:', error);
         }
       }
+      // Check if the argument is a music file
+      else if (arg && /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(arg)) {
+        try {
+          // Check if file exists
+          if (fs.existsSync(arg)) {
+            // Add to music files array
+            commandLineMusicFiles.push(arg);
+            
+            // Also store in savedCommandLineMusicFiles for splash reload
+            if (!savedCommandLineMusicFiles.includes(arg)) {
+              savedCommandLineMusicFiles.push(path.resolve(arg)); // Use absolute path
+            }
+          }
+        } catch (error) {
+          console.error('Error checking music file:', error);
+        }
+      }
     }
   }
 }
 
-// Process command line arguments on startup
-processCommandLineArgs(process.argv);
+// Store command line arguments for processing after splash screen
+savedCommandLineMusicFiles = [...process.argv];
+// We'll process them after the splash screen reload
 
 // Handle second instance (when user tries to open another instance of the app)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -777,12 +867,25 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Process the command line arguments from the second instance
     // This will set shouldLoadPipelineState to false if a preset file is specified
+    // and will detect music files
     processCommandLineArgs(commandLine);
     
     // Focus the main window if it exists
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
+      
+      // If there's a preset file, send it to the renderer
+      if (commandLinePresetFile) {
+        mainWindow.webContents.send('open-preset-file', commandLinePresetFile);
+        commandLinePresetFile = null;
+      }
+      
+      // If there are music files, send them to the renderer
+      if (commandLineMusicFiles.length > 0) {
+        mainWindow.webContents.send('open-music-files', commandLineMusicFiles);
+        commandLineMusicFiles = [];
+      }
     }
   });
 }
@@ -818,8 +921,30 @@ app.on('open-file', (event, path) => {
     } catch (error) {
       console.error('Error checking preset file:', error);
     }
+  } else if (/\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(path)) {
+    try {
+      // Check if file exists
+      if (fs.existsSync(path)) {
+        if (mainWindow && mainWindow.webContents) {
+          // If app is already running, send the file path to the renderer
+          mainWindow.webContents.send('open-music-files', [path]);
+        } else {
+          // If app is not yet running, store the path to be opened when the app is ready
+          commandLineMusicFiles.push(path);
+          // Also store in savedCommandLineMusicFiles for splash reload
+          if (!savedCommandLineMusicFiles.includes(path)) {
+            savedCommandLineMusicFiles.push(path);
+          }
+        }
+      } else {
+        console.error('Music file does not exist:', path);
+      }
+    } catch (error) {
+      console.error('Error checking music file:', error);
+    }
   } else {
-    // Not a preset file, ignore
+    // Not a supported file, ignore
+    console.log('Unsupported file type:', path);
   }
 });
 
@@ -838,6 +963,25 @@ app.whenReady().then(() => {
   // Get user data path
   const userDataPath = getUserDataPath();
   const isPortable = userDataPath !== app.getPath('userData');
+  
+  // If portable mode is enabled, make sure we never use standard userData path
+  if (isPortable) {
+    // Override app.getPath for userData to always return our portable path
+    // This ensures any direct calls to app.getPath('userData') will use portable path
+    const originalGetPath = app.getPath;
+    app.getPath = function(name) {
+      if (name === 'userData') {
+        return userDataPath;
+      }
+      return originalGetPath.call(this, name);
+    };
+    
+    // Set shouldLoadPipelineState to false for first launch in portable mode
+    // This prevents loading from standard userData path during splash screen reload
+    if (isFirstLaunch) {
+      shouldLoadPipelineState = false;
+    }
+  }
   
   // Create portable settings folder if it doesn't exist
   // This will enable portable mode if the folder is created successfully
@@ -983,6 +1127,9 @@ app.whenReady().then(() => {
       // Save command line preset file path before reload
       savedCommandLinePresetFile = commandLinePresetFile;
       
+      // Save command line music files before reload
+      savedCommandLineMusicFiles = [...process.argv];
+      
       // Close splash window and reload main window
       if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.close();
@@ -1070,6 +1217,28 @@ ipcMain.handle('read-file', async (event, filePath, binary = false) => {
   }
 });
 
+// Handle read file as buffer request (for ID3 tag reading)
+ipcMain.handle('read-file-as-buffer', async (event, filePath) => {
+  try {
+    console.log('Reading file as buffer:', filePath);
+    // Read file as buffer
+    const buffer = fs.readFileSync(filePath);
+    // Convert Buffer to ArrayBuffer for jsmediatags
+    const arrayBuffer = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
+    // Return the buffer as base64 string
+    return {
+      success: true,
+      buffer: buffer.toString('base64')
+    };
+  } catch (error) {
+    console.error('Error reading file as buffer:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Get audio devices
 ipcMain.handle('get-audio-devices', async () => {
   try {
@@ -1103,7 +1272,7 @@ ipcMain.handle('get-audio-devices', async () => {
           return deviceList;
         })
         .catch(err => {
-          console.error('Error enumerating devices:', err);
+          console.error('Error enumerating devices:', err.message || String(err));
           return [];
         });
     `);
@@ -1211,6 +1380,155 @@ ipcMain.handle('fileExists', (event, filePath) => {
   return fs.existsSync(filePath);
 });
 
+// Handle get file path request
+ipcMain.handle('get-file-path', async (event, fileInfo) => {
+  try {
+    console.log('get-file-path called with:', fileInfo);
+    
+    // Show open dialog to let the user select the file
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: `Select ${fileInfo.name}`,
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      console.log('File selection canceled');
+      return null;
+    }
+    
+    return result.filePaths[0];
+  } catch (error) {
+    console.error('Error in get-file-path:', error);
+    return null;
+  }
+});
+
+// Handle get file paths request
+ipcMain.handle('get-file-paths', async (event, filesInfo) => {
+  try {
+    console.log('get-file-paths called with:', filesInfo);
+    
+    // Show open dialog to let the user select multiple files
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Music Files',
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      console.log('File selection canceled');
+      return [];
+    }
+    
+    return result.filePaths;
+  } catch (error) {
+    console.error('Error in get-file-paths:', error);
+    return [];
+  }
+});
+
+// Handle get file path request for a single file is already defined above
+
+// Handle dropped files with paths (new method)
+ipcMain.handle('handle-dropped-files-with-paths', async (event, filePaths) => {
+  try {
+    console.log('handle-dropped-files-with-paths called with:', filePaths.length, 'files');
+    console.log('File paths received from renderer:', filePaths);
+    
+    // Filter for audio files
+    const audioFilePaths = filePaths.filter(filePath => {
+      const ext = path.extname(filePath).toLowerCase();
+      return ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'].includes(ext);
+    });
+    
+    console.log('Audio file paths:', audioFilePaths);
+    return audioFilePaths;
+  } catch (error) {
+    console.error('Error handling dropped files with paths:', error);
+    return [];
+  }
+});
+
+// Handle dropped files (fallback method)
+ipcMain.handle('handle-dropped-files', async (event, filesInfo) => {
+  try {
+    console.log('handle-dropped-files called with:', filesInfo.length, 'files');
+    
+    // For security reasons, Electron doesn't provide direct access to file paths from the renderer process
+    // We'll use a different approach to handle dropped files
+    
+    // Extract file names and extensions
+    const fileNames = filesInfo.map(info => info.name).filter(Boolean);
+    const fileExtensions = fileNames
+      .map(name => {
+        const parts = name.split('.');
+        return parts.length > 1 ? parts.pop().toLowerCase() : '';
+      })
+      .filter(Boolean);
+    
+    console.log('Dropped file names:', fileNames);
+    console.log('Dropped file extensions:', fileExtensions);
+    
+    // Show a dialog to let the user select the files
+    // This is the most reliable approach
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Music Files',
+      defaultPath: app.getPath('music'),
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', ...fileExtensions] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      console.log('File selection canceled');
+      return [];
+    }
+    
+    console.log('Selected file paths:', result.filePaths);
+    return result.filePaths;
+  } catch (error) {
+    console.error('Error handling dropped files:', error);
+    return [];
+  }
+});
+
+// Handle dropped preset file
+ipcMain.handle('handle-dropped-preset-file', async (event, fileInfo) => {
+  try {
+    console.log('handle-dropped-preset-file called with:', fileInfo);
+    
+    // In a real implementation, we would use the file info to locate the actual file
+    // For now, we'll show a dialog to let the user select the file
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Preset File',
+      properties: ['openFile'],
+      filters: [
+        { name: 'EffeTune Preset Files', extensions: ['effetune_preset'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      console.log('File selection canceled');
+      return null;
+    }
+    
+    return result.filePaths[0];
+  } catch (error) {
+    console.error('Error handling dropped preset file:', error);
+    return null;
+  }
+});
+
 // Handle save pipeline state to file request
 ipcMain.handle('save-pipeline-state-to-file', async (event, pipelineState) => {
   try {
@@ -1250,6 +1568,31 @@ ipcMain.handle('reload-window', () => {
   return { success: false, error: 'Main window not available' };
 });
 
+// Handle clear microphone permission request
+ipcMain.handle('clear-microphone-permission', async () => {
+  try {
+    if (mainWindow) {
+      // Clear permission overrides for microphone
+      await mainWindow.webContents.session.clearPermissionOverrides({
+        origin: 'file://',
+        permission: 'media'
+      });
+      
+      // Request microphone access again
+      const status = await systemPreferences.getMediaAccessStatus('microphone');
+      if (status !== 'granted') {
+        await systemPreferences.askForMediaAccess('microphone');
+      }
+      
+      return { success: true };
+    }
+    return { success: false, error: 'Main window not available' };
+  } catch (error) {
+    console.error('Error clearing microphone permission:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Handle application menu update request
 ipcMain.handle('update-application-menu', (event, menuTemplate) => {
   try {
@@ -1273,7 +1616,16 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
           },
           { type: 'separator' },
           {
-            label: menuTemplate.file.submenu[3].label, // Process Audio Files with Effects...
+            label: menuTemplate.file.submenu[3].label, // Open music file...
+            accelerator: 'CommandOrControl+O',
+            click: () => {
+              if (mainWindow) {
+                mainWindow.webContents.send('open-music-file');
+              }
+            }
+          },
+          {
+            label: menuTemplate.file.submenu[4].label, // Process Audio Files with Effects...
             click: () => {
               if (mainWindow) {
                 mainWindow.webContents.send('process-audio-files');
@@ -1282,7 +1634,7 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
           },
           { type: 'separator' },
           {
-            label: menuTemplate.file.submenu[5].label, // Export Preset...
+            label: menuTemplate.file.submenu[6].label, // Export Preset...
             click: () => {
               if (mainWindow) {
                 mainWindow.webContents.send('export-preset');
@@ -1290,7 +1642,7 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
             }
           },
           {
-            label: menuTemplate.file.submenu[6].label, // Import Preset...
+            label: menuTemplate.file.submenu[7].label, // Import Preset...
             click: () => {
               if (mainWindow) {
                 mainWindow.webContents.send('import-preset');
@@ -1298,7 +1650,7 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
             }
           },
           { type: 'separator' },
-          { role: 'quit', label: menuTemplate.file.submenu[8].label } // Quit
+          { role: 'quit', label: menuTemplate.file.submenu[9].label } // Quit
         ]
       },
       {
@@ -1479,6 +1831,33 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
   } catch (error) {
     console.error('Error updating application menu:', error);
     return { success: false, error: error.message };
+  }
+});
+
+// Handle files dropped from preload script
+ipcMain.on('files-dropped', (event, filePaths) => {
+  try {
+    console.log('Files dropped from preload script received in main.js:', filePaths);
+    
+    // Filter for audio files
+    const audioFilePaths = filePaths.filter(filePath => {
+      const ext = path.extname(filePath).toLowerCase();
+      const isAudio = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'].includes(ext);
+      console.log(`File: ${filePath}, Extension: ${ext}, Is Audio: ${isAudio}`);
+      return isAudio;
+    });
+    
+    console.log('Audio file paths to send back to renderer:', audioFilePaths);
+    
+    // Send the audio file paths back to the renderer process
+    if (mainWindow && mainWindow.webContents) {
+      console.log('Sending audio-files-dropped event to renderer');
+      mainWindow.webContents.send('audio-files-dropped', audioFilePaths);
+    } else {
+      console.error('mainWindow or webContents not available');
+    }
+  } catch (error) {
+    console.error('Error handling dropped files:', error);
   }
 });
 

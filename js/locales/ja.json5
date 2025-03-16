@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "オーディオファイルの処理に失敗しました: {errorMessage}",
   "error.lowSampleRate": "サンプルレートが低すぎます ({sampleRate}Hz)。オーディオ品質が不十分な可能性があります。88.2kHz以上が推奨されます。",
   "error.sampleRateWarning": "サンプルレートが推奨の88.2kHzを下回っています。オーディオ品質に影響がある可能性があります。",
+  "error.cannotPlayBrowserFiles": "Electron環境ではブラウザファイルを再生できません",
+  "error.browserPlaybackNotSupported": "ブラウザでのローカルファイルの再生はサポートされていません",
+  "error.noMusicFilesFound": "音楽ファイルが見つかりません",
 
   // 成功メッセージ
   "success.urlCopied": "URLがクリップボードにコピーされました！",
@@ -59,8 +62,9 @@
 
   // メインメニュー
   "menu.file": "ファイル",
-  "menu.file.save": "保存",
+  "menu.file.save": "パイプラインを保存",
   "menu.file.saveAs": "名前を付けて保存...",
+  "menu.file.openMusicFile": "音楽ファイルを開く...",
   "menu.file.processAudioFiles": "エフェクトでオーディオファイルを処理...",
   "menu.file.exportPreset": "プリセットをエクスポート...",
   "menu.file.importPreset": "プリセットをインポート...",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "入力デバイス:",
   "dialog.audioConfig.outputDevice": "出力デバイス:",
   "dialog.audioConfig.sampleRate": "サンプルレート:",
+  "dialog.audioConfig.useInputWithPlayer": "プレーヤー使用時も音声入力を有効にする",
   "dialog.audioConfig.cancel": "キャンセル",
   "dialog.audioConfig.apply": "適用",
   "dialog.audioConfig.updatedTitle": "オーディオ設定が更新されました",

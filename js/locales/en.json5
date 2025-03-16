@@ -15,6 +15,9 @@
   "error.failedToProcessAudioFiles": "Failed to process audio files: {errorMessage}",
   "error.lowSampleRate": "Sample rate is too low ({sampleRate}Hz). Audio quality may be insufficient. 88.2kHz or higher is recommended.",
   "error.sampleRateWarning": "Sample rate is below recommended 88.2kHz. Audio quality may be affected.",
+  "error.cannotPlayBrowserFiles": "Cannot play browser files in Electron environment",
+  "error.browserPlaybackNotSupported": "Browser playback of local files is not supported",
+  "error.noMusicFilesFound": "No music files found",
 
   // Success messages
   "success.urlCopied": "URL copied to clipboard!",
@@ -59,8 +62,9 @@
 
   // Main menu
   "menu.file": "File",
-  "menu.file.save": "Save",
+  "menu.file.save": "Save Pipeline",
   "menu.file.saveAs": "Save As...",
+  "menu.file.openMusicFile": "Open music file...",
   "menu.file.processAudioFiles": "Process Audio Files with Effects...",
   "menu.file.exportPreset": "Export Preset...",
   "menu.file.importPreset": "Import Preset...",
@@ -94,6 +98,7 @@
   "dialog.audioConfig.inputDevice": "Input Device:",
   "dialog.audioConfig.outputDevice": "Output Device:",
   "dialog.audioConfig.sampleRate": "Sample Rate:",
+  "dialog.audioConfig.useInputWithPlayer": "Audio input even when using Player",
   "dialog.audioConfig.cancel": "Cancel",
   "dialog.audioConfig.apply": "Apply",
   "dialog.audioConfig.updatedTitle": "Audio Configuration Updated",
