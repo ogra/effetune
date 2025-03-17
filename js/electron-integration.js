@@ -398,25 +398,63 @@ class ElectronIntegration {
       return false;
     }
   }
-
-  /**
-   * Get available audio devices
-   * @returns {Promise<Array>} List of audio devices
-   */
-  async getAudioDevices() {
-    if (!this.isElectron) return [];
-    
+/**
+ * Get available audio devices
+ * @returns {Promise<Array>} List of audio devices
+ */
+async getAudioDevices() {
+  if (!this.isElectron) return [];
+  
+  try {
+    // First try to get devices from Electron's main process
     try {
       const result = await window.electronAPI.getAudioDevices();
-      if (result.success) {
+      if (result.success && result.devices && result.devices.length > 0) {
         return result.devices;
       }
-      return [];
-    } catch (error) {
-      console.error('Failed to get audio devices:', error);
-      return [];
+    } catch (electronError) {
+      console.warn('Failed to get audio devices from Electron API:', electronError);
+      // Continue to browser API fallback
     }
+    
+    // If Electron API fails or returns no devices, try browser's API directly
+    // This is especially important for output devices which can be enumerated
+    // even when microphone permission is denied
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      try {
+        console.log('Trying to enumerate devices using browser API');
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        
+        // Process and return the devices
+        return devices.map(device => ({
+          deviceId: device.deviceId,
+          kind: device.kind,
+          label: device.label || (device.kind === 'audioinput'
+            ? 'Microphone (no permission)'
+            : device.kind === 'audiooutput'
+              ? `Speaker ${device.deviceId.substring(0, 5)}`
+              : 'Unknown device')
+        }));
+      } catch (browserError) {
+        console.warn('Failed to enumerate devices using browser API:', browserError);
+      }
+    }
+    
+    // If we still have no devices, create default placeholders
+    // This ensures the user can at least select the default devices
+    return [
+      { deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' },
+      { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' }
+    ];
+  } catch (error) {
+    console.error('Failed to get audio devices:', error);
+    // Return default devices as fallback
+    return [
+      { deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' },
+      { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' }
+    ];
   }
+}
 
   /**
    * Show audio configuration dialog
@@ -437,6 +475,18 @@ class ElectronIntegration {
       // Group devices by kind
       const inputDevices = devices.filter(device => device.kind === 'audioinput');
       const outputDevices = devices.filter(device => device.kind === 'audiooutput');
+      
+      // Ensure we have at least one default device in each category
+      if (inputDevices.length === 0) {
+        inputDevices.push({ deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' });
+      }
+      
+      if (outputDevices.length === 0) {
+        outputDevices.push({ deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' });
+      }
+      
+      console.log('Available input devices:', inputDevices);
+      console.log('Available output devices:', outputDevices);
       
       // Get current sample rate preference or default to 96000
       const currentSampleRate = this.audioPreferences?.sampleRate || 96000;

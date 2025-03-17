@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Não é possível reproduzir arquivos do navegador no ambiente Electron",
   "error.browserPlaybackNotSupported": "A reprodução de arquivos locais no navegador não é suportada",
   "error.noMusicFilesFound": "Nenhum arquivo de música encontrado",
+  "error.microphoneAccessDenied": "Acesso ao microfone não permitido. A entrada de áudio não está disponível.",
+  "error.microphoneAccessDeniedElectron": "Acesso ao microfone não permitido. A entrada de áudio não está disponível, mas a reprodução de arquivos de música continuará funcionando.",
 
   // Mensagens de sucesso
   "success.urlCopied": "URL copiada para a área de transferência!",

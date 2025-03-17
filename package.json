@@ -5,10 +5,14 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist build node_modules/.cache",
     "build": "npm run clean && electron-builder --win --publish never",
     "build:portable": "npm run clean && electron-builder --win portable --publish never",
     "build:installer": "npm run clean && electron-builder --win nsis --publish never",
+    "prepare-icons": "node scripts/prepare-icons.js",
+    "build:mac": "npm run clean && electron-builder --mac --publish never",
+    "postbuild:mac": "npm run prepare-icons",
+    "build:linux": "npm run clean && electron-builder --linux --publish never",
     "pack": "npm run clean && electron-builder --dir",
     "dist": "electron-builder"
   },
@@ -18,14 +22,17 @@
     "cross-env": "^7.0.3",
     "electron": "^35.0.0",
     "electron-builder": "^24.13.3",
+    "fs-extra": "^11.3.0",
     "mkdirp": "^3.0.1",
+    "png2icons": "^2.0.1",
     "rimraf": "^6.0.1"
   },
   "build": {
     "appId": "com.frieve.effetune",
     "productName": "EffeTune",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "."
     },
     "files": [
       "**/*",
@@ -116,13 +123,14 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "favicon.png",
       "category": "public.app-category.music",
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "artifactName": "${productName}-${version}.${ext}"
     },
+    "dmg": {},
     "linux": {
       "target": "AppImage",
-      "icon": "favicon.png"
+      "icon": "images/icon.png"
     },
     "asar": true,
     "asarUnpack": [],

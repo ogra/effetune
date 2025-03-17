@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Electron環境ではブラウザファイルを再生できません",
   "error.browserPlaybackNotSupported": "ブラウザでのローカルファイルの再生はサポートされていません",
   "error.noMusicFilesFound": "音楽ファイルが見つかりません",
+  "error.microphoneAccessDenied": "マイクへのアクセスが許可されていません。音声入力は利用できません。",
+  "error.microphoneAccessDeniedElectron": "マイクへのアクセスが許可されていません。音声入力は利用できませんが、音楽ファイルの再生は可能です。",
 
   // 成功メッセージ
   "success.urlCopied": "URLがクリップボードにコピーされました！",

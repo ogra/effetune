@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Electron环境下无法播放浏览器文件",
   "error.browserPlaybackNotSupported": "浏览器不支持播放本地文件",
   "error.noMusicFilesFound": "未找到音乐文件",
+  "error.microphoneAccessDenied": "未授予麦克风访问权限。无法使用音频输入。",
+  "error.microphoneAccessDeniedElectron": "未授予麦克风访问权限。无法使用音频输入，但仍可播放音乐文件。",
 
   // 成功信息
   "success.urlCopied": "URL已复制到剪贴板！",
