@@ -432,6 +432,123 @@ export class PipelineManager {
         };
     }
 
+    /**
+     * Common function to delete selected plugins
+     * @returns {boolean} Whether the deletion was executed
+     */
+    deleteSelectedPlugins() {
+        if (this.selectedPlugins.size === 0) {
+            return false;
+        }
+
+        // Convert to array and sort in reverse order (delete from highest index)
+        const selectedIndices = Array.from(this.selectedPlugins)
+            .map(plugin => this.audioManager.pipeline.indexOf(plugin))
+            .sort((a, b) => b - a);
+        
+        // Delete selected plugins
+        selectedIndices.forEach(index => {
+            if (index > -1) {
+                const plugin = this.audioManager.pipeline[index];
+                
+                // Clean up plugin resources before removing
+                if (typeof plugin.cleanup === 'function') {
+                    plugin.cleanup();
+                }
+                
+                this.audioManager.pipeline.splice(index, 1);
+                this.selectedPlugins.delete(plugin);
+            }
+        });
+        
+        this.updatePipelineUI();
+        
+        // Update worklet directly without rebuilding pipeline
+        this.updateWorkletPlugins();
+        
+        // Save state for undo/redo
+        this.saveState();
+        
+        return true;
+    }
+
+    /**
+     * Common function to handle plugin selection
+     * @param {Object} plugin - The plugin to select
+     * @param {Event} e - The event object
+     * @param {boolean} clearExisting - Whether to clear existing selection if not using Ctrl/Cmd key
+     */
+    handlePluginSelection(plugin, e, clearExisting = true) {
+        if (clearExisting && !e.ctrlKey && !e.metaKey) {
+            this.selectedPlugins.clear();
+        }
+        this.selectedPlugins.add(plugin);
+        this.updateSelectionClasses();
+    }
+
+    /**
+     * Common function to copy selected plugins to clipboard
+     * @returns {Promise<boolean>} Whether the copy was successful
+     */
+    async copySelectedPluginsToClipboard() {
+        if (this.selectedPlugins.size === 0) {
+            return false;
+        }
+
+        try {
+            const selectedPluginsArray = Array.from(this.selectedPlugins);
+            const states = selectedPluginsArray.map(plugin =>
+                this.getSerializablePluginState(plugin, true, false, false)
+            );
+            await navigator.clipboard.writeText(JSON.stringify(states, null, 2));
+            
+            if (window.uiManager) {
+                window.uiManager.setError('success.settingsCopied', false);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+            return true;
+        } catch (err) {
+            // Failed to copy settings
+            if (window.uiManager) {
+                window.uiManager.setError('error.failedToCopySettings', true);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Common function to cut selected plugins (copy then delete)
+     * @returns {Promise<boolean>} Whether the cut was successful
+     */
+    async cutSelectedPlugins() {
+        if (this.selectedPlugins.size === 0) {
+            return false;
+        }
+
+        try {
+            // First copy the plugins
+            const copySuccess = await this.copySelectedPluginsToClipboard();
+            if (!copySuccess) {
+                return false;
+            }
+
+            // Then delete after successful copy
+            this.deleteSelectedPlugins();
+            
+            if (window.uiManager) {
+                window.uiManager.setError('success.settingsCut', false);
+                setTimeout(() => window.uiManager.clearError(), 3000);
+            }
+            return true;
+        } catch (err) {
+            // Failed to cut settings
+            if (window.uiManager) {
+                window.uiManager.setError('error.failedToCutSettings', true);
+            }
+            return false;
+        }
+    }
+
     initKeyboardEvents() {
         // Handle keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -491,75 +608,12 @@ export class PipelineManager {
                 this.updateSelectionClasses();
             } else if (e.key === 'x' && (e.ctrlKey || e.metaKey)) {
                 // Cut selected plugin settings to clipboard (copy + delete)
-                if (this.selectedPlugins.size > 0) {
-                    const selectedPluginsArray = Array.from(this.selectedPlugins);
-                    const states = selectedPluginsArray.map(plugin =>
-                        this.getSerializablePluginState(plugin, true, false, false)
-                    );
-                    navigator.clipboard.writeText(JSON.stringify(states, null, 2))
-                        .then(() => {
-                            // After copying, delete the selected plugins
-                            // Convert to array and sort in reverse order (delete from highest index)
-                            const selectedIndices = Array.from(this.selectedPlugins)
-                                .map(plugin => this.audioManager.pipeline.indexOf(plugin))
-                                .sort((a, b) => b - a);
-                            
-                            // Delete selected plugins
-                            selectedIndices.forEach(index => {
-                                if (index > -1) {
-                                    const plugin = this.audioManager.pipeline[index];
-                                    
-                                    // Clean up plugin resources before removing
-                                    if (typeof plugin.cleanup === 'function') {
-                                        plugin.cleanup();
-                                    }
-                                    
-                                    this.audioManager.pipeline.splice(index, 1);
-                                    this.selectedPlugins.delete(plugin);
-                                }
-                            });
-                            
-                            this.updatePipelineUI();
-                            
-                            // Update worklet directly without rebuilding pipeline
-                            this.updateWorkletPlugins();
-                            
-                            // Save state for undo/redo
-                            this.saveState();
-                            
-                            if (window.uiManager) {
-                                window.uiManager.setError('success.settingsCut', false);
-                                setTimeout(() => window.uiManager.clearError(), 3000);
-                            }
-                        })
-                        .catch(err => {
-                            // Failed to cut settings
-                            if (window.uiManager) {
-                                window.uiManager.setError('error.failedToCutSettings', true);
-                            }
-                        });
-                }
+                e.preventDefault();
+                this.cutSelectedPlugins();
             } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
                 // Copy selected plugin settings to clipboard
-                if (this.selectedPlugins.size > 0) {
-                    const selectedPluginsArray = Array.from(this.selectedPlugins);
-                    const states = selectedPluginsArray.map(plugin =>
-                        this.getSerializablePluginState(plugin, true, false, false)
-                    );
-                    navigator.clipboard.writeText(JSON.stringify(states, null, 2))
-                        .then(() => {
-                            if (window.uiManager) {
-                                window.uiManager.setError('success.settingsCopied', false);
-                                setTimeout(() => window.uiManager.clearError(), 3000);
-                            }
-                        })
-                        .catch(err => {
-                            // Failed to copy settings
-                            if (window.uiManager) {
-                                window.uiManager.setError('error.failedToCopySettings', true);
-                            }
-                        });
-                }
+                e.preventDefault();
+                this.copySelectedPluginsToClipboard();
             } else if (e.key === 'Escape') {
                 // Clear preset select text if it's focused
                 if (document.activeElement === this.presetSelect) {
@@ -577,11 +631,124 @@ export class PipelineManager {
                 navigator.clipboard.readText()
                     .then(text => {
                         try {
-                            const pluginStates = JSON.parse(text);
-                            if (!Array.isArray(pluginStates)) {
-                                throw new Error('Invalid plugin data format');
+                            console.log('Clipboard text:', text);
+                            
+                            // Check if the text is a URL with BASE64 encoded pipeline data
+                            if (text.startsWith('http://') || text.startsWith('https://')) {
+                                console.log('Detected URL in clipboard');
+                                
+                                try {
+                                    // Try to extract the 'p' parameter from the URL
+                                    const url = new URL(text);
+                                    const pParam = url.searchParams.get('p');
+                                    
+                                    if (pParam) {
+                                        console.log('Found p parameter in URL');
+                                        
+                                        // Try to decode the p parameter as BASE64
+                                        try {
+                                            // Validate base64 format using regex
+                                            if (!/^[A-Za-z0-9+/=]+$/.test(pParam)) {
+                                                throw new Error('Invalid base64 characters in p parameter');
+                                            }
+                                            
+                                            // Convert base64 back to JSON
+                                            const jsonStr = atob(pParam);
+                                            const pipelineState = JSON.parse(jsonStr);
+                                            
+                                            // Validate that state is an array
+                                            if (!Array.isArray(pipelineState)) {
+                                                throw new Error('Pipeline state must be an array');
+                                            }
+                                            
+                                            // Use the pipeline state directly
+                                            // This is already in the format expected by the paste handler
+                                            const pluginStates = pipelineState;
+                                            
+                                            // Create plugins from states
+                                            const newPlugins = pluginStates.map(state => {
+                                                const plugin = this.pluginManager.createPlugin(state.nm);
+                                                if (!plugin) {
+                                                    throw new Error(`Failed to create plugin: ${state.nm}`);
+                                                }
+                                                
+                                                // Set enabled state
+                                                plugin.enabled = state.en;
+                                                
+                                                // Set parameters
+                                                const { nm, en, ...params } = state;
+                                                if (plugin.setParameters) {
+                                                    plugin.setParameters(params);
+                                                }
+                                                
+                                                return plugin;
+                                            });
+                                            
+                                            // Determine insertion index
+                                            let insertIndex;
+                                            if (this.selectedPlugins.size > 0) {
+                                                // Get index of first selected plugin
+                                                insertIndex = Math.min(...Array.from(this.selectedPlugins)
+                                                    .map(plugin => this.audioManager.pipeline.indexOf(plugin)));
+                                            } else {
+                                                // Insert at end if no selection
+                                                insertIndex = this.audioManager.pipeline.length;
+                                            }
+                                            
+                                            // Insert plugins
+                                            this.audioManager.pipeline.splice(insertIndex, 0, ...newPlugins);
+                                            
+                                            // Clear selection and select new plugins
+                                            this.selectedPlugins.clear();
+                                            newPlugins.forEach(plugin => {
+                                                this.selectedPlugins.add(plugin);
+                                                this.expandedPlugins.add(plugin);
+                                            });
+                                            
+                                            this.updatePipelineUI();
+                                            
+                                            // Update worklet directly without rebuilding pipeline
+                                            this.updateWorkletPlugins();
+                                            
+                                            // Save state for undo/redo
+                                            this.saveState();
+                                            
+                                            // If plugins were inserted at the end, scroll to bottom
+                                            if (insertIndex === this.audioManager.pipeline.length - newPlugins.length) {
+                                                requestAnimationFrame(() => {
+                                                    window.scrollTo({
+                                                        top: document.body.scrollHeight,
+                                                        behavior: 'smooth'
+                                                    });
+                                                });
+                                            }
+                                            
+                                            if (window.uiManager) {
+                                                window.uiManager.setError('success.settingsPasted', false);
+                                                setTimeout(() => window.uiManager.clearError(), 3000);
+                                            }
+                                            
+                                            // Return early since we've handled the URL
+                                            return;
+                                        } catch (decodeErr) {
+                                            console.error('Failed to decode/parse BASE64 data from URL:', decodeErr);
+                                            // Continue to try parsing as JSON
+                                        }
+                                    }
+                                } catch (urlErr) {
+                                    console.error('Failed to parse URL:', urlErr);
+                                    // Continue to try parsing as JSON
+                                }
                             }
-
+                            
+                            // If we get here, either the text wasn't a URL or we couldn't extract pipeline data from it
+                            // Try parsing the text as JSON directly
+                            const pluginStates = JSON.parse(text);
+                            
+                            if (!Array.isArray(pluginStates)) {
+                                throw new Error('Invalid plugin data format: not an array');
+                            }
+                            
                             // Create plugins from states
                             const newPlugins = pluginStates.map(state => {
                                 const plugin = this.pluginManager.createPlugin(state.nm);
@@ -658,36 +825,12 @@ export class PipelineManager {
                         }
                     });
             } else if (e.key === 'Delete') {
-                // Delete selected plugins
-                if (this.selectedPlugins.size > 0) {
-                    // Convert to array and sort in reverse order (delete from highest index)
-                    const selectedIndices = Array.from(this.selectedPlugins)
-                        .map(plugin => this.audioManager.pipeline.indexOf(plugin))
-                        .sort((a, b) => b - a);
-                    
-                    // Delete selected plugins
-                    selectedIndices.forEach(index => {
-                        if (index > -1) {
-                            const plugin = this.audioManager.pipeline[index];
-                            
-                            // Clean up plugin resources before removing
-                            if (typeof plugin.cleanup === 'function') {
-                                plugin.cleanup();
-                            }
-                            
-                            this.audioManager.pipeline.splice(index, 1);
-                            this.selectedPlugins.delete(plugin);
-                        }
-                    });
-                    
-                    this.updatePipelineUI();
-                    
-                    // Update worklet directly without rebuilding pipeline
-                    this.updateWorkletPlugins();
-                    
-                    // Save state for undo/redo
-                    this.saveState();
-                }
+                // Prevent default behavior and stop propagation to avoid repeated key events in Electron
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Use the common delete function
+                this.deleteSelectedPlugins();
             }
         });
     }
@@ -713,19 +856,18 @@ export class PipelineManager {
             // Stop event propagation
             e.stopPropagation();
 
+            // Special handling for Ctrl/Cmd click to toggle selection
             if (e.ctrlKey || e.metaKey) {
-                // Toggle selection when Ctrl key is pressed
                 if (this.selectedPlugins.has(plugin)) {
                     this.selectedPlugins.delete(plugin);
+                    this.updateSelectionClasses();
                 } else {
-                    this.selectedPlugins.add(plugin);
+                    this.handlePluginSelection(plugin, e, false);
                 }
             } else {
                 // Single selection on normal click
-                this.selectedPlugins.clear();
-                this.selectedPlugins.add(plugin);
+                this.handlePluginSelection(plugin, e);
             }
-            this.updateSelectionClasses();
         };
         
         // Detect click/touch events for entire pipeline-item
@@ -749,11 +891,8 @@ export class PipelineManager {
             plugin.enabled = !plugin.enabled;
             toggle.classList.toggle('off', !plugin.enabled);
             
-            if (!e.ctrlKey && !e.metaKey) {
-                this.selectedPlugins.clear();
-            }
-            this.selectedPlugins.add(plugin);
-            this.updateSelectionClasses();
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
             
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugin(plugin);
@@ -802,11 +941,8 @@ export class PipelineManager {
                 }
             }
             
-            if (!e.ctrlKey && !e.metaKey) {
-                this.selectedPlugins.clear();
-            }
-            this.selectedPlugins.add(plugin);
-            this.updateSelectionClasses();
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
         };
         header.appendChild(helpBtn);
 
@@ -815,29 +951,11 @@ export class PipelineManager {
         deleteBtn.className = 'delete-button';
         deleteBtn.textContent = '✖';
         deleteBtn.onclick = (e) => {
-            if (!e.ctrlKey && !e.metaKey) {
-                this.selectedPlugins.clear();
-            }
-            this.selectedPlugins.add(plugin);
-            this.updateSelectionClasses();
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
             
-            const index = this.audioManager.pipeline.indexOf(plugin);
-            if (index > -1) {
-                // Clean up plugin resources before removing
-                if (typeof plugin.cleanup === 'function') {
-                    plugin.cleanup();
-                }
-                
-                this.audioManager.pipeline.splice(index, 1);
-                this.selectedPlugins.delete(plugin);
-                this.updatePipelineUI();
-                
-                // Update worklet directly without rebuilding pipeline
-                this.updateWorkletPlugins();
-                
-                // Save state for undo/redo
-                this.saveState();
-            }
+            // Use the common delete function
+            this.deleteSelectedPlugins();
         };
         header.appendChild(deleteBtn);
 
@@ -897,11 +1015,8 @@ export class PipelineManager {
                     return;
                 }
                 
-                if (!e.ctrlKey && !e.metaKey) {
-                    this.selectedPlugins.clear();
-                }
-                this.selectedPlugins.add(plugin);
-                this.updateSelectionClasses();
+                // Use the common selection function
+                this.handlePluginSelection(plugin, e);
             }
         });
         
@@ -910,6 +1025,20 @@ export class PipelineManager {
 
         // Toggle UI visibility and handle selection
         name.onclick = (e) => {
+            // Handle selection first to ensure immediate visual feedback
+            // Special handling for Ctrl/Cmd click to toggle selection
+            if (e.ctrlKey || e.metaKey) {
+                if (this.selectedPlugins.has(plugin)) {
+                    this.selectedPlugins.delete(plugin);
+                    this.updateSelectionClasses();
+                } else {
+                    this.handlePluginSelection(plugin, e, false);
+                }
+            } else {
+                this.handlePluginSelection(plugin, e);
+            }
+            
+            // Then toggle expanded state
             const isExpanded = ui.classList.toggle('expanded');
             if (isExpanded) {
                 this.expandedPlugins.add(plugin);
@@ -923,18 +1052,6 @@ export class PipelineManager {
                 this.expandedPlugins.delete(plugin);
             }
             name.title = isExpanded ? 'Click to collapse' : 'Click to expand';
-
-            if (e.ctrlKey || e.metaKey) {
-                if (this.selectedPlugins.has(plugin)) {
-                    this.selectedPlugins.delete(plugin);
-                } else {
-                    this.selectedPlugins.add(plugin);
-                }
-            } else {
-                this.selectedPlugins.clear();
-                this.selectedPlugins.add(plugin);
-            }
-            this.updateSelectionClasses();
         };
         name.title = this.expandedPlugins.has(plugin) ? 'Click to collapse' : 'Click to expand';
 
@@ -1078,10 +1195,22 @@ export class PipelineManager {
     }
 
     updateSelectionClasses() {
+        // First, remove 'selected' class from all items
+        this.pipelineList.querySelectorAll('.pipeline-item.selected').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Then, add 'selected' class to selected items
+        // This two-step process ensures a more reliable visual update
         this.pipelineList.querySelectorAll('.pipeline-item').forEach((item, index) => {
             const itemPlugin = this.audioManager.pipeline[index];
-            item.classList.toggle('selected', this.selectedPlugins.has(itemPlugin));
+            if (this.selectedPlugins.has(itemPlugin)) {
+                item.classList.add('selected');
+            }
         });
+        
+        // Force a synchronous style recalculation and layout
+        document.body.getBoundingClientRect();
     }
 
     initDragAndDrop() {
@@ -1380,11 +1509,8 @@ export class PipelineManager {
         this.audioManager.pipeline.splice(parsedSourceIndex, 1);
         this.audioManager.pipeline.splice(targetIndex, 0, plugin);
         
-        if (!e.ctrlKey && !e.metaKey) {
-            this.selectedPlugins.clear();
-        }
-        this.selectedPlugins.add(plugin);
-        this.updateSelectionClasses();
+        // Use the common selection function
+        this.handlePluginSelection(plugin, e);
         
         // Update worklet directly without rebuilding pipeline
         this.updateWorkletPlugins();
@@ -1416,11 +1542,8 @@ export class PipelineManager {
             const targetIndex = targetItem ? items.indexOf(targetItem) : items.length;
             this.audioManager.pipeline.splice(targetIndex, 0, plugin);
             
-            if (!e.ctrlKey && !e.metaKey) {
-                this.selectedPlugins.clear();
-            }
-            this.selectedPlugins.add(plugin);
-            this.updateSelectionClasses();
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
             
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugins();

@@ -1,12 +1,17 @@
 # Version History
 
+### Version 1.31 (Mar 18, 2025)
+- Added Mac and Linux builds
+- Change license from BSD 3-Clause to MIT License
+- Various minor improvements
+
 ### Version 1.30 (Mar 16, 2025)
-- Added a simple audio file player to the desktop app version (supports MP3, WAV, OGG, FLAC, M4A, and AAC formats).
-- The desktop app now remembers the previous session state.
+- Added a simple audio file player to the desktop app version (supports MP3, WAV, OGG, FLAC, M4A, and AAC formats)
+- The desktop app now remembers the previous session state
 - Various minor improvements
 
 ### Version 1.26 (Mar 11, 2025)
-- Localized UI display
+- Localized UI dnpisplay
 - Various minor improvements
 
 ### Version 1.25 (Mar 9, 2025)

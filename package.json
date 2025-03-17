@@ -1,6 +1,6 @@
 {
   "name": "effetune",
-  "version": "1.30.0",
+  "version": "1.31.0",
   "description": "Desktop Audio Effect Processor",
   "main": "main.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "npm run clean && electron-builder --win --publish never",
     "build:portable": "npm run clean && electron-builder --win portable --publish never",
     "build:installer": "npm run clean && electron-builder --win nsis --publish never",
-    "pack": "npm run clean && electron-builder --dir"
+    "pack": "npm run clean && electron-builder --dir",
+    "dist": "electron-builder"
   },
   "author": "Frieve",
   "license": "MIT",
