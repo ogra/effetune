@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Impossible de lire les fichiers du navigateur dans l'environnement Electron",
   "error.browserPlaybackNotSupported": "La lecture des fichiers locaux dans le navigateur n'est pas prise en charge",
   "error.noMusicFilesFound": "Aucun fichier musical trouvé",
+  "error.microphoneAccessDenied": "L'accès au microphone n'est pas autorisé. L'entrée audio n'est pas disponible.",
+  "error.microphoneAccessDeniedElectron": "L'accès au microphone n'est pas autorisé. L'entrée audio n'est pas disponible, mais la lecture des fichiers musicaux fonctionnera toujours.",
 
   // Messages de succès
   "success.urlCopied": "URL copiée dans le presse-papiers !",

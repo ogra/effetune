@@ -126,8 +126,9 @@ This module integrates the web application with Electron-specific features:
 ### Application Icon
 
 To change the application icon:
-1. Replace `favicon.ico` (Windows) and `favicon.png` (macOS/Linux) with your custom icons
+1. Replace `favicon.ico` (Windows) and `images/icon.png` (macOS/Linux) with your custom icons
 2. Ensure the icons are referenced correctly in the `build` section of `package.json`
+3. For macOS builds, the `scripts/create-macos-icons.js` script will automatically convert `images/icon.png` to the required `.icns` format
 
 ### Application Metadata
 
@@ -155,12 +156,17 @@ To customize the installer behavior:
 2. **Build fails with code signing errors**:
    - Set `forceCodeSigning` to `false` in the build configuration
    - Or provide valid code signing certificates
-
 3. **Electron download fails**:
    - Check your internet connection
    - The build configuration includes `strictSSL: false` to help with some network issues
 
-4. **Antivirus blocking the build**:
+4. **macOS icon conversion fails**:
+   - Ensure ImageMagick is installed: `brew install imagemagick`
+   - If the automatic conversion fails, manually create an .icns file and place it at `build/favicon.icns`
+   - Alternatively, install electron-icon-builder: `npm install -g electron-icon-builder` and run:
+     `electron-icon-builder --input=./images/icon.png --output=./build --flatten`
+
+5. **Antivirus blocking the build**:
    - Temporarily disable antivirus software
    - Add exceptions for the project directory
 

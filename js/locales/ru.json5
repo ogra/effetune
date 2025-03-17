@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Невозможно воспроизвести файлы браузера в среде Electron",
   "error.browserPlaybackNotSupported": "Воспроизведение локальных файлов в браузере не поддерживается",
   "error.noMusicFilesFound": "Музыкальные файлы не найдены",
+  "error.microphoneAccessDenied": "Доступ к микрофону не разрешён. Аудиовход недоступен.",
+  "error.microphoneAccessDeniedElectron": "Доступ к микрофону не разрешён. Аудиовход недоступен, но воспроизведение музыкальных файлов будет доступно.",
 
   // Сообщения об успехе
   "success.urlCopied": "URL скопирован в буфер обмена!",

@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "لا يمكن تشغيل ملفات المتصفح في بيئة Electron",
   "error.browserPlaybackNotSupported": "تشغيل الملفات المحلية في المتصفح غير مدعوم",
   "error.noMusicFilesFound": "لم يتم العثور على ملفات موسيقية",
+  "error.microphoneAccessDenied": "لم يتم السماح بالوصول إلى الميكروفون. إدخال الصوت غير متاح.",
+  "error.microphoneAccessDeniedElectron": "لم يتم السماح بالوصول إلى الميكروفون. إدخال الصوت غير متاح، ولكن سيستمر تشغيل ملفات الموسيقى.",
 
   // رسائل النجاح
   "success.urlCopied": "تم نسخ URL إلى الحافظة!",

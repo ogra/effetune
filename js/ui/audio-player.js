@@ -921,8 +921,17 @@ export class AudioPlayer {
     
     // Revoke object URL if one was created
     if (this.currentObjectURL) {
-      URL.revokeObjectURL(this.currentObjectURL);
-      this.currentObjectURL = null;
+      try {
+        // Set src to empty before revoking to prevent errors
+        if (this.audioElement) {
+          this.audioElement.src = '';
+        }
+        URL.revokeObjectURL(this.currentObjectURL);
+      } catch (error) {
+        console.warn('Error revoking object URL:', error);
+      } finally {
+        this.currentObjectURL = null;
+      }
     }
     
     // Check if we were using input with player

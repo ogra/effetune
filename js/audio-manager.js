@@ -77,6 +77,9 @@ export class AudioManager {
 
     async initAudio() {
         try {
+            // Variable to store microphone error message
+            let microphoneError = null;
+            
             // Check if this is the first launch
             if (window.electronAPI && window.electronAPI.isFirstLaunch) {
                 try {
@@ -131,9 +134,16 @@ export class AudioManager {
                     AudioManager.originalConnect = AudioNode.prototype.connect;
                     
                     // Override connect method to force all connections through the silence gain
-                    AudioNode.prototype.connect = function() {
-                        // Connect to silence gain instead
-                        return AudioManager.originalConnect.call(this, silenceGain);
+                    // Handle all possible overloads of the connect method
+                    AudioNode.prototype.connect = function(destination, outputIndex, inputIndex) {
+                        // Connect to silence gain instead, preserving all arguments
+                        if (arguments.length === 1) {
+                            return AudioManager.originalConnect.call(this, silenceGain);
+                        } else if (arguments.length === 2) {
+                            return AudioManager.originalConnect.call(this, silenceGain, outputIndex);
+                        } else {
+                            return AudioManager.originalConnect.call(this, silenceGain, outputIndex, inputIndex);
+                        }
                     };
                     
                     // Connect silence gain to destination
@@ -157,6 +167,9 @@ export class AudioManager {
                 throw new Error('AudioWorklet is not supported in this browser. Please use a modern browser.');
             }
 
+            // Flag to track if we're using microphone input
+            let usingMicrophoneInput = true;
+            
             // Check if we're running in Electron and have audio preferences
             let audioConstraints = {
                 echoCancellation: false,
@@ -172,7 +185,7 @@ export class AudioManager {
                 }
             }
 
-            // Get user media with audio constraints
+            // Try to get user media with audio constraints
             try {
                 this.stream = await navigator.mediaDevices.getUserMedia({
                     audio: audioConstraints
@@ -191,37 +204,94 @@ export class AudioManager {
                         if (innerError.name === 'NotAllowedError' || innerError.name === 'PermissionDeniedError') {
                             if (window.electronAPI && window.electronAPI.clearMicrophonePermission) {
                                 console.log('Microphone permission denied, attempting to clear permission overrides');
-                                await window.electronAPI.clearMicrophonePermission();
-                                // Try one more time after clearing permissions
-                                this.stream = await navigator.mediaDevices.getUserMedia({
-                                    audio: audioConstraints
-                                });
+                                try {
+                                    await window.electronAPI.clearMicrophonePermission();
+                                    // Try one more time after clearing permissions
+                                    this.stream = await navigator.mediaDevices.getUserMedia({
+                                        audio: audioConstraints
+                                    });
+                                } catch (finalError) {
+                                    console.warn('Failed to get microphone access after clearing permissions:', finalError);
+                                    usingMicrophoneInput = false;
+                                }
                             } else {
-                                throw innerError;
+                                console.warn('Microphone permission denied:', innerError);
+                                usingMicrophoneInput = false;
                             }
                         } else {
-                            throw innerError;
+                            console.warn('Failed to get microphone access:', innerError);
+                            usingMicrophoneInput = false;
                         }
                     }
                 } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                     // If permission is denied on first attempt, try to clear permission overrides and ask again
                     if (window.electronAPI && window.electronAPI.clearMicrophonePermission) {
                         console.log('Microphone permission denied, attempting to clear permission overrides');
-                        await window.electronAPI.clearMicrophonePermission();
-                        // Try one more time after clearing permissions
-                        this.stream = await navigator.mediaDevices.getUserMedia({
-                            audio: audioConstraints
-                        });
+                        try {
+                            await window.electronAPI.clearMicrophonePermission();
+                            // Try one more time after clearing permissions
+                            this.stream = await navigator.mediaDevices.getUserMedia({
+                                audio: audioConstraints
+                            });
+                        } catch (finalError) {
+                            console.warn('Failed to get microphone access after clearing permissions:', finalError);
+                            usingMicrophoneInput = false;
+                        }
                     } else {
-                        throw error;
+                        console.warn('Microphone permission denied:', error);
+                        usingMicrophoneInput = false;
                     }
                 } else {
-                    throw error;
+                    console.warn('Failed to get microphone access:', error);
+                    usingMicrophoneInput = false;
                 }
             }
 
-            // Create source and worklet nodes
-            this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+            // If we have microphone access, create source from stream
+            if (usingMicrophoneInput && this.stream) {
+                this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+            } else {
+                // No microphone access, create a stereo-compatible silent source as a fallback
+                console.log('Creating stereo-compatible silent source as fallback');
+                
+                // Create a buffer source instead of oscillator for better stereo support
+                const bufferSize = this.audioContext.sampleRate * 2; // 2 seconds of silence
+                const silentBuffer = this.audioContext.createBuffer(
+                    2, // 2 channels for stereo
+                    bufferSize,
+                    this.audioContext.sampleRate
+                );
+                
+                // Create a buffer source node
+                const bufferSource = this.audioContext.createBufferSource();
+                bufferSource.buffer = silentBuffer;
+                bufferSource.loop = true; // Loop the silent buffer
+                
+                // Create a gain node to ensure silence
+                const gainNode = this.audioContext.createGain();
+                gainNode.gain.value = 0; // Mute
+                
+                // Connect buffer source to gain node
+                bufferSource.connect(gainNode);
+                bufferSource.start();
+                
+                // Use the gain node as our source node
+                this.sourceNode = gainNode;
+                
+                // Log message for Electron users
+                if (window.electronAPI && window.electronIntegration) {
+                    console.log('Microphone access not available. Music file playback mode will still work.');
+                }
+                
+                // Store the error message if microphone access was denied, but don't return it yet
+                // This allows us to continue setting up the audio nodes for playback
+                if (!usingMicrophoneInput) {
+                    // Use the same error format as before so app.js can detect it properly
+                    microphoneError = `Audio Error: Microphone access denied. Music file playback mode will still work.`;
+                }
+            }
+
+            // Create worklet node
             this.workletNode = new AudioWorkletNode(this.audioContext, 'plugin-processor');
             window.workletNode = this.workletNode;
             window.pipeline = this.pipeline; // Global pipeline reference
@@ -245,9 +315,22 @@ export class AudioManager {
             if (this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
             }
+            
+            // If we had a microphone error, return it now after all audio nodes are set up
+            // This ensures the error is displayed in the UI but audio playback still works
+            if (microphoneError) {
+                console.warn('Returning microphone error for display:', microphoneError);
+                return microphoneError;
+            }
+            
+            // Return success (empty string means no error)
             return '';
         } catch (error) {
-            throw new Error(`Audio Error: ${error.message}`);
+            console.error('Audio initialization error:', error);
+            // Instead of throwing, return an error message
+            const errorMessage = `Audio Error: ${error.message}`;
+            // Make sure we return a resolved promise with the error message
+            return errorMessage;
         }
     }
 
@@ -256,25 +339,93 @@ export class AudioManager {
         if (!this.audioContext || !this.sourceNode) return;
 
         // Disconnect existing connections
-        this.sourceNode.disconnect();
-        if (this.workletNode) {
-            this.workletNode.disconnect();
+        try {
+            if (this.sourceNode) {
+                this.sourceNode.disconnect();
+            }
+            if (this.workletNode) {
+                this.workletNode.disconnect();
+            }
+        } catch (error) {
+            console.warn('Error disconnecting audio nodes:', error);
+            // Continue execution, as we'll try to establish new connections
         }
 
+        // Create missing nodes if needed
+        if (!this.sourceNode && this.audioContext) {
+            console.warn('Source node missing, creating fallback silent source');
+            // Create a silent source node as fallback
+            const bufferSize = this.audioContext.sampleRate * 2;
+            const silentBuffer = this.audioContext.createBuffer(2, bufferSize, this.audioContext.sampleRate);
+            const bufferSource = this.audioContext.createBufferSource();
+            bufferSource.buffer = silentBuffer;
+            bufferSource.loop = true;
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0;
+            
+            bufferSource.connect(gainNode);
+            bufferSource.start();
+            
+            this.sourceNode = gainNode;
+        }
+        
+        if (!this.workletNode && this.audioContext) {
+            console.warn('Worklet node missing, creating new worklet node');
+            try {
+                this.workletNode = new AudioWorkletNode(this.audioContext, 'plugin-processor');
+                window.workletNode = this.workletNode;
+            } catch (error) {
+                console.error('Failed to create worklet node:', error);
+                return `Audio Error: Failed to create audio processor: ${error.message}`;
+            }
+        }
+        
         // Connect source to worklet
-        this.sourceNode.connect(this.workletNode);
+        try {
+            // Make sure both nodes exist after our recovery attempts
+            if (!this.sourceNode || !this.workletNode) {
+                console.error('Source or worklet node is still missing after recovery attempt');
+                return `Audio Error: Audio initialization incomplete - missing audio nodes`;
+            }
+            
+            // Use the original connect method to avoid any overridden connect methods
+            if (AudioManager.originalConnect && this.isFirstLaunch) {
+                AudioManager.originalConnect.call(this.sourceNode, this.workletNode);
+            } else {
+                this.sourceNode.connect(this.workletNode);
+            }
+        } catch (error) {
+            console.error('Error connecting source to worklet:', error);
+            // Return an error message that will be propagated to app.js
+            return `Audio Error: Failed to connect audio nodes: ${error.message}`;
+        }
         
         // Create a MediaStreamDestination to get a MediaStream
         // Check if createMediaStreamDestination is supported
-        if (typeof this.audioContext.createMediaStreamDestination === 'function') {
-            this.destinationNode = this.audioContext.createMediaStreamDestination();
-            
-            // Connect worklet to the MediaStreamDestination
-            this.workletNode.connect(this.destinationNode);
-        } else {
-            console.warn('createMediaStreamDestination is not supported in this browser');
+        try {
+            if (typeof this.audioContext.createMediaStreamDestination === 'function') {
+                this.destinationNode = this.audioContext.createMediaStreamDestination();
+                
+                // Connect worklet to the MediaStreamDestination
+                try {
+                    this.workletNode.connect(this.destinationNode);
+                } catch (connectError) {
+                    console.error('Error connecting worklet to MediaStreamDestination:', connectError);
+                    // Return an error message that will be propagated to app.js
+                    return `Audio Error: Failed to connect to audio destination: ${connectError.message}`;
+                }
+            } else {
+                console.warn('createMediaStreamDestination is not supported in this browser');
+                // Fall back to default destination only
+                this.destinationNode = null;
+            }
+        } catch (error) {
+            console.error('Error creating MediaStreamDestination:', error);
             // Fall back to default destination only
             this.destinationNode = null;
+            // Return an error message that will be propagated to app.js
+            return `Audio Error: Failed to create audio destination: ${error.message}`;
         }
         
         // Store the connection to default destination so we can disconnect it later if needed
@@ -310,9 +461,20 @@ export class AudioManager {
             };
             
             // Insert the silence node between worklet and destination
-            this.workletNode.disconnect(this.destinationNode);
-            this.workletNode.connect(silenceNode);
-            silenceNode.connect(this.destinationNode);
+            try {
+                // Only disconnect if connected
+                if (this.destinationNode) {
+                    this.workletNode.disconnect(this.destinationNode);
+                }
+                this.workletNode.connect(silenceNode);
+                silenceNode.connect(this.destinationNode);
+            } catch (error) {
+                console.warn('Error connecting silence node:', error);
+                // Fall back to direct connection if there's an error
+                if (this.destinationNode) {
+                    this.workletNode.connect(this.destinationNode);
+                }
+            }
             
             // Store reference to remove on cleanup
             this.silenceNode = silenceNode;
@@ -322,8 +484,15 @@ export class AudioManager {
         if (!window.electronAPI || !window.electronIntegration) {
             // Only log during initialization
             if (isInitializing) {
+                console.log('Using default audio destination');
             }
-            this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+            try {
+                this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+            } catch (error) {
+                console.error('Error connecting to default audio destination:', error);
+                // Return an error message that will be propagated to app.js
+                return `Audio Error: Failed to connect to default audio destination: ${error.message}`;
+            }
             
             // Skip the Electron-specific code and continue with the rest of the method
             // Don't return early, let the method continue to update the worklet
@@ -348,26 +517,41 @@ export class AudioManager {
                     // Check for Audio Output Devices API support
                     // The setSinkId method is part of the Audio Output Devices API
                     const hasSinkIdSupport =
-                        typeof this.audioElement.setSinkId === 'function' &&
-                        typeof navigator.mediaDevices !== 'undefined' &&
-                        typeof navigator.mediaDevices.enumerateDevices === 'function';
+                        typeof this.audioElement.setSinkId === 'function';
                     
                     if (hasSinkIdSupport) {
                         try {
-                            // Check if the requested device is available
-                            const devices = await navigator.mediaDevices.enumerateDevices();
-                            const outputDevice = devices.find(device =>
-                                device.kind === 'audiooutput' &&
-                                device.deviceId === preferences.outputDeviceId
-                            );
+                            // Get available devices - this doesn't require microphone permission
+                            let outputDevice = null;
+                            
+                            try {
+                                // Try to enumerate devices - this works even without microphone permission
+                                if (typeof navigator.mediaDevices !== 'undefined' &&
+                                    typeof navigator.mediaDevices.enumerateDevices === 'function') {
+                                    const devices = await navigator.mediaDevices.enumerateDevices();
+                                    outputDevice = devices.find(device =>
+                                        device.kind === 'audiooutput' &&
+                                        device.deviceId === preferences.outputDeviceId
+                                    );
+                                }
+                            } catch (enumError) {
+                                console.warn('Failed to enumerate devices:', enumError);
+                                // Continue with the saved device ID even if we can't verify it exists
+                            }
                             
                             if (outputDevice) {
                                 await this.audioElement.setSinkId(preferences.outputDeviceId);
                                 console.log(`Audio output set to: ${outputDevice.label || 'unnamed device'}`);
                             } else {
-                                console.warn('Requested audio output device not found, using default');
-                                // Fall back to default device
-                                await this.audioElement.setSinkId('default');
+                                // Try to use the saved device ID directly even if we couldn't verify it
+                                try {
+                                    await this.audioElement.setSinkId(preferences.outputDeviceId);
+                                    console.log(`Audio output set to saved device ID: ${preferences.outputDeviceId}`);
+                                } catch (directSinkError) {
+                                    console.warn('Failed to set audio output to saved device, using default:', directSinkError);
+                                    // Fall back to default device
+                                    await this.audioElement.setSinkId('default');
+                                }
                             }
                             
                             // Now set the srcObject after sinkId is set
@@ -376,7 +560,12 @@ export class AudioManager {
                             } else {
                                 console.warn('No destination stream available');
                                 // Fall back to default output
-                                this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                                try {
+                                    this.defaultDestinationConnection = this.workletNode.connect(this.audioContext.destination);
+                                } catch (connectError) {
+                                    console.error('Error connecting to default audio destination:', connectError);
+                                    return `Audio Error: Failed to connect to default audio destination: ${connectError.message}`;
+                                }
                             }
                             
                             // Explicitly call play()

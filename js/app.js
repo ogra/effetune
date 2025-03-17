@@ -203,7 +203,22 @@ class App {
             this.uiManager.initDragAndDrop();
 
             // Initialize audio
-            await this.audioManager.initAudio();
+            const audioInitResult = await this.audioManager.initAudio();
+            
+            // Debug log to check what's being returned
+            console.log('Audio initialization result:', audioInitResult);
+            
+            // Store the audio initialization result for later
+            this.audioInitResult = audioInitResult;
+
+            // If there's an error, store it for display at the end of initialization
+            if (audioInitResult && typeof audioInitResult === 'string' && audioInitResult.startsWith('Audio Error:')) {
+                this.hasAudioError = true;
+                console.warn('Audio initialization error detected:', audioInitResult); // Just log the error, don't display it yet
+            } else {
+                console.log('No audio initialization error detected');
+            }
+            
             this.uiManager.initAudio();
 
             // Initialize pipeline
@@ -304,27 +319,29 @@ class App {
                 (async () => {
                     this.uiManager.updatePipelineUI();
                     this.uiManager.updateURL();
-                    this.uiManager.clearError();
                     this.uiManager.hideLoadingSpinner();
                 })()
             ]);
-// Add F1 key event listener for help documentation
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'F1') {
-        event.preventDefault(); // Prevent default browser behavior
-        const whatsThisLink = document.querySelector('.whats-this');
-        if (whatsThisLink) {
-            whatsThisLink.click();
-        }
-    }
-});
+            // Add F1 key event listener for help documentation
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'F1') {
+                    event.preventDefault(); // Prevent default browser behavior
+                    const whatsThisLink = document.querySelector('.whats-this');
+                    if (whatsThisLink) {
+                        whatsThisLink.click();
+                    }
+                }
+            });
 
-// Check sample rate after initialization
-if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
-    this.uiManager.setError('error.lowSampleRate', true, { sampleRate: this.audioManager.audioContext.sampleRate });
-}
+            // Check sample rate after initialization
+            if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
+                this.uiManager.setError('error.lowSampleRate', true, { sampleRate: this.audioManager.audioContext.sampleRate });
+            }
 
-// Auto-resume audio context when page gains focus
+            // Clear any existing error messages
+            this.uiManager.clearError();
+
+            // Auto-resume audio context when page gains focus
             // Auto-resume audio context when page gains focus
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden && this.audioManager.audioContext &&
@@ -333,6 +350,17 @@ if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate 
                 }
             });
 
+            // Display microphone error message at the very end of initialization if there was one
+            if (this.hasAudioError) {
+                // Show a non-blocking warning message to the user
+                if (window.electronAPI && window.electronIntegration && window.electronIntegration.isElectron) {
+                    // For Electron version, show a message that music playback will still work
+                    this.uiManager.setError(this.uiManager.t('error.microphoneAccessDeniedElectron'), false);
+                } else {
+                    // For web version, show the actual error
+                    this.uiManager.setError(this.uiManager.t('error.microphoneAccessDenied') + ' ' + this.audioInitResult, false);
+                }
+            }
         } catch (error) {
             this.uiManager.setError(error.message, true);
         }
@@ -416,20 +444,12 @@ document.addEventListener('dragover', (e) => {
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
         const items = Array.from(e.dataTransfer.items);
         
-        // Debug: Log the items being dragged
-        console.log('Drag items:', items.map(item => ({
-            kind: item.kind,
-            type: item.type,
-            name: item.getAsFile()?.name || 'unknown'
-        })));
-        
         // In Electron environment, always add drag-over class for any file
         if (window.electronIntegration && window.electronIntegration.isElectron) {
             e.preventDefault();
             e.stopPropagation();
             e.dataTransfer.dropEffect = 'copy';
             document.body.classList.add('drag-over');
-            console.log('Electron: Added drag-over class to body for any file');
             return;
         }
         
@@ -442,42 +462,30 @@ document.addEventListener('dragover', (e) => {
             (item.getAsFile()?.name.endsWith('.effetune_preset') || false)
         );
         
-        // Debug: Log preset detection
-        console.log('Has preset files:', hasPresetFiles);
-        
         // Check for music files or folders - using similar approach as preset files
         const hasMusicFiles = items.some(item => {
             if (item.kind === 'file') {
                 const file = item.getAsFile();
                 if (!file) return false;
                 
-                // Debug: Log file details
-                console.log('Checking file:', file.name, 'type:', file.type);
-                
                 // First check: file extension for audio files
                 const hasAudioExtension = /\.(mp3|wav|ogg|flac|m4a|aac|aiff|wma|alac)$/i.test(file.name);
                 if (hasAudioExtension) {
-                    console.log('Audio extension match:', file.name);
                     return true;
                 }
                 
                 // Second check: MIME type for audio files
                 if (file.type.startsWith('audio/')) {
-                    console.log('Audio MIME type match:', file.type);
                     return true;
                 }
                 
                 // Check for folder (webkitGetAsEntry is only available during dragover/drop)
                 if (item.webkitGetAsEntry && item.webkitGetAsEntry().isDirectory) {
-                    console.log('Directory detected');
                     return true;
                 }
             }
             return false;
         });
-        
-        // Debug: Log music file detection
-        console.log('Has music files:', hasMusicFiles);
         
         // If we have preset files or music files, allow drop
         if (hasPresetFiles || hasMusicFiles) {
@@ -488,7 +496,6 @@ document.addEventListener('dragover', (e) => {
             
             // Add visual feedback
             document.body.classList.add('drag-over');
-            console.log('Added drag-over class to body');
         }
     }
 }, true); // Use capture phase to ensure this handler runs first
@@ -648,18 +655,15 @@ document.addEventListener('drop', async (e) => {
             if (isBrowser) {
                 // In browser environment, check if the drop target is the file-drop-area
                 const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
-                console.log('Is dropped on file-drop-area:', isDroppedOnFileDropArea);
                 
                 // Check if we have a drop area for offline processing
                 const dropArea = window.uiManager?.pipelineManager?.dropArea;
                 
                 if (dropArea && isDroppedOnFileDropArea) {
                     // Only process files if they were dropped on the file-drop-area
-                    console.log('Files dropped on file-drop-area, processing offline');
                     window.uiManager.pipelineManager.processDroppedAudioFiles(musicFiles);
                 } else {
                     // Files were dropped elsewhere, show error
-                    console.log('Files not dropped on file-drop-area, showing error');
                     window.uiManager.setError('error.browserPlaybackNotSupported', true);
                     setTimeout(() => window.uiManager.clearError(), 3000);
                 }

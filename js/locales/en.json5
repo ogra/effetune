@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Cannot play browser files in Electron environment",
   "error.browserPlaybackNotSupported": "Browser playback of local files is not supported",
   "error.noMusicFilesFound": "No music files found",
+  "error.microphoneAccessDenied": "Microphone access is not permitted. Audio input is unavailable.",
+  "error.microphoneAccessDeniedElectron": "Microphone access is not permitted. Audio input is unavailable, but music file playback will still work.",
 
   // Success messages
   "success.urlCopied": "URL copied to clipboard!",

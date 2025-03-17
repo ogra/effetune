@@ -18,6 +18,8 @@
   "error.cannotPlayBrowserFiles": "Electron वातावरण में ब्राउज़र फ़ाइलें नहीं चला सकते",
   "error.browserPlaybackNotSupported": "ब्राउज़र में स्थानीय फ़ाइलों का प्लेबैक समर्थित नहीं है",
   "error.noMusicFilesFound": "कोई संगीत फ़ाइल नहीं मिली",
+  "error.microphoneAccessDenied": "माइक्रोफ़ोन की अनुमति नहीं है। ऑडियो इनपुट अनुपलब्ध है।",
+  "error.microphoneAccessDeniedElectron": "माइक्रोफ़ोन की अनुमति नहीं है। ऑडियो इनपुट अनुपलब्ध है, लेकिन संगीत फ़ाइल प्लेबैक अभी भी काम करेगा।",
 
   // सफलता संदेश
   "success.urlCopied": "URL क्लिपबोर्ड में कॉपी हुई!",
