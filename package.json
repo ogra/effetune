@@ -30,7 +30,7 @@
     "productName": "EffeTune",
     "directories": {
       "output": "dist",
-      "buildResources": "build"
+      "buildResources": "."
     },
     "files": [
       "**/*",
@@ -121,7 +121,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "favicon.icns",
+      "icon": "images/favicon.icns",
       "category": "public.app-category.music",
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}"
