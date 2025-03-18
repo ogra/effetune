@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "clean": "rimraf dist build node_modules/.cache",
+    "clean": "rimraf dist node_modules/.cache",
     "build": "npm run clean && electron-builder --win --publish never",
     "build:portable": "npm run clean && electron-builder --win portable --publish never",
     "build:installer": "npm run clean && electron-builder --win nsis --publish never",
