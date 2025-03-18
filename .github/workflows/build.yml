@@ -27,7 +27,7 @@ jobs:
       - name: Build
         run: |
           npm run clean
-          electron-builder --publish never
+          npx electron-builder --publish never
         env:
           USE_HARD_LINKS: false
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
