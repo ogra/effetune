@@ -25,12 +25,12 @@ Sin mitos audiophiles, solo pura ciencia.
 
 Antes de usar EffeTune, deberás configurar el enrutamiento de audio. Aquí se explica cómo configurar diferentes fuentes de audio:
 
-### Configuración del Reproductor de Archivos de Música (solo aplicación de escritorio)
+### Configuración del Reproductor de Archivos de Música
 
-- Instala e inicia la aplicación de escritorio EffeTune
+- Abre la aplicación web EffeTune en tu navegador, o inicia la aplicación de escritorio EffeTune
 - Abre y reproduce un archivo de música para asegurar una reproducción adecuada
-   - Abre un archivo de música y selecciona EffeTune como la aplicación
-   - O selecciona Abrir archivo de música... desde el menú Archivo
+   - Abre un archivo de música y selecciona EffeTune como la aplicación (solo aplicación de escritorio)
+   - O selecciona Abrir archivo de música... desde el menú Archivo (solo aplicación de escritorio)
    - O arrastra el archivo de música a la ventana
 
 ### Configuración para Servicios de Streaming

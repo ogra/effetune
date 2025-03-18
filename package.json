@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "electron": "^35.0.0",
+    "electron": "^35.0.2",
     "electron-builder": "^24.13.3",
     "fs-extra": "^11.3.0",
     "mkdirp": "^3.0.1",
@@ -42,49 +42,49 @@
         "ext": "effetune_preset",
         "name": "EffeTune Preset",
         "description": "EffeTune Preset File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "Editor"
       },
       {
         "ext": "mp3",
         "name": "MP3 Audio",
         "description": "MP3 Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       },
       {
         "ext": "wav",
         "name": "WAV Audio",
         "description": "WAV Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       },
       {
         "ext": "ogg",
         "name": "OGG Audio",
         "description": "OGG Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       },
       {
         "ext": "flac",
         "name": "FLAC Audio",
         "description": "FLAC Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       },
       {
         "ext": "m4a",
         "name": "M4A Audio",
         "description": "M4A Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       },
       {
         "ext": "aac",
         "name": "AAC Audio",
         "description": "AAC Audio File",
-        "icon": "favicon.ico",
+        "icon": "icon",
         "role": "None"
       }
     ],
@@ -102,8 +102,7 @@
             "x64"
           ]
         }
-      ],
-      "icon": "favicon.ico"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -111,9 +110,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "EffeTune",
-      "installerIcon": "favicon.ico",
-      "uninstallerIcon": "favicon.ico",
-      "installerHeaderIcon": "favicon.ico",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
       "artifactName": "${productName}-${version}-Setup.${ext}"
     },
     "portable": {
@@ -121,15 +120,13 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "favicon.icns",
       "category": "public.app-category.music",
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}"
     },
     "dmg": {},
     "linux": {
-      "target": "AppImage",
-      "icon": "images/icon.png"
+      "target": "AppImage"
     },
     "asar": true,
     "asarUnpack": [],

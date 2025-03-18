@@ -31,12 +31,12 @@ No audiophile myths, Just pure science.
 
 Before using EffeTune, you'll need to set up your audio routing. Here's how to configure different audio sources:
 
-### Music File Player Setup (desktop app only)
+### Music File Player Setup
 
-- Install and launch the EffeTune desktop app
+- Open the EffeTune web app in your browser, or launch the EffeTune desktop app
 - Open and play a music file to ensure proper playback
-   - Open a music file and select EffeTune as the application
-   - Or select Open music file... from the File menu
+   - Open a music file and select EffeTune as the application (desktop app only)
+   - Or select Open music file... from the File menu (desktop app only)
    - Or drag the music file into the window
 
 ### Streaming Service Setup

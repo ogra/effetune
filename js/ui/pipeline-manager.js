@@ -1563,40 +1563,29 @@ export class PipelineManager {
     setupFileDropHandlers() {
         // Handle file drag and drop for audio files only
         this.dropArea.addEventListener('dragenter', (e) => {
-            console.log('Pipeline Manager: dragenter event on dropArea');
             
             // Skip in Electron environment
             if (window.electronIntegration && window.electronIntegration.isElectron) {
-                console.log('Pipeline Manager: Skipping dragenter in Electron environment');
                 return;
             }
             
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
-                console.log('Pipeline Manager dragenter items:', items.map(item => ({
-                    kind: item.kind,
-                    type: item.type,
-                    name: item.getAsFile()?.name || 'unknown'
-                })));
                 
                 const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
-                console.log('Pipeline Manager: hasAudioFiles =', hasAudioFiles);
                 
                 if (hasAudioFiles) {
                     e.preventDefault();
                     this.dropArea.classList.add('drag-active');
-                    console.log('Pipeline Manager: Added drag-active class on dragenter');
                 }
             }
         }, { passive: false });
         
         this.dropArea.addEventListener('dragover', (e) => {
-            console.log('Pipeline Manager: dragover event on dropArea');
             
             // Skip in Electron environment
             if (window.electronIntegration && window.electronIntegration.isElectron) {
-                console.log('Pipeline Manager: Skipping dragover in Electron environment');
                 return;
             }
             
@@ -1604,13 +1593,11 @@ export class PipelineManager {
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
                 const hasAudioFiles = items.some(item => item.kind === 'file' && item.type.startsWith('audio/'));
-                console.log('Pipeline Manager: hasAudioFiles in dragover =', hasAudioFiles);
                 
                 if (hasAudioFiles) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'copy';
                     this.dropArea.classList.add('drag-active');
-                    console.log('Pipeline Manager: Added drag-active class on dragover');
                 }
             }
         }, { passive: false });

@@ -25,12 +25,12 @@ Aucun mythe audiophile, juste de la science pure.
 
 Avant d'utiliser EffeTune, vous devez configurer votre routage audio. Voici comment configurer différentes sources audio :
 
-### Configuration du lecteur de fichiers musicaux (application de bureau uniquement)
+### Configuration du lecteur de fichiers musicaux
 
-- Installez et lancez l'application de bureau EffeTune
+- Ouvrez l'application web EffeTune dans votre navigateur, ou lancez l'application de bureau EffeTune
 - Ouvrez et lisez un fichier musical pour assurer une lecture correcte
-   - Ouvrez un fichier musical et sélectionnez EffeTune comme application
-   - Ou sélectionnez Ouvrir un fichier musical... depuis le menu Fichier
+   - Ouvrez un fichier musical et sélectionnez EffeTune comme application (application de bureau uniquement)
+   - Ou sélectionnez Ouvrir un fichier musical... depuis le menu Fichier (application de bureau uniquement)
    - Ou faites glisser le fichier musical dans la fenêtre
 
 ### Configuration des services de streaming

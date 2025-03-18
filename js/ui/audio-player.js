@@ -22,16 +22,99 @@ export class AudioPlayer {
     this.prevButton = null;
     this.nextButton = null;
     this.closeButton = null;
+    this.repeatButton = null;
+    this.shuffleButton = null;
     this.updateInterval = null;
     this.currentObjectURL = null; // Store current object URL for cleanup
+    
+    // Repeat and shuffle state
+    this.repeatMode = 'OFF'; // OFF, ALL, ONE
+    this.shuffleMode = false;
+    this.originalPlaylist = []; // Store original playlist order for shuffle mode
     
     // Store original source node for restoration
     if (this.audioManager.sourceNode) {
       this.originalSourceNode = this.audioManager.sourceNode;
     }
     
+    // Load saved player state
+    this.loadPlayerState().then(() => {
+      // After loading player state, make sure UI is updated when created
+      if (this.container) {
+        this.updatePlayerUIState();
+      }
+    });
+    
     // Initialize keyboard shortcuts
     this.initKeyboardShortcuts();
+  }
+  
+  /**
+   * Load player state from player-state.json
+   * @returns {Promise} A promise that resolves when the player state is loaded
+   */
+  async loadPlayerState() {
+    if (!window.electronAPI || !window.electronIntegration) return Promise.resolve();
+    
+    try {
+      // Get user data path
+      const userDataPath = await window.electronAPI.getPath('userData');
+      
+      // Get player state file path
+      const stateFilePath = await window.electronAPI.joinPaths(userDataPath, 'player-state.json');
+      
+      // Check if file exists
+      const fileExists = await window.electronAPI.fileExists(stateFilePath);
+      
+      if (fileExists) {
+        // Read player state file
+        const result = await window.electronAPI.readFile(stateFilePath);
+        
+        if (result.success) {
+          // Parse player state
+          const playerState = JSON.parse(result.content);
+          
+          // Load repeat and shuffle state if available
+          if (playerState.repeatMode) {
+            this.repeatMode = playerState.repeatMode;
+          }
+          
+          if (playerState.shuffleMode !== undefined) {
+            this.shuffleMode = playerState.shuffleMode;
+          }
+        }
+      }
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Failed to load player state:', error);
+      return Promise.resolve();
+    }
+  }
+  
+  /**
+   * Save player state to player-state.json
+   */
+  async savePlayerState() {
+    if (!window.electronAPI || !window.electronIntegration) return;
+    
+    try {
+      // Get user data path
+      const userDataPath = await window.electronAPI.getPath('userData');
+      
+      // Get player state file path
+      const stateFilePath = await window.electronAPI.joinPaths(userDataPath, 'player-state.json');
+      
+      // Create player state object
+      const playerState = {
+        repeatMode: this.repeatMode,
+        shuffleMode: this.shuffleMode
+      };
+      
+      // Save player state
+      await window.electronAPI.saveFile(stateFilePath, JSON.stringify(playerState, null, 2));
+    } catch (error) {
+      console.error('Failed to save player state:', error);
+    }
   }
   
   /**
@@ -144,6 +227,13 @@ export class AudioPlayer {
     // Create container
     const container = document.createElement('div');
     container.className = 'audio-player';
+    
+    // Set initial button image based on repeat mode
+    let repeatButtonImg = 'repeat_button.png';
+    if (this.repeatMode === 'ONE') {
+      repeatButtonImg = 'repeat1_button.png';
+    }
+    
     container.innerHTML = `
      <h2>Player</h2>
      <div class="track-name-container">
@@ -156,6 +246,8 @@ export class AudioPlayer {
         <button class="player-button stop-button"><img src="images/stop_button.png" width="16" height="16"></button>
         <button class="player-button prev-button"><img src="images/previous_button.png" width="16" height="16"></button>
         <button class="player-button next-button"><img src="images/next_button.png" width="16" height="16"></button>
+        <button class="player-button repeat-button"><img src="images/${repeatButtonImg}" width="16" height="16"></button>
+        <button class="player-button shuffle-button"><img src="images/shuffle_button.png" width="16" height="16"></button>
         <button class="player-button close-button">✖</button>
       </div>
     `;
@@ -169,6 +261,8 @@ export class AudioPlayer {
     this.stopButton = container.querySelector('.stop-button');
     this.prevButton = container.querySelector('.prev-button');
     this.nextButton = container.querySelector('.next-button');
+    this.repeatButton = container.querySelector('.repeat-button');
+    this.shuffleButton = container.querySelector('.shuffle-button');
     this.closeButton = container.querySelector('.close-button');
 
     // Add event listeners
@@ -177,6 +271,15 @@ export class AudioPlayer {
     this.prevButton.addEventListener('click', () => this.playPrevious());
     this.nextButton.addEventListener('click', () => this.playNext());
     this.closeButton.addEventListener('click', () => this.close());
+    
+    // Add repeat button event listener
+    this.repeatButton.addEventListener('click', () => this.toggleRepeatMode());
+    
+    // Add shuffle button event listener
+    this.shuffleButton.addEventListener('click', () => this.toggleShuffleMode());
+    
+    // Update UI based on loaded state
+    this.updatePlayerUIState();
     
     this.seekBar.addEventListener('input', () => {
       if (this.audioElement) {
@@ -202,6 +305,7 @@ export class AudioPlayer {
     // Clear current playlist if not appending
     if (!append) {
       this.playlist = [];
+      this.originalPlaylist = []; // Clear original playlist as well
     }
     
     // Add files to playlist
@@ -209,18 +313,22 @@ export class AudioPlayer {
       if (typeof file === 'string') {
         // Handle file path string
         const fileName = file.split(/[\\/]/).pop();
-        this.playlist.push({
+        const trackEntry = {
           path: file,
           name: fileName,
           file: null // No File object for path-based entries
-        });
+        };
+        this.playlist.push(trackEntry);
+        this.originalPlaylist.push({...trackEntry}); // Store a copy in original playlist
       } else if (file instanceof File) {
         // Handle File object
-        this.playlist.push({
+        const trackEntry = {
           path: null, // No path for File object-based entries
           name: file.name,
           file: file
-        });
+        };
+        this.playlist.push(trackEntry);
+        this.originalPlaylist.push({...trackEntry}); // Store a copy in original playlist
       }
     });
     
@@ -248,6 +356,148 @@ export class AudioPlayer {
     // Load and play the current track
     this.loadTrack(this.currentTrackIndex);
     this.play();
+  }
+  
+  /**
+   * Toggle repeat mode (OFF -> ALL -> ONE -> OFF)
+   */
+  toggleRepeatMode() {
+    if (!this.repeatButton) return;
+    
+    // Cycle through repeat modes: OFF -> ALL -> ONE -> OFF
+    switch (this.repeatMode) {
+      case 'OFF':
+        this.repeatMode = 'ALL';
+        this.repeatButton.innerHTML = '<img src="images/repeat_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = '#4CAF50'; // Highlight button when active
+        break;
+      case 'ALL':
+        this.repeatMode = 'ONE';
+        this.repeatButton.innerHTML = '<img src="images/repeat1_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = '#4CAF50';
+        
+        // Disable shuffle button when in ONE mode
+        if (this.shuffleMode) {
+          this.toggleShuffleMode(); // Turn off shuffle mode
+        }
+        this.shuffleButton.disabled = true;
+        this.shuffleButton.style.opacity = '0.5';
+        break;
+      case 'ONE':
+        this.repeatMode = 'OFF';
+        this.repeatButton.innerHTML = '<img src="images/repeat_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = ''; // Reset button color
+        
+        // Re-enable shuffle button
+        this.shuffleButton.disabled = false;
+        this.shuffleButton.style.opacity = '1';
+        break;
+    }
+    
+    // Save player state after changing repeat mode
+    this.savePlayerState();
+  }
+  
+  /**
+   * Toggle shuffle mode (ON/OFF)
+   */
+  toggleShuffleMode() {
+    if (!this.shuffleButton || this.repeatMode === 'ONE') return;
+    
+    this.shuffleMode = !this.shuffleMode;
+    
+    if (this.shuffleMode) {
+      // Enable shuffle mode
+      this.shuffleButton.style.backgroundColor = '#4CAF50'; // Highlight button when active
+      
+      // Save current track
+      const currentTrack = this.playlist[this.currentTrackIndex];
+      
+      // Create a copy of the original playlist
+      const playlistCopy = [...this.originalPlaylist];
+      
+      // Shuffle the playlist copy using Fisher-Yates algorithm
+      for (let i = playlistCopy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [playlistCopy[i], playlistCopy[j]] = [playlistCopy[j], playlistCopy[i]];
+      }
+      
+      // Replace the playlist with the shuffled copy
+      this.playlist = playlistCopy;
+      
+      // Find the current track in the shuffled playlist
+      this.currentTrackIndex = this.playlist.findIndex(track =>
+        (track.path === currentTrack.path && track.name === currentTrack.name) ||
+        (track.file && currentTrack.file && track.file.name === currentTrack.file.name)
+      );
+      
+      // If track not found (shouldn't happen), reset to first track
+      if (this.currentTrackIndex === -1) {
+        this.currentTrackIndex = 0;
+      }
+    } else {
+      // Disable shuffle mode
+      this.shuffleButton.style.backgroundColor = ''; // Reset button color
+      
+      // Save current track
+      const currentTrack = this.playlist[this.currentTrackIndex];
+      
+      // Restore original playlist
+      this.playlist = [...this.originalPlaylist];
+      
+      // Find the current track in the original playlist
+      this.currentTrackIndex = this.playlist.findIndex(track =>
+        (track.path === currentTrack.path && track.name === currentTrack.name) ||
+        (track.file && currentTrack.file && track.file.name === currentTrack.file.name)
+      );
+      
+      // If track not found (shouldn't happen), reset to first track
+      if (this.currentTrackIndex === -1) {
+        this.currentTrackIndex = 0;
+      }
+    }
+    
+    // Save player state after changing shuffle mode
+    this.savePlayerState();
+  }
+  
+  /**
+   * Update player UI based on current state
+   */
+  updatePlayerUIState() {
+    if (!this.repeatButton || !this.shuffleButton) return;
+    
+    // Update repeat button state
+    switch (this.repeatMode) {
+      case 'ALL':
+        this.repeatButton.innerHTML = '<img src="images/repeat_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = '#4a9eff'; // Highlight button when active
+        break;
+      case 'ONE':
+        this.repeatButton.innerHTML = '<img src="images/repeat1_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = '#4a9eff';
+        
+        // Disable shuffle button in ONE mode
+        this.shuffleButton.disabled = true;
+        this.shuffleButton.style.opacity = '0.5';
+        break;
+      case 'OFF':
+      default:
+        this.repeatButton.innerHTML = '<img src="images/repeat_button.png" width="16" height="16">';
+        this.repeatButton.style.backgroundColor = ''; // Reset button color
+        
+        // Enable shuffle button
+        this.shuffleButton.disabled = false;
+        this.shuffleButton.style.opacity = '1';
+        break;
+    }
+    
+    // Update shuffle button state
+    if (this.shuffleMode && this.repeatMode !== 'ONE') {
+      this.shuffleButton.style.backgroundColor = '#4a9eff'; // Highlight button when active
+    } else {
+      this.shuffleButton.style.backgroundColor = ''; // Reset button color
+    }
   }
   
   // CSS styles for the player are now in effetune.css
@@ -579,9 +829,22 @@ export class AudioPlayer {
    * Play the previous track in the playlist
    */
   playPrevious() {
+    // If in repeat ONE mode, just restart the current track
+    if (this.repeatMode === 'ONE') {
+      this.audioElement.currentTime = 0;
+      this.play();
+      return;
+    }
+    
     const newIndex = this.currentTrackIndex - 1;
+    
     if (newIndex >= 0) {
+      // Normal case - previous track exists
       this.loadTrack(newIndex);
+      this.play();
+    } else if (this.repeatMode === 'ALL' && this.playlist.length > 0) {
+      // In repeat ALL mode, wrap around to the last track
+      this.loadTrack(this.playlist.length - 1);
       this.play();
     }
   }
@@ -590,9 +853,22 @@ export class AudioPlayer {
    * Play the next track in the playlist
    */
   playNext() {
+    // If in repeat ONE mode, just restart the current track
+    if (this.repeatMode === 'ONE') {
+      this.audioElement.currentTime = 0;
+      this.play();
+      return;
+    }
+    
     const newIndex = this.currentTrackIndex + 1;
+    
     if (newIndex < this.playlist.length) {
+      // Normal case - next track exists
       this.loadTrack(newIndex);
+      this.play();
+    } else if (this.repeatMode === 'ALL' && this.playlist.length > 0) {
+      // In repeat ALL mode, wrap around to the first track
+      this.loadTrack(0);
       this.play();
     }
   }
@@ -601,14 +877,39 @@ export class AudioPlayer {
    * Handle track ended event
    */
   onTrackEnded() {
-    // Play next track if available
-    const nextIndex = this.currentTrackIndex + 1;
-    if (nextIndex < this.playlist.length) {
-      this.loadTrack(nextIndex);
-      this.play();
-    } else {
-      // Stop playback if at the end of playlist
-      this.stop();
+    // Handle based on repeat mode
+    switch (this.repeatMode) {
+      case 'ONE':
+        // Repeat the current track
+        this.loadTrack(this.currentTrackIndex);
+        this.play();
+        break;
+        
+      case 'ALL':
+        // If at the end of playlist, go back to the beginning
+        const nextIndex = this.currentTrackIndex + 1;
+        if (nextIndex < this.playlist.length) {
+          this.loadTrack(nextIndex);
+          this.play();
+        } else {
+          // Restart from the first track
+          this.loadTrack(0);
+          this.play();
+        }
+        break;
+        
+      case 'OFF':
+      default:
+        // Standard behavior - play next track if available
+        const standardNextIndex = this.currentTrackIndex + 1;
+        if (standardNextIndex < this.playlist.length) {
+          this.loadTrack(standardNextIndex);
+          this.play();
+        } else {
+          // Stop playback if at the end of playlist
+          this.stop();
+        }
+        break;
     }
   }
 
@@ -911,6 +1212,9 @@ export class AudioPlayer {
    * Close the player and restore original audio input
    */
   close() {
+    // Save player state before closing
+    this.savePlayerState();
+    
     // Stop playback
     this.stop();
     
