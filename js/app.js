@@ -353,13 +353,8 @@ class App {
             // Display microphone error message at the very end of initialization if there was one
             if (this.hasAudioError) {
                 // Show a non-blocking warning message to the user
-                if (window.electronAPI && window.electronIntegration && window.electronIntegration.isElectron) {
-                    // For Electron version, show a message that music playback will still work
-                    this.uiManager.setError(this.uiManager.t('error.microphoneAccessDeniedElectron'), false);
-                } else {
-                    // For web version, show the actual error
-                    this.uiManager.setError(this.uiManager.t('error.microphoneAccessDenied') + ' ' + this.audioInitResult, false);
-                }
+                this.uiManager.setError(this.uiManager.t('error.microphoneAccessDenied'), false);
+                setTimeout(() => window.uiManager.clearError(), 3000);
             }
         } catch (error) {
             this.uiManager.setError(error.message, true);
@@ -444,59 +439,11 @@ document.addEventListener('dragover', (e) => {
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
         const items = Array.from(e.dataTransfer.items);
         
-        // In Electron environment, always add drag-over class for any file
-        if (window.electronIntegration && window.electronIntegration.isElectron) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = 'copy';
-            document.body.classList.add('drag-over');
-            return;
-        }
-        
-        // For web environment, continue with normal checks
-        
-        // Check for preset files
-        const hasPresetFiles = items.some(item =>
-            item.kind === 'file' &&
-            (item.type === '' || item.type === 'application/octet-stream') && // Preset files often have no specific MIME type
-            (item.getAsFile()?.name.endsWith('.effetune_preset') || false)
-        );
-        
-        // Check for music files or folders - using similar approach as preset files
-        const hasMusicFiles = items.some(item => {
-            if (item.kind === 'file') {
-                const file = item.getAsFile();
-                if (!file) return false;
-                
-                // First check: file extension for audio files
-                const hasAudioExtension = /\.(mp3|wav|ogg|flac|m4a|aac|aiff|wma|alac)$/i.test(file.name);
-                if (hasAudioExtension) {
-                    return true;
-                }
-                
-                // Second check: MIME type for audio files
-                if (file.type.startsWith('audio/')) {
-                    return true;
-                }
-                
-                // Check for folder (webkitGetAsEntry is only available during dragover/drop)
-                if (item.webkitGetAsEntry && item.webkitGetAsEntry().isDirectory) {
-                    return true;
-                }
-            }
-            return false;
-        });
-        
-        // If we have preset files or music files, allow drop
-        if (hasPresetFiles || hasMusicFiles) {
-            e.preventDefault();
-            e.stopPropagation();
-            // Explicitly set dropEffect to 'copy' to show the user that dropping is allowed
-            e.dataTransfer.dropEffect = 'copy';
-            
-            // Add visual feedback
-            document.body.classList.add('drag-over');
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'copy';
+        document.body.classList.add('drag-over');
+        return;
     }
 }, true); // Use capture phase to ensure this handler runs first
 
@@ -660,15 +607,16 @@ document.addEventListener('drop', async (e) => {
                 const dropArea = window.uiManager?.pipelineManager?.dropArea;
                 
                 if (dropArea && isDroppedOnFileDropArea) {
-                    // Only process files if they were dropped on the file-drop-area
+                    // Process files if they were dropped on the file-drop-area
                     window.uiManager.pipelineManager.processDroppedAudioFiles(musicFiles);
                 } else {
-                    // Files were dropped elsewhere, show error
-                    window.uiManager.setError('error.browserPlaybackNotSupported', true);
-                    setTimeout(() => window.uiManager.clearError(), 3000);
+                    // Pass File objects directly to the audio player
+                    if (window.uiManager) {
+                        window.uiManager.createAudioPlayer(musicFiles, false);
+                    }
                 }
             } else {
-                // In Electron environment, pass File objects directly to the audio player
+                // Pass File objects directly to the audio player
                 if (window.uiManager) {
                     window.uiManager.createAudioPlayer(musicFiles, false);
                 }

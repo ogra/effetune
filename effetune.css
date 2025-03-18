@@ -851,6 +851,7 @@ input {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: background-color 0.2s ease;
 }
 
 .player-button:hover {
@@ -859,4 +860,9 @@ input {
 
 .player-button:active {
     background-color: #6d6d6d;
+}
+
+.player-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

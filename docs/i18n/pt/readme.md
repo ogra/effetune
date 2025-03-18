@@ -25,12 +25,12 @@ Sem mitos audiófilos, apenas pura ciência.
 
 Antes de usar o EffeTune, você precisará configurar o roteamento de áudio. Veja como configurar diferentes fontes de áudio:
 
-### Configuração do Reprodutor de Arquivos de Música (apenas aplicativo desktop)
+### Configuração do Reprodutor de Arquivos de Música
 
-- Instale e inicie o aplicativo desktop EffeTune
+- Abra o aplicativo web EffeTune em seu navegador, ou inicie o aplicativo desktop EffeTune
 - Abra e reproduza um arquivo de música para garantir a reprodução adequada
-   - Abra um arquivo de música e selecione EffeTune como o aplicativo
-   - Ou selecione Abrir arquivo de música... no menu Arquivo
+   - Abra um arquivo de música e selecione EffeTune como o aplicativo (apenas aplicativo desktop)
+   - Ou selecione Abrir arquivo de música... no menu Arquivo (apenas aplicativo desktop)
    - Ou arraste o arquivo de música para a janela
 
 ### Configuração para Serviços de Streaming

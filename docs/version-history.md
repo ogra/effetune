@@ -3,6 +3,8 @@
 ### Version 1.31 (Mar 18, 2025)
 - Added Mac and Linux builds
 - Change license from BSD 3-Clause to MIT License
+- Added player function to the web app version
+- Added repeat and shuffle playback features to player
 - Various minor improvements
 
 ### Version 1.30 (Mar 16, 2025)
