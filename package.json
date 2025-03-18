@@ -121,7 +121,6 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "icon.icns",
       "category": "public.app-category.music",
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}"
