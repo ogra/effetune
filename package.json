@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "electron": "^35.0.0",
+    "electron": "^35.0.2",
     "electron-builder": "^24.13.3",
     "fs-extra": "^11.3.0",
     "mkdirp": "^3.0.1",
@@ -30,7 +30,7 @@
     "productName": "EffeTune",
     "directories": {
       "output": "dist",
-      "buildResources": "."
+      "buildResources": "build"
     },
     "files": [
       "**/*",
@@ -121,7 +121,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "images/favicon.icns",
+      "icon": "icon.icns",
       "category": "public.app-category.music",
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}"
