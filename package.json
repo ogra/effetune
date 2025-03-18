@@ -9,9 +9,7 @@
     "build": "npm run clean && electron-builder --win --publish never",
     "build:portable": "npm run clean && electron-builder --win portable --publish never",
     "build:installer": "npm run clean && electron-builder --win nsis --publish never",
-    "prepare-icons": "node scripts/prepare-icons.js",
     "build:mac": "npm run clean && electron-builder --mac --publish never",
-    "postbuild:mac": "npm run prepare-icons",
     "build:linux": "npm run clean && electron-builder --linux --publish never",
     "pack": "npm run clean && electron-builder --dir",
     "dist": "electron-builder"
@@ -123,6 +121,7 @@
     },
     "mac": {
       "target": "dmg",
+      "icon": "images/favicon.icns",
       "category": "public.app-category.music",
       "darkModeSupport": true,
       "artifactName": "${productName}-${version}.${ext}"
