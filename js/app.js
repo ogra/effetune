@@ -425,12 +425,82 @@ isFirstLaunchPromise.then(isFirstLaunch => {
     
     // Initialize the app
     app.initialize();
+    
+    // Add event listener for the "Open Music" button
+    const openMusicButton = document.getElementById('openMusicButton');
+    if (openMusicButton) {
+        // Create a hidden file input element for web browser environment
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.multiple = true;
+        fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+        
+        // Add change event listener to the file input
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files && event.target.files.length > 0) {
+                // Convert FileList to Array
+                const files = Array.from(event.target.files);
+                // Pass File objects directly to the audio player
+                if (window.uiManager) {
+                    window.uiManager.createAudioPlayer(files, false);
+                }
+            }
+        });
+        
+        // Add click event listener to the button
+        openMusicButton.addEventListener('click', () => {
+            // If in Electron environment, use Electron's file dialog
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                window.electronIntegration.openMusicFile();
+            } else {
+                // In web browser environment, trigger the file input
+                fileInput.click();
+            }
+        });
+    }
 }).catch(error => {
     // Initialize anyway in case of error
     window.isFirstLaunchConfirmed = false;
     const app = new App();
     window.uiManager = app.uiManager;
     app.initialize();
+    
+    // Add event listener for the "Open Music" button even in case of error
+    const openMusicButton = document.getElementById('openMusicButton');
+    if (openMusicButton) {
+        // Create a hidden file input element for web browser environment
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.multiple = true;
+        fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+        
+        // Add change event listener to the file input
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files && event.target.files.length > 0) {
+                // Convert FileList to Array
+                const files = Array.from(event.target.files);
+                // Pass File objects directly to the audio player
+                if (window.uiManager) {
+                    window.uiManager.createAudioPlayer(files, false);
+                }
+            }
+        });
+        
+        // Add click event listener to the button
+        openMusicButton.addEventListener('click', () => {
+            // If in Electron environment, use Electron's file dialog
+            if (window.electronIntegration && window.electronIntegration.isElectron) {
+                window.electronIntegration.openMusicFile();
+            } else {
+                // In web browser environment, trigger the file input
+                fileInput.click();
+            }
+        });
+    }
 });
 
 // Add global drag and drop support for preset files and music files

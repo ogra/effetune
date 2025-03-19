@@ -69,10 +69,26 @@ input {
     border-radius: 4px;
 }
 
-.reset-button {
+.header-buttons {
     position: absolute;
     right: 0;
     top: 0;
+    display: flex;
+    gap: 10px;
+}
+
+.open-music-button {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.open-music-button img {
+    width: 16px;
+    height: 16px;
 }
 
 .header-button:hover {
@@ -492,7 +508,9 @@ input {
 .save-button,
 .delete-preset-button,
 .help-button,
-.delete-button {
+.delete-button,
+.move-up-button,
+.move-down-button {
     padding: 4px 8px;
     background-color: #4d4d4d;
     border: 1px solid #5d5d5d;
@@ -511,6 +529,12 @@ input {
     margin-right: 5px;
 }
 
+.move-up-button,
+.move-down-button {
+    color: #a8a8a8;
+    margin-right: 5px;
+}
+
 .share-button {
     margin-left: 10px;
 }
@@ -525,7 +549,9 @@ input {
 }
 
 .help-button:hover,
-.delete-button:hover {
+.delete-button:hover,
+.move-up-button:hover,
+.move-down-button:hover {
     background-color: #5d5d5d;
 }
 

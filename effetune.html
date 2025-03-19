@@ -13,7 +13,10 @@
 <body>
     <div class="title-container">
         <h1>Frieve EffeTune<img src="images/icon_64x64.png" class="title-icon" alt="EffeTune Icon"><div class="message-display" id="errorDisplay">Loading...</div></h1>
-        <button class="header-button reset-button" id="resetButton">Reset Audio</button>
+        <div class="header-buttons">
+            <button class="header-button open-music-button" id="openMusicButton"><img src="images/open_button.png" width="16" height="16"></button>
+            <button class="header-button reset-button" id="resetButton">Reset Audio</button>
+        </div>
         <div class="subtitle-container">
             <span class="subtitle">Color the music, unleash your senses. Craft your own signature sound.</span>
             <a href="javascript:void(0);" class="whats-this" id="whatsThisLink">What's this app?</a>
@@ -42,7 +45,7 @@
                         <input type="text" class="preset-select" id="presetSelect" list="presetList" placeholder="">
                     </div>
                     <datalist id="presetList"></datalist>
-                    <button class="header-button save-button" id="savePresetButton">💾</button>
+                    <button class="header-button save-button" id="savePresetButton"><img src="images/save_button.png" width="16" height="16"></button>
                     <button class="header-button delete-preset-button" id="deletePresetButton">✖</button>
                     <button class="header-button share-button" id="shareButton">Share</button>
                 </div>

@@ -1,6 +1,6 @@
 {
   "name": "effetune",
-  "version": "1.31.0",
+  "version": "1.32.0",
   "description": "Desktop Audio Effect Processor",
   "main": "main.js",
   "scripts": {
@@ -126,7 +126,15 @@
     },
     "dmg": {},
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "category": "Audio",
+      "executableName": "effetune",
+      "desktop": {
+        "Name": "EffeTune",
+        "Comment": "Desktop Audio Effect Processor",
+        "GenericName": "Audio Processor",
+        "StartupWMClass": "EffeTune"
+      }
     },
     "asar": true,
     "asarUnpack": [],

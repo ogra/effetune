@@ -73,12 +73,12 @@ def process_windows(version):
     create_directory(settings_dir)
     
     # Compress win-unpacked folder to ZIP
-    portable_zip = os.path.join('dist', f'EffeTune-{version}-Portable.zip')
+    portable_zip = os.path.join('dist', f'EffeTune-{version}-Windows-Portable.zip')
     zip_directory(os.path.join('dist', 'win-unpacked'), portable_zip)
     
     # Compress Setup.exe to ZIP
     setup_exe = os.path.join('dist', f'EffeTune-{version}-Setup.exe')
-    setup_zip = os.path.join('dist', f'EffeTune-{version}-Setup.zip')
+    setup_zip = os.path.join('dist', f'EffeTune-{version}-Windows-Setup.zip')
     if os.path.exists(setup_exe):
         zip_file(setup_exe, setup_zip)
     else:
@@ -95,13 +95,13 @@ def process_macos(version):
         create_directory(settings_dir)
         
         # Compress mac-unpacked folder to ZIP
-        portable_zip = os.path.join('dist', f'EffeTune-{version}-Portable.zip')
+        portable_zip = os.path.join('dist', f'EffeTune-{version}-MacOS-Portable.zip')
         zip_directory(mac_unpacked, portable_zip)
     
     # Compress DMG file to ZIP
     dmg_file = os.path.join('dist', f'EffeTune-{version}.dmg')
     if os.path.exists(dmg_file):
-        dmg_zip = os.path.join('dist', f'EffeTune-{version}-DMG.zip')
+        dmg_zip = os.path.join('dist', f'EffeTune-{version}-MacOS-DMG.zip')
         zip_file(dmg_file, dmg_zip)
     else:
         print(f"Warning: {dmg_file} not found")
@@ -117,13 +117,13 @@ def process_linux(version):
         create_directory(settings_dir)
         
         # Compress linux-unpacked folder to ZIP
-        portable_zip = os.path.join('dist', f'EffeTune-{version}-Portable.zip')
+        portable_zip = os.path.join('dist', f'EffeTune-{version}-Linux-Portable.zip')
         zip_directory(linux_unpacked, portable_zip)
     
     # Compress AppImage file to ZIP
     appimage_file = os.path.join('dist', f'EffeTune-{version}.AppImage')
     if os.path.exists(appimage_file):
-        appimage_zip = os.path.join('dist', f'EffeTune-{version}-AppImage.zip')
+        appimage_zip = os.path.join('dist', f'EffeTune-{version}-Linux-AppImage.zip')
         zip_file(appimage_file, appimage_zip)
     else:
         print(f"Warning: {appimage_file} not found")

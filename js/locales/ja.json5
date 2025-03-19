@@ -43,11 +43,11 @@
   "ui.shareButton": "共有",
   "ui.dragEffectMessage": "エフェクトをドラッグして、エフェクトパイプライン内の希望する位置に追加してください。\nまたは、エフェクトをダブルクリックしてエフェクトパイプラインに追加できます。",
   "ui.dragPluginsHere": "プラグインをここにドラッグしてエフェクトパイプラインを構築",
-  "ui.effectsAvailable": "{count}個のエフェクトが利用可能です",
-  "ui.effectsFound": "{count}個のエフェクトが見つかりました",
+  "ui.effectsAvailable": "{count}種類のエフェクトが利用可能です",
+  "ui.effectsFound": "{count}種類のエフェクトが見つかりました",
   "ui.searchEffectsPlaceholder": "エフェクトを検索...",
   "ui.sleepMode": "スリープモード",
-  "ui.whatsThisApp": "このアプリは何？",
+  "ui.whatsThisApp": "何このアプリ？",
 
   // ファイル処理UI
   "ui.dropAudioFiles": "オーディオファイルをここにドロップして、現在のエフェクトで処理",

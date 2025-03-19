@@ -6,8 +6,8 @@ Basics: Basic audio effects
 Delay: Delay effects
 Dynamics: Dynamic range effects
 EQ: Equalization effects
-Filter: Time-based filter effects
 Lo-Fi: Lo-Fi audio effects
+Modulation: Modulation effects
 Others: Other audio tools and generators
 Reverb: Reverberation effects
 Saturation: Saturation and distortion effects
@@ -37,10 +37,11 @@ eq/five_band_peq: 5Band PEQ | EQ | FiveBandPEQPlugin | css
 eq/loudness_equalizer: Loudness Equalizer | EQ | LoudnessEqualizerPlugin | css
 eq/narrow_range: Narrow Range | EQ | NarrowRangePlugin | css
 eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
-filter/wow_flutter: Wow Flutter | Filter | WowFlutterPlugin | css
 lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
 lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
 lofi/simple_jitter: Simple Jitter | Lo-Fi | SimpleJitterPlugin | css
+modulation/tremolo: Tremolo | Modulation | TremoloPlugin | css
+modulation/wow_flutter: Wow Flutter | Modulation | WowFlutterPlugin | css
 others/oscillator: Oscillator | Others | OscillatorPlugin | css
 reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css

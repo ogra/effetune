@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.32 (Mar 19, 2025)
+- Added a button to open files and a button to move effects up and down for use on smartphones (but it is still intended for use on PCs).
+- Added tremolo effect
+- Various minor improvements
+
 ### Version 1.31 (Mar 18, 2025)
 - Added Mac and Linux builds
 - Change license from BSD 3-Clause to MIT License

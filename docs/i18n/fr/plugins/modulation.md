@@ -1,0 +1,188 @@
+# Modulation Plugins
+
+Une collection de plugins qui ajoutent du mouvement et de la variation à votre musique grâce aux effets de modulation. Ces effets peuvent rendre votre musique numérique plus organique et dynamique, améliorant votre expérience d'écoute avec des variations subtiles ou dramatiques du son.
+
+## Liste des plugins
+
+- [Tremolo](#tremolo) - Crée des variations rythmiques du volume pour un son pulsé et dynamique
+- [Wow Flutter](#wow-flutter) - Recrée les subtiles variations de hauteur des disques vinyles et des lecteurs de cassette
+
+## Tremolo
+
+Un effet qui ajoute des variations rythmiques du volume à votre musique, similaire au son pulsé que l'on retrouve dans les amplificateurs vintage et les enregistrements classiques. Cela crée une qualité dynamique et expressive qui apporte mouvement et intérêt à votre expérience d'écoute.
+
+### Guide de l'expérience d'écoute
+- Expérience d'amplificateur classique :
+  - Recrée le son pulsé emblématique des amplificateurs à lampes vintage
+  - Ajoute du mouvement rythmique aux enregistrements statiques
+  - Crée une expérience d'écoute hypnotique et captivante
+- Caractère d'enregistrement vintage :
+  - Simule les effets naturels de tremolo utilisés dans les enregistrements classiques
+  - Ajoute du caractère vintage et de la chaleur
+  - Parfait pour l'écoute de jazz, de blues et de rock
+- Ambiance créative :
+  - Crée des montées et des descentes dramatiques
+  - Ajoute une intensité émotionnelle à la musique
+  - Parfait pour une écoute ambiante et atmosphérique
+
+### Paramètres
+- **Rate** - À quelle vitesse le volume change (0.1 to 20 Hz)
+  - Slower (0.1-2 Hz) : Pulsation douce et subtile
+  - Medium (2-6 Hz) : Effet tremolo classique
+  - Faster (6-20 Hz) : Effets dramatiques et saccadés
+- **Depth** - L'amplitude des variations de volume (0 to 12 dB)
+  - Subtle (0-3 dB) : Variations de volume légères
+  - Medium (3-6 dB) : Effet de pulsation perceptible
+  - Strong (6-12 dB) : Montées de volume dramatiques
+- **Ch Phase** - Différence de phase entre les canaux stéréo (-180 à 180 degrés)
+  - 0° : Les deux canaux pulsent ensemble (tremolo mono)
+  - 90° ou -90° : Crée un effet de rotation tourbillonnant
+  - 180° ou -180° : Les canaux pulsent en sens opposé (largeur stéréo maximale)
+- **Randomness** - Irrégularité des variations de volume (0 to 96 dB)
+  - Low : Pulsations plus prévisibles et régulières
+  - Medium : Variation vintage naturelle
+  - High : Son plus instable et organique
+- **Randomness Cutoff** - Vitesse d'occurrence des variations aléatoires (1 to 1000 Hz)
+  - Lower : Variations aléatoires plus lentes et douces
+  - Higher : Variations plus rapides et erratiques
+- **Ch Sync** - Synchronisation de l'aléatoire entre les canaux (0 to 100%)
+  - 0% : Chaque canal a une aléatoire indépendante
+  - 50% : Synchronisation partielle entre les canaux
+  - 100% : Les deux canaux partagent le même schéma d'aléatoire
+
+### Réglages recommandés pour différents styles
+
+1. Tremolo d'ampli guitare classique
+   - Rate: 4-6 Hz (vitesse moyenne)
+   - Depth: 6-8 dB
+   - Ch Phase: 0° (mono)
+   - Randomness: 0-5 dB
+   - Parfait pour : Blues, Rock, Surf Music
+
+2. Effet psychédélique stéréo
+   - Rate: 2-4 Hz
+   - Depth: 4-6 dB
+   - Ch Phase: 180° (canaux opposés)
+   - Randomness: 10-20 dB
+   - Parfait pour : Psychedelic Rock, Electronic, Experimental
+
+3. Amélioration subtile
+   - Rate: 1-2 Hz
+   - Depth: 2-3 dB
+   - Ch Phase: 0-45°
+   - Randomness: 5-10 dB
+   - Parfait pour : Toute musique nécessitant un mouvement subtil
+
+4. Pulsation dramatique
+   - Rate: 8-12 Hz
+   - Depth: 8-12 dB
+   - Ch Phase: 90°
+   - Randomness: 20-30 dB
+   - Parfait pour : Electronic, Dance, Ambient
+
+### Guide de démarrage rapide
+
+1. Pour un son Tremolo classique :
+   - Commencez avec un Rate moyen (4-5 Hz)
+   - Ajoutez un Depth modéré (6 dB)
+   - Réglez Ch Phase sur 0° pour un effet mono ou 90° pour un mouvement stéréo
+   - Gardez Randomness bas (0-5 dB)
+   - Ajustez selon vos préférences
+
+2. Pour plus de caractère :
+   - Augmentez progressivement Randomness
+   - Expérimentez avec différents réglages de Ch Phase
+   - Essayez différentes combinaisons de Rate et Depth
+   - Fiez-vous à votre oreille
+
+## Wow Flutter
+
+Un effet qui ajoute des variations subtiles de hauteur à votre musique, semblable au son ondulant naturel que vous vous rappelez peut-être des disques vinyles ou des cassettes. Cela crée une sensation chaleureuse et nostalgique que beaucoup trouvent agréable et relaxante.
+
+### Guide de l'expérience d'écoute
+- Expérience de disque vinyle :
+  - Recrée l'ondulation douce des platines
+  - Ajoute un mouvement organique au son
+  - Crée une atmosphère chaleureuse et nostalgique
+- Souvenir de cassette :
+  - Simule le flutter caractéristique des magnétocassette
+  - Ajoute le caractère vintage d'un magnétocassette
+  - Parfait pour les ambiances lo-fi et rétro
+- Ambiance créative :
+  - Crée des effets oniriques et aquatiques
+  - Ajoute du mouvement et de la vie aux sons statiques
+  - Parfait pour une écoute ambiante et expérimentale
+
+### Paramètres
+- **Rate** - À quelle vitesse le son oscille (0.1 to 20 Hz)
+  - Slower (0.1-2 Hz) : Mouvement semblable à un disque vinyle
+  - Medium (2-6 Hz) : Flutter similaire à celui d'une cassette
+  - Faster (6-20 Hz) : Effets créatifs
+- **Depth** - L'amplitude des variations de hauteur (0 to 40 ms)
+  - Subtle (0-10 ms) : Caractère vintage subtil
+  - Medium (10-20 ms) : Sensation classique de cassette/vinyle
+  - Strong (20-40 ms) : Effets dramatiques
+- **Ch Phase** - Différence de phase entre les canaux stéréo (-180 à 180 degrés)
+  - 0° : Les deux canaux oscillent ensemble
+  - 90° ou -90° : Crée un effet de rotation tourbillonnant
+  - 180° ou -180° : Les canaux oscillent en sens opposé
+- **Randomness** - Irrégularité de l'oscillation (0 to 40 ms)
+  - Low : Mouvement plus prévisible et régulier
+  - Medium : Variation vintage naturelle
+  - High : Son plus instable, rappelant un équipement usé
+- **Randomness Cutoff** - Vitesse d'occurrence des variations aléatoires (0.1 to 20 Hz)
+  - Lower : Changements plus lents et doux
+  - Higher : Changements plus rapides et erratiques
+- **Ch Sync** - Synchronisation de l'aléatoire entre les canaux (0 to 100%)
+  - 0% : Chaque canal a une aléatoire indépendante
+  - 50% : Synchronisation partielle entre les canaux
+  - 100% : Les deux canaux partagent le même schéma d'aléatoire
+
+### Réglages recommandés pour différents styles
+
+1. Expérience classique du vinyle
+   - Rate: 0.5-1 Hz (mouvement lent et doux)
+   - Depth: 15-20 ms
+   - Randomness: 10-15 ms
+   - Ch Phase: 0°
+   - Ch Sync: 100%
+   - Parfait pour : Jazz, Classical, Vintage Rock
+2. Ambiance cassette rétro
+   - Rate: 4-5 Hz (flutter plus rapide)
+   - Depth: 10-15 ms
+   - Randomness: 15-20 ms
+   - Ch Phase: 0-45°
+   - Ch Sync: 80-100%
+   - Parfait pour : Lo-Fi, Pop, Rock
+3. Ambiance onirique
+   - Rate: 1-2 Hz
+   - Depth: 25-30 ms
+   - Randomness: 20-25 ms
+   - Ch Phase: 90-180°
+   - Ch Sync: 50-70%
+   - Parfait pour : Ambient, Electronic, Experimental
+4. Amélioration subtile
+   - Rate: 2-3 Hz
+   - Depth: 5-10 ms
+   - Randomness: 5-10 ms
+   - Ch Phase: 0°
+   - Ch Sync: 100%
+   - Parfait pour : Toute musique nécessitant un caractère vintage subtil
+
+### Guide de démarrage rapide
+
+1. Pour un son vintage naturel :
+   - Commencez avec un Rate lent (1 Hz)
+   - Ajoutez un Depth modéré (15 ms)
+   - Ajoutez un peu de Randomness (10 ms)
+   - Maintenez Ch Phase à 0° et Ch Sync à 100%
+   - Ajustez selon vos préférences
+
+2. Pour plus de caractère :
+   - Augmentez progressivement Depth
+   - Ajoutez davantage de Randomness
+   - Expérimentez avec différents réglages de Ch Phase
+   - Réduisez Ch Sync pour plus de variation stéréo
+   - Fiez-vous à votre oreille
+
+Rappelez-vous : Le but est d'ajouter un caractère vintage agréable à votre musique. Commencez subtilement et ajustez jusqu'à trouver le juste équilibre qui améliore votre expérience d'écoute!

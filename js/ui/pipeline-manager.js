@@ -908,6 +908,68 @@ export class PipelineManager {
         name.textContent = plugin.name;
         header.appendChild(name);
 
+        // Move up button
+        const moveUpBtn = document.createElement('button');
+        moveUpBtn.className = 'move-up-button';
+        moveUpBtn.textContent = '▲';
+        moveUpBtn.title = 'Move effect up';
+        moveUpBtn.onclick = (e) => {
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
+            
+            // Get the index of the plugin
+            const index = this.audioManager.pipeline.indexOf(plugin);
+            
+            // Can't move up if it's the first plugin
+            if (index <= 0) return;
+            
+            // Swap with the plugin above
+            const temp = this.audioManager.pipeline[index - 1];
+            this.audioManager.pipeline[index - 1] = plugin;
+            this.audioManager.pipeline[index] = temp;
+            
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugins();
+            
+            // Save state for undo/redo
+            this.saveState();
+            
+            // Update UI
+            this.updatePipelineUI();
+        };
+        header.appendChild(moveUpBtn);
+
+        // Move down button
+        const moveDownBtn = document.createElement('button');
+        moveDownBtn.className = 'move-down-button';
+        moveDownBtn.textContent = '▼';
+        moveDownBtn.title = 'Move effect down';
+        moveDownBtn.onclick = (e) => {
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
+            
+            // Get the index of the plugin
+            const index = this.audioManager.pipeline.indexOf(plugin);
+            
+            // Can't move down if it's the last plugin
+            if (index >= this.audioManager.pipeline.length - 1) return;
+            
+            // Swap with the plugin below
+            const temp = this.audioManager.pipeline[index + 1];
+            this.audioManager.pipeline[index + 1] = plugin;
+            this.audioManager.pipeline[index] = temp;
+            
+            // Update worklet directly without rebuilding pipeline
+            this.updateWorkletPlugins();
+            
+            // Save state for undo/redo
+            this.saveState();
+            
+            // Update UI
+            this.updatePipelineUI();
+        };
+        header.appendChild(moveDownBtn);
+
         // Help button
         const helpBtn = document.createElement('button');
         helpBtn.className = 'help-button';

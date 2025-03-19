@@ -1,0 +1,8 @@
+/* Tremolo plugin specific styles */
+.tremolo-plugin-ui {
+    position: relative;
+}
+
+.tremolo-plugin-ui label {
+    min-width: 140px;
+}
