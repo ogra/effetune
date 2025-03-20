@@ -260,6 +260,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Lo-Fi    | Bit Crusher        | बिट डेप्थ में कमी और जीरो-ऑर्डर होल्ड इफेक्ट                | [विवरण](plugins/lofi.md#bit-crusher) |
 | Lo-Fi    | Noise Blender      | नॉइज जनरेशन और मिक्सिंग                                   | [विवरण](plugins/lofi.md#noise-blender) |
 | Lo-Fi    | Simple Jitter      | डिजिटल जिटर सिमुलेशन                                      | [विवरण](plugins/lofi.md#simple-jitter) |
+| Modulation | Pitch Shifter | हल्का पिच शिफ्टिंग प्रभाव | [विवरण](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | वॉल्यूम आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | समय आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb          | प्राकृतिक विसरण के साथ रैंडम स्कैटरिंग रिवर्ब              | [विवरण](plugins/reverb.md#rs-reverb) |

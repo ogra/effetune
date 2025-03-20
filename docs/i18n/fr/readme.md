@@ -259,6 +259,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Lo-Fi     | Bit Crusher | Réduction de la profondeur de bits et effet de maintien zéro | [Détails](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender | Génération et mélange de bruit | [Détails](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter | Simulation de jitter numérique | [Détails](plugins/lofi.md#simple-jitter) |
+| Modulation | Pitch Shifter | Effet léger de changement de hauteur tonale | [Détails](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Effet de modulation basé sur le volume | [Détails](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Effet de modulation basé sur le temps | [Détails](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Réverbération à diffusion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |

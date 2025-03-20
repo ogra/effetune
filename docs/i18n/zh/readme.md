@@ -260,6 +260,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Lo-Fi     | Bit Crusher       | 位深度降低及零阶保持效果                       | [详情](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender     | 噪声生成与混合                              | [详情](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter     | 数字抖动模拟                               | [详情](plugins/lofi.md#simple-jitter) |
+| Modulation | Pitch Shifter | 轻量级音高变换效果 | [详情](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 基于音量的调制效果 | [详情](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |

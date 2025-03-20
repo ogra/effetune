@@ -262,6 +262,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Lo-Fi     | Bit Crusher | Reducción de la profundidad de bits y efecto de retención de orden cero | [Detalles](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender | Generación y mezcla de ruido | [Detalles](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter | Simulación digital de jitter | [Detalles](plugins/lofi.md#simple-jitter) |
+| Modulation | Pitch Shifter | Efecto ligero de cambio de tono | [Detalles](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Efecto de modulación basado en volumen | [Detalles](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Efecto de modulación basado en tiempo | [Detalles](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Reverb de dispersión aleatoria con difusión natural | [Detalles](plugins/reverb.md#rs-reverb) |

@@ -260,6 +260,7 @@
 | Lo-Fi    | Bit Crusher     | تقليل عمق البت وتأثير التعليق صفر المرتبة                      | [تفاصيل](plugins/lofi.md#bit-crusher)            |
 | Lo-Fi    | Noise Blender   | توليد وخلط الضوضاء                                          | [تفاصيل](plugins/lofi.md#noise-blender)          |
 | Lo-Fi    | Simple Jitter   | محاكاة التذبذب الرقمي                                       | [تفاصيل](plugins/lofi.md#simple-jitter)          |
+| Modulation | Pitch Shifter | تأثير خفيف لتغيير حدة الصوت | [تفاصيل](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | تأثير تعديل يعتمد على مستوى الصوت | [تفاصيل](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |

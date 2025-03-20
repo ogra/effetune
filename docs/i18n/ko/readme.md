@@ -262,6 +262,7 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Lo-Fi     | Bit Crusher        | 비트 깊이 감소 및 제로 오더 홀드 이펙트              | [세부 정보](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender      | 노이즈 생성 및 혼합                                 | [세부 정보](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter      | 디지털 지터 시뮬레이션                             | [세부 정보](plugins/lofi.md#simple-jitter) |
+| Modulation | Pitch Shifter | 가벼운 피치 시프팅 효과 | [세부 정보](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 볼륨 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 시간 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb          | 자연스러운 확산을 갖춘 랜덤 스캐터링 리버브          | [세부 정보](plugins/reverb.md#rs-reverb) |

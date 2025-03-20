@@ -266,6 +266,7 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Lo-Fi      | Bit Crusher           | ビット深度の削減とゼロオーダーホールドエフェクト             | [詳細](plugins/lofi.md#bit-crusher)                         |
 | Lo-Fi      | Noise Blender         | ノイズの生成とミキシング                                   | [詳細](plugins/lofi.md#noise-blender)                       |
 | Lo-Fi      | Simple Jitter         | デジタルジッターのシミュレーション                         | [詳細](plugins/lofi.md#simple-jitter)                       |
+| Modulation | Pitch Shifter | 軽量なピッチシフト効果 | [詳細](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 音量ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 時間ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#wow-flutter) |
 | Reverb     | RS Reverb             | 自然な拡散を伴うランダム散乱リバーブ                         | [詳細](plugins/reverb.md#rs-reverb)                         |
