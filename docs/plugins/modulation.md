@@ -4,8 +4,30 @@ A collection of plugins that add movement and variation to your music through mo
 
 ## Plugin List
 
+- [Pitch Shifter](#pitch-shifter) - Changes the pitch of your music without affecting playback speed
 - [Tremolo](#tremolo) - Creates rhythmic volume variations for a pulsing, dynamic sound
 - [Wow Flutter](#wow-flutter) - Recreates the gentle pitch variations of vinyl records and tape players
+
+## Pitch Shifter
+
+An effect that changes the pitch of your music without affecting its playback speed. This allows you to experience your favorite songs in different keys, making them sound higher or lower while maintaining the original tempo and rhythm.
+
+### Parameters
+- **Pitch Shift** - Changes the overall pitch in semitones (-6 to +6)
+  - Negative values: Lowers the pitch (deeper, lower sound)
+  - Zero: No change (original pitch)
+  - Positive values: Raises the pitch (higher, brighter sound)
+- **Fine Tune** - Makes subtle pitch adjustments in cents (-50 to +50)
+  - Allows for precise tuning between semitones
+  - Perfect for minor adjustments when a full semitone is too much
+- **Window Size** - Controls the analysis window size in milliseconds (80 to 500ms)
+  - Smaller values (80-150ms): Better for transient-rich material like percussion
+  - Medium values (150-300ms): Good balance for most music
+  - Larger values (300-500ms): Better for smooth, sustained sounds
+- **XFade Time** - Sets the crossfade time between processed segments in milliseconds (20 to 40ms)
+  - Affects how smoothly the pitch-shifted segments blend together
+  - Lower values may sound more immediate but potentially less smooth
+  - Higher values create smoother transitions between segments, but may increase sound wavering and create an overlapping sensation
 
 ## Tremolo
 

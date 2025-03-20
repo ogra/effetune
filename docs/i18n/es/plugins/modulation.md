@@ -4,8 +4,30 @@ Una colección de plugins que añaden movimiento y variación a tu música media
 
 ## Lista de Plugins
 
-- [Tremolo](#tremolo) - Crea variaciones rítmicas en el volumen para un sonido pulsante y dinámico
-- [Wow Flutter](#wow-flutter) - Recrea las sutiles variaciones de tono de los discos de vinilo y reproductores de casetes
+- [Pitch Shifter](#pitch-shifter) - Cambia el tono de tu música sin afectar la velocidad de reproducción
+- [Tremolo](#tremolo) - Crea variaciones rítmicas de volumen para un sonido pulsante y dinámico
+- [Wow Flutter](#wow-flutter) - Recrea las suaves variaciones de tono de los discos de vinilo y los reproductores de cinta
+
+## Pitch Shifter
+
+Un efecto que cambia el tono de tu música sin afectar su velocidad de reproducción. Esto te permite experimentar tus canciones favoritas en diferentes tonalidades, haciendo que suenen más altas o más bajas mientras se mantiene el tempo y ritmo original.
+
+### Parámetros
+- **Pitch Shift** - Cambia el tono general en semitonos (-6 a +6)
+  - Valores negativos: Baja el tono (sonido más profundo y grave)
+  - Cero: Sin cambio (tono original)
+  - Valores positivos: Eleva el tono (sonido más agudo y brillante)
+- **Fine Tune** - Realiza ajustes sutiles en el tono en centésimas (-50 a +50)
+  - Permite una afinación precisa entre semitonos
+  - Perfecto para ajustes menores cuando un semitono completo es excesivo
+- **Window Size** - Controla el tamaño de la ventana de análisis en milisegundos (80 a 500ms)
+  - Valores más pequeños (80-150ms): Mejor para material rico en transitorios como la percusión
+  - Valores medios (150-300ms): Buen equilibrio para la mayoría de la música
+  - Valores más grandes (300-500ms): Mejor para sonidos suaves y sostenidos
+- **XFade Time** - Establece el tiempo de crossfade entre segmentos procesados en milisegundos (20 a 40ms)
+  - Afecta la suavidad con la que se mezclan los segmentos con cambio de tono
+  - Valores más bajos pueden sonar más inmediatos pero potencialmente menos suaves
+  - Valores más altos crean transiciones más suaves entre segmentos, pero pueden aumentar la fluctuación del sonido y generar una sensación de superposición
 
 ## Tremolo
 

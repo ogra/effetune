@@ -40,8 +40,9 @@ eq/tone_control: Tone Control | EQ | ToneControlPlugin | css
 lofi/bit_crusher: Bit Crusher | Lo-Fi | BitCrusherPlugin | css
 lofi/noise_blender: Noise Blender | Lo-Fi | NoiseBlenderPlugin | css
 lofi/simple_jitter: Simple Jitter | Lo-Fi | SimpleJitterPlugin | css
-modulation/tremolo: Tremolo | Modulation | TremoloPlugin | css
-modulation/wow_flutter: Wow Flutter | Modulation | WowFlutterPlugin | css
+modulation/pitch_shifter: Pitch Shifter | Modulation | PitchShifterPlugin
+modulation/tremolo: Tremolo | Modulation | TremoloPlugin
+modulation/wow_flutter: Wow Flutter | Modulation | WowFlutterPlugin
 others/oscillator: Oscillator | Others | OscillatorPlugin | css
 reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css

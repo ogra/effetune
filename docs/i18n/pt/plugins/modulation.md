@@ -1,11 +1,33 @@
 # Modulation Plugins
 
-Uma coleção de plugins que adicionam movimento e variação à sua música por meio de efeitos de modulação. Esses efeitos podem fazer sua música digital parecer mais orgânica e dinâmica, aprimorando sua experiência auditiva com variações sutis ou dramáticas no som.
+Uma coleção de plugins que adicionam movimento e variação à sua música através de efeitos de modulação. Esses efeitos podem fazer com que sua música digital pareça mais orgânica e dinâmica, aprimorando sua experiência auditiva com variações sutis ou dramáticas no som.
 
-## Lista de Plugins
+## Plugin List
 
+- [Pitch Shifter](#pitch-shifter) - Altera o tom da sua música sem afetar a velocidade de reprodução
 - [Tremolo](#tremolo) - Cria variações rítmicas de volume para um som pulsante e dinâmico
-- [Wow Flutter](#wow-flutter) - Recria as suaves variações de pitch dos discos de vinil e dos tocadores de fita
+- [Wow Flutter](#wow-flutter) - Reproduz as suaves variações de pitch de discos de vinil e toca-fitas
+
+## Pitch Shifter
+
+Um efeito que altera o tom da sua música sem afetar a velocidade de reprodução. Isso permite que você experimente suas músicas favoritas em diferentes tonalidades, fazendo com que soem mais altas ou mais baixas, mantendo o tempo e o ritmo originais.
+
+### Parameters
+- **Pitch Shift** - Altera o tom geral em semitons (-6 a +6)
+  - Valores negativos: Reduz o tom (som mais profundo e grave)
+  - Zero: Sem alteração (tom original)
+  - Valores positivos: Aumenta o tom (som mais agudo e brilhante)
+- **Fine Tune** - Faz ajustes sutis no pitch em cents (-50 a +50)
+  - Permite uma afinação precisa entre semitons
+  - Ideal para pequenos ajustes quando um semitom completo é excessivo
+- **Window Size** - Controla o tamanho da janela de análise em milissegundos (80 a 500ms)
+  - Valores menores (80-150ms): Melhor para materiais ricos em transientes, como percussão
+  - Valores médios (150-300ms): Bom equilíbrio para a maioria das músicas
+  - Valores maiores (300-500ms): Melhor para sons suaves e sustentados
+- **XFade Time** - Define o tempo de crossfade entre segmentos processados em milissegundos (20 a 40ms)
+  - Afeta a suavidade com que os segmentos com pitch modificado se fundem
+  - Valores mais baixos podem soar mais imediatos, porém potencialmente menos suaves
+  - Valores mais altos criam transições mais suaves entre os segmentos, mas podem aumentar a oscilação do som e criar uma sensação de sobreposição
 
 ## Tremolo
 

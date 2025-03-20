@@ -1,11 +1,33 @@
 # Modulation Plugins
 
-Une collection de plugins qui ajoutent du mouvement et de la variation à votre musique grâce aux effets de modulation. Ces effets peuvent rendre votre musique numérique plus organique et dynamique, améliorant votre expérience d'écoute avec des variations subtiles ou dramatiques du son.
+Une collection de plugins qui ajoutent du mouvement et des variations à votre musique grâce aux effets de modulation. Ces effets peuvent rendre votre musique numérique plus organique et dynamique, améliorant votre expérience d'écoute avec des variations subtiles ou dramatiques du son.
 
 ## Liste des plugins
 
-- [Tremolo](#tremolo) - Crée des variations rythmiques du volume pour un son pulsé et dynamique
-- [Wow Flutter](#wow-flutter) - Recrée les subtiles variations de hauteur des disques vinyles et des lecteurs de cassette
+- [Pitch Shifter](#pitch-shifter) - Modifie la hauteur de votre musique sans altérer la vitesse de lecture
+- [Tremolo](#tremolo) - Crée des variations rythmiques de volume pour un son pulsé et dynamique
+- [Wow Flutter](#wow-flutter) - Recrée les légères variations de hauteur caractéristiques des disques vinyles et des magnétophones
+
+## Pitch Shifter
+
+Un effet qui modifie la hauteur de votre musique sans en altérer la vitesse de lecture. Cela vous permet d'écouter vos morceaux préférés dans différentes tonalités, les rendant plus aigus ou plus graves tout en conservant le tempo et le rythme d'origine.
+
+### Paramètres
+- **Pitch Shift** - Modifie la hauteur globale en demi-tons (-6 à +6)
+  - Valeurs négatives : Abaisse la hauteur (son plus grave et profond)
+  - Zéro : Aucun changement (hauteur originale)
+  - Valeurs positives : Augmente la hauteur (son plus aigu et lumineux)
+- **Fine Tune** - Effectue des ajustements fins de la hauteur en cents (-50 à +50)
+  - Permet un réglage précis entre les demi-tons
+  - Idéal pour de légères corrections lorsque l'intervalle d'un demi-ton est trop important
+- **Window Size** - Contrôle la taille de la fenêtre d'analyse en millisecondes (80 à 500ms)
+  - Valeurs plus petites (80-150ms) : Mieux adaptées aux matériaux riches en transitoires comme les percussions
+  - Valeurs moyennes (150-300ms) : Bon compromis pour la plupart des musiques
+  - Valeurs plus grandes (300-500ms) : Mieux adaptées aux sons doux et soutenus
+- **XFade Time** - Définit le temps de fondu enchaîné entre les segments traités en millisecondes (20 à 40ms)
+  - Influence la fluidité de la transition entre les segments modifiés
+  - Des valeurs plus faibles peuvent paraître plus immédiates, mais potentiellement moins fluides
+  - Des valeurs plus élevées créent des transitions plus douces entre les segments, mais peuvent augmenter les fluctuations sonores et provoquer une sensation de chevauchement
 
 ## Tremolo
 
