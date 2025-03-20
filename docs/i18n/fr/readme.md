@@ -256,10 +256,11 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | EQ        | Loudness Equalizer | Correction de l'équilibre fréquentiel pour une écoute à faible volume | [Détails](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range | Combinaison de filtres passe-haut et passe-bas | [Détails](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control | Contrôle de tonalité à trois bandes | [Détails](plugins/eq.md#tone-control) |
-| Filter    | Wow Flutter | Effet de modulation basé sur le temps | [Détails](plugins/filter.md#wow-flutter) |
 | Lo-Fi     | Bit Crusher | Réduction de la profondeur de bits et effet de maintien zéro | [Détails](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender | Génération et mélange de bruit | [Détails](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter | Simulation de jitter numérique | [Détails](plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | Effet de modulation basé sur le volume | [Détails](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | Effet de modulation basé sur le temps | [Détails](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Réverbération à diffusion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Effet de hard clipping numérique | [Détails](plugins/saturation.md#hard-clipping) |
 | Saturation| Multiband Saturation | Effet de saturation 3 bandes pour une chaleur précise basée sur les fréquences | [Détails](plugins/saturation.md#multiband-saturation) |

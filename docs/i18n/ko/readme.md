@@ -259,10 +259,11 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | EQ        | Loudness Equalizer | 낮은 볼륨 청취를 위한 주파수 밸런스 보정             | [세부 정보](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range       | 하이패스 및 로우패스 필터 조합                      | [세부 정보](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control       | 3밴드 톤 컨트롤                                    | [세부 정보](plugins/eq.md#tone-control) |
-| Filter    | Wow Flutter        | 시간 기반 모듈레이션 이펙트                         | [세부 정보](plugins/filter.md#wow-flutter) |
 | Lo-Fi     | Bit Crusher        | 비트 깊이 감소 및 제로 오더 홀드 이펙트              | [세부 정보](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender      | 노이즈 생성 및 혼합                                 | [세부 정보](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter      | 디지털 지터 시뮬레이션                             | [세부 정보](plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | 볼륨 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | 시간 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb          | 자연스러운 확산을 갖춘 랜덤 스캐터링 리버브          | [세부 정보](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping      | 디지털 하드 클리핑 이펙트                           | [세부 정보](plugins/saturation.md#hard-clipping) |
 | Saturation| Multiband Saturation | 정밀한 주파수 기반 온기를 위한 3밴드 서츄레이션 이펙트 | [세부 정보](plugins/saturation.md#multiband-saturation) |

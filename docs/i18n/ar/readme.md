@@ -257,10 +257,11 @@
 | EQ       | Loudness Equalizer | تصحيح توازن الترددات للاستماع بمستوى صوت منخفض              | [تفاصيل](plugins/eq.md#loudness-equalizer)       |
 | EQ       | Narrow Range    | مزيج من مرشحات التردد العالي والمنخفض                       | [تفاصيل](plugins/eq.md#narrow-range)            |
 | EQ       | Tone Control    | تحكم في النغم بثلاث نطاقات                                  | [تفاصيل](plugins/eq.md#tone-control)             |
-| Filter   | Wow Flutter     | تأثير تعديل يعتمد على الزمن                                | [تفاصيل](plugins/filter.md#wow-flutter)         |
 | Lo-Fi    | Bit Crusher     | تقليل عمق البت وتأثير التعليق صفر المرتبة                      | [تفاصيل](plugins/lofi.md#bit-crusher)            |
 | Lo-Fi    | Noise Blender   | توليد وخلط الضوضاء                                          | [تفاصيل](plugins/lofi.md#noise-blender)          |
 | Lo-Fi    | Simple Jitter   | محاكاة التذبذب الرقمي                                       | [تفاصيل](plugins/lofi.md#simple-jitter)          |
+| Modulation | Tremolo | تأثير تعديل يعتمد على مستوى الصوت | [تفاصيل](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |
 | Saturation | Hard Clipping   | تأثير قص رقمي صارم                                         | [تفاصيل](plugins/saturation.md#hard-clipping)    |
 | Saturation | Multiband Saturation | تأثير تشبع بـ 3 نطاقات لدفء يعتمد على التردد بدقة       | [تفاصيل](plugins/saturation.md#multiband-saturation) |

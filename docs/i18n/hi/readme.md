@@ -257,10 +257,11 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | EQ       | Loudness Equalizer | कम वॉल्यूम सुनने के लिए आवृत्ति संतुलन सुधार                | [विवरण](plugins/eq.md#loudness-equalizer) |
 | EQ       | Narrow Range       | हाई-पास और लो-पास फ़िल्टर संयोजन                          | [विवरण](plugins/eq.md#narrow-range) |
 | EQ       | Tone Control       | तीन-बैंड टोन नियंत्रण                                      | [विवरण](plugins/eq.md#tone-control) |
-| Filter   | Wow Flutter        | समय-आधारित मॉड्यूलेशन इफेक्ट                              | [विवरण](plugins/filter.md#wow-flutter) |
 | Lo-Fi    | Bit Crusher        | बिट डेप्थ में कमी और जीरो-ऑर्डर होल्ड इफेक्ट                | [विवरण](plugins/lofi.md#bit-crusher) |
 | Lo-Fi    | Noise Blender      | नॉइज जनरेशन और मिक्सिंग                                   | [विवरण](plugins/lofi.md#noise-blender) |
 | Lo-Fi    | Simple Jitter      | डिजिटल जिटर सिमुलेशन                                      | [विवरण](plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | वॉल्यूम आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | समय आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb          | प्राकृतिक विसरण के साथ रैंडम स्कैटरिंग रिवर्ब              | [विवरण](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping    | डिजिटल हार्ड क्लिपिंग इफेक्ट                              | [विवरण](plugins/saturation.md#hard-clipping) |
 | Saturation | Multiband Saturation | सटीक आवृत्ति-आधारित गर्मी के लिए 3-बैंड सैचुरेशन इफेक्ट      | [विवरण](plugins/saturation.md#multiband-saturation) |

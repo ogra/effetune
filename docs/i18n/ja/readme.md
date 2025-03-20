@@ -263,10 +263,11 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | EQ         | Loudness Equalizer    | 低音量再生時の周波数バランス補正                           | [詳細](plugins/eq.md#loudness-equalizer)                   |
 | EQ         | Narrow Range          | ハイパスとローパスフィルターの組み合わせ                   | [詳細](plugins/eq.md#narrow-range)                         |
 | EQ         | Tone Control          | 3バンドトーンコントロール                                  | [詳細](plugins/eq.md#tone-control)                         |
-| Filter     | Wow Flutter           | 時間ベースのモジュレーションエフェクト                     | [詳細](plugins/filter.md#wow-flutter)                      |
 | Lo-Fi      | Bit Crusher           | ビット深度の削減とゼロオーダーホールドエフェクト             | [詳細](plugins/lofi.md#bit-crusher)                         |
 | Lo-Fi      | Noise Blender         | ノイズの生成とミキシング                                   | [詳細](plugins/lofi.md#noise-blender)                       |
 | Lo-Fi      | Simple Jitter         | デジタルジッターのシミュレーション                         | [詳細](plugins/lofi.md#simple-jitter)                       |
+| Modulation | Tremolo | 音量ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | 時間ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#wow-flutter) |
 | Reverb     | RS Reverb             | 自然な拡散を伴うランダム散乱リバーブ                         | [詳細](plugins/reverb.md#rs-reverb)                         |
 | Saturation | Hard Clipping         | デジタルハードクリッピングエフェクト                       | [詳細](plugins/saturation.md#hard-clipping)                |
 | Saturation | Multiband Saturation  | 周波数ごとに正確な温かみを実現する3バンドサチュレーションエフェクト | [詳細](plugins/saturation.md#multiband-saturation)         |

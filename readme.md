@@ -263,10 +263,11 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | EQ | Loudness Equalizer | Frequency balance correction for low volume listening | [Details](docs/plugins/eq.md#loudness-equalizer) |
 | EQ | Narrow Range | High-pass and low-pass filter combination | [Details](docs/plugins/eq.md#narrow-range) |
 | EQ | Tone Control | Three-band tone control | [Details](docs/plugins/eq.md#tone-control) |
-| Filter | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/filter.md#wow-flutter) |
 | Lo-Fi | Bit Crusher | Bit depth reduction and zero-order hold effect | [Details](docs/plugins/lofi.md#bit-crusher) |
 | Lo-Fi | Noise Blender | Noise generation and mixing | [Details](docs/plugins/lofi.md#noise-blender) |
 | Lo-Fi | Simple Jitter | Digital jitter simulation | [Details](docs/plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | Volume-based modulation effect | [Details](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/modulation.md#wow-flutter) |
 | Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
 | Saturation | Multiband Saturation | 3-band saturation effect for precise frequency-based warmth | [Details](docs/plugins/saturation.md#multiband-saturation) |

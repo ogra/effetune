@@ -257,10 +257,11 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | EQ        | Loudness Equalizer| 针对低音量聆听的频率平衡校正                    | [详情](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | 高通和低通滤波器组合                         | [详情](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control      | 三频段音调控制                              | [详情](plugins/eq.md#tone-control) |
-| Filter    | Wow Flutter       | 基于时间的调制效果                           | [详情](plugins/filter.md#wow-flutter) |
 | Lo-Fi     | Bit Crusher       | 位深度降低及零阶保持效果                       | [详情](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender     | 噪声生成与混合                              | [详情](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter     | 数字抖动模拟                               | [详情](plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | 基于音量的调制效果 | [详情](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | 数字硬削波效果                              | [详情](plugins/saturation.md#hard-clipping) |
 | Saturation| Multiband Saturation | 3 频段饱和效果，实现精确的频率基础暖音             | [详情](plugins/saturation.md#multiband-saturation) |

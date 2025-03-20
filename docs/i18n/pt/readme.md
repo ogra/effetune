@@ -257,10 +257,11 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | EQ        | Loudness Equalizer| Correção do equilíbrio de frequência para audição em volume baixo                  | [Detalhes](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | Combinação de filtro passa-alta e passa-baixa                                      | [Detalhes](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control      | Controle de tom de três bandas                                                     | [Detalhes](plugins/eq.md#tone-control) |
-| Filter    | Wow Flutter       | Efeito de modulação baseado no tempo                                               | [Detalhes](plugins/filter.md#wow-flutter) |
 | Lo-Fi     | Bit Crusher       | Redução da profundidade de bits e efeito de retenção de ordem zero                   | [Detalhes](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender     | Geração e mistura de ruído                                                         | [Detalhes](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter     | Simulação de jitter digital                                                        | [Detalhes](plugins/lofi.md#simple-jitter) |
+| Modulation | Tremolo | Efeito de modulação baseado em volume | [Detalhes](docs/plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | Reverb de dispersão aleatória com difusão natural                                  | [Detalhes](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | Efeito de hard clipping digital                                                    | [Detalhes](plugins/saturation.md#hard-clipping) |
 | Saturation| Multiband Saturation | Efeito de saturação de 3 bandas para um aquecimento preciso baseado em frequência    | [Detalhes](plugins/saturation.md#multiband-saturation) |
