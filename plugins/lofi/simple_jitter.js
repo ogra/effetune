@@ -83,15 +83,20 @@ class SimpleJitterPlugin extends PluginBase {
         const jitterRow = document.createElement('div');
         jitterRow.className = 'parameter-row';
         
+        const jitterSliderId = `${this.id}-${this.name}-jitter-slider`;
         const jitterLabel = document.createElement('label');
         jitterLabel.textContent = 'RMS Jitter:';
+        jitterLabel.htmlFor = jitterSliderId;
         
         const jitterSlider = document.createElement('input');
         jitterSlider.type = 'range';
+        jitterSlider.id = jitterSliderId;
+        jitterSlider.name = jitterSliderId;
         jitterSlider.min = '0';
         jitterSlider.max = '200';
         jitterSlider.step = '1';
         jitterSlider.value = this.rj;
+        jitterSlider.autocomplete = "off";
         
         const jitterValue = document.createElement('span');
         jitterValue.className = 'parameter-value';

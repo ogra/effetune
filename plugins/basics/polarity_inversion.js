@@ -60,6 +60,7 @@ class PolarityInversionPlugin extends PluginBase {
         channelRow.className = 'parameter-row';
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelLabel.htmlFor = `${this.id}-${this.name}-all`;
         channelRow.appendChild(channelLabel);
 
         const radioGroup = document.createElement('div');
@@ -67,19 +68,24 @@ class PolarityInversionPlugin extends PluginBase {
         const options = ['all', 'left', 'right'];
         
         options.forEach(option => {
-            const label = document.createElement('label');
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `channel-${this.id}`;
+            radio.name = `${this.id}-${this.name}-channel`;
             radio.value = option;
+            radio.id = `${this.id}-${this.name}-${option}`;
             radio.checked = this.ch === option;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => {
                 if (radio.checked) {
                     this.setCh(option);
                 }
             });
-            label.appendChild(radio);
+            
+            const label = document.createElement('label');
+            label.htmlFor = `${this.id}-${this.name}-${option}`;
             label.appendChild(document.createTextNode(option.charAt(0).toUpperCase() + option.slice(1)));
+            
+            radioGroup.appendChild(radio);
             radioGroup.appendChild(label);
         });
 

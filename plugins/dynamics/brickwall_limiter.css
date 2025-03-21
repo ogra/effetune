@@ -1,8 +1,0 @@
-/* Brickwall Limiter plugin specific styles */
-.plugin-parameter-ui .parameter-row select {
-    background-color: #3d3d3d;
-    border: 1px solid #4d4d4d;
-    color: #ffffff;
-    border-radius: 4px;
-    padding: 4px;
-}

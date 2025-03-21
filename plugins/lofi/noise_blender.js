@@ -145,12 +145,16 @@ class NoiseBlenderPlugin extends PluginBase {
         typeContainer.className = 'radio-group';
         const types = ['pink', 'white'];
         types.forEach(type => {
+            const radioId = `${this.id}-${this.name}-noise-type-${type}`;
             const label = document.createElement('label');
+            label.htmlFor = radioId;
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `noise-type-${this.id}`;
+            radio.id = radioId;
+            radio.name = `${this.id}-${this.name}-noise-type`;
             radio.value = type;
             radio.checked = this.nt === type;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => {
                 if (radio.checked) {
                     this.setParameters({ nt: type });
@@ -166,23 +170,32 @@ class NoiseBlenderPlugin extends PluginBase {
         // Level slider
         const levelRow = document.createElement('div');
         levelRow.className = 'parameter-row';
+        const levelSliderId = `${this.id}-${this.name}-level-slider`;
         const levelLabel = document.createElement('label');
         levelLabel.textContent = 'Level:';
+        levelLabel.htmlFor = levelSliderId;
         levelRow.appendChild(levelLabel);
 
         const levelSlider = document.createElement('input');
         levelSlider.type = 'range';
+        levelSlider.id = levelSliderId;
+        levelSlider.name = levelSliderId;
         levelSlider.min = -96;
         levelSlider.max = 0;
         levelSlider.step = 0.1;
         levelSlider.value = this.lv;
+        levelSlider.autocomplete = "off";
 
+        const levelValueId = `${this.id}-${this.name}-level-value`;
         const levelValue = document.createElement('input');
         levelValue.type = 'number';
+        levelValue.id = levelValueId;
+        levelValue.name = levelValueId;
         levelValue.min = -96;
         levelValue.max = 0;
         levelValue.step = 0.1;
         levelValue.value = this.lv;
+        levelValue.autocomplete = "off";
 
         levelSlider.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
@@ -204,11 +217,16 @@ class NoiseBlenderPlugin extends PluginBase {
         // Per Channel checkbox
         const perChannelRow = document.createElement('div');
         perChannelRow.className = 'parameter-row';
+        const perChannelId = `${this.id}-${this.name}-per-channel`;
         const perChannelLabel = document.createElement('label');
         perChannelLabel.textContent = 'Per Channel:';
+        perChannelLabel.htmlFor = perChannelId;
         const perChannelCheckbox = document.createElement('input');
         perChannelCheckbox.type = 'checkbox';
+        perChannelCheckbox.id = perChannelId;
+        perChannelCheckbox.name = perChannelId;
         perChannelCheckbox.checked = this.pc;
+        perChannelCheckbox.autocomplete = "off";
         perChannelCheckbox.addEventListener('change', (e) => {
             this.setParameters({ pc: e.target.checked });
         });

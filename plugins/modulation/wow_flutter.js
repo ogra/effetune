@@ -123,22 +123,34 @@ class WowFlutterPlugin extends PluginBase {
             const row = document.createElement('div');
             row.className = 'parameter-row';
             
+            // Create unique IDs for the controls
+            const paramName = label.toLowerCase().replace(/\s+/g, '-');
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const valueId = `${this.id}-${this.name}-${paramName}-value`;
+            
             const labelEl = document.createElement('label');
             labelEl.textContent = `${label}${unit ? ' (' + unit + ')' : ''}:`;
+            labelEl.htmlFor = sliderId;
             
             const slider = document.createElement('input');
             slider.type = 'range';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
+            slider.autocomplete = "off";
             
             const valueInput = document.createElement('input');
             valueInput.type = 'number';
+            valueInput.id = valueId;
+            valueInput.name = valueId;
             valueInput.min = min;
             valueInput.max = max;
             valueInput.step = step;
             valueInput.value = value;
+            valueInput.autocomplete = "off";
 
             slider.addEventListener('input', (e) => {
                 setter(parseFloat(e.target.value));

@@ -415,35 +415,52 @@ class MultibandBalancePlugin extends PluginBase {
         freqSliders.className = 'multiband-balance-frequency-sliders';
         freqContainer.appendChild(freqSliders);
 
-        const createFreqSlider = (label, min, max, value, setter) => {
+        const createFreqSlider = (label, min, max, value, setter, freqNum) => {
             const sliderContainer = document.createElement('div');
             sliderContainer.className = 'multiband-balance-frequency-slider';
             const topRow = document.createElement('div');
             topRow.className = 'multiband-balance-frequency-slider-top';
+            
+            // Create unique IDs for the inputs
+            const sliderId = `${this.id}-${this.name}-freq${freqNum}-slider`;
+            const inputId = `${this.id}-${this.name}-freq${freqNum}-input`;
+            
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
+            labelEl.htmlFor = sliderId;
+            
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
             numberInput.min = min;
             numberInput.max = max;
             numberInput.step = 1;
             numberInput.value = value;
+            numberInput.id = inputId;
+            numberInput.name = inputId;
+            numberInput.autocomplete = "off";
+            
             const rangeInput = document.createElement('input');
             rangeInput.type = 'range';
             rangeInput.min = min;
             rangeInput.max = max;
             rangeInput.step = 1;
             rangeInput.value = value;
+            rangeInput.id = sliderId;
+            rangeInput.name = sliderId;
+            rangeInput.autocomplete = "off";
+            
             rangeInput.addEventListener('input', (e) => {
                 setter(parseFloat(e.target.value));
                 numberInput.value = e.target.value;
             });
+            
             numberInput.addEventListener('input', (e) => {
                 const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
                 setter(val);
                 rangeInput.value = val;
                 e.target.value = val;
             });
+            
             topRow.appendChild(labelEl);
             topRow.appendChild(numberInput);
             sliderContainer.appendChild(topRow);
@@ -451,10 +468,10 @@ class MultibandBalancePlugin extends PluginBase {
             return sliderContainer;
         };
 
-        freqSliders.appendChild(createFreqSlider('Freq 1 (Hz):', 20, 500, this.f1, (value) => this.setParameters({ f1: value })));
-        freqSliders.appendChild(createFreqSlider('Freq 2 (Hz):', 100, 2000, this.f2, (value) => this.setParameters({ f2: value })));
-        freqSliders.appendChild(createFreqSlider('Freq 3 (Hz):', 500, 8000, this.f3, (value) => this.setParameters({ f3: value })));
-        freqSliders.appendChild(createFreqSlider('Freq 4 (Hz):', 1000, 20000, this.f4, (value) => this.setParameters({ f4: value })));
+        freqSliders.appendChild(createFreqSlider('Freq 1 (Hz):', 20, 500, this.f1, (value) => this.setParameters({ f1: value }), 1));
+        freqSliders.appendChild(createFreqSlider('Freq 2 (Hz):', 100, 2000, this.f2, (value) => this.setParameters({ f2: value }), 2));
+        freqSliders.appendChild(createFreqSlider('Freq 3 (Hz):', 500, 8000, this.f3, (value) => this.setParameters({ f3: value }), 3));
+        freqSliders.appendChild(createFreqSlider('Freq 4 (Hz):', 1000, 20000, this.f4, (value) => this.setParameters({ f4: value }), 4));
         container.appendChild(freqContainer);
 
         // Band balance sliders UI
@@ -467,30 +484,47 @@ class MultibandBalancePlugin extends PluginBase {
         const createBalanceSlider = (label, bandIndex) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            
+            // Create unique IDs for the inputs
+            const sliderId = `${this.id}-${this.name}-band${bandIndex}-slider`;
+            const inputId = `${this.id}-${this.name}-band${bandIndex}-input`;
+            
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
+            labelEl.htmlFor = sliderId;
+            
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = -100;
             slider.max = 100;
             slider.step = 1;
             slider.value = this.bands[bandIndex].balance;
+            slider.id = sliderId;
+            slider.name = sliderId;
+            slider.autocomplete = "off";
+            
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
             numberInput.min = -100;
             numberInput.max = 100;
             numberInput.step = 1;
             numberInput.value = this.bands[bandIndex].balance;
+            numberInput.id = inputId;
+            numberInput.name = inputId;
+            numberInput.autocomplete = "off";
+            
             slider.addEventListener('input', (e) => {
                 this.setParameters({ band: bandIndex, balance: parseFloat(e.target.value) });
                 numberInput.value = e.target.value;
             });
+            
             numberInput.addEventListener('input', (e) => {
                 const val = Math.max(-100, Math.min(100, parseFloat(e.target.value) || 0));
                 this.setParameters({ band: bandIndex, balance: val });
                 slider.value = val;
                 e.target.value = val;
             });
+            
             row.appendChild(labelEl);
             row.appendChild(slider);
             row.appendChild(numberInput);

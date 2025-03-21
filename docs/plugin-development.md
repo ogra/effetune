@@ -773,26 +773,79 @@ Use this tool during development to ensure your plugin follows the required impl
    - Use simple mathematical operations where possible
 
 3. **UI Design**
-   - Keep controls intuitive and responsive
-   - Provide appropriate value ranges and steps
-   - Include units in labels where applicable
-   - When using radio buttons, include plugin ID in the name attribute (e.g., `name="radio-group-${this.id}"`) to ensure each plugin instance has its own independent radio button group. This is critical when multiple instances of plugins with radio buttons are used simultaneously, as radio buttons with the same name attribute will interfere with each other. Example:
-     ```javascript
-     const radio = document.createElement('input');
-     radio.type = 'radio';
-     radio.name = `channel-${this.id}`; // Include plugin ID to make it unique
-     radio.value = 'Left';
-     ```
-   - Use effetune.css styles as much as possible to maintain consistent look and feel across plugins
-   - When defining plugin-specific CSS, include the plugin name in class names to avoid style conflicts and duplication. Example:
-     ```css
-     .my-plugin-container { /* Plugin-specific styles */ }
-     .my-plugin-slider { /* Custom slider styles */ }
-     ```
-   - Follow the standard CSS styles for common UI elements to maintain consistency across plugins
-   - Keep plugin-specific CSS minimal and focused on unique styling needs
-   - Use the base CSS classes for standard elements (e.g., `.parameter-row`, `.radio-group`) to ensure consistent layout and appearance
-   - Only add custom CSS for plugin-specific UI elements that require unique styling
+    - Keep controls intuitive and responsive
+    - Provide appropriate value ranges and steps
+    - Include units in labels where applicable
+    - When using radio buttons, include plugin ID in the name attribute (e.g., `name="radio-group-${this.id}"`) to ensure each plugin instance has its own independent radio button group. This is critical when multiple instances of plugins with radio buttons are used simultaneously, as radio buttons with the same name attribute will interfere with each other. Example:
+      ```javascript
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `channel-${this.id}`; // Include plugin ID to make it unique
+      radio.value = 'Left';
+      ```
+    - Use effetune.css styles as much as possible to maintain consistent look and feel across plugins
+    - When defining plugin-specific CSS, include the plugin name in class names to avoid style conflicts and duplication. Example:
+      ```css
+      .my-plugin-container { /* Plugin-specific styles */ }
+      .my-plugin-slider { /* Custom slider styles */ }
+      ```
+    - Follow the standard CSS styles for common UI elements to maintain consistency across plugins
+    - Keep plugin-specific CSS minimal and focused on unique styling needs
+    - Use the base CSS classes for standard elements (e.g., `.parameter-row`, `.radio-group`) to ensure consistent layout and appearance
+    - Only add custom CSS for plugin-specific UI elements that require unique styling
+
+4. **Accessibility and Input Element Attributes**
+    - All input elements must have IDs that follow the format `${this.id}-${this.name}-[type]` where:
+      * `this.id` is the plugin's unique ID
+      * `this.name` is the plugin's name
+      * `[type]` is a descriptor for the input (e.g., "slider", "input", "checkbox")
+    - For radio button groups, use a consistent name attribute that follows the same format as IDs: `${this.id}-${this.name}-[group-name]`
+    - All input elements must have the `autocomplete="off"` attribute to prevent browser autocomplete from interfering with plugin controls
+    - Associate labels with inputs using the `htmlFor` attribute that matches the input's ID
+    - Example for a slider and text input pair:
+      ```javascript
+      // Slider
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.id = `${this.id}-${this.name}-slider`;
+      slider.name = `${this.id}-${this.name}-slider`;
+      slider.autocomplete = "off";
+      
+      // Text input
+      const valueInput = document.createElement('input');
+      valueInput.type = 'number';
+      valueInput.id = `${this.id}-${this.name}-input`;
+      valueInput.name = `${this.id}-${this.name}-input`;
+      valueInput.autocomplete = "off";
+      
+      // Label (associated with slider)
+      const label = document.createElement('label');
+      label.textContent = 'Parameter:';
+      label.htmlFor = `${this.id}-${this.name}-slider`;
+      ```
+    - Example for radio buttons:
+      ```javascript
+      const options = ['option1', 'option2', 'option3'];
+      
+      options.forEach(option => {
+          // Radio button
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = `${this.id}-${this.name}-options`;
+          radio.id = `${this.id}-${this.name}-${option}`;
+          radio.value = option;
+          radio.autocomplete = "off";
+          
+          // Label for this radio button
+          const label = document.createElement('label');
+          label.htmlFor = `${this.id}-${this.name}-${option}`;
+          label.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+          
+          // Add to container
+          container.appendChild(radio);
+          container.appendChild(label);
+      });
+      ```
 
 4. **Error Handling**
    - Validate all inputs in both UI and processing code

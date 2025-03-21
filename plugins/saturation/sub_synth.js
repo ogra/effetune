@@ -259,31 +259,48 @@ class SubSynthPlugin extends PluginBase {
     container.className = "sub-synth-plugin-ui plugin-parameter-ui";
 
     // Helper to create a parameter row with slider and number input
-    const createRow = (labelText, min, max, step, value, onInput) => {
+    const createRow = (labelText, min, max, step, value, onInput, paramName) => {
       const row = document.createElement("div");
       row.className = "parameter-row";
+      
+      // Create unique IDs for the inputs
+      const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+      const inputId = `${this.id}-${this.name}-${paramName}-input`;
+      
       const label = document.createElement("label");
       label.textContent = labelText;
+      label.htmlFor = sliderId;
+      
       const slider = document.createElement("input");
       slider.type = "range";
       slider.min = min;
       slider.max = max;
       slider.step = step;
       slider.value = value;
+      slider.id = sliderId;
+      slider.name = sliderId;
+      slider.autocomplete = "off";
+      
       const numberInput = document.createElement("input");
       numberInput.type = "number";
       numberInput.min = min;
       numberInput.max = max;
       numberInput.step = step;
       numberInput.value = value;
+      numberInput.id = inputId;
+      numberInput.name = inputId;
+      numberInput.autocomplete = "off";
+      
       slider.addEventListener("input", e => {
         onInput(parseFloat(e.target.value));
         numberInput.value = e.target.value;
       });
+      
       numberInput.addEventListener("input", e => {
         onInput(parseFloat(e.target.value) || 0);
         slider.value = e.target.value;
       });
+      
       row.appendChild(label);
       row.appendChild(slider);
       row.appendChild(numberInput);
@@ -291,9 +308,13 @@ class SubSynthPlugin extends PluginBase {
     };
 
     // Helper to create a slope select box
-    const createSlopeSelect = (current, onChange) => {
+    const createSlopeSelect = (current, onChange, paramName) => {
       const select = document.createElement("select");
       select.className = "slope-select";
+      select.id = `${this.id}-${this.name}-${paramName}-select`;
+      select.name = `${this.id}-${this.name}-${paramName}-select`;
+      select.autocomplete = "off";
+      
       const slopes = [0, -6, -12, -18, -24];
       slopes.forEach(slope => {
         const option = document.createElement("option");
@@ -302,19 +323,20 @@ class SubSynthPlugin extends PluginBase {
         option.selected = current === slope;
         select.appendChild(option);
       });
+      
       select.addEventListener("change", e => onChange(parseInt(e.target.value)));
       return select;
     };
 
     // Create parameter rows
-    const subLevelRow = createRow("Sub Level (%):", 0, 200, 1, this.sl, v => this.setSl(v));
-    const subLpfRow = createRow("Sub LPF (Hz):", 5, 400, 1, this.slf, v => this.setSlf(v));
-    subLpfRow.appendChild(createSlopeSelect(this.sls, v => this.setSls(v)));
-    const subHpfRow = createRow("Sub HPF (Hz):", 5, 400, 1, this.shf, v => this.setShf(v));
-    subHpfRow.appendChild(createSlopeSelect(this.shs, v => this.setShs(v)));
-    const dryLevelRow = createRow("Dry Level (%):", 0, 200, 1, this.dl, v => this.setDl(v));
-    const dryHpfRow = createRow("Dry HPF (Hz):", 5, 400, 1, this.dhf, v => this.setDhf(v));
-    dryHpfRow.appendChild(createSlopeSelect(this.dhs, v => this.setDhs(v)));
+    const subLevelRow = createRow("Sub Level (%):", 0, 200, 1, this.sl, v => this.setSl(v), "sublevel");
+    const subLpfRow = createRow("Sub LPF (Hz):", 5, 400, 1, this.slf, v => this.setSlf(v), "sublpf");
+    subLpfRow.appendChild(createSlopeSelect(this.sls, v => this.setSls(v), "sublpfslope"));
+    const subHpfRow = createRow("Sub HPF (Hz):", 5, 400, 1, this.shf, v => this.setShf(v), "subhpf");
+    subHpfRow.appendChild(createSlopeSelect(this.shs, v => this.setShs(v), "subhpfslope"));
+    const dryLevelRow = createRow("Dry Level (%):", 0, 200, 1, this.dl, v => this.setDl(v), "drylevel");
+    const dryHpfRow = createRow("Dry HPF (Hz):", 5, 400, 1, this.dhf, v => this.setDhf(v), "dryhpf");
+    dryHpfRow.appendChild(createSlopeSelect(this.dhs, v => this.setDhs(v), "dryhpfslope"));
 
     // Create graph container and canvas
     const graphContainer = document.createElement("div");

@@ -184,21 +184,28 @@ class OscilloscopePlugin extends PluginBase {
   
       const dtLabel = document.createElement('label');
       dtLabel.textContent = 'Display Time (ms):';
-  
+      dtLabel.htmlFor = `${this.id}-${this.name}-display-time-slider`;
+
       // Allowed range: 1 to 100 ms.
       const dtSlider = document.createElement('input');
       dtSlider.type = 'range';
+      dtSlider.id = `${this.id}-${this.name}-display-time-slider`;
+      dtSlider.name = `${this.id}-${this.name}-display-time-slider`;
       dtSlider.min = 1;
       dtSlider.max = 100;
       dtSlider.step = 1;
       dtSlider.value = (this.displayTime * 1000).toFixed(0);
-  
+      dtSlider.autocomplete = "off";
+
       const dtValue = document.createElement('input');
       dtValue.type = 'number';
+      dtValue.id = `${this.id}-${this.name}-display-time-value`;
+      dtValue.name = `${this.id}-${this.name}-display-time-value`;
       dtValue.value = (this.displayTime * 1000).toFixed(0);
       dtValue.step = 1;
       dtValue.min = 1;
       dtValue.max = 100;
+      dtValue.autocomplete = "off";
   
       const dtHandler = (e) => {
         const value = parseFloat(e.target.value) / 1000; // convert ms to sec.
@@ -225,17 +232,21 @@ class OscilloscopePlugin extends PluginBase {
   
       const tmLabel = document.createElement('label');
       tmLabel.textContent = 'Trigger Mode:';
-  
+
       const modes = ['Auto', 'Normal'];
       const modeRadios = modes.map(mode => {
         const label = document.createElement('label');
         label.className = 'radio-label';
-  
+        const radioId = `${this.id}-${this.name}-trigger-mode-${mode.toLowerCase()}`;
+        label.htmlFor = radioId;
+
         const radio = document.createElement('input');
         radio.type = 'radio';
-        radio.name = `tm-${this.id}`;
+        radio.id = radioId;
+        radio.name = `${this.id}-${this.name}-trigger-mode`;
         radio.value = mode;
         radio.checked = (mode === this.triggerMode);
+        radio.autocomplete = "off";
   
         const radioHandler = (e) => {
           if (e.target.checked) {
@@ -260,17 +271,21 @@ class OscilloscopePlugin extends PluginBase {
   
       const tsLabel = document.createElement('label');
       tsLabel.textContent = 'Trigger Source:';
-  
+
       const sources = ['Left', 'Right'];
       const sourceRadios = sources.map(source => {
         const label = document.createElement('label');
         label.className = 'radio-label';
-  
+        const radioId = `${this.id}-${this.name}-trigger-source-${source.toLowerCase()}`;
+        label.htmlFor = radioId;
+
         const radio = document.createElement('input');
         radio.type = 'radio';
-        radio.name = `ts-${this.id}`;
+        radio.id = radioId;
+        radio.name = `${this.id}-${this.name}-trigger-source`;
         radio.value = source;
         radio.checked = (source === this.triggerSource);
+        radio.autocomplete = "off";
   
         const radioHandler = (e) => {
           if (e.target.checked) {
@@ -295,20 +310,27 @@ class OscilloscopePlugin extends PluginBase {
   
       const tlLabel = document.createElement('label');
       tlLabel.textContent = 'Trigger Level:';
-  
+      tlLabel.htmlFor = `${this.id}-${this.name}-trigger-level-slider`;
+
       const tlSlider = document.createElement('input');
       tlSlider.type = 'range';
+      tlSlider.id = `${this.id}-${this.name}-trigger-level-slider`;
+      tlSlider.name = `${this.id}-${this.name}-trigger-level-slider`;
       tlSlider.min = -1;
       tlSlider.max = 1;
       tlSlider.step = 0.001;
       tlSlider.value = this.triggerLevel;
-  
+      tlSlider.autocomplete = "off";
+
       const tlValue = document.createElement('input');
       tlValue.type = 'number';
+      tlValue.id = `${this.id}-${this.name}-trigger-level-value`;
+      tlValue.name = `${this.id}-${this.name}-trigger-level-value`;
       tlValue.value = this.triggerLevel.toFixed(3);
       tlValue.step = 0.001;
       tlValue.min = -1;
       tlValue.max = 1;
+      tlValue.autocomplete = "off";
   
       const tlHandler = (e) => {
         const value = parseFloat(e.target.value);
@@ -333,17 +355,21 @@ class OscilloscopePlugin extends PluginBase {
   
       const teLabel = document.createElement('label');
       teLabel.textContent = 'Trigger Edge:';
-  
+
       const edges = ['Rising', 'Falling'];
       const edgeRadios = edges.map(edge => {
         const label = document.createElement('label');
         label.className = 'radio-label';
-  
+        const radioId = `${this.id}-${this.name}-trigger-edge-${edge.toLowerCase()}`;
+        label.htmlFor = radioId;
+
         const radio = document.createElement('input');
         radio.type = 'radio';
-        radio.name = `te-${this.id}`;
+        radio.id = radioId;
+        radio.name = `${this.id}-${this.name}-trigger-edge`;
         radio.value = edge;
         radio.checked = (edge === this.triggerEdge);
+        radio.autocomplete = "off";
   
         const radioHandler = (e) => {
           if (e.target.checked) {
@@ -368,20 +394,27 @@ class OscilloscopePlugin extends PluginBase {
   
       const hoLabel = document.createElement('label');
       hoLabel.textContent = 'Holdoff (ms):';
-  
+      hoLabel.htmlFor = `${this.id}-${this.name}-holdoff-slider`;
+
       // Allowed range: 0.1 ms to 10 ms.
       const hoSlider = document.createElement('input');
       hoSlider.type = 'range';
+      hoSlider.id = `${this.id}-${this.name}-holdoff-slider`;
+      hoSlider.name = `${this.id}-${this.name}-holdoff-slider`;
       hoSlider.min = Math.log10(1e-4);
       hoSlider.max = Math.log10(1e-2);
       hoSlider.step = 'any';
       hoSlider.value = Math.log10(this.holdoff);
-  
+      hoSlider.autocomplete = "off";
+
       const hoValue = document.createElement('input');
       hoValue.type = 'number';
+      hoValue.id = `${this.id}-${this.name}-holdoff-value`;
+      hoValue.name = `${this.id}-${this.name}-holdoff-value`;
       hoValue.value = (this.holdoff * 1000).toFixed(2);
       hoValue.step = 'any';
       hoValue.min = (1e-4 * 1000);
+      hoValue.autocomplete = "off";
       hoValue.max = (1e-2 * 1000);
   
       const hoHandler = (e) => {
@@ -412,20 +445,27 @@ class OscilloscopePlugin extends PluginBase {
   
       const dlLabel = document.createElement('label');
       dlLabel.textContent = 'Display Level (dB):';
-  
+      dlLabel.htmlFor = `${this.id}-${this.name}-display-level-slider`;
+
       const dlSlider = document.createElement('input');
       dlSlider.type = 'range';
+      dlSlider.id = `${this.id}-${this.name}-display-level-slider`;
+      dlSlider.name = `${this.id}-${this.name}-display-level-slider`;
       dlSlider.min = -96;
       dlSlider.max = 0;
       dlSlider.step = 1;
       dlSlider.value = this.displayLevel;
-  
+      dlSlider.autocomplete = "off";
+
       const dlValue = document.createElement('input');
       dlValue.type = 'number';
+      dlValue.id = `${this.id}-${this.name}-display-level-value`;
+      dlValue.name = `${this.id}-${this.name}-display-level-value`;
       dlValue.value = this.displayLevel;
       dlValue.step = 1;
       dlValue.min = -96;
       dlValue.max = 0;
+      dlValue.autocomplete = "off";
   
       const dlHandler = (e) => {
         const value = parseInt(e.target.value);
@@ -450,20 +490,27 @@ class OscilloscopePlugin extends PluginBase {
   
       const voLabel = document.createElement('label');
       voLabel.textContent = 'Vertical Offset:';
-  
+      voLabel.htmlFor = `${this.id}-${this.name}-vertical-offset-slider`;
+
       const voSlider = document.createElement('input');
       voSlider.type = 'range';
+      voSlider.id = `${this.id}-${this.name}-vertical-offset-slider`;
+      voSlider.name = `${this.id}-${this.name}-vertical-offset-slider`;
       voSlider.min = -1;
       voSlider.max = 1;
       voSlider.step = 0.01;
       voSlider.value = this.verticalOffset;
-  
+      voSlider.autocomplete = "off";
+
       const voValue = document.createElement('input');
       voValue.type = 'number';
+      voValue.id = `${this.id}-${this.name}-vertical-offset-value`;
+      voValue.name = `${this.id}-${this.name}-vertical-offset-value`;
       voValue.value = this.verticalOffset.toFixed(2);
       voValue.step = 0.01;
       voValue.min = -1;
       voValue.max = 1;
+      voValue.autocomplete = "off";
   
       const voHandler = (e) => {
         const value = parseFloat(e.target.value);

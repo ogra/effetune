@@ -169,8 +169,8 @@ function createWindow() {
       contextIsolation: true, // Security: Enable context isolation
       preload: path.join(__dirname, 'preload.js'), // Use a preload script for safe IPC
       // Note: The following settings are for development only and should be removed for production
-      webSecurity: false, // Allow file drag and drop
-      allowRunningInsecureContent: process.env.NODE_ENV === 'development' ? true : false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
       // Disable Electron's built-in zoom functionality
       zoomFactor: 1.0
     }

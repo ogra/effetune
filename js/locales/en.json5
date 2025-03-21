@@ -43,7 +43,7 @@
   "ui.configAudioButton": "Config Audio",
   "ui.shareButton": "Share",
   "ui.dragEffectMessage": "Drag this effect to add it at your desired position in the Effect Pipeline.\nAlternatively, you can double-click this effect to add it to the Effect Pipeline.",
-  "ui.dragPluginsHere": "Drag plugins here to build your effect pipeline",
+  "ui.dragPluginsHere": "Drag effects here to build your effect pipeline",
   "ui.effectsAvailable": "{count} effects available",
   "ui.effectsFound": "{count} effects found",
   "ui.searchEffectsPlaceholder": "Search effects...",

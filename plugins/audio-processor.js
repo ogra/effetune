@@ -210,7 +210,7 @@ class PluginProcessor extends AudioWorkletProcessor {
         }
 
         if (!input[0]) {
-            console.warn('Audio processor: Input channel data is missing');
+            // console.warn('Audio processor: Input channel data is missing');
             return true;
         }
 

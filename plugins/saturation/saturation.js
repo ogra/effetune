@@ -154,28 +154,38 @@ class SaturationPlugin extends PluginBase {
         // Drive control
         const driveLabel = document.createElement('label');
         driveLabel.textContent = 'Drive:';
+        driveLabel.htmlFor = `${this.id}-${this.name}-drive-slider`;
+        
         const driveSlider = document.createElement('input');
         driveSlider.type = 'range';
         driveSlider.min = 0;
         driveSlider.max = 10;
         driveSlider.step = 0.1;
         driveSlider.value = this.dr;
+        driveSlider.id = `${this.id}-${this.name}-drive-slider`;
+        driveSlider.name = `${this.id}-${this.name}-drive-slider`;
+        driveSlider.autocomplete = "off";
         driveSlider.addEventListener('input', (e) => {
             this.setDr(parseFloat(e.target.value));
             driveValue.value = e.target.value;
         });
+        
         const driveValue = document.createElement('input');
         driveValue.type = 'number';
         driveValue.min = 0;
         driveValue.max = 10;
         driveValue.step = 0.1;
         driveValue.value = this.dr;
+        driveValue.id = `${this.id}-${this.name}-drive-value`;
+        driveValue.name = `${this.id}-${this.name}-drive-value`;
+        driveValue.autocomplete = "off";
         driveValue.addEventListener('input', (e) => {
             const value = Math.max(0, Math.min(10, parseFloat(e.target.value) || 0));
             this.setDr(value);
             driveSlider.value = value;
             e.target.value = value;
         });
+        
         const driveRow = document.createElement('div');
         driveRow.className = 'parameter-row';
         driveRow.appendChild(driveLabel);
@@ -186,28 +196,38 @@ class SaturationPlugin extends PluginBase {
         // Bias control
         const biasLabel = document.createElement('label');
         biasLabel.textContent = 'Bias:';
+        biasLabel.htmlFor = `${this.id}-${this.name}-bias-slider`;
+        
         const biasSlider = document.createElement('input');
         biasSlider.type = 'range';
         biasSlider.min = -0.3;
         biasSlider.max = 0.3;
         biasSlider.step = 0.01;
         biasSlider.value = this.bs;
+        biasSlider.id = `${this.id}-${this.name}-bias-slider`;
+        biasSlider.name = `${this.id}-${this.name}-bias-slider`;
+        biasSlider.autocomplete = "off";
         biasSlider.addEventListener('input', (e) => {
             this.setBs(parseFloat(e.target.value));
             biasValue.value = e.target.value;
         });
+        
         const biasValue = document.createElement('input');
         biasValue.type = 'number';
         biasValue.min = -0.3;
         biasValue.max = 0.3;
         biasValue.step = 0.01;
         biasValue.value = this.bs;
+        biasValue.id = `${this.id}-${this.name}-bias-value`;
+        biasValue.name = `${this.id}-${this.name}-bias-value`;
+        biasValue.autocomplete = "off";
         biasValue.addEventListener('input', (e) => {
             const value = Math.max(-0.3, Math.min(0.3, parseFloat(e.target.value) || 0));
             this.setBs(value);
             biasSlider.value = value;
             e.target.value = value;
         });
+        
         const biasRow = document.createElement('div');
         biasRow.className = 'parameter-row';
         biasRow.appendChild(biasLabel);
@@ -218,28 +238,38 @@ class SaturationPlugin extends PluginBase {
         // Mix control
         const mixLabel = document.createElement('label');
         mixLabel.textContent = 'Mix (%):';
+        mixLabel.htmlFor = `${this.id}-${this.name}-mix-slider`;
+        
         const mixSlider = document.createElement('input');
         mixSlider.type = 'range';
         mixSlider.min = 0;
         mixSlider.max = 100;
         mixSlider.step = 1;
         mixSlider.value = this.mx;
+        mixSlider.id = `${this.id}-${this.name}-mix-slider`;
+        mixSlider.name = `${this.id}-${this.name}-mix-slider`;
+        mixSlider.autocomplete = "off";
         mixSlider.addEventListener('input', (e) => {
             this.setMx(parseFloat(e.target.value));
             mixValue.value = e.target.value;
         });
+        
         const mixValue = document.createElement('input');
         mixValue.type = 'number';
         mixValue.min = 0;
         mixValue.max = 100;
         mixValue.step = 1;
         mixValue.value = this.mx;
+        mixValue.id = `${this.id}-${this.name}-mix-value`;
+        mixValue.name = `${this.id}-${this.name}-mix-value`;
+        mixValue.autocomplete = "off";
         mixValue.addEventListener('input', (e) => {
             const value = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
             this.setMx(value);
             mixSlider.value = value;
             e.target.value = value;
         });
+        
         const mixRow = document.createElement('div');
         mixRow.className = 'parameter-row';
         mixRow.appendChild(mixLabel);
@@ -264,28 +294,38 @@ class SaturationPlugin extends PluginBase {
         // Gain control
         const gainLabel = document.createElement('label');
         gainLabel.textContent = 'Gain (dB):';
+        gainLabel.htmlFor = `${this.id}-${this.name}-gain-slider`;
+        
         const gainSlider = document.createElement('input');
         gainSlider.type = 'range';
         gainSlider.min = -18;
         gainSlider.max = 18;
         gainSlider.step = 0.1;
         gainSlider.value = this.gn;
+        gainSlider.id = `${this.id}-${this.name}-gain-slider`;
+        gainSlider.name = `${this.id}-${this.name}-gain-slider`;
+        gainSlider.autocomplete = "off";
         gainSlider.addEventListener('input', (e) => {
             this.setGn(parseFloat(e.target.value));
             gainValue.value = e.target.value;
         });
+        
         const gainValue = document.createElement('input');
         gainValue.type = 'number';
         gainValue.min = -18;
         gainValue.max = 18;
         gainValue.step = 0.1;
         gainValue.value = this.gn;
+        gainValue.id = `${this.id}-${this.name}-gain-value`;
+        gainValue.name = `${this.id}-${this.name}-gain-value`;
+        gainValue.autocomplete = "off";
         gainValue.addEventListener('input', (e) => {
             const value = Math.max(-18, Math.min(18, parseFloat(e.target.value) || 0));
             this.setGn(value);
             gainSlider.value = value;
             e.target.value = value;
         });
+        
         const gainRow = document.createElement('div');
         gainRow.className = 'parameter-row';
         gainRow.appendChild(gainLabel);

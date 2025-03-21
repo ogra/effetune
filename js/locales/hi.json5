@@ -43,7 +43,7 @@
   "ui.configAudioButton": "ऑडियो विन्यास",
   "ui.shareButton": "साझा करें",
   "ui.dragEffectMessage": "इफेक्ट जोड़ने के लिए इसे खींचें अपनी इच्छित स्थिति पर।\nया इसे डबल-क्लिक करें।",
-  "ui.dragPluginsHere": "अपनी इफेक्ट पाइपलाइन बनाने हेतु प्लगइन खींचें",
+  "ui.dragPluginsHere": "अपनी प्रभाव पाइपलाइन बनाने के लिए प्रभावों को यहां खींचें",
   "ui.effectsAvailable": "{count} प्रभाव उपलब्ध",
   "ui.effectsFound": "{count} प्रभाव मिले",
   "ui.searchEffectsPlaceholder": "प्रभाव खोजें...",

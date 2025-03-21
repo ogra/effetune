@@ -43,7 +43,7 @@
   "ui.configAudioButton": "配置音频",
   "ui.shareButton": "分享",
   "ui.dragEffectMessage": "拖动此效果至效果管线的所需位置，或双击以添加。",
-  "ui.dragPluginsHere": "拖动插件到此处构建效果管线",
+  "ui.dragPluginsHere": "将效果拖到此处以构建效果管道",
   "ui.effectsAvailable": "{count} 个效果可用",
   "ui.effectsFound": "找到 {count} 个效果",
   "ui.searchEffectsPlaceholder": "搜索效果...",

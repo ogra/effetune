@@ -237,22 +237,31 @@ class HardClippingPlugin extends PluginBase {
         // Threshold control
         const thresholdLabel = document.createElement('label');
         thresholdLabel.textContent = 'Threshold (dB):';
+        thresholdLabel.htmlFor = `${this.id}-${this.name}-threshold-slider`;
+        
         const thresholdSlider = document.createElement('input');
         thresholdSlider.type = 'range';
         thresholdSlider.min = -60;
         thresholdSlider.max = 0;
         thresholdSlider.step = 0.1;
         thresholdSlider.value = this.th;
+        thresholdSlider.id = `${this.id}-${this.name}-threshold-slider`;
+        thresholdSlider.name = `${this.id}-${this.name}-threshold-slider`;
+        thresholdSlider.autocomplete = "off";
         thresholdSlider.addEventListener('input', (e) => {
             this.setTh(parseFloat(e.target.value));
             thresholdValue.value = e.target.value;
         });
+        
         const thresholdValue = document.createElement('input');
         thresholdValue.type = 'number';
         thresholdValue.min = -60;
         thresholdValue.max = 0;
         thresholdValue.step = 0.1;
         thresholdValue.value = this.th;
+        thresholdValue.id = `${this.id}-${this.name}-threshold-value`;
+        thresholdValue.name = `${this.id}-${this.name}-threshold-value`;
+        thresholdValue.autocomplete = "off";
         thresholdValue.addEventListener('input', (e) => {
             const value = Math.max(-60, Math.min(0, parseFloat(e.target.value) || 0));
             this.setTh(value);
@@ -273,11 +282,14 @@ class HardClippingPlugin extends PluginBase {
         ];
 
         modes.forEach(mode => {
+            const radioId = `${this.id}-${this.name}-mode-${mode.value}`;
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `mode-${this.id}`;
+            radio.name = `${this.id}-${this.name}-mode`;
+            radio.id = radioId;
             radio.value = mode.value;
             radio.checked = this.md === mode.value;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => {
                 if (radio.checked) {
                     this.setMd(mode.value);
@@ -285,6 +297,7 @@ class HardClippingPlugin extends PluginBase {
             });
 
             const label = document.createElement('label');
+            label.htmlFor = radioId;
             label.appendChild(radio);
             label.appendChild(document.createTextNode(mode.label));
             modeGroup.appendChild(label);

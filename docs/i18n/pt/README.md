@@ -120,12 +120,14 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
    - Delete: Excluir os efeitos selecionados
    - ESC: Desmarcar todos os efeitos
 
-3. Atalhos de Teclado (apenas aplicativo desktop):
+3. Atalhos de teclado (ao usar o player):
    - Space: Reproduzir/Pausar
    - Ctrl + → ou N: Próxima faixa
    - Ctrl + ← ou P: Faixa anterior
    - Shift + → ou F ou .: Avançar 10 segundos
    - Shift + ← ou B ou ,: Retroceder 10 segundos
+   - Ctrl + T: Alternar modo de repetição
+   - Ctrl + H: Alternar modo aleatório
 
 ### Processamento de Arquivos de Áudio
 

@@ -118,12 +118,14 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
    - Delete: Supprimer les effets sélectionnés
    - ESC: Désélectionner tous les effets
 
-3. Raccourcis clavier (application de bureau uniquement) :
-   - Space: Lecture/Pause
-   - Ctrl + → ou N: Piste suivante
-   - Ctrl + ← ou P: Piste précédente
-   - Shift + → ou F ou .: Avance rapide de 10 secondes
-   - Shift + ← ou B ou ,: Retour en arrière de 10 secondes
+3. Raccourcis clavier (lors de l'utilisation du lecteur) :
+   - Space : Lecture/Pause
+   - Ctrl + → ou N : Piste suivante
+   - Ctrl + ← ou P : Piste précédente
+   - Shift + → ou F ou . : Avancer de 10 secondes
+   - Shift + ← ou B ou , : Reculer de 10 secondes
+   - Ctrl + T : Activer/Désactiver la répétition
+   - Ctrl + H : Activer/Désactiver le mode aléatoire
 
 ### Traitement des fichiers audio
 

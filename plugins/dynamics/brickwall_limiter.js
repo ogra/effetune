@@ -720,14 +720,31 @@ class BrickwallLimiterPlugin extends PluginBase {
         const createControl = (label, min, max, step, value, setter) => {
             const row = document.createElement("div");
             row.className = "parameter-row";
+            
+            // Create a parameter name from the label (e.g., "Threshold (dB):" -> "thresholddb")
+            // Include more of the label to ensure uniqueness
+            const paramName = label.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const numberId = `${this.id}-${this.name}-${paramName}-number`;
+            
             const labelEl = document.createElement("label");
             labelEl.textContent = label;
+            labelEl.htmlFor = sliderId;
+            
             const slider = document.createElement("input");
             slider.type = "range";
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min; slider.max = max; slider.step = step; slider.value = value;
+            slider.autocomplete = "off";
+            
             const numberInput = document.createElement("input");
             numberInput.type = "number";
+            numberInput.id = numberId;
+            numberInput.name = numberId;
             numberInput.min = min; numberInput.max = max; numberInput.step = step; numberInput.value = value;
+            numberInput.autocomplete = "off";
             slider.addEventListener("input", (e) => { setter(parseFloat(e.target.value)); numberInput.value = e.target.value; });
             numberInput.addEventListener("input", (e) => {
                 const val = parseFloat(e.target.value) || 0;
@@ -750,8 +767,12 @@ class BrickwallLimiterPlugin extends PluginBase {
         osRow.className = "parameter-row";
         const osLabel = document.createElement("label");
         osLabel.textContent = "Oversampling:";
+        osLabel.htmlFor = `${this.id}-${this.name}-oversampling-select`;
         osRow.appendChild(osLabel);
         const osSelect = document.createElement("select");
+        osSelect.id = `${this.id}-${this.name}-oversampling-select`;
+        osSelect.name = `${this.id}-${this.name}-oversampling-select`;
+        osSelect.autocomplete = "off";
         [1,2,4,8].forEach(factor => {
             const option = document.createElement("option");
             option.value = factor;

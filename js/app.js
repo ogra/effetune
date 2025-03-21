@@ -273,25 +273,30 @@ class App {
             
             if (savedState && savedState.length > 0) {
                 // Restore pipeline from saved state
-                plugins.push(...savedState.map(pluginState => {
-                    const plugin = this.pluginManager.createPlugin(pluginState.name);
-                    plugin.enabled = pluginState.enabled;
-                    
-                    // Restore parameters efficiently
-                    if (plugin.setSerializedParameters) {
-                        plugin.setSerializedParameters(pluginState.parameters);
-                    } else if (plugin.setParameters) {
-                        plugin.setParameters({
-                            ...pluginState.parameters,
-                            enabled: pluginState.enabled
-                        });
-                    } else if (plugin.parameters) {
-                        Object.assign(plugin.parameters, pluginState.parameters);
-                    }
+                plugins.push(...savedState.flatMap(pluginState => {
+                    try {
+                        const plugin = this.pluginManager.createPlugin(pluginState.name);
+                        plugin.enabled = pluginState.enabled;
+                        
+                        // Restore parameters efficiently
+                        if (plugin.setSerializedParameters) {
+                            plugin.setSerializedParameters(pluginState.parameters);
+                        } else if (plugin.setParameters) {
+                            plugin.setParameters({
+                                ...pluginState.parameters,
+                                enabled: pluginState.enabled
+                            });
+                        } else if (plugin.parameters) {
+                            Object.assign(plugin.parameters, pluginState.parameters);
+                        }
 
-                    plugin.updateParameters();
-                    this.uiManager.expandedPlugins.add(plugin);
-                    return plugin;
+                        plugin.updateParameters();
+                        this.uiManager.expandedPlugins.add(plugin);
+                        return plugin;
+                    } catch (error) {
+                        console.warn(`Failed to create plugin '${pluginState.name}': ${error.message}`);
+                        return []; // Return empty array for flatMap to filter out this plugin
+                    }
                 }));
             } else {
                 // Initialize default plugins
@@ -300,13 +305,18 @@ class App {
                     { name: 'Level Meter' }
                 ];
                 
-                plugins.push(...defaultPlugins.map(config => {
-                    const plugin = this.pluginManager.createPlugin(config.name);
-                    if (config.config?.volume !== undefined) {
-                        plugin.setVl(config.config.volume);
+                plugins.push(...defaultPlugins.flatMap(config => {
+                    try {
+                        const plugin = this.pluginManager.createPlugin(config.name);
+                        if (config.config?.volume !== undefined) {
+                            plugin.setVl(config.config.volume);
+                        }
+                        this.uiManager.expandedPlugins.add(plugin);
+                        return plugin;
+                    } catch (error) {
+                        console.warn(`Failed to create default plugin '${config.name}': ${error.message}`);
+                        return []; // Return empty array for flatMap to filter out this plugin
                     }
-                    this.uiManager.expandedPlugins.add(plugin);
-                    return plugin;
                 }));
             }
             
@@ -507,17 +517,25 @@ isFirstLaunchPromise.then(isFirstLaunch => {
 document.addEventListener('dragover', (e) => {
     // Check for files
     if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-        const items = Array.from(e.dataTransfer.items);
+        // Check if we're dragging over the file drop area
+        const isOverFileDropArea = e.target.closest('.file-drop-area') !== null;
         
+        // Always prevent default to allow drop
         e.preventDefault();
-        e.stopPropagation();
         e.dataTransfer.dropEffect = 'copy';
-        document.body.classList.add('drag-over');
+        
+        // Only add drag-over class to body if not over the file drop area
+        if (!isOverFileDropArea) {
+            document.body.classList.add('drag-over');
+        } else {
+            // Explicitly remove drag-over class when over the drop area
+            document.body.classList.remove('drag-over');
+        }
         return;
     }
 }, true); // Use capture phase to ensure this handler runs first
 
-// Remove visual feedback when drag leaves
+// Remove visual feedback when drag leaves the document
 document.addEventListener('dragleave', (e) => {
     // Only handle if we're leaving the document
     if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
@@ -625,13 +643,14 @@ document.addEventListener('drop', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         
-        // Remove visual feedback
+        // Remove all visual feedback
         document.body.classList.remove('drag-over');
-        
-        // Also remove drag-active class from any drop areas
         document.querySelectorAll('.drag-active').forEach(el => {
             el.classList.remove('drag-active');
         });
+        
+        // Check if we're dropping on the file drop area
+        const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
         
         // Check if we're in a browser environment
         const isBrowser = !window.electronIntegration || !window.electronIntegration.isElectron;
@@ -672,13 +691,16 @@ document.addEventListener('drop', async (e) => {
             if (isBrowser) {
                 // In browser environment, check if the drop target is the file-drop-area
                 const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
-                
                 // Check if we have a drop area for offline processing
-                const dropArea = window.uiManager?.pipelineManager?.dropArea;
+                const fileProcessor = window.uiManager?.pipelineManager?.fileProcessor;
+                const dropArea = fileProcessor?.dropArea;
                 
-                if (dropArea && isDroppedOnFileDropArea) {
+                // Check if the target or any of its parents has the class 'file-drop-area'
+                const isOnDropArea = e.target.closest('.file-drop-area') !== null;
+                
+                if (fileProcessor && isOnDropArea) {
                     // Process files if they were dropped on the file-drop-area
-                    window.uiManager.pipelineManager.processDroppedAudioFiles(musicFiles);
+                    fileProcessor.processDroppedAudioFiles(musicFiles);
                 } else {
                     // Pass File objects directly to the audio player
                     if (window.uiManager) {

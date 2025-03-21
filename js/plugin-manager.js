@@ -15,6 +15,10 @@ export class PluginManager {
     }
 
     createPlugin(name) {
+        if (!this.isPluginAvailable(name)) {
+            console.error(`Plugin '${name}' is not available`);
+            throw new Error(`Plugin '${name}' is not available`);
+        }
         const plugin = new this.pluginClasses[name]();
         plugin.id = this.nextPluginId++;
         return plugin;

@@ -42,7 +42,7 @@
   "ui.configAudioButton": "オーディオ設定",
   "ui.shareButton": "共有",
   "ui.dragEffectMessage": "エフェクトをドラッグして、エフェクトパイプライン内の希望する位置に追加してください。\nまたは、エフェクトをダブルクリックしてエフェクトパイプラインに追加できます。",
-  "ui.dragPluginsHere": "プラグインをここにドラッグしてエフェクトパイプラインを構築",
+  "ui.dragPluginsHere": "エフェクトをここにドラッグしてエフェクトパイプラインを構築",
   "ui.effectsAvailable": "{count}種類のエフェクトが利用可能です",
   "ui.effectsFound": "{count}種類のエフェクトが見つかりました",
   "ui.searchEffectsPlaceholder": "エフェクトを検索...",

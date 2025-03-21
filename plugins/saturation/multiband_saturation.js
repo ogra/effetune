@@ -500,15 +500,20 @@ class MultibandSaturationPlugin extends PluginBase {
         const freqContainer = document.createElement('div');
         freqContainer.className = 'mbs-freq-sliders';
 
-        const createFreqSlider = (label, min, max, value, setter) => {
+        const createFreqSlider = (label, min, max, value, setter, freqNum) => {
             const sliderContainer = document.createElement('div');
             sliderContainer.className = 'mbs-freq-slider';
 
             const topRow = document.createElement('div');
             topRow.className = 'mbs-freq-slider-top';
 
+            // Create unique IDs for the inputs
+            const sliderId = `${this.id}-${this.name}-freq${freqNum}-slider`;
+            const inputId = `${this.id}-${this.name}-freq${freqNum}-input`;
+
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
+            labelEl.htmlFor = sliderId;
 
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
@@ -516,6 +521,9 @@ class MultibandSaturationPlugin extends PluginBase {
             numberInput.max = max;
             numberInput.step = 1;
             numberInput.value = value;
+            numberInput.id = inputId;
+            numberInput.name = inputId;
+            numberInput.autocomplete = "off";
 
             topRow.appendChild(labelEl);
             topRow.appendChild(numberInput);
@@ -527,6 +535,9 @@ class MultibandSaturationPlugin extends PluginBase {
             rangeInput.max = max;
             rangeInput.step = 1;
             rangeInput.value = value;
+            rangeInput.id = sliderId;
+            rangeInput.name = sliderId;
+            rangeInput.autocomplete = "off";
 
             rangeInput.addEventListener('input', (e) => {
                 setter(parseFloat(e.target.value));
@@ -543,8 +554,8 @@ class MultibandSaturationPlugin extends PluginBase {
             return sliderContainer;
         };
 
-        freqContainer.appendChild(createFreqSlider('Freq 1 (Hz)', 20, 2000, this.f1, this.setF1.bind(this)));
-        freqContainer.appendChild(createFreqSlider('Freq 2 (Hz)', 200, 20000, this.f2, this.setF2.bind(this)));
+        freqContainer.appendChild(createFreqSlider('Freq 1 (Hz)', 20, 2000, this.f1, this.setF1.bind(this), 1));
+        freqContainer.appendChild(createFreqSlider('Freq 2 (Hz)', 200, 20000, this.f2, this.setF2.bind(this), 2));
         container.appendChild(freqContainer);
 
         // Band settings UI
@@ -581,33 +592,50 @@ class MultibandSaturationPlugin extends PluginBase {
             content.className = `mbs-band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
             content.setAttribute('data-instance-id', this.instanceId);
 
-            const createControl = (label, min, max, step, value, setter) => {
+            const createControl = (label, min, max, step, value, setter, paramName) => {
                 const row = document.createElement('div');
                 row.className = 'parameter-row';
+                
+                // Create unique IDs for the inputs
+                const sliderId = `${this.id}-${this.name}-band${i}-${paramName}-slider`;
+                const inputId = `${this.id}-${this.name}-band${i}-${paramName}-input`;
+                
                 const labelEl = document.createElement('label');
                 labelEl.textContent = label;
+                labelEl.htmlFor = sliderId;
+                
                 const slider = document.createElement('input');
                 slider.type = 'range';
                 slider.min = min;
                 slider.max = max;
                 slider.step = step;
                 slider.value = value;
+                slider.id = sliderId;
+                slider.name = sliderId;
+                slider.autocomplete = "off";
+                
                 const numberInput = document.createElement('input');
                 numberInput.type = 'number';
                 numberInput.min = min;
                 numberInput.max = max;
                 numberInput.step = step;
                 numberInput.value = value;
+                numberInput.id = inputId;
+                numberInput.name = inputId;
+                numberInput.autocomplete = "off";
+                
                 slider.addEventListener('input', (e) => {
                     setter(parseFloat(e.target.value));
                     numberInput.value = e.target.value;
                 });
+                
                 numberInput.addEventListener('input', (e) => {
                     const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
                     setter(val);
                     slider.value = val;
                     e.target.value = val;
                 });
+                
                 row.appendChild(labelEl);
                 row.appendChild(slider);
                 row.appendChild(numberInput);
@@ -615,10 +643,10 @@ class MultibandSaturationPlugin extends PluginBase {
             };
 
             const band = this.bands[i];
-            content.appendChild(createControl('Drive:', 0, 10, 0.1, band.dr, this.setDr.bind(this)));
-            content.appendChild(createControl('Bias:', -0.3, 0.3, 0.01, band.bs, this.setBs.bind(this)));
-            content.appendChild(createControl('Mix (%):', 0, 100, 1, band.mx, this.setMx.bind(this)));
-            content.appendChild(createControl('Gain (dB):', -18, 18, 0.1, band.gn, this.setGn.bind(this)));
+            content.appendChild(createControl('Drive:', 0, 10, 0.1, band.dr, this.setDr.bind(this), 'drive'));
+            content.appendChild(createControl('Bias:', -0.3, 0.3, 0.01, band.bs, this.setBs.bind(this), 'bias'));
+            content.appendChild(createControl('Mix (%):', 0, 100, 1, band.mx, this.setMx.bind(this), 'mix'));
+            content.appendChild(createControl('Gain (dB):', -18, 18, 0.1, band.gn, this.setGn.bind(this), 'gain'));
             bandContents.appendChild(content);
         }
 

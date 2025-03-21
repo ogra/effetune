@@ -205,22 +205,31 @@ class BitCrusherPlugin extends PluginBase {
         // Bit Depth control
         const bitDepthLabel = document.createElement('label');
         bitDepthLabel.textContent = 'Bit Depth:';
+        const bitDepthSliderId = `${this.id}-${this.name}-bit-depth-slider`;
+        bitDepthLabel.htmlFor = bitDepthSliderId;
         const bitDepthSlider = document.createElement('input');
         bitDepthSlider.type = 'range';
+        bitDepthSlider.id = bitDepthSliderId;
+        bitDepthSlider.name = bitDepthSliderId;
         bitDepthSlider.min = 4;
         bitDepthSlider.max = 24;
         bitDepthSlider.step = 1;
         bitDepthSlider.value = this.bd;
+        bitDepthSlider.autocomplete = "off";
         bitDepthSlider.addEventListener('input', (e) => {
             this.setBd(parseInt(e.target.value));
             bitDepthValue.value = e.target.value;
         });
+        const bitDepthValueId = `${this.id}-${this.name}-bit-depth-value`;
         const bitDepthValue = document.createElement('input');
         bitDepthValue.type = 'number';
+        bitDepthValue.id = bitDepthValueId;
+        bitDepthValue.name = bitDepthValueId;
         bitDepthValue.min = 4;
         bitDepthValue.max = 24;
         bitDepthValue.step = 1;
         bitDepthValue.value = this.bd;
+        bitDepthValue.autocomplete = "off";
         bitDepthValue.addEventListener('input', (e) => {
             const value = Math.max(4, Math.min(24, parseInt(e.target.value) || 4));
             this.setBd(value);
@@ -231,9 +240,14 @@ class BitCrusherPlugin extends PluginBase {
         // TPDF Dither control
         const tpdfLabel = document.createElement('label');
         tpdfLabel.textContent = 'TPDF Dither:';
+        const tpdfCheckboxId = `${this.id}-${this.name}-tpdf-dither`;
+        tpdfLabel.htmlFor = tpdfCheckboxId;
         const tpdfCheckbox = document.createElement('input');
         tpdfCheckbox.type = 'checkbox';
+        tpdfCheckbox.id = tpdfCheckboxId;
+        tpdfCheckbox.name = tpdfCheckboxId;
         tpdfCheckbox.checked = this.td;
+        tpdfCheckbox.autocomplete = "off";
         tpdfCheckbox.addEventListener('change', (e) => {
             this.setTd(e.target.checked);
         });
@@ -241,22 +255,31 @@ class BitCrusherPlugin extends PluginBase {
         // ZOH Frequency control
         const zohFreqLabel = document.createElement('label');
         zohFreqLabel.textContent = 'ZOH Frequency (Hz):';
+        const zohFreqSliderId = `${this.id}-${this.name}-zoh-freq-slider`;
+        zohFreqLabel.htmlFor = zohFreqSliderId;
         const zohFreqSlider = document.createElement('input');
         zohFreqSlider.type = 'range';
+        zohFreqSlider.id = zohFreqSliderId;
+        zohFreqSlider.name = zohFreqSliderId;
         zohFreqSlider.min = 4000;
         zohFreqSlider.max = 96000;
         zohFreqSlider.step = 100;
         zohFreqSlider.value = this.zf;
+        zohFreqSlider.autocomplete = "off";
         zohFreqSlider.addEventListener('input', (e) => {
             this.setZf(parseInt(e.target.value));
             zohFreqValue.value = e.target.value;
         });
+        const zohFreqValueId = `${this.id}-${this.name}-zoh-freq-value`;
         const zohFreqValue = document.createElement('input');
         zohFreqValue.type = 'number';
+        zohFreqValue.id = zohFreqValueId;
+        zohFreqValue.name = zohFreqValueId;
         zohFreqValue.min = 4000;
         zohFreqValue.max = 96000;
         zohFreqValue.step = 100;
         zohFreqValue.value = this.zf;
+        zohFreqValue.autocomplete = "off";
         zohFreqValue.addEventListener('input', (e) => {
             const value = Math.max(4000, Math.min(96000, parseInt(e.target.value) || 4000));
             this.setZf(value);
@@ -267,22 +290,31 @@ class BitCrusherPlugin extends PluginBase {
         // Bit Error control
         const beLabel = document.createElement('label');
         beLabel.textContent = 'Bit Error (%):';
+        const beSliderId = `${this.id}-${this.name}-bit-error-slider`;
+        beLabel.htmlFor = beSliderId;
         const beSlider = document.createElement('input');
         beSlider.type = 'range';
+        beSlider.id = beSliderId;
+        beSlider.name = beSliderId;
         beSlider.min = 0;
         beSlider.max = 10;
         beSlider.step = 0.01;
         beSlider.value = this.be;
+        beSlider.autocomplete = "off";
         beSlider.addEventListener('input', (e) => {
             this.setBe(parseFloat(e.target.value));
             beValue.value = e.target.value;
         });
+        const beValueId = `${this.id}-${this.name}-bit-error-value`;
         const beValue = document.createElement('input');
         beValue.type = 'number';
+        beValue.id = beValueId;
+        beValue.name = beValueId;
         beValue.min = 0;
         beValue.max = 10;
         beValue.step = 0.01;
         beValue.value = this.be;
+        beValue.autocomplete = "off";
         beValue.addEventListener('input', (e) => {
             const value = Math.max(0, Math.min(10, parseFloat(e.target.value) || 0));
             this.setBe(value);
@@ -293,22 +325,31 @@ class BitCrusherPlugin extends PluginBase {
         // Seed control
         const seedLabel = document.createElement('label');
         seedLabel.textContent = 'Random Seed:';
+        const seedSliderId = `${this.id}-${this.name}-seed-slider`;
+        seedLabel.htmlFor = seedSliderId;
         const seedSlider = document.createElement('input');
         seedSlider.type = 'range';
+        seedSlider.id = seedSliderId;
+        seedSlider.name = seedSliderId;
         seedSlider.min = 0;
         seedSlider.max = 1000;
         seedSlider.step = 1;
         seedSlider.value = this.sd;
+        seedSlider.autocomplete = "off";
         seedSlider.addEventListener('input', (e) => {
             this.setSeed(parseInt(e.target.value));
             seedValue.value = e.target.value;
         });
+        const seedValueId = `${this.id}-${this.name}-seed-value`;
         const seedValue = document.createElement('input');
         seedValue.type = 'number';
+        seedValue.id = seedValueId;
+        seedValue.name = seedValueId;
         seedValue.min = 0;
         seedValue.max = 1000;
         seedValue.step = 1;
         seedValue.value = this.sd;
+        seedValue.autocomplete = "off";
         seedValue.addEventListener('input', (e) => {
             const value = Math.max(0, Math.min(1000, parseInt(e.target.value) || 0));
             this.setSeed(value);

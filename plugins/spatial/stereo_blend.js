@@ -88,22 +88,31 @@ class StereoBlendPlugin extends PluginBase {
         // Stereo width parameter row
         const stereoLabel = document.createElement('label');
         stereoLabel.textContent = 'Stereo (%):';
+        stereoLabel.htmlFor = `${this.id}-${this.name}-stereo-slider`;
+        
         const stereoSlider = document.createElement('input');
         stereoSlider.type = 'range';
         stereoSlider.min = 0;
         stereoSlider.max = 200;
         stereoSlider.step = 1;
         stereoSlider.value = this.stereo;
+        stereoSlider.id = `${this.id}-${this.name}-stereo-slider`;
+        stereoSlider.name = `${this.id}-${this.name}-stereo-slider`;
+        stereoSlider.autocomplete = "off";
         stereoSlider.addEventListener('input', (e) => {
             this.setStereo(parseFloat(e.target.value));
             stereoValue.value = e.target.value;
         });
+        
         const stereoValue = document.createElement('input');
         stereoValue.type = 'number';
         stereoValue.min = 0;
         stereoValue.max = 200;
         stereoValue.step = 1;
         stereoValue.value = this.stereo;
+        stereoValue.id = `${this.id}-${this.name}-stereo-value`;
+        stereoValue.name = `${this.id}-${this.name}-stereo-value`;
+        stereoValue.autocomplete = "off";
         stereoValue.addEventListener('input', (e) => {
             const value = Math.max(0, Math.min(200, parseFloat(e.target.value) || 0));
             this.setStereo(value);

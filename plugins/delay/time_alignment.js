@@ -156,6 +156,7 @@ class TimeAlignmentPlugin extends PluginBase {
         channelRow.className = 'parameter-row';
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`;
         channelRow.appendChild(channelLabel);
 
         const channelContainer = document.createElement('div');
@@ -165,14 +166,17 @@ class TimeAlignmentPlugin extends PluginBase {
             const label = document.createElement('label');
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `channel-${this.id}`;
+            radio.id = `${this.id}-${this.name}-channel-${ch}`;
+            radio.name = `${this.id}-${this.name}-channel`;
             radio.value = ch;
             radio.checked = this.ch === ch;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => {
                 if (radio.checked) {
                     this.setChannel(radio.value);
                 }
             });
+            label.htmlFor = `${this.id}-${this.name}-channel-${ch}`;
             label.appendChild(radio);
             label.appendChild(document.createTextNode(ch));
             channelContainer.appendChild(label);
@@ -185,21 +189,26 @@ class TimeAlignmentPlugin extends PluginBase {
         delayRow.className = 'parameter-row';
         const delayLabel = document.createElement('label');
         delayLabel.textContent = 'Delay:';
+        delayLabel.htmlFor = `${this.id}-${this.name}-delay-slider`;
         delayRow.appendChild(delayLabel);
 
         const delaySlider = document.createElement('input');
         delaySlider.type = 'range';
+        delaySlider.id = `${this.id}-${this.name}-delay-slider`;
         delaySlider.min = '0';
         delaySlider.max = this.maxDelayTime;
         delaySlider.step = '0.01';
         delaySlider.value = this.dl;
+        delaySlider.autocomplete = "off";
 
         const delayValue = document.createElement('input');
         delayValue.type = 'number';
+        delayValue.id = `${this.id}-${this.name}-delay-value`;
         delayValue.min = '0';
         delayValue.max = this.maxDelayTime;
         delayValue.step = '0.01';
         delayValue.value = this.dl;
+        delayValue.autocomplete = "off";
 
         delaySlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);

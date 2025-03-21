@@ -200,22 +200,32 @@ class ToneControlPlugin extends PluginBase {
         const bassRow = document.createElement('div');
         bassRow.className = 'parameter-row';
         
+        const bassSliderId = `${this.id}-${this.name}-bass-slider`;
+        const bassValueId = `${this.id}-${this.name}-bass-value`;
+        
         const bassLabel = document.createElement('label');
         bassLabel.textContent = 'Bass (dB):';
+        bassLabel.htmlFor = bassSliderId;
         
         const bassSlider = document.createElement('input');
         bassSlider.type = 'range';
+        bassSlider.id = bassSliderId;
+        bassSlider.name = bassSliderId;
         bassSlider.min = -24;
         bassSlider.max = 24;
         bassSlider.step = 0.1;
         bassSlider.value = this.bs;
+        bassSlider.autocomplete = "off";
         
         const bassValue = document.createElement('input');
         bassValue.type = 'number';
+        bassValue.id = bassValueId;
+        bassValue.name = bassValueId;
         bassValue.min = -24;
         bassValue.max = 24;
         bassValue.step = 0.1;
         bassValue.value = this.bs;
+        bassValue.autocomplete = "off";
 
         bassSlider.addEventListener('input', (e) => {
             this.setBass(parseFloat(e.target.value));
@@ -238,22 +248,32 @@ class ToneControlPlugin extends PluginBase {
         const midRow = document.createElement('div');
         midRow.className = 'parameter-row';
         
+        const midSliderId = `${this.id}-${this.name}-mid-slider`;
+        const midValueId = `${this.id}-${this.name}-mid-value`;
+        
         const midLabel = document.createElement('label');
         midLabel.textContent = 'Mid (dB):';
+        midLabel.htmlFor = midSliderId;
         
         const midSlider = document.createElement('input');
         midSlider.type = 'range';
+        midSlider.id = midSliderId;
+        midSlider.name = midSliderId;
         midSlider.min = -24;
         midSlider.max = 24;
         midSlider.step = 0.1;
         midSlider.value = this.md;
+        midSlider.autocomplete = "off";
         
         const midValue = document.createElement('input');
         midValue.type = 'number';
+        midValue.id = midValueId;
+        midValue.name = midValueId;
         midValue.min = -24;
         midValue.max = 24;
         midValue.step = 0.1;
         midValue.value = this.md;
+        midValue.autocomplete = "off";
 
         midSlider.addEventListener('input', (e) => {
             this.setMid(parseFloat(e.target.value));
@@ -276,22 +296,32 @@ class ToneControlPlugin extends PluginBase {
         const trebleRow = document.createElement('div');
         trebleRow.className = 'parameter-row';
         
+        const trebleSliderId = `${this.id}-${this.name}-treble-slider`;
+        const trebleValueId = `${this.id}-${this.name}-treble-value`;
+        
         const trebleLabel = document.createElement('label');
         trebleLabel.textContent = 'Treble (dB):';
+        trebleLabel.htmlFor = trebleSliderId;
         
         const trebleSlider = document.createElement('input');
         trebleSlider.type = 'range';
+        trebleSlider.id = trebleSliderId;
+        trebleSlider.name = trebleSliderId;
         trebleSlider.min = -24;
         trebleSlider.max = 24;
         trebleSlider.step = 0.1;
         trebleSlider.value = this.tr;
+        trebleSlider.autocomplete = "off";
         
         const trebleValue = document.createElement('input');
         trebleValue.type = 'number';
+        trebleValue.id = trebleValueId;
+        trebleValue.name = trebleValueId;
         trebleValue.min = -24;
         trebleValue.max = 24;
         trebleValue.step = 0.1;
         trebleValue.value = this.tr;
+        trebleValue.autocomplete = "off";
 
         trebleSlider.addEventListener('input', (e) => {
             this.setTreble(parseFloat(e.target.value));

@@ -161,22 +161,39 @@ class LoudnessEqualizerPlugin extends PluginBase {
 
         // Helper to create a parameter row with slider and number input
         const createRow = (labelText, min, max, step, value, onChange) => {
+            // Create a parameter name from the label (e.g., "Average SPL (dB):" -> "averagespldb")
+            // Include more of the label to ensure uniqueness
+            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const numberId = `${this.id}-${this.name}-${paramName}-number`;
+            
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            
             const label = document.createElement('label');
             label.textContent = labelText;
+            label.htmlFor = sliderId;
+            
             const slider = document.createElement('input');
             slider.type = 'range';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
+            slider.autocomplete = "off";
+            
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
+            numberInput.id = numberId;
+            numberInput.name = numberId;
             numberInput.min = min;
             numberInput.max = max;
             numberInput.step = step;
             numberInput.value = value;
+            numberInput.autocomplete = "off";
             slider.addEventListener('input', e => {
                 onChange(parseFloat(e.target.value));
                 numberInput.value = e.target.value;

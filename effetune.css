@@ -599,6 +599,14 @@ input {
     min-width: 80px;
 }
 
+.plugin-parameter-ui select {
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 4px;
+}
+
 /* Error Display */
 .plugin-error {
     background-color: rgba(244, 67, 54, 0.1);

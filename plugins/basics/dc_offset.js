@@ -61,6 +61,9 @@ class DCOffsetPlugin extends PluginBase {
         slider.max = 1;
         slider.step = 0.01;
         slider.value = this.of;
+        slider.id = `${this.id}-${this.name}-slider`;
+        slider.name = `${this.id}-${this.name}-slider`;
+        slider.autocomplete = "off";
         slider.addEventListener('input', (e) => {
             this.setOf(parseFloat(e.target.value));
             valueInput.value = e.target.value;
@@ -73,6 +76,9 @@ class DCOffsetPlugin extends PluginBase {
         valueInput.max = 1;
         valueInput.step = 0.01;
         valueInput.value = this.of;
+        valueInput.id = `${this.id}-${this.name}-input`;
+        valueInput.name = `${this.id}-${this.name}-input`;
+        valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
             const value = Math.max(-1, Math.min(1, parseFloat(e.target.value) || 0));
             this.setOf(value);
@@ -83,6 +89,7 @@ class DCOffsetPlugin extends PluginBase {
         // Label
         const label = document.createElement('label');
         label.textContent = 'Offset:';
+        label.htmlFor = `${this.id}-${this.name}-slider`;
 
         // Offset parameter row
         const offsetRow = document.createElement('div');

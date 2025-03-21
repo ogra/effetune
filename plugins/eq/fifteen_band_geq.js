@@ -243,6 +243,7 @@ class FifteenBandGEQPlugin extends PluginBase {
         
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`; // Associate with the first radio button
         
         const channels = ['All', 'Left', 'Right'];
         const channelRadios = channels.map(ch => {
@@ -251,9 +252,11 @@ class FifteenBandGEQPlugin extends PluginBase {
             
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `channel-${this.id}`;
+            radio.id = `${this.id}-${this.name}-channel-${ch}`;
+            radio.name = `${this.id}-${this.name}-channel`;
             radio.value = ch;
             radio.checked = ch === this.ch;
+            radio.autocomplete = "off";
             
             radio.addEventListener('change', (e) => {
                 if (e.target.checked) {
@@ -261,6 +264,7 @@ class FifteenBandGEQPlugin extends PluginBase {
                 }
             });
             
+            label.htmlFor = radio.id;
             label.appendChild(radio);
             label.appendChild(document.createTextNode(ch));
             return label;
@@ -283,18 +287,23 @@ class FifteenBandGEQPlugin extends PluginBase {
             sliderContainer.className = 'slider-container';
 
             // Frequency label
-            const freqLabel = document.createElement('div');
+            const freqLabel = document.createElement('label');
             freqLabel.className = 'freq-label';
             freqLabel.textContent = band.name;
+            const sliderId = `${this.id}-${this.name}-band-${index}-slider`;
+            freqLabel.htmlFor = sliderId;
 
             // Vertical slider
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.className = 'vertical-slider';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = -12;
             slider.max = 12;
             slider.step = 0.1;
             slider.value = this['b' + index];
+            slider.autocomplete = "off";
             sliders.push(slider);
 
             // Value display

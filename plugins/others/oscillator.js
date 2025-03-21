@@ -144,12 +144,16 @@ class OscillatorPlugin extends PluginBase {
         
         const freqLabel = document.createElement('label');
         freqLabel.textContent = 'Frequency (Hz):';
+        freqLabel.htmlFor = `${this.id}-${this.name}-frequency-slider`;
         
         const freqSlider = document.createElement('input');
         freqSlider.type = 'range';
         freqSlider.min = '0';
         freqSlider.max = '100000';
         freqSlider.value = this.mapFrequencyToSlider(this.fr);
+        freqSlider.id = `${this.id}-${this.name}-frequency-slider`;
+        freqSlider.name = `${this.id}-${this.name}-frequency-slider`;
+        freqSlider.autocomplete = "off";
         
         const freqValue = document.createElement('input');
         freqValue.type = 'number';
@@ -157,6 +161,9 @@ class OscillatorPlugin extends PluginBase {
         freqValue.max = '96000';
         freqValue.step = '1';
         freqValue.value = this.fr;
+        freqValue.id = `${this.id}-${this.name}-frequency-value`;
+        freqValue.name = `${this.id}-${this.name}-frequency-value`;
+        freqValue.autocomplete = "off";
 
         freqSlider.addEventListener('input', (e) => {
             const freq = this.mapSliderToFrequency(e.target.value);
@@ -180,12 +187,16 @@ class OscillatorPlugin extends PluginBase {
         
         const volLabel = document.createElement('label');
         volLabel.textContent = 'Volume (dB):';
+        volLabel.htmlFor = `${this.id}-${this.name}-volume-slider`;
         
         const volSlider = document.createElement('input');
         volSlider.type = 'range';
         volSlider.min = '-96';
         volSlider.max = '0';
         volSlider.value = this.vl;
+        volSlider.id = `${this.id}-${this.name}-volume-slider`;
+        volSlider.name = `${this.id}-${this.name}-volume-slider`;
+        volSlider.autocomplete = "off";
         
         const volValue = document.createElement('input');
         volValue.type = 'number';
@@ -193,6 +204,9 @@ class OscillatorPlugin extends PluginBase {
         volValue.max = '0';
         volValue.step = '0.1';
         volValue.value = this.vl;
+        volValue.id = `${this.id}-${this.name}-volume-value`;
+        volValue.name = `${this.id}-${this.name}-volume-value`;
+        volValue.autocomplete = "off";
 
         volSlider.addEventListener('input', (e) => {
             const vol = parseFloat(e.target.value);
@@ -222,14 +236,18 @@ class OscillatorPlugin extends PluginBase {
         
         ['Center', 'Left', 'Right'].forEach((label, index) => {
             const value = index === 1 ? -1 : index === 2 ? 1 : 0;
+            const radioId = `${this.id}-${this.name}-panning-${label.toLowerCase()}`;
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `panning-${this.id}`;
+            radio.name = `${this.id}-${this.name}-panning`;
+            radio.id = radioId;
             radio.value = value;
             radio.checked = this.pn === value;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => this.setPanning(value));
             
             const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = radioId;
             radioLabel.appendChild(radio);
             radioLabel.appendChild(document.createTextNode(label));
             panRadioGroup.appendChild(radioLabel);
@@ -249,18 +267,21 @@ class OscillatorPlugin extends PluginBase {
         waveRadioGroup.className = 'radio-group';
         
         [
-            ['sine', 'Sine'], 
-            ['sawtooth', 'Sawtooth'], 
-            ['triangle', 'Triangle'], 
+            ['sine', 'Sine'],
+            ['sawtooth', 'Sawtooth'],
+            ['triangle', 'Triangle'],
             ['square', 'Square'],
             ['white', 'White Noise'],
             ['pink', 'Pink Noise']
         ].forEach(([value, label]) => {
+            const radioId = `${this.id}-${this.name}-waveform-${value}`;
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `waveform-${this.id}`;
+            radio.name = `${this.id}-${this.name}-waveform`;
+            radio.id = radioId;
             radio.value = value;
             radio.checked = this.wf === value;
+            radio.autocomplete = "off";
             radio.addEventListener('change', () => {
                 this.setWaveform(value);
                 freqSlider.disabled = value === 'white' || value === 'pink';
@@ -268,6 +289,7 @@ class OscillatorPlugin extends PluginBase {
             });
             
             const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = radioId;
             radioLabel.appendChild(radio);
             radioLabel.appendChild(document.createTextNode(label));
             waveRadioGroup.appendChild(radioLabel);

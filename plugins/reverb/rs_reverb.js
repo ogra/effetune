@@ -308,28 +308,44 @@ class RSReverbPlugin extends PluginBase {
         container.className = 'plugin-parameter-ui';
 
         // Utility function to create a parameter row with a slider and number input
-        const createRow = (labelText, type, min, max, step, value, onChange) => {
+        const createRow = (labelText, type, min, max, step, value, onChange, paramName) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            
+            // Create unique IDs for the inputs
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const inputId = `${this.id}-${this.name}-${paramName}-input`;
+            
             const label = document.createElement('label');
             label.textContent = labelText;
+            label.htmlFor = sliderId; // Associate label with slider
+            
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
+            slider.id = sliderId;
+            slider.name = sliderId;
+            slider.autocomplete = "off";
+            
             const input = document.createElement('input');
             input.type = type;
             input.min = min;
             input.max = max;
             input.step = step;
             input.value = value;
+            input.id = inputId;
+            input.name = inputId;
+            input.autocomplete = "off";
+            
             slider.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
                 onChange(val);
                 input.value = val;
             });
+            
             input.addEventListener('input', (e) => {
                 let val = parseFloat(e.target.value) || 0;
                 if (val < min) val = min;
@@ -338,21 +354,22 @@ class RSReverbPlugin extends PluginBase {
                 slider.value = val;
                 e.target.value = val;
             });
+            
             row.appendChild(label);
             row.appendChild(slider);
             row.appendChild(input);
             return row;
         };
 
-        container.appendChild(createRow('Pre-Delay (ms):', 'number', '0', '50', '0.1', this.pd, (value) => this.setParameters({ pd: value })));
-        container.appendChild(createRow('Room Size (m):', 'number', '2.0', '50.0', '0.1', this.rs, (value) => this.setParameters({ rs: value })));
-        container.appendChild(createRow('Reverb Time (s):', 'number', '0.1', '10.0', '0.1', this.rt, (value) => this.setParameters({ rt: value })));
-        container.appendChild(createRow('Density (lines):', 'number', '4', '8', '1', this.ds, (value) => this.setParameters({ ds: value })));
-        container.appendChild(createRow('Diffusion (ratio):', 'number', '0.2', '0.8', '0.01', this.df, (value) => this.setParameters({ df: value })));
-        container.appendChild(createRow('Damping (%):', 'number', '0', '100', '1', this.dp, (value) => this.setParameters({ dp: value })));
-        container.appendChild(createRow('High Damp (Hz):', 'number', '1000', '20000', '100', this.hd, (value) => this.setParameters({ hd: value })));
-        container.appendChild(createRow('Low Damp (Hz):', 'number', '20', '500', '1', this.ld, (value) => this.setParameters({ ld: value })));
-        container.appendChild(createRow('Mix (%):', 'number', '0', '100', '1', this.mx, (value) => this.setParameters({ mx: value })));
+        container.appendChild(createRow('Pre-Delay (ms):', 'number', '0', '50', '0.1', this.pd, (value) => this.setParameters({ pd: value }), 'predelay'));
+        container.appendChild(createRow('Room Size (m):', 'number', '2.0', '50.0', '0.1', this.rs, (value) => this.setParameters({ rs: value }), 'roomsize'));
+        container.appendChild(createRow('Reverb Time (s):', 'number', '0.1', '10.0', '0.1', this.rt, (value) => this.setParameters({ rt: value }), 'reverbtime'));
+        container.appendChild(createRow('Density (lines):', 'number', '4', '8', '1', this.ds, (value) => this.setParameters({ ds: value }), 'density'));
+        container.appendChild(createRow('Diffusion (ratio):', 'number', '0.2', '0.8', '0.01', this.df, (value) => this.setParameters({ df: value }), 'diffusion'));
+        container.appendChild(createRow('Damping (%):', 'number', '0', '100', '1', this.dp, (value) => this.setParameters({ dp: value }), 'damping'));
+        container.appendChild(createRow('High Damp (Hz):', 'number', '1000', '20000', '100', this.hd, (value) => this.setParameters({ hd: value }), 'highdamp'));
+        container.appendChild(createRow('Low Damp (Hz):', 'number', '20', '500', '1', this.ld, (value) => this.setParameters({ ld: value }), 'lowdamp'));
+        container.appendChild(createRow('Mix (%):', 'number', '0', '100', '1', this.mx, (value) => this.setParameters({ mx: value }), 'mix'));
 
         return container;
     }

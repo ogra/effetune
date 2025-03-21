@@ -43,7 +43,7 @@
   "ui.configAudioButton": "إعداد الصوت",
   "ui.shareButton": "مشاركة",
   "ui.dragEffectMessage": "اسحب هذا التأثير لإضافته في الموقع المطلوب بسلسلة التأثيرات.\nأو انقر نقراً مزدوجاً لإضافته.",
-  "ui.dragPluginsHere": "اسحب الإضافات هنا لبناء سلسلة التأثيرات",
+  "ui.dragPluginsHere": "اسحب التأثيرات هنا لبناء سلسلة تأثيرات",
   "ui.effectsAvailable": "{count} تأثيرات متاحة",
   "ui.effectsFound": "{count} تأثيرات تم العثور عليها",
   "ui.searchEffectsPlaceholder": "ابحث عن التأثيرات...",

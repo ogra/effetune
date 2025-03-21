@@ -504,8 +504,8 @@ export class UIManager {
             cleanPath = cleanPath.replace(/\.md$/, '.html');
         }
         
-        // If path is '/readme.md' or '/readme.html', convert it to root directory
-        if (cleanPath === '/readme.html' || cleanPath === '/readme.md' || cleanPath === '/') {
+        // If path is '/README.md' or '/README.html', convert it to root directory
+        if (cleanPath === '/README.html' || cleanPath === '/README.md' || cleanPath === '/') {
             if (this.userLanguage) {
                 return `${baseUrl}/docs/i18n/${this.userLanguage}/`;
             }
@@ -553,7 +553,7 @@ export class UIManager {
         const whatsThisLink = document.querySelector('.whats-this');
         if (whatsThisLink) {
             // Get the localized path (now always returns a web URL)
-            const localizedPath = this.getLocalizedDocPath('/readme.md');
+            const localizedPath = this.getLocalizedDocPath('/README.md');
             
             // For both Electron and web, open the URL in external browser
             whatsThisLink.addEventListener('click', (e) => {

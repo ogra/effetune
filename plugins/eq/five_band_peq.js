@@ -337,6 +337,7 @@ class FiveBandPEQPlugin extends PluginBase {
     
     const channelLabel = document.createElement('label');
     channelLabel.textContent = 'Channel:';
+    channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`; // Associate with the first radio button
     
     const channels = ['All', 'Left', 'Right'];
     const channelRadios = channels.map(ch => {
@@ -345,9 +346,11 @@ class FiveBandPEQPlugin extends PluginBase {
       
       const radio = document.createElement('input');
       radio.type = 'radio';
-      radio.name = `channel-${this.id}`;
+      radio.id = `${this.id}-${this.name}-channel-${ch}`;
+      radio.name = `${this.id}-${this.name}-channel`;
       radio.value = ch;
       radio.checked = ch === this.ch;
+      radio.autocomplete = "off";
       
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
@@ -355,6 +358,7 @@ class FiveBandPEQPlugin extends PluginBase {
         }
       });
       
+      label.htmlFor = radio.id;
       label.appendChild(radio);
       label.appendChild(document.createTextNode(ch));
       return label;
@@ -546,12 +550,18 @@ class FiveBandPEQPlugin extends PluginBase {
       const typeRow = document.createElement('div');
       typeRow.className = 'five-band-peq-type-row';
 
-      const typeLabel = document.createElement('div');
+      const typeSelectId = `${this.id}-${this.name}-band${i}-type`;
+      
+      const typeLabel = document.createElement('label');
       typeLabel.className = 'five-band-peq-type-label';
       typeLabel.textContent = 'Type:';
+      typeLabel.htmlFor = typeSelectId;
 
       const typeSelect = document.createElement('select');
       typeSelect.className = 'five-band-peq-filter-type';
+      typeSelect.id = typeSelectId;
+      typeSelect.name = typeSelectId;
+      typeSelect.autocomplete = "off";
       FiveBandPEQPlugin.FILTER_TYPES.forEach(type => {
         const option = document.createElement('option');
         option.value = type.id;
@@ -563,25 +573,35 @@ class FiveBandPEQPlugin extends PluginBase {
       const qRow = document.createElement('div');
       qRow.className = 'five-band-peq-q-row';
 
-      const qLabel = document.createElement('div');
+      const qSliderId = `${this.id}-${this.name}-band${i}-q-slider`;
+      const qTextId = `${this.id}-${this.name}-band${i}-q-text`;
+      
+      const qLabel = document.createElement('label');
       qLabel.className = 'five-band-peq-q-label';
       qLabel.textContent = 'Q:';
+      qLabel.htmlFor = qSliderId;
 
       const qSlider = document.createElement('input');
       qSlider.type = 'range';
       qSlider.className = 'five-band-peq-q-slider';
+      qSlider.id = qSliderId;
+      qSlider.name = qSliderId;
       qSlider.min = 0.1;
       qSlider.max = 10;
       qSlider.step = 0.1;
       qSlider.value = this['q' + i];
+      qSlider.autocomplete = "off";
 
       const qText = document.createElement('input');
       qText.type = 'number';
       qText.className = 'five-band-peq-q-text';
+      qText.id = qTextId;
+      qText.name = qTextId;
       qText.min = 0.1;
       qText.max = 10;
       qText.step = 0.1;
       qText.value = this['q' + i];
+      qText.autocomplete = "off";
 
       const updateQControlsState = (type) => {
         const isShelvingFilter = type === 'ls' || type === 'hs';

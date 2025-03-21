@@ -302,20 +302,27 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         const dbRangeLabel = document.createElement('label');
         dbRangeLabel.textContent = 'DB Range (dB):';
+        dbRangeLabel.htmlFor = `${this.id}-${this.name}-db-range-slider`;
         
         const dbRangeSlider = document.createElement('input');
         dbRangeSlider.type = 'range';
+        dbRangeSlider.id = `${this.id}-${this.name}-db-range-slider`;
+        dbRangeSlider.name = `${this.id}-${this.name}-db-range-slider`;
         dbRangeSlider.min = -144;
         dbRangeSlider.max = -48;
         dbRangeSlider.step = 6;
         dbRangeSlider.value = this.dr;
+        dbRangeSlider.autocomplete = "off";
 
         const dbRangeValue = document.createElement('input');
         dbRangeValue.type = 'number';
+        dbRangeValue.id = `${this.id}-${this.name}-db-range-value`;
+        dbRangeValue.name = `${this.id}-${this.name}-db-range-value`;
         dbRangeValue.value = this.dr;
         dbRangeValue.step = 6;
         dbRangeValue.min = -144;
         dbRangeValue.max = -48;
+        dbRangeValue.autocomplete = "off";
 
         const dbRangeHandler = (e) => {
             const value = parseInt(e.target.value);
@@ -335,20 +342,27 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         const pointsLabel = document.createElement('label');
         pointsLabel.textContent = 'Points:';
+        pointsLabel.htmlFor = `${this.id}-${this.name}-points-slider`;
         
         const pointsSlider = document.createElement('input');
         pointsSlider.type = 'range';
+        pointsSlider.id = `${this.id}-${this.name}-points-slider`;
+        pointsSlider.name = `${this.id}-${this.name}-points-slider`;
         pointsSlider.min = 8;
         pointsSlider.max = 14;
         pointsSlider.step = 1;
         pointsSlider.value = this.pt;
+        pointsSlider.autocomplete = "off";
 
         const pointsValue = document.createElement('input');
         pointsValue.type = 'number';
+        pointsValue.id = `${this.id}-${this.name}-points-value`;
+        pointsValue.name = `${this.id}-${this.name}-points-value`;
         pointsValue.value = 1 << this.pt;
         pointsValue.step = 1;
         pointsValue.min = 1 << 8;
         pointsValue.max = 1 << 14;
+        pointsValue.autocomplete = "off";
 
         const pointsHandler = (e) => {
             const value = parseInt(e.target.value);
@@ -373,12 +387,16 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const channelRadios = channels.map(ch => {
             const label = document.createElement('label');
             label.className = 'radio-label';
+            const radioId = `${this.id}-${this.name}-channel-${ch.toLowerCase()}`;
+            label.htmlFor = radioId;
             
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = `channel-${this.id}`;
+            radio.id = radioId;
+            radio.name = `${this.id}-${this.name}-channel`;
             radio.value = ch;
             radio.checked = ch === this.ch;
+            radio.autocomplete = "off";
             
             const radioHandler = (e) => {
                 if (e.target.checked) {

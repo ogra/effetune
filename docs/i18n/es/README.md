@@ -120,12 +120,14 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
    - Delete: Eliminar los efectos seleccionados
    - ESC: Deseleccionar todos los efectos
 
-3. Atajos de teclado (solo aplicación de escritorio):
+3. Atajos de teclado (al usar el reproductor):
    - Espacio: Reproducir/Pausar
-   - Ctrl + → o N: Pista siguiente
+   - Ctrl + → o N: Siguiente pista
    - Ctrl + ← o P: Pista anterior
    - Shift + → o F o .: Avanzar 10 segundos
    - Shift + ← o B o ,: Retroceder 10 segundos
+   - Ctrl + T: Alternar modo repetición
+   - Ctrl + H: Alternar modo aleatorio
 
 ### Procesamiento de Archivos de Audio
 

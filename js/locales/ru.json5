@@ -43,7 +43,7 @@
   "ui.configAudioButton": "Настроить аудио",
   "ui.shareButton": "Поделиться",
   "ui.dragEffectMessage": "Перетащите этот эффект в нужное место в цепочке эффектов.\nИли дважды кликните, чтобы добавить его.",
-  "ui.dragPluginsHere": "Перетащите плагины сюда для создания цепочки эффектов",
+  "ui.dragPluginsHere": "Перетащите эффекты сюда, чтобы создать свой конвейер эффектов",
   "ui.effectsAvailable": "{count} доступных эффектов",
   "ui.effectsFound": "{count} эффектов найдено",
   "ui.searchEffectsPlaceholder": "Поиск эффектов...",

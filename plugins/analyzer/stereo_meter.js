@@ -115,20 +115,27 @@ class StereoMeterPlugin extends PluginBase {
 
     const windowLabel = document.createElement('label');
     windowLabel.textContent = 'Window (ms):';
+    windowLabel.htmlFor = `${this.id}-${this.name}-window-slider`;
 
     const windowSlider = document.createElement('input');
     windowSlider.type = 'range';
+    windowSlider.id = `${this.id}-${this.name}-window-slider`;
+    windowSlider.name = `${this.id}-${this.name}-window-slider`;
     windowSlider.min = 10;
     windowSlider.max = 1000;
     windowSlider.step = 1;
     windowSlider.value = (this.windowTime * 1000).toFixed(0);
+    windowSlider.autocomplete = "off";
 
     const windowValue = document.createElement('input');
     windowValue.type = 'number';
+    windowValue.id = `${this.id}-${this.name}-window-value`;
+    windowValue.name = `${this.id}-${this.name}-window-value`;
     windowValue.value = (this.windowTime * 1000).toFixed(0);
     windowValue.step = 1;
     windowValue.min = 10;
     windowValue.max = 1000;
+    windowValue.autocomplete = "off";
 
     const windowHandler = (e) => {
       const value = parseFloat(e.target.value) / 1000; // Convert ms to seconds.

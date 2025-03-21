@@ -8,7 +8,7 @@ class AutoLevelerPlugin extends PluginBase {
         this.mg = 0.0;    // mg: Max Gain (0.0 to 12.0 dB)
         this.ng = -12.0;  // ng: Min Gain (-36.0 to 0.0 dB)
         this.at = 50;     // at: Attack Time (1 to 1000 ms)
-        this.rt = 1000;   // rt: Release Time (10 to 10000 ms)
+        this.rt = 5000;   // rt: Release Time (10 to 10000 ms)
         this.gt = -60;    // gt: Noise Gate (-96 to -24 dB)
 
         // Internal state
@@ -439,20 +439,37 @@ class AutoLevelerPlugin extends PluginBase {
         const createRow = (labelText, type, min, max, step, value, onChange) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            
+            // Create a parameter name from the label (e.g., "Target (dB LUFS):" -> "targetdblufs")
+            // Include more of the label to ensure uniqueness
+            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const inputId = `${this.id}-${this.name}-${paramName}-input`;
+            
             const label = document.createElement('label');
             label.textContent = labelText;
+            label.htmlFor = sliderId;
+            
             const slider = document.createElement('input');
             slider.type = 'range';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
+            slider.autocomplete = "off";
+            
             const input = document.createElement('input');
             input.type = type;
+            input.id = inputId;
+            input.name = inputId;
             input.min = min;
             input.max = max;
             input.step = step;
             input.value = value;
+            input.autocomplete = "off";
             slider.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
                 onChange(val);

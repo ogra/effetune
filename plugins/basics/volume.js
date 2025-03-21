@@ -61,6 +61,9 @@ class VolumePlugin extends PluginBase {
         slider.max = 24;
         slider.step = 0.1;
         slider.value = this.vl;
+        slider.id = `${this.id}-${this.name}-slider`;
+        slider.name = `${this.id}-${this.name}-slider`;
+        slider.autocomplete = "off";
         slider.addEventListener('input', (e) => {
             this.setVl(parseFloat(e.target.value));
             valueInput.value = e.target.value;
@@ -73,6 +76,9 @@ class VolumePlugin extends PluginBase {
         valueInput.max = 24;
         valueInput.step = 0.1;
         valueInput.value = this.vl;
+        valueInput.id = `${this.id}-${this.name}-input`;
+        valueInput.name = `${this.id}-${this.name}-input`;
+        valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
             const value = Math.max(-60, Math.min(24, parseFloat(e.target.value) || 0));
             this.setVl(value);
@@ -83,6 +89,7 @@ class VolumePlugin extends PluginBase {
         // Label
         const label = document.createElement('label');
         label.textContent = 'Volume (dB):';
+        label.htmlFor = `${this.id}-${this.name}-slider`;
 
         // Volume parameter row
         const volumeRow = document.createElement('div');

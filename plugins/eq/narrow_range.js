@@ -245,22 +245,38 @@ class NarrowRangePlugin extends PluginBase {
 
     // Helper to create a parameter row with slider and number input
     const createRow = (labelText, min, max, step, value, onInput) => {
+      // Create a parameter name from the label (e.g., "HPF Freq (Hz):" -> "hpffreq")
+      const paramName = labelText.toLowerCase().split(' ')[0].replace(/[^a-z0-9]/g, '');
+      
+      const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+      const numberId = `${this.id}-${this.name}-${paramName}-number`;
+      
       const row = document.createElement("div");
       row.className = "parameter-row";
+      
       const label = document.createElement("label");
       label.textContent = labelText;
+      label.htmlFor = sliderId;
+      
       const slider = document.createElement("input");
       slider.type = "range";
+      slider.id = sliderId;
+      slider.name = sliderId;
       slider.min = min;
       slider.max = max;
       slider.step = step;
       slider.value = value;
+      slider.autocomplete = "off";
+      
       const numberInput = document.createElement("input");
       numberInput.type = "number";
+      numberInput.id = numberId;
+      numberInput.name = numberId;
       numberInput.min = min;
       numberInput.max = max;
       numberInput.step = step;
       numberInput.value = value;
+      numberInput.autocomplete = "off";
       slider.addEventListener("input", e => {
         onInput(parseFloat(e.target.value));
         numberInput.value = labelText.includes("HPF") ? this.hf : this.lf;
@@ -279,9 +295,15 @@ class NarrowRangePlugin extends PluginBase {
     };
 
     // Helper to create a slope select box
-    const createSlopeSelect = (current, onChange) => {
+    const createSlopeSelect = (current, onChange, filterType) => {
+      const selectId = `${this.id}-${this.name}-${filterType.toLowerCase()}-slope`;
+      
       const select = document.createElement("select");
       select.className = "slope-select";
+      select.id = selectId;
+      select.name = selectId;
+      select.autocomplete = "off";
+      
       const slopes = [0, -6, -12, -18, -24, -30, -36, -42, -48];
       slopes.forEach(slope => {
         const option = document.createElement("option");
@@ -299,9 +321,9 @@ class NarrowRangePlugin extends PluginBase {
 
     // Create HPF and LPF parameter rows
     const hpfRow = createRow("HPF Freq (Hz):", 20, 4000, 1, this.hf, v => this.setHf(v));
-    hpfRow.appendChild(createSlopeSelect(this.hs, v => this.setHs(v)));
+    hpfRow.appendChild(createSlopeSelect(this.hs, v => this.setHs(v), "HPF"));
     const lpfRow = createRow("LPF Freq (Hz):", 200, 40000, 100, this.lf, v => this.setLf(v));
-    lpfRow.appendChild(createSlopeSelect(this.ls, v => this.setLs(v)));
+    lpfRow.appendChild(createSlopeSelect(this.ls, v => this.setLs(v), "LPF"));
 
     // Create graph container and canvas
     const graphContainer = document.createElement("div");

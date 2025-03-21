@@ -843,20 +843,36 @@ class MultibandCompressorPlugin extends PluginBase {
       sliderContainer.className = 'multiband-compressor-frequency-slider';
       const topRow = document.createElement('div');
       topRow.className = 'multiband-compressor-frequency-slider-top parameter-row';
+      
+      // Create a parameter name from the label (e.g., "Freq 1 (Hz):" -> "freq1")
+      const paramName = label.toLowerCase().split(' ')[0] + label.match(/\d+/)[0];
+      
+      const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+      const numberId = `${this.id}-${this.name}-${paramName}-number`;
+      
       const labelEl = document.createElement('label');
       labelEl.textContent = label;
+      labelEl.htmlFor = sliderId;
+      
       const numberInput = document.createElement('input');
       numberInput.type = 'number';
+      numberInput.id = numberId;
+      numberInput.name = numberId;
       numberInput.min = min;
       numberInput.max = max;
       numberInput.step = 1;
       numberInput.value = value;
+      numberInput.autocomplete = "off";
+      
       const rangeInput = document.createElement('input');
       rangeInput.type = 'range';
+      rangeInput.id = sliderId;
+      rangeInput.name = sliderId;
       rangeInput.min = min;
       rangeInput.max = max;
       rangeInput.step = 1;
       rangeInput.value = value;
+      rangeInput.autocomplete = "off";
       rangeInput.addEventListener('input', (e) => {
         setter(parseFloat(e.target.value));
         numberInput.value = e.target.value;
@@ -917,23 +933,41 @@ class MultibandCompressorPlugin extends PluginBase {
       content.className = `multiband-compressor-band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
       content.setAttribute('data-instance-id', this.instanceId);
 
-      const createControl = (label, min, max, step, value, setter) => {
+      // Pass the band index to createControl to ensure unique IDs
+      const createControl = (label, min, max, step, value, setter, bandIndex) => {
         const row = document.createElement('div');
         row.className = 'parameter-row';
+        
+        // Create a parameter name from the label (e.g., "Threshold (dB):" -> "thresholddb")
+        // Include more of the label to ensure uniqueness
+        const paramName = label.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        const sliderId = `${this.id}-${this.name}-band${bandIndex+1}-${paramName}-slider`;
+        const numberId = `${this.id}-${this.name}-band${bandIndex+1}-${paramName}-number`;
+        
         const labelEl = document.createElement('label');
         labelEl.textContent = label;
+        labelEl.htmlFor = sliderId;
+        
         const slider = document.createElement('input');
         slider.type = 'range';
+        slider.id = sliderId;
+        slider.name = sliderId;
         slider.min = min;
         slider.max = max;
         slider.step = step;
         slider.value = value;
+        slider.autocomplete = "off";
+        
         const numberInput = document.createElement('input');
         numberInput.type = 'number';
+        numberInput.id = numberId;
+        numberInput.name = numberId;
         numberInput.min = min;
         numberInput.max = max;
         numberInput.step = step;
         numberInput.value = value;
+        numberInput.autocomplete = "off";
         slider.addEventListener('input', (e) => {
           setter(parseFloat(e.target.value));
           numberInput.value = e.target.value;
@@ -951,12 +985,12 @@ class MultibandCompressorPlugin extends PluginBase {
       };
 
       const band = this.bands[i];
-      content.appendChild(createControl('Threshold (dB):', -60, 0, 1, band.t, this.setT.bind(this)));
-      content.appendChild(createControl('Ratio:', 1, 20, 0.1, band.r, this.setR.bind(this)));
-      content.appendChild(createControl('Attack (ms):', 0.1, 100, 0.1, band.a, this.setA.bind(this)));
-      content.appendChild(createControl('Release (ms):', 1, 1000, 1, band.rl, this.setRl.bind(this)));
-      content.appendChild(createControl('Knee (dB):', 0, 12, 1, band.k, this.setK.bind(this)));
-      content.appendChild(createControl('Gain (dB):', -12, 12, 0.1, band.g, this.setG.bind(this)));
+      content.appendChild(createControl('Threshold (dB):', -60, 0, 1, band.t, this.setT.bind(this), i));
+      content.appendChild(createControl('Ratio:', 1, 20, 0.1, band.r, this.setR.bind(this), i));
+      content.appendChild(createControl('Attack (ms):', 0.1, 100, 0.1, band.a, this.setA.bind(this), i));
+      content.appendChild(createControl('Release (ms):', 1, 1000, 1, band.rl, this.setRl.bind(this), i));
+      content.appendChild(createControl('Knee (dB):', 0, 12, 1, band.k, this.setK.bind(this), i));
+      content.appendChild(createControl('Gain (dB):', -12, 12, 0.1, band.g, this.setG.bind(this), i));
       bandContents.appendChild(content);
     }
 

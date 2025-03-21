@@ -127,13 +127,13 @@ class ElectronIntegration {
           if (this.isElectron) {
             // Convert doc path for Electron
             
-            // Handle the main readme
-            if (basePath === '/readme.md' || basePath === '/') {
+            // Handle the main README
+            if (basePath === '/README.md' || basePath === '/') {
               const language = window.uiManager.userLanguage;
               if (language) {
-                return `docs/i18n/${language}/readme.md`;
+                return `docs/i18n/${language}/README.md`;
               }
-              return 'readme.md';
+              return 'README.md';
             }
             
             // Handle plugin documentation
@@ -154,9 +154,9 @@ class ElectronIntegration {
             if (basePath === '/index.html' || basePath === './') {
               const language = window.uiManager.userLanguage;
               if (language) {
-                return `docs/i18n/${language}/readme.md`;
+                return `docs/i18n/${language}/README.md`;
               }
-              return 'readme.md';
+              return 'README.md';
             }
             
             // For other paths, just convert to local path
@@ -164,14 +164,14 @@ class ElectronIntegration {
             if (language && !basePath.includes(`/i18n/${language}/`)) {
               // Make sure the path has a file extension
               if (!basePath.includes('.')) {
-                return `docs/i18n/${language}${basePath}/readme.md`;
+                return `docs/i18n/${language}${basePath}/README.md`;
               }
               return `docs/i18n/${language}${basePath}`;
             }
             
             // Make sure the path has a file extension
             if (!basePath.includes('.')) {
-              return `docs${basePath}/readme.md`;
+              return `docs${basePath}/README.md`;
             }
             return `docs${basePath}`;
           }

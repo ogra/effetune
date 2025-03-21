@@ -71,6 +71,9 @@ class StereoBalancePlugin extends PluginBase {
         slider.max = 100;
         slider.step = 1;
         slider.value = this.bl * 100;
+        slider.id = `${this.id}-${this.name}-slider`;
+        slider.name = `${this.id}-${this.name}-slider`;
+        slider.autocomplete = "off";
         slider.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value) / 100;
             this.setBl(value);
@@ -84,6 +87,9 @@ class StereoBalancePlugin extends PluginBase {
         valueInput.max = 100;
         valueInput.step = 1;
         valueInput.value = this.bl * 100;
+        valueInput.id = `${this.id}-${this.name}-input`;
+        valueInput.name = `${this.id}-${this.name}-input`;
+        valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
             const value = Math.max(-100, Math.min(100, parseFloat(e.target.value) || 0)) / 100;
             this.setBl(value);
@@ -94,6 +100,7 @@ class StereoBalancePlugin extends PluginBase {
         // Label
         const label = document.createElement('label');
         label.textContent = 'Balance (%):';
+        label.htmlFor = `${this.id}-${this.name}-slider`;
 
         // Balance parameter row
         const balanceRow = document.createElement('div');

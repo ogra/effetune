@@ -13,7 +13,8 @@
             var hostname = window.location.hostname;
             
             // For GitHub Pages, we need special handling
-            var isGitHubPages = hostname.indexOf('github.io') > -1;
+            // Secure check: ensure hostname is exactly 'github.io' or ends with '.github.io'
+            var isGitHubPages = hostname === 'github.io' || hostname.endsWith('.github.io');
             var repoPath = '';
             
             // Determine the repository path for GitHub Pages

@@ -43,7 +43,7 @@
   "ui.configAudioButton": "Configurer l'audio",
   "ui.shareButton": "Partager",
   "ui.dragEffectMessage": "Faites glisser cet effet pour l'ajouter à la position souhaitée dans la chaîne d'effets.\nOu double-cliquez pour l'ajouter.",
-  "ui.dragPluginsHere": "Faites glisser les plugins ici pour construire votre chaîne d'effets",
+  "ui.dragPluginsHere": "Faites glisser les effets ici pour créer votre chaîne d'effets",
   "ui.effectsAvailable": "{count} effets disponibles",
   "ui.effectsFound": "{count} effets trouvés",
   "ui.searchEffectsPlaceholder": "Rechercher des effets...",
