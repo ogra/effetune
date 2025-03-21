@@ -1,8 +1,12 @@
 # Version History
 
+### Version 1.33 (Mar 21, 2025)
+- Added Pitch Shift effect
+- Various minor improvements
+
 ### Version 1.32 (Mar 19, 2025)
 - Added a button to open files and a button to move effects up and down for use on smartphones (but it is still intended for use on PCs).
-- Added tremolo effect
+- Added Tremolo effect
 - Various minor improvements
 
 ### Version 1.31 (Mar 18, 2025)
