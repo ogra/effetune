@@ -73,8 +73,9 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
    - Presiona ESC para limpiar la búsqueda
 2. Arrastra los efectos desde la lista hasta el área de **Effect Pipeline**
 3. Los efectos se procesan en orden de arriba a abajo
-4. Utiliza el asa (⋮) para reordenar los efectos arrastrándolos
-5. Haz clic en el nombre de un efecto para expandir/colapsar sus configuraciones
+4. Arrastra el manejador (⋮) o pulsa los botones ▲▼ para reordenar los efectos
+5. Haz clic en el nombre de un efecto para expandir o colapsar sus ajustes
+   - Shift+clic para colapsar/expandir todos los efectos excepto la categoría Analizador
 6. Utiliza el botón **ON** para omitir efectos individuales
 7. Haz clic en el botón **?** para abrir su documentación detallada en una nueva pestaña
 8. Elimina efectos usando el ícono de la papelera

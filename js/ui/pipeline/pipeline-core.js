@@ -299,7 +299,63 @@ export class PipelineCore {
                 this.handlePluginSelection(plugin, e);
             }
             
-            // Then toggle expanded state
+            // Handle Shift+Click to collapse/expand effects
+            if (e.shiftKey) {
+                // Determine if we're expanding or collapsing based on current state
+                const shouldExpand = !this.expandedPlugins.has(plugin);
+                
+                // Check if the clicked plugin is in the Analyzer category
+                const clickedPluginCategory = Object.entries(this.pluginManager.effectCategories)
+                    .find(([_, {plugins}]) => plugins.includes(plugin.name))?.[0];
+                const isClickedPluginAnalyzer = clickedPluginCategory &&
+                    clickedPluginCategory.toLowerCase() === 'analyzer';
+                
+                // Process all plugins
+                this.audioManager.pipeline.forEach(p => {
+                    // If clicked plugin is NOT in Analyzer category, skip Analyzer category plugins
+                    if (!isClickedPluginAnalyzer) {
+                        const category = Object.entries(this.pluginManager.effectCategories)
+                            .find(([_, {plugins}]) => plugins.includes(p.name))?.[0];
+                        
+                        if (category && category.toLowerCase() === 'analyzer') {
+                            return; // Skip Analyzer category plugins
+                        }
+                    }
+                    // If clicked plugin IS in Analyzer category, process all plugins
+                    
+                    // Get the UI element for this plugin
+                    const pipelineItem = this.pipelineList.children[this.audioManager.pipeline.indexOf(p)];
+                    if (!pipelineItem) return;
+                    
+                    const pluginUI = pipelineItem.querySelector('.plugin-ui');
+                    if (!pluginUI) return;
+                    
+                    // Set expanded state
+                    if (shouldExpand) {
+                        pluginUI.classList.add('expanded');
+                        this.expandedPlugins.add(p);
+                        if (p.updateMarkers && p.updateResponse) {
+                            requestAnimationFrame(() => {
+                                p.updateMarkers();
+                                p.updateResponse();
+                            });
+                        }
+                    } else {
+                        pluginUI.classList.remove('expanded');
+                        this.expandedPlugins.delete(p);
+                    }
+                });
+                
+                // Update all titles
+                this.pipelineList.querySelectorAll('.plugin-name').forEach((nameEl, index) => {
+                    const p = this.audioManager.pipeline[index];
+                    nameEl.title = this.expandedPlugins.has(p) ? 'Click to collapse' : 'Click to expand';
+                });
+                
+                return; // Skip individual toggle since we've handled all plugins
+            }
+            
+            // Then toggle expanded state for individual plugin (non-shift click)
             const isExpanded = ui.classList.toggle('expanded');
             if (isExpanded) {
                 this.expandedPlugins.add(plugin);
