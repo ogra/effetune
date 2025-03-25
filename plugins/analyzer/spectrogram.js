@@ -408,6 +408,7 @@ class SpectrogramPlugin extends PluginBase {
         channelRow.className = 'parameter-row';
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelRow.appendChild(channelLabel);
         const channels = ['All', 'Left', 'Right'];
         channels.forEach(chVal => {
             const label = document.createElement('label');

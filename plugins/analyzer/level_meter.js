@@ -261,7 +261,7 @@ class LevelMeterPlugin extends PluginBase {
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
             const peakText = peakLevel.toFixed(1) + ' dB';
-            ctx.fillText(peakText, this.canvasWidth - 5, y + channelHeight/2);
+            ctx.fillText(peakText, this.canvasWidth - 10, y + channelHeight/2 + 2);
         }
 
         // Update overload indicator

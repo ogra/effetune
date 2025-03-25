@@ -4,7 +4,7 @@ class FiveBandPEQPlugin extends PluginBase {
     { freq: 100, name: '100 Hz' },
     { freq: 316, name: '316 Hz' },
     { freq: 1000, name: '1.0 kHz' },
-    { freq: 3160, name: '3.2 kHz' },
+    { freq: 3160, name: '3.16 kHz' },
     { freq: 10000, name: '10 kHz' }
   ];
 
@@ -66,6 +66,11 @@ class FiveBandPEQPlugin extends PluginBase {
 
     // Process each band sequentially
     for (let bandIndex = 0; bandIndex < 5; bandIndex++) {
+      // Check if band is enabled
+      if (!parameters['e' + bandIndex]) {
+        continue; // Skip disabled bands
+      }
+      
       // Retrieve parameters for this band
       const gainDb = parameters['g' + bandIndex];
       const type = parameters['t' + bandIndex];
@@ -228,7 +233,11 @@ class FiveBandPEQPlugin extends PluginBase {
       this['g' + i] = 0;      // Gain: -18dB to +18dB
       this['q' + i] = 1.0;    // Q: 0.1 to 10.0
       this['t' + i] = 'pk';   // Filter type: default is peaking
+      this['e' + i] = true;   // Enabled: default is ON
     }
+
+    // Store references to band checkboxes
+    this.bandCheckboxes = [];
 
     // Initialize channel parameter
     this.ch = 'All';  // 'All', 'Left', or 'Right'
@@ -238,7 +247,7 @@ class FiveBandPEQPlugin extends PluginBase {
   }
 
   // Set band parameters and update immediately
-  setBand(index, freq, gain, Q, type) {
+  setBand(index, freq, gain, Q, type, enabled) {
     if (freq !== undefined) this['f' + index] = freq;
     if (gain !== undefined) this['g' + index] = Math.max(-18, Math.min(18, gain));
     if (Q !== undefined) this['q' + index] = Math.max(0.1, Math.min(10, Q));
@@ -248,8 +257,27 @@ class FiveBandPEQPlugin extends PluginBase {
         this['q' + index] = 0.7;
       }
     }
+    if (enabled !== undefined) this['e' + index] = enabled;
     // Immediately update parameters
     this.updateParameters();
+  }
+
+  // Toggle band enabled state
+  toggleBandEnabled(index) {
+    this['e' + index] = !this['e' + index];
+    
+    // Update checkbox state if it exists
+    if (this.bandCheckboxes[index]) {
+      this.bandCheckboxes[index].checked = this['e' + index];
+    }
+    
+    this.updateParameters();
+    if (this.responseSvg) {
+      this.updateResponse();
+    }
+    if (this.markers) {
+      this.updateMarkers();
+    }
   }
 
   // Set channel
@@ -267,6 +295,7 @@ class FiveBandPEQPlugin extends PluginBase {
       this['g' + i] = 0;
       this['q' + i] = 1.0;
       this['t' + i] = 'pk';
+      this['e' + i] = true;
     }
     this.setChannel('All');
     this.updateParameters();
@@ -284,6 +313,7 @@ class FiveBandPEQPlugin extends PluginBase {
           params['g' + i] = this['g' + i];
           params['q' + i] = this['q' + i];
           params['t' + i] = this['t' + i];
+          params['e' + i] = this['e' + i];
       }
       return params;
   }
@@ -315,6 +345,10 @@ class FiveBandPEQPlugin extends PluginBase {
               if (params['t' + i] === 'ls' || params['t' + i] === 'hs') {
                   this['q' + i] = 0.7;
               }
+              shouldUpdateResponse = true;
+          }
+          if (params['e' + i] !== undefined) {
+              this['e' + i] = params['e' + i];
               shouldUpdateResponse = true;
           }
       }
@@ -524,12 +558,10 @@ class FiveBandPEQPlugin extends PluginBase {
         }
       });
 
-      // Right-click to reset gain
+      // Right-click to toggle band enabled state
       marker.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        this.setBand(i, undefined, 0);
-        this.updateMarkers();
-        this.updateResponse();
+        this.toggleBandEnabled(i);
       });
     }
 
@@ -543,9 +575,28 @@ class FiveBandPEQPlugin extends PluginBase {
       bandControls.className = 'five-band-peq-band';
       bandControls.dataset.band = i;
 
-      const label = document.createElement('div');
-      label.className = 'five-band-peq-band-label';
-      label.textContent = `Band ${i + 1}`;
+      const labelContainer = document.createElement('label');
+      labelContainer.className = 'five-band-peq-band-label';
+      
+      // Create checkbox for band enable/disable
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'five-band-peq-band-checkbox';
+      checkbox.checked = this['e' + i];
+      checkbox.autocomplete = "off";
+      
+      // Store reference to checkbox
+      this.bandCheckboxes[i] = checkbox;
+      
+      checkbox.addEventListener('change', () => {
+        this['e' + i] = checkbox.checked;
+        this.updateParameters();
+        this.updateMarkers();
+        this.updateResponse();
+      });
+      
+      labelContainer.appendChild(checkbox);
+      labelContainer.appendChild(document.createTextNode(`Band ${i + 1}`));
 
       const typeRow = document.createElement('div');
       typeRow.className = 'five-band-peq-type-row';
@@ -639,7 +690,7 @@ class FiveBandPEQPlugin extends PluginBase {
       qRow.appendChild(qSlider);
       qRow.appendChild(qText);
 
-      bandControls.appendChild(label);
+      bandControls.appendChild(labelContainer);
       bandControls.appendChild(typeRow);
       bandControls.appendChild(qRow);
       controlsContainer.appendChild(bandControls);
@@ -684,6 +735,7 @@ class FiveBandPEQPlugin extends PluginBase {
       const marker = this.markers[i];
       const freq = this['f' + i];
       const gain = this['g' + i];
+      const enabled = this['e' + i];
       const x = this.freqToX(freq);
       const y = this.gainToY(gain);
       const margin = 20;
@@ -691,6 +743,14 @@ class FiveBandPEQPlugin extends PluginBase {
       const yPos = (y / 100) * (this.graphContainer.clientHeight - 2 * margin) + margin;
       marker.style.left = `${xPos}px`;
       marker.style.top = `${yPos}px`;
+      
+      // Update marker appearance based on enabled state
+      if (enabled) {
+        marker.classList.remove('disabled');
+      } else {
+        marker.classList.add('disabled');
+      }
+      
       const markerText = marker.querySelector('.five-band-peq-marker-text');
       const centerX = this.graphContainer.clientWidth / 2;
       const isLeft = xPos < centerX;
@@ -816,6 +876,11 @@ class FiveBandPEQPlugin extends PluginBase {
     const responsePoints = freqPoints.map(freq => {
       let totalResponse = 0;
       for (let band = 0; band < 5; band++) {
+        // Skip disabled bands
+        if (!this['e' + band]) {
+          continue;
+        }
+        
         const bandFreq = this['f' + band];
         const bandGain = this['g' + band];
         const bandQ = this['q' + band];

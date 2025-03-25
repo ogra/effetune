@@ -1017,6 +1017,27 @@ class MultibandCompressorPlugin extends PluginBase {
       label.textContent = `Band ${i + 1}`;
       graphDiv.appendChild(canvas);
       graphDiv.appendChild(label);
+      
+      // Add click event to switch to this band when clicking on the graph
+      const bandIndex = i; // Capture the current band index
+      graphDiv.addEventListener('click', () => {
+        if (bandIndex >= this.bands.length) return;
+        const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
+        container.querySelectorAll('.multiband-compressor-band-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.multiband-compressor-band-content').forEach(c => c.classList.remove('active'));
+        container.querySelectorAll('.multiband-compressor-band-graph').forEach(g => g.classList.remove('active'));
+        
+        // Find and activate the corresponding tab
+        const tab = container.querySelectorAll('.multiband-compressor-band-tab')[bandIndex];
+        const content = container.querySelectorAll('.multiband-compressor-band-content')[bandIndex];
+        if (tab) tab.classList.add('active');
+        if (content) content.classList.add('active');
+        graphDiv.classList.add('active');
+        
+        this.selectedBand = bandIndex;
+        this.updateTransferGraphs();
+      });
+      
       graphsContainer.appendChild(graphDiv);
     }
     container.appendChild(graphsContainer);

@@ -83,9 +83,8 @@ class PolarityInversionPlugin extends PluginBase {
             
             const label = document.createElement('label');
             label.htmlFor = `${this.id}-${this.name}-${option}`;
+            label.appendChild(radio);
             label.appendChild(document.createTextNode(option.charAt(0).toUpperCase() + option.slice(1)));
-            
-            radioGroup.appendChild(radio);
             radioGroup.appendChild(label);
         });
 

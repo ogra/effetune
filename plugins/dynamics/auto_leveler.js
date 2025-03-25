@@ -427,8 +427,21 @@ class AutoLevelerPlugin extends PluginBase {
 
         // Draw input LUFS (green)
         drawLufs(this.inputLufsBuffer, '#00ff00');
-        // Draw output (Auto Leveler後) LUFS (white)
+        // Draw output (After Auto Leveler) LUFS (white)
         drawLufs(this.outputLufsBuffer, '#ffffff');
+        
+        // Display current LUFS level as white text
+        const currentOutputLufs = this.outputLufsBuffer[this.outputLufsBuffer.length - 1];
+        if (!isNaN(currentOutputLufs)) {
+            const clamped = Math.max(-48, Math.min(0, currentOutputLufs));
+            const x = width - 20; // Position near the right edge
+            const y = height * (1 - (clamped + 48) / 48) - 20; // Position above the line
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'right';
+            ctx.font = '25px Arial';
+            ctx.fillText(currentOutputLufs.toFixed(1) + ' dB', x, y);
+        }
     }
 
     createUI() {

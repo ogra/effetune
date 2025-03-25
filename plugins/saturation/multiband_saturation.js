@@ -440,6 +440,7 @@ class MultibandSaturationPlugin extends PluginBase {
             // Draw labels
             ctx.fillStyle = LABEL_COLOR;
             ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
             ctx.fillText('-6dB', width * 0.25, height - 5);
             ctx.fillText('-6dB', width * 0.75, height - 5);
             ctx.save();
@@ -456,7 +457,6 @@ class MultibandSaturationPlugin extends PluginBase {
             // Draw axis labels
             ctx.fillStyle = '#fff';
             ctx.font = '28px Arial';
-            ctx.textAlign = 'center';
             ctx.fillText('in', width / 2, height - 5);
             ctx.save();
             ctx.translate(20, height / 2);
@@ -672,6 +672,27 @@ class MultibandSaturationPlugin extends PluginBase {
             label.textContent = bandNames[i];
             graphDiv.appendChild(canvas);
             graphDiv.appendChild(label);
+            
+            // Add click event to switch to this band when clicking on the graph
+            const bandIndex = i; // Capture the current band index
+            graphDiv.addEventListener('click', () => {
+                if (bandIndex >= this.bands.length) return;
+                const container = document.querySelector(`[data-instance-id="${this.instanceId}"]`);
+                container.querySelectorAll('.mbs-band-tab').forEach(t => t.classList.remove('active'));
+                container.querySelectorAll('.mbs-band-content').forEach(c => c.classList.remove('active'));
+                container.querySelectorAll('.mbs-band-graph').forEach(g => g.classList.remove('active'));
+                
+                // Find and activate the corresponding tab and content
+                const tabs = container.querySelectorAll('.mbs-band-tab');
+                const contents = container.querySelectorAll('.mbs-band-content');
+                if (bandIndex < tabs.length) tabs[bandIndex].classList.add('active');
+                if (bandIndex < contents.length) contents[bandIndex].classList.add('active');
+                graphDiv.classList.add('active');
+                
+                this.selectedBand = bandIndex;
+                this.updateTransferGraphs();
+            });
+            
             graphsContainer.appendChild(graphDiv);
         }
         container.appendChild(graphsContainer);

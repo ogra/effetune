@@ -60,6 +60,30 @@ input {
     -ms-user-select: text;
 }
 
+label {
+    vertical-align: middle;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+    vertical-align: middle;
+    margin: 0px 5px 0px 3px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.radio-group label {
+    min-width: auto;
+    margin-right: 10px;
+    color: #ddd;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 .header-button {
     padding: 8px 16px;
     background-color: #2d2d2d;

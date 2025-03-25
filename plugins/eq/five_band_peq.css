@@ -45,12 +45,18 @@
     color: #fff;
     user-select: none;
 }
-
 .five-band-peq-plugin-ui .five-band-peq-marker:hover,
 .five-band-peq-plugin-ui .five-band-peq-marker.active {
     background-color: #666;
     border-color: #999;
 }
+
+.five-band-peq-plugin-ui .five-band-peq-marker.disabled {
+    background-color: #333;
+    border-color: #444;
+    opacity: 0.6;
+}
+
 
 .five-band-peq-plugin-ui .five-band-peq-marker-text {
     position: absolute;
@@ -142,6 +148,14 @@
     font-size: 12px;
     color: #ccc;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.five-band-peq-plugin-ui .five-band-peq-band-checkbox {
+    margin: 0;
 }
 
 .five-band-peq-plugin-ui .five-band-peq-filter-type {
