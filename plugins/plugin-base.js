@@ -10,8 +10,8 @@ class PluginBase {
         this.enabled = true;
         this.id = null; // Will be set by createPlugin
         this.errorState = null; // Holds error state
-        this.inputBus = null; // Input bus (null = default bus 1)
-        this.outputBus = null; // Output bus (null = default bus 1)
+        this.inputBus = null; // Input bus (null = default Main bus, index 0)
+        this.outputBus = null; // Output bus (null = default Main bus, index 0)
 
         // Message control properties
         this.lastUpdateTime = 0;

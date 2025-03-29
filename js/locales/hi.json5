@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "संसाधित फ़ाइल सहेजें ({size} MB)",
   "ui.saveMultipleFiles": "संसाधित फ़ाइलें सहेजें ({size} MB)",
 
+  // हिन्दी
+  "ui.busRouting": "बस रूटिंग",
+  "ui.inputBus": "इनपुट बस:",
+  "ui.outputBus": "आउटपुट बस:",
+
   // मुख्य मेनू
   "menu.file": "फ़ाइल",
   "menu.file.save": "पाइपलाइन सहेजें",

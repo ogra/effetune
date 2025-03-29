@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "처리된 파일 저장 ({size} MB)",
   "ui.saveMultipleFiles": "처리된 파일들 저장 ({size} MB)",
 
+  // 한국어
+  "ui.busRouting": "버스 라우팅",
+  "ui.inputBus": "입력 버스:",
+  "ui.outputBus": "출력 버스:",
+
   // 메인 메뉴
   "menu.file": "파일",
   "menu.file.save": "파이프라인 저장",

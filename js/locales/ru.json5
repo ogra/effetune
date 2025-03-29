@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "Сохранить обработанный файл ({size} МБ)",
   "ui.saveMultipleFiles": "Сохранить обработанные файлы ({size} МБ)",
 
+  // Русский
+  "ui.busRouting": "Маршрутизация шины",
+  "ui.inputBus": "Входная шина:",
+  "ui.outputBus": "Выходная шина:",
+
   // Главное меню
   "menu.file": "Файл",
   "menu.file.save": "Сохранить пайплайн",

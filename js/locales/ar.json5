@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "حفظ الملف المعالج ({size} MB)",
   "ui.saveMultipleFiles": "حفظ الملفات المعالجة ({size} MB)",
 
+  // العربية
+  "ui.busRouting": "توجيه الناقل",
+  "ui.inputBus": "ناقل الإدخال:",
+  "ui.outputBus": "ناقل الإخراج:",
+
   // القائمة الرئيسية
   "menu.file": "ملف",
   "menu.file.save": "حفظ خط الأنابيب",

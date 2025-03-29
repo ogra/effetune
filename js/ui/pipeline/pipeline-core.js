@@ -112,7 +112,9 @@ export class PipelineCore {
         if (plugin.inputBus !== null || plugin.outputBus !== null) {
             const busInfo = document.createElement('div');
             busInfo.className = 'bus-info';
-            busInfo.textContent = `bus ${plugin.inputBus || 1}→bus ${plugin.outputBus || 1}`;
+            const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
+            const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
+            busInfo.textContent = `${inputBusName}→${outputBusName}`;
             busInfo.title = 'Click to configure bus routing';
             busInfo.style.cursor = 'pointer';
             
@@ -658,17 +660,25 @@ export class PipelineCore {
         inputBusContainer.appendChild(inputBusLabel);
         
         const inputBusSelect = document.createElement('select');
+        // Add Main bus option (index 0)
+        const inputMainOption = document.createElement('option');
+        inputMainOption.value = 0;
+        inputMainOption.textContent = 'Main';
+        inputMainOption.selected = plugin.inputBus === null || plugin.inputBus === 0;
+        inputBusSelect.appendChild(inputMainOption);
+        
+        // Add Bus 1-4 options
         for (let i = 1; i <= 4; i++) {
             const option = document.createElement('option');
             option.value = i;
             option.textContent = `Bus ${i}`;
-            option.selected = (plugin.inputBus || 1) === i;
+            option.selected = plugin.inputBus === i;
             inputBusSelect.appendChild(option);
         }
         
         inputBusSelect.onchange = () => {
             const value = parseInt(inputBusSelect.value, 10);
-            plugin.inputBus = value === 1 ? null : value;
+            plugin.inputBus = value === 0 ? null : value;
             plugin.updateParameters();
             this.updateBusInfo(plugin);
         };
@@ -685,17 +695,25 @@ export class PipelineCore {
         outputBusContainer.appendChild(outputBusLabel);
         
         const outputBusSelect = document.createElement('select');
+        // Add Main bus option (index 0)
+        const outputMainOption = document.createElement('option');
+        outputMainOption.value = 0;
+        outputMainOption.textContent = 'Main';
+        outputMainOption.selected = plugin.outputBus === null || plugin.outputBus === 0;
+        outputBusSelect.appendChild(outputMainOption);
+        
+        // Add Bus 1-4 options
         for (let i = 1; i <= 4; i++) {
             const option = document.createElement('option');
             option.value = i;
             option.textContent = `Bus ${i}`;
-            option.selected = (plugin.outputBus || 1) === i;
+            option.selected = plugin.outputBus === i;
             outputBusSelect.appendChild(option);
         }
         
         outputBusSelect.onchange = () => {
             const value = parseInt(outputBusSelect.value, 10);
-            plugin.outputBus = value === 1 ? null : value;
+            plugin.outputBus = value === 0 ? null : value;
             plugin.updateParameters();
             this.updateBusInfo(plugin);
         };
@@ -756,7 +774,9 @@ export class PipelineCore {
                     header.insertBefore(busInfo, header.firstChild);
                 }
             }
-            busInfo.textContent = `bus ${plugin.inputBus || 1}→bus ${plugin.outputBus || 1}`;
+            const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
+            const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
+            busInfo.textContent = `${inputBusName}→${outputBusName}`;
             busInfo.title = 'Click to configure bus routing';
             busInfo.style.cursor = 'pointer';
             

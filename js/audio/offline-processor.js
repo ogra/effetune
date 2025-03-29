@@ -113,26 +113,26 @@ export class OfflineProcessor {
                 const MAX_BUSES = 4;
                 
                 // First, determine which buses are used
-                const usedBuses = new Set([1]); // Bus 1 is always used
+                const usedBuses = new Set([0]); // Main bus (index 0) is always used
                 for (const plugin of activePlugins) {
                     if (!plugin.enabled) continue;
                     
-                    const inputBus = plugin.getParameters().inputBus || plugin.inputBus || 1;
-                    const outputBus = plugin.getParameters().outputBus || plugin.outputBus || 1;
+                    const inputBus = plugin.getParameters().inputBus || plugin.inputBus || 0;
+                    const outputBus = plugin.getParameters().outputBus || plugin.outputBus || 0;
                     
                     usedBuses.add(inputBus);
                     usedBuses.add(outputBus);
                 }
                 
-                // Initialize bus 1 with input data
-                // Create a proper copy of the buffer to ensure bus 1 is isolated
-                const bus1Buffer = new Float32Array(blockSize * numberOfChannels);
-                bus1Buffer.set(inputBlock);
-                busBuffers.set(1, bus1Buffer);
+                // Initialize Main bus (index 0) with input data
+                // Create a proper copy of the buffer to ensure Main bus is isolated
+                const mainBusBuffer = new Float32Array(blockSize * numberOfChannels);
+                mainBusBuffer.set(inputBlock);
+                busBuffers.set(0, mainBusBuffer);
                 
                 // Initialize other used buses with silence
                 for (const busIndex of usedBuses) {
-                    if (busIndex !== 1) { // Skip bus 1 as it's already initialized
+                    if (busIndex !== 0) { // Skip Main bus as it's already initialized
                         busBuffers.set(busIndex, new Float32Array(blockSize * numberOfChannels));
                         busBuffers.get(busIndex).fill(0);
                     }
@@ -151,8 +151,8 @@ export class OfflineProcessor {
                     };
                     
                     // Determine input and output buses
-                    const inputBus = parameters.inputBus || plugin.inputBus || 1; // Default to bus 1
-                    const outputBus = parameters.outputBus || plugin.outputBus || 1; // Default to bus 1
+                    const inputBus = parameters.inputBus || plugin.inputBus || 0; // Default to Main bus (index 0)
+                    const outputBus = parameters.outputBus || plugin.outputBus || 0; // Default to Main bus (index 0)
                     
                     // Get the input buffer for this plugin
                     const inputBuffer = busBuffers.get(inputBus);
@@ -200,16 +200,16 @@ export class OfflineProcessor {
                         }
                     } catch (error) {
                         console.error('Plugin processing error:', error);
-                        // On error, if this plugin was using bus 1 as output,
-                        // pass through the original input to bus 1
-                        if (outputBus === 1) {
-                            busBuffers.set(1, new Float32Array(inputBlock));
+                        // On error, if this plugin was using Main bus as output,
+                        // pass through the original input to Main bus
+                        if (outputBus === 0) {
+                            busBuffers.set(0, new Float32Array(inputBlock));
                         }
                     }
                 }
 
-                // De-interleave processed data from bus 1 back into the processed buffer
-                const finalBlock = busBuffers.get(1) || inputBlock;
+                // De-interleave processed data from Main bus back into the processed buffer
+                const finalBlock = busBuffers.get(0) || inputBlock;
                 for (let ch = 0; ch < numberOfChannels; ch++) {
                     const channelData = processedBuffer.getChannelData(ch);
                     const channelOffset = ch * blockSize;

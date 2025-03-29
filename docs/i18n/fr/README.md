@@ -76,7 +76,9 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
    - Maj+Clic pour développer/réduire tous les effets sauf la catégorie Analyzer
 6. Utilisez le bouton ON pour contourner les effets individuels
 7. Cliquez sur le bouton ? pour ouvrir sa documentation détaillée dans un nouvel onglet
-8. Supprimez les effets en utilisant l'icône de la poubelle
+8. Supprimez les effets en utilisant le bouton ×  
+9. Cliquez sur le bouton de routage pour définir les bus d'entrée et de sortie  
+   - [Plus d'informations sur les fonctions de bus](bus-function.md)
 
 ### Utilisation des préréglages
 

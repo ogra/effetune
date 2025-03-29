@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "Salvar arquivo processado ({size} MB)",
   "ui.saveMultipleFiles": "Salvar arquivos processados ({size} MB)",
 
+  // Português
+  "ui.busRouting": "Roteamento de Bus",
+  "ui.inputBus": "Bus de Entrada:",
+  "ui.outputBus": "Bus de Saída:",
+
   // Menu principal
   "menu.file": "Arquivo",
   "menu.file.save": "Salvar pipeline",
