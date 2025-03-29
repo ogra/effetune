@@ -10,6 +10,8 @@ class PluginBase {
         this.enabled = true;
         this.id = null; // Will be set by createPlugin
         this.errorState = null; // Holds error state
+        this.inputBus = null; // Input bus (null = default bus 1)
+        this.outputBus = null; // Output bus (null = default bus 1)
 
         // Message control properties
         this.lastUpdateTime = 0;
@@ -198,13 +200,17 @@ class PluginBase {
     // Update plugin parameters via the worklet.
     updateParameters() {
         if (window.workletNode) {
+            const parameters = this.getParameters();
+            
             window.workletNode.port.postMessage({
                 type: 'updatePlugin',
                 plugin: {
                     id: this.id,
                     type: this.constructor.name,
                     enabled: this.enabled,
-                    parameters: this.getParameters()
+                    parameters: parameters,
+                    inputBus: this.inputBus,
+                    outputBus: this.outputBus
                 }
             });
             if (window.uiManager) {
@@ -218,7 +224,9 @@ class PluginBase {
         return {
             type: this.constructor.name,
             id: this.id,
-            enabled: this.enabled
+            enabled: this.enabled,
+            ...(this.inputBus !== null && { inputBus: this.inputBus }),
+            ...(this.outputBus !== null && { outputBus: this.outputBus })
         };
     }
 
@@ -227,17 +235,28 @@ class PluginBase {
         const params = this.getParameters();
         const serializedParams = JSON.parse(JSON.stringify(params));
         // Remove internal properties that should not be serialized
-        const { type, id, ...cleanParams } = serializedParams;
+        const { type, id, inputBus, outputBus, ...cleanParams } = serializedParams;
+        
+        // Add input and output bus with short names if they exist
+        if (inputBus !== undefined) {
+            cleanParams.ib = inputBus;
+        }
+        if (outputBus !== undefined) {
+            cleanParams.ob = outputBus;
+        }
+        
         return cleanParams;
     }
 
     // Set parameters from a serialized state.
     setSerializedParameters(params) {
-        const { nm, en, id, ...pluginParams } = params;
+        const { nm, en, id, ib, ob, ...pluginParams } = params;
         const parameters = {
             type: this.constructor.name,
             enabled: en,
             ...(id !== undefined && { id }),
+            ...(ib !== undefined && { inputBus: ib }),
+            ...(ob !== undefined && { outputBus: ob }),
             ...pluginParams
         };
         this.setParameters(parameters);
@@ -262,7 +281,21 @@ class PluginBase {
 
     // Apply validated parameters (must be implemented by subclasses).
     _setValidatedParameters(params) {
-        throw new Error('_setValidatedParameters must be implemented by subclass');
+        // Set common parameters
+        if (params.enabled !== undefined) {
+            this.enabled = Boolean(params.enabled);
+        }
+        
+        // Set bus parameters
+        if (params.inputBus !== undefined) {
+            this.inputBus = params.inputBus;
+        }
+        if (params.outputBus !== undefined) {
+            this.outputBus = params.outputBus;
+        }
+        
+        // Subclasses must override this method to handle their specific parameters
+        // but should call super._setValidatedParameters(params) to handle common parameters
     }
 
     // Handle errors by storing error state and updating the error UI.

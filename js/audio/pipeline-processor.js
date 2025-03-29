@@ -102,7 +102,9 @@ export class PipelineProcessor {
                 id: plugin.id,
                 type: plugin.constructor.name,
                 enabled: plugin.enabled,
-                parameters: params
+                parameters: params,
+                inputBus: plugin.inputBus,
+                outputBus: plugin.outputBus
             };
         });
         

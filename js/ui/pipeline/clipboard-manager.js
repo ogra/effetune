@@ -1,6 +1,7 @@
 /**
  * ClipboardManager - Handles copy/cut/paste operations and URL parsing
  */
+import { getSerializablePluginStateShort, applySerializedState } from '../../utils/serialization-utils.js';
 export class ClipboardManager {
     /**
      * Create a new ClipboardManager instance
@@ -25,7 +26,7 @@ export class ClipboardManager {
         try {
             const selectedPluginsArray = Array.from(this.core.selectedPlugins);
             const states = selectedPluginsArray.map(plugin =>
-                this.core.getSerializablePluginState(plugin, true, false, false)
+                getSerializablePluginStateShort(plugin)
             );
             await navigator.clipboard.writeText(JSON.stringify(states, null, 2));
             
@@ -123,14 +124,8 @@ export class ClipboardManager {
                                     throw new Error(`Failed to create plugin: ${state.nm}`);
                                 }
                                 
-                                // Set enabled state
-                                plugin.enabled = state.en;
-                                
-                                // Set parameters
-                                const { nm, en, ...params } = state;
-                                if (plugin.setParameters) {
-                                    plugin.setParameters(params);
-                                }
+                                // Apply serialized state
+                                applySerializedState(plugin, state);
                                 
                                 return plugin;
                             });
@@ -207,14 +202,8 @@ export class ClipboardManager {
                     throw new Error(`Failed to create plugin: ${state.nm}`);
                 }
                 
-                // Set enabled state
-                plugin.enabled = state.en;
-                
-                // Set parameters
-                const { nm, en, ...params } = state;
-                if (plugin.setParameters) {
-                    plugin.setParameters(params);
-                }
+                // Apply serialized state
+                applySerializedState(plugin, state);
                 
                 return plugin;
             });

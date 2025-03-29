@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.40 (Mar 29, 2025)
+- Added bus functionality for more advanced routing
+- Various minor improvements
+
 ### Version 1.33 (Mar 21, 2025)
 - Added Pitch Shift effect
 - Various minor improvements

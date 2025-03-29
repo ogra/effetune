@@ -108,8 +108,37 @@ export class OfflineProcessor {
                     }
                 }
 
+                // Initialize bus buffers
+                const busBuffers = new Map();
+                const MAX_BUSES = 4;
+                
+                // First, determine which buses are used
+                const usedBuses = new Set([1]); // Bus 1 is always used
+                for (const plugin of activePlugins) {
+                    if (!plugin.enabled) continue;
+                    
+                    const inputBus = plugin.getParameters().inputBus || plugin.inputBus || 1;
+                    const outputBus = plugin.getParameters().outputBus || plugin.outputBus || 1;
+                    
+                    usedBuses.add(inputBus);
+                    usedBuses.add(outputBus);
+                }
+                
+                // Initialize bus 1 with input data
+                // Create a proper copy of the buffer to ensure bus 1 is isolated
+                const bus1Buffer = new Float32Array(blockSize * numberOfChannels);
+                bus1Buffer.set(inputBlock);
+                busBuffers.set(1, bus1Buffer);
+                
+                // Initialize other used buses with silence
+                for (const busIndex of usedBuses) {
+                    if (busIndex !== 1) { // Skip bus 1 as it's already initialized
+                        busBuffers.set(busIndex, new Float32Array(blockSize * numberOfChannels));
+                        busBuffers.get(busIndex).fill(0);
+                    }
+                }
+                
                 // Process block through each active plugin
-                let processedBlock = new Float32Array(inputBlock);
                 for (const plugin of activePlugins) {
                     if (!plugin.enabled) continue;
 
@@ -120,18 +149,34 @@ export class OfflineProcessor {
                         sampleRate,
                         initialized: pluginContexts.has(plugin.id)
                     };
+                    
+                    // Determine input and output buses
+                    const inputBus = parameters.inputBus || plugin.inputBus || 1; // Default to bus 1
+                    const outputBus = parameters.outputBus || plugin.outputBus || 1; // Default to bus 1
+                    
+                    // Get the input buffer for this plugin
+                    const inputBuffer = busBuffers.get(inputBus);
+                    // All used buses should already be initialized
 
                     try {
                         const pluginContext = createContext(plugin.id);
                         pluginContext.currentTime = offset / sampleRate;
 
-                        if (!(processedBlock instanceof Float32Array)) {
-                            processedBlock = new Float32Array(processedBlock);
+                        if (!(inputBuffer instanceof Float32Array)) {
+                            inputBuffer = new Float32Array(inputBuffer);
+                        }
+                        
+                        // If input and output buses are different, make a copy of the input buffer
+                        // to prevent in-place modifications from affecting the input buffer
+                        let processingBuffer = inputBuffer;
+                        if (inputBus !== outputBus) {
+                            processingBuffer = new Float32Array(inputBuffer.length);
+                            processingBuffer.set(inputBuffer);
                         }
                         
                         const result = plugin.executeProcessor(
                             pluginContext,
-                            processedBlock,
+                            processingBuffer,
                             parameters,
                             pluginContext.currentTime
                         );
@@ -139,19 +184,37 @@ export class OfflineProcessor {
                         if (!result || !(result instanceof Float32Array) || result.length !== blockSize * numberOfChannels) {
                             throw new Error('Invalid plugin output');
                         }
-                        processedBlock = result;
+                        
+                        // Get the output buffer - all used buses should already be initialized
+                        const outputBuffer = busBuffers.get(outputBus);
+                        
+                        // If input and output buses are the same, or this is a new output bus,
+                        // overwrite the output buffer with the result
+                        if (inputBus === outputBus || outputBuffer.every(sample => sample === 0)) {
+                            outputBuffer.set(result);
+                        } else {
+                            // Otherwise, add the result to the existing output buffer
+                            for (let i = 0; i < outputBuffer.length; i++) {
+                                outputBuffer[i] += result[i];
+                            }
+                        }
                     } catch (error) {
-                        // On error, pass through the original block
-                        processedBlock = inputBlock;
+                        console.error('Plugin processing error:', error);
+                        // On error, if this plugin was using bus 1 as output,
+                        // pass through the original input to bus 1
+                        if (outputBus === 1) {
+                            busBuffers.set(1, new Float32Array(inputBlock));
+                        }
                     }
                 }
 
-                // De-interleave processed data back into the processed buffer
+                // De-interleave processed data from bus 1 back into the processed buffer
+                const finalBlock = busBuffers.get(1) || inputBlock;
                 for (let ch = 0; ch < numberOfChannels; ch++) {
                     const channelData = processedBuffer.getChannelData(ch);
                     const channelOffset = ch * blockSize;
                     for (let i = 0; i < blockSize; i++) {
-                        channelData[offset + i] = processedBlock[channelOffset + i];
+                        channelData[offset + i] = finalBlock[channelOffset + i];
                     }
                 }
 

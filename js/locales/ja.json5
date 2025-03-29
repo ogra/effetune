@@ -61,6 +61,11 @@
   "ui.saveSingleFile": "処理済みファイルを保存 ({size} MB)",
   "ui.saveMultipleFiles": "処理済みファイルを保存 ({size} MB)",
 
+  // バスルーティングダイアログ
+  "ui.busRouting": "バスルーティング",
+  "ui.inputBus": "入力バス:",
+  "ui.outputBus": "出力バス:",
+  
   // メインメニュー
   "menu.file": "ファイル",
   "menu.file.save": "パイプラインを保存",

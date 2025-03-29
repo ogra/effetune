@@ -3,6 +3,11 @@ import { PipelineManager } from './ui/pipeline-manager.js';
 import { StateManager } from './ui/state-manager.js';
 import { AudioPlayer } from './ui/audio-player.js';
 import { electronIntegration } from './electron-integration.js';
+import {
+    getSerializablePluginStateShort,
+    convertPresetToShortFormat,
+    convertLongToShortFormat
+} from './utils/serialization-utils.js';
 
 export class UIManager {
     constructor(pluginManager, audioManager) {
@@ -126,7 +131,7 @@ export class UIManager {
                     throw new Error('Each plugin state must be an object');
                 }
                 
-                const { nm: name, en: enabled, ...allParams } = serializedParams;
+                const { nm: name, en: enabled, ib: inputBus, ob: outputBus, ...allParams } = serializedParams;
                 
                 // Validate plugin name
                 if (typeof name !== 'string' || name.trim() === '') {
@@ -148,11 +153,21 @@ export class UIManager {
                 const paramsCopy = JSON.parse(JSON.stringify(allParams));
                 
                 // Return the complete plugin state
-                return {
+                const result = {
                     name,
                     enabled: enabled === undefined ? true : enabled, // Default to enabled if not specified
                     parameters: paramsCopy
                 };
+                
+                // Add input and output bus if they exist
+                if (inputBus !== undefined) {
+                    result.inputBus = inputBus;
+                }
+                if (outputBus !== undefined) {
+                    result.outputBus = outputBus;
+                }
+                
+                return result;
             });
             
             return result;
@@ -168,33 +183,9 @@ export class UIManager {
     }
 
     getPipelineState() {
-        const state = this.audioManager.pipeline.map(plugin => {
-            // Get serializable parameters first
-            let params = plugin.getSerializableParameters();
-            
-            // If getSerializableParameters is not available, try getParameters
-            if (!params && plugin.getParameters) {
-                params = JSON.parse(JSON.stringify(plugin.getParameters()));
-            }
-            
-            // If neither method is available, use plugin.parameters directly
-            if (!params && plugin.parameters) {
-                params = JSON.parse(JSON.stringify(plugin.parameters));
-            }
-            
-            // Ensure we have at least an empty object
-            params = params || {};
-            
-            // Remove id from params if it exists
-            const { id, type, enabled, ...cleanParams } = params;
-            
-            // Create the final state object
-            return {
-                nm: plugin.name,
-                en: plugin.enabled,
-                ...cleanParams
-            };
-        });
+        const state = this.audioManager.pipeline.map(plugin =>
+            getSerializablePluginStateShort(plugin)
+        );
         
         return btoa(JSON.stringify(state));
     }
@@ -675,21 +666,8 @@ export class UIManager {
             // Handle different preset formats
             if (preset.pipeline && Array.isArray(preset.pipeline)) {
                 // New format with pipeline array
-                // Convert to the format expected by PipelineManager
-                const presetName = preset.name || 'Imported Preset';
-                const pluginsData = preset.pipeline.map(pluginState => {
-                    return {
-                        nm: pluginState.name,
-                        en: pluginState.enabled,
-                        ...pluginState.parameters
-                    };
-                });
-                
-                // Create a preset object in the format expected by PipelineManager
-                const pipelineManagerPreset = {
-                    name: presetName,
-                    plugins: pluginsData
-                };
+                // Convert to the format expected by PipelineManager (short format)
+                const pipelineManagerPreset = convertPresetToShortFormat(preset);
                 
                 // Load the preset directly without affecting localStorage
                 this.pipelineManager.loadPreset(pipelineManagerPreset);

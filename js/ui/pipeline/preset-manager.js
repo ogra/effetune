@@ -2,6 +2,7 @@
  * PresetManager - Handles preset loading, saving, and deletion
  * Manages preset UI and storage (localStorage for web, file system for Electron)
  */
+import { getSerializablePluginStateShort, applySerializedState } from '../../utils/serialization-utils.js';
 export class PresetManager {
     /**
      * Create a new PresetManager instance
@@ -136,20 +137,9 @@ export class PresetManager {
         const presets = await this.getPresets();
         
         // Create preset data with original format (plugins array)
-        const pluginsData = this.audioManager.pipeline.map(plugin => {
-            const params = plugin.getSerializableParameters ?
-                plugin.getSerializableParameters() : {};
-            
-            // Remove id from params if it exists
-            const { id, enabled, ...cleanParams } = params;
-            
-            // Use nm and en for name and enabled to maintain original format
-            return {
-                ...cleanParams,
-                nm: plugin.name,
-                en: plugin.enabled
-            };
-        });
+        const pluginsData = this.audioManager.pipeline.map(plugin =>
+            getSerializablePluginStateShort(plugin)
+        );
         
         // Save preset with original format
         presets[name] = {
@@ -246,20 +236,17 @@ export class PresetManager {
                     const plugin = this.pipelineManager.pluginManager.createPlugin(pluginState.name);
                     if (!plugin) return null;
                     
-                    plugin.enabled = pluginState.enabled;
+                    // Create a state object in the format expected by applySerializedState
+                    const state = {
+                        nm: pluginState.name,
+                        en: pluginState.enabled,
+                        ...(pluginState.inputBus !== undefined && { ib: pluginState.inputBus }),
+                        ...(pluginState.outputBus !== undefined && { ob: pluginState.outputBus }),
+                        ...pluginState.parameters
+                    };
                     
-                    // Restore parameters
-                    if (plugin.setSerializedParameters) {
-                        plugin.setSerializedParameters(pluginState.parameters);
-                    } else if (plugin.setParameters) {
-                        plugin.setParameters(pluginState.parameters);
-                    } else if (plugin.parameters) {
-                        Object.assign(plugin.parameters, pluginState.parameters);
-                    }
-                    
-                    if (plugin.updateParameters) {
-                        plugin.updateParameters();
-                    }
+                    // Apply serialized state
+                    applySerializedState(plugin, state);
                     
                     this.pipelineManager.expandedPlugins.add(plugin);
                     return plugin;
@@ -270,18 +257,8 @@ export class PresetManager {
                     const plugin = this.pipelineManager.pluginManager.createPlugin(state.nm);
                     if (!plugin) return null;
                     
-                    plugin.enabled = state.en;
-                    
-                    // Extract parameters from old format
-                    const { nm, en, ...params } = state;
-                    
-                    if (plugin.setParameters) {
-                        plugin.setParameters(params);
-                    }
-                    
-                    if (plugin.updateParameters) {
-                        plugin.updateParameters();
-                    }
+                    // Apply serialized state
+                    applySerializedState(plugin, state);
                     
                     this.pipelineManager.expandedPlugins.add(plugin);
                     return plugin;

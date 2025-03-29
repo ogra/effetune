@@ -2,6 +2,11 @@
  * PipelineCore - Core functionality for managing the audio processing pipeline
  * Handles plugin creation, deletion, reordering, and UI updates
  */
+import {
+    getSerializablePluginStateShort,
+    getSerializablePluginStateLong,
+    applySerializedState
+} from '../../utils/serialization-utils.js';
 export class PipelineCore {
     /**
      * Create a new PipelineCore instance
@@ -103,6 +108,52 @@ export class PipelineCore {
         name.textContent = plugin.name;
         header.appendChild(name);
 
+        // Display bus routing info if set
+        if (plugin.inputBus !== null || plugin.outputBus !== null) {
+            const busInfo = document.createElement('div');
+            busInfo.className = 'bus-info';
+            busInfo.textContent = `bus ${plugin.inputBus || 1}→bus ${plugin.outputBus || 1}`;
+            busInfo.title = 'Click to configure bus routing';
+            busInfo.style.cursor = 'pointer';
+            
+            // Make the bus info clickable to open the routing dialog
+            busInfo.onclick = (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                
+                // Use the common selection function
+                this.handlePluginSelection(plugin, e);
+                
+                // Show routing dialog
+                const routingBtn = item.querySelector('.routing-button');
+                this.showRoutingDialog(plugin, routingBtn || busInfo);
+            };
+            
+            header.appendChild(busInfo);
+        }
+        
+        // Routing button
+        const routingBtn = document.createElement('button');
+        routingBtn.className = 'routing-button';
+        routingBtn.title = 'Configure bus routing';
+        
+        // Use the routing button image
+        const routingImg = document.createElement('img');
+        routingImg.src = 'images/routing_button.png';
+        routingImg.alt = 'Routing';
+        routingBtn.appendChild(routingImg);
+        
+        routingBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            
+            // Use the common selection function
+            this.handlePluginSelection(plugin, e);
+            
+            // Show routing dialog
+            console.log('Showing routing dialog for plugin:', plugin.name);
+            this.showRoutingDialog(plugin, routingBtn);
+        };
+        header.appendChild(routingBtn);
+        
         // Move up button
         const moveUpBtn = document.createElement('button');
         moveUpBtn.className = 'move-up-button';
@@ -496,12 +547,17 @@ export class PipelineCore {
             if (window.workletNode) {
                 window.workletNode.port.postMessage({
                     type: 'updatePlugins',
-                    plugins: this.audioManager.pipeline.map(plugin => ({
-                        id: plugin.id,
-                        type: plugin.constructor.name,
-                        enabled: plugin.enabled,
-                        parameters: plugin.getParameters()
-                    })),
+                    plugins: this.audioManager.pipeline.map(plugin => {
+                        const parameters = plugin.getParameters();
+                        return {
+                            id: plugin.id,
+                            type: plugin.constructor.name,
+                            enabled: plugin.enabled,
+                            parameters: parameters,
+                            inputBus: plugin.inputBus,
+                            outputBus: plugin.outputBus
+                        };
+                    }),
                     masterBypass: !this.enabled
                 });
             }
@@ -525,12 +581,17 @@ export class PipelineCore {
         if (window.workletNode) {
             window.workletNode.port.postMessage({
                 type: 'updatePlugins',
-                plugins: this.audioManager.pipeline.map(plugin => ({
-                    id: plugin.id,
-                    type: plugin.constructor.name,
-                    enabled: plugin.enabled,
-                    parameters: plugin.getParameters()
-                })),
+                plugins: this.audioManager.pipeline.map(plugin => {
+                    const parameters = plugin.getParameters();
+                    return {
+                        id: plugin.id,
+                        type: plugin.constructor.name,
+                        enabled: plugin.enabled,
+                        parameters: parameters,
+                        inputBus: plugin.inputBus,
+                        outputBus: plugin.outputBus
+                    };
+                }),
                 masterBypass: this.audioManager.masterBypass
             });
         }
@@ -543,17 +604,181 @@ export class PipelineCore {
      */
     updateWorkletPlugin(plugin) {
         if (window.workletNode) {
+            const parameters = plugin.getParameters();
             window.workletNode.port.postMessage({
                 type: 'updatePlugin',
                 plugin: {
                     id: plugin.id,
                     type: plugin.constructor.name,
                     enabled: plugin.enabled,
-                    parameters: plugin.getParameters()
+                    parameters: parameters,
+                    inputBus: plugin.inputBus,
+                    outputBus: plugin.outputBus
                 }
             });
         }
         this.updateURL();
+    }
+
+    /**
+     * Show the routing dialog for a plugin
+     * @param {Object} plugin - The plugin to configure routing for
+     * @param {HTMLElement} button - The button that was clicked
+     */
+    showRoutingDialog(plugin, button) {
+        // Remove any existing dialog
+        const existingDialog = document.querySelector('.routing-dialog');
+        if (existingDialog) {
+            existingDialog.remove();
+        }
+        
+        // Create dialog
+        const dialog = document.createElement('div');
+        dialog.className = 'routing-dialog';
+        
+        // Create dialog header
+        const header = document.createElement('div');
+        header.className = 'routing-dialog-header';
+        header.textContent = window.uiManager.t('ui.busRouting');
+        
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'routing-dialog-close';
+        closeBtn.textContent = '✕';
+        closeBtn.onclick = () => dialog.remove();
+        header.appendChild(closeBtn);
+        dialog.appendChild(header);
+        
+        // Create input bus selector
+        const inputBusContainer = document.createElement('div');
+        inputBusContainer.className = 'routing-dialog-row';
+        
+        const inputBusLabel = document.createElement('label');
+        inputBusLabel.textContent = window.uiManager.t('ui.inputBus');
+        inputBusContainer.appendChild(inputBusLabel);
+        
+        const inputBusSelect = document.createElement('select');
+        for (let i = 1; i <= 4; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Bus ${i}`;
+            option.selected = (plugin.inputBus || 1) === i;
+            inputBusSelect.appendChild(option);
+        }
+        
+        inputBusSelect.onchange = () => {
+            const value = parseInt(inputBusSelect.value, 10);
+            plugin.inputBus = value === 1 ? null : value;
+            plugin.updateParameters();
+            this.updateBusInfo(plugin);
+        };
+        
+        inputBusContainer.appendChild(inputBusSelect);
+        dialog.appendChild(inputBusContainer);
+        
+        // Create output bus selector
+        const outputBusContainer = document.createElement('div');
+        outputBusContainer.className = 'routing-dialog-row';
+        
+        const outputBusLabel = document.createElement('label');
+        outputBusLabel.textContent = window.uiManager.t('ui.outputBus');
+        outputBusContainer.appendChild(outputBusLabel);
+        
+        const outputBusSelect = document.createElement('select');
+        for (let i = 1; i <= 4; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Bus ${i}`;
+            option.selected = (plugin.outputBus || 1) === i;
+            outputBusSelect.appendChild(option);
+        }
+        
+        outputBusSelect.onchange = () => {
+            const value = parseInt(outputBusSelect.value, 10);
+            plugin.outputBus = value === 1 ? null : value;
+            plugin.updateParameters();
+            this.updateBusInfo(plugin);
+        };
+        
+        outputBusContainer.appendChild(outputBusSelect);
+        dialog.appendChild(outputBusContainer);
+        
+        // Position the dialog near the button
+        const buttonRect = button.getBoundingClientRect();
+        dialog.style.position = 'absolute';
+        dialog.style.top = `${buttonRect.bottom + window.scrollY}px`;
+        dialog.style.left = `${buttonRect.left + window.scrollX}px`;
+        
+        // Add dialog to the document
+        document.body.appendChild(dialog);
+        
+        // Add dialog to the document
+        console.log('Adding dialog to document');
+        document.body.appendChild(dialog);
+        
+        // Prevent immediate closing by delaying the click handler
+        setTimeout(() => {
+            // Close dialog when clicking outside
+            document.addEventListener('click', function closeDialog(e) {
+                if (!dialog.contains(e.target) && e.target !== button) {
+                    dialog.remove();
+                    document.removeEventListener('click', closeDialog);
+                }
+            });
+        }, 100);
+    }
+    
+    /**
+     * Update the bus info display for a plugin
+     * @param {Object} plugin - The plugin to update bus info for
+     */
+    updateBusInfo(plugin) {
+        // Find the plugin's pipeline item
+        const index = this.audioManager.pipeline.indexOf(plugin);
+        if (index === -1) return;
+        
+        const pipelineItem = this.pipelineList.children[index];
+        if (!pipelineItem) return;
+        
+        // Find or create the bus info element
+        let busInfo = pipelineItem.querySelector('.bus-info');
+        
+        if (plugin.inputBus !== null || plugin.outputBus !== null) {
+            if (!busInfo) {
+                busInfo = document.createElement('div');
+                busInfo.className = 'bus-info';
+                const header = pipelineItem.querySelector('.pipeline-item-header');
+                // Insert before the routing button
+                const routingBtn = pipelineItem.querySelector('.routing-button');
+                if (routingBtn) {
+                    header.insertBefore(busInfo, routingBtn);
+                } else {
+                    header.insertBefore(busInfo, header.firstChild);
+                }
+            }
+            busInfo.textContent = `bus ${plugin.inputBus || 1}→bus ${plugin.outputBus || 1}`;
+            busInfo.title = 'Click to configure bus routing';
+            busInfo.style.cursor = 'pointer';
+            
+            // Make the bus info clickable to open the routing dialog
+            busInfo.onclick = (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                
+                // Use the common selection function
+                this.handlePluginSelection(plugin, e);
+                
+                // Show routing dialog
+                const routingBtn = pipelineItem.querySelector('.routing-button');
+                this.showRoutingDialog(plugin, routingBtn || busInfo);
+            };
+        } else if (busInfo) {
+            busInfo.remove();
+        }
+        
+        // Save state for undo/redo
+        if (this.pipelineManager && this.pipelineManager.historyManager) {
+            this.pipelineManager.historyManager.saveState();
+        }
     }
 
     /**
@@ -565,32 +790,20 @@ export class PipelineCore {
      * @returns {Object} Serializable plugin state
      */
     getSerializablePluginState(plugin, useShortNames = false, useFullFallback = false, useDeepCopy = false) {
-        // Get serializable parameters - all plugins inherit from PluginBase
-        // which defines getSerializableParameters
-        let params = plugin.getSerializableParameters();
-        
-        // Create a deep copy if requested
-        if (useDeepCopy) {
-            params = JSON.parse(JSON.stringify(params));
-        }
-        
-        // Remove id and enabled from params if they exist
-        const { id, enabled, ...cleanParams } = params;
-        
+        // Use the centralized utility functions
         if (useShortNames) {
-            // Old format with nm/en
-            return {
-                ...cleanParams,
-                nm: plugin.name,
-                en: plugin.enabled
-            };
+            // Short format (nm/en/ib/ob)
+            let result = getSerializablePluginStateShort(plugin);
+            
+            // Create a deep copy if requested
+            if (useDeepCopy) {
+                result = JSON.parse(JSON.stringify(result));
+            }
+            
+            return result;
         } else {
-            // New format with name/enabled/parameters
-            return {
-                name: plugin.name,
-                enabled: plugin.enabled,
-                parameters: cleanParams
-            };
+            // Long format (name/enabled/parameters/inputBus/outputBus)
+            return getSerializablePluginStateLong(plugin, useDeepCopy);
         }
     }
 }

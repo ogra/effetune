@@ -24,6 +24,10 @@ class PluginProcessor extends AudioWorkletProcessor {
         this.combinedBuffer = null;
         this.lastChannelCount = 0;
         
+        // Bus management
+        this.busBuffers = new Map(); // Map to store buffers for each bus
+        this.MAX_BUSES = 4; // Maximum number of buses
+        
         // Offline processing flag
         this.isOfflineProcessing = false;
         
@@ -96,7 +100,22 @@ class PluginProcessor extends AudioWorkletProcessor {
     updatePlugin(pluginConfig) {
         const index = this.plugins.findIndex(p => p.id === pluginConfig.id);
         if (index !== -1) {
+            // Update the plugin
             this.plugins[index] = pluginConfig;
+            
+            // Make sure inputBus and outputBus are directly accessible
+            // Check if they're in the parameters object
+            if (pluginConfig.parameters && pluginConfig.parameters.inputBus !== undefined) {
+                this.plugins[index].inputBus = pluginConfig.parameters.inputBus;
+            } else if (pluginConfig.inputBus !== undefined) {
+                this.plugins[index].inputBus = pluginConfig.inputBus;
+            }
+            
+            if (pluginConfig.parameters && pluginConfig.parameters.outputBus !== undefined) {
+                this.plugins[index].outputBus = pluginConfig.parameters.outputBus;
+            } else if (pluginConfig.outputBus !== undefined) {
+                this.plugins[index].outputBus = pluginConfig.outputBus;
+            }
         }
     }
 
@@ -225,15 +244,45 @@ class PluginProcessor extends AudioWorkletProcessor {
             this.lastChannelCount = channelCount;
         }
         
+        // Initialize bus buffers
+        this.busBuffers.clear();
+        
+        // First, determine which buses are used
+        const usedBuses = new Set([1]); // Bus 1 is always used
+        for (const plugin of this.plugins) {
+            if (!plugin.enabled) continue;
+            
+            const inputBus = plugin.parameters.inputBus || plugin.inputBus || 1;
+            const outputBus = plugin.parameters.outputBus || plugin.outputBus || 1;
+            
+            usedBuses.add(inputBus);
+            usedBuses.add(outputBus);
+        }
+        
         // Copy input data to combined buffer
         for (let i = 0; i < channelCount; i++) {
             this.combinedBuffer.set(input[i], i * this.blockSize);
         }
-
+        
+        // Use combinedBuffer directly for bus 1 to avoid unnecessary copy
+        const bus1Buffer = new Float32Array(this.combinedBuffer);
+        this.busBuffers.set(1, bus1Buffer);
+        
+        // Initialize other used buses with silence
+        for (const busIndex of usedBuses) {
+            if (busIndex !== 1) { // Skip bus 1 as it's already initialized
+                this.busBuffers.set(busIndex, new Float32Array(requiredSize));
+                this.busBuffers.get(busIndex).fill(0);
+            }
+        }
+        
         // Process through all plugins in order
         for (const plugin of this.plugins) {
+            if (!plugin.enabled) continue;
+            
             const processor = this.pluginProcessors.get(plugin.type);
             if (!processor) continue;
+            
             // Get or initialize plugin context
             if (!this.pluginContexts.has(plugin.id)) {
                 this.pluginContexts.set(plugin.id, {});
@@ -247,6 +296,17 @@ class PluginProcessor extends AudioWorkletProcessor {
             };
             this.pluginContexts.set(plugin.id, context);
 
+            // Determine input and output buses
+            const inputBus = plugin.parameters.inputBus || plugin.inputBus || 1; // Default to bus 1
+            const outputBus = plugin.parameters.outputBus || plugin.outputBus || 1; // Default to bus 1
+            
+            // Determine input and output buses for processing
+            
+            // Get the input buffer for this plugin
+            const inputBuffer = this.busBuffers.get(inputBus);
+            // All used buses should already be initialized
+            
+            // Process the plugin with its input buffer
             const params = {
                 ...plugin.parameters,
                 id: plugin.id,
@@ -254,15 +314,37 @@ class PluginProcessor extends AudioWorkletProcessor {
                 blockSize: this.blockSize,
                 sampleRate: sampleRate
             };
-
-            const result = processor.call(null, context, this.combinedBuffer, params, time);
-            if (result && result.length === this.combinedBuffer.length) {
-                this.combinedBuffer.set(result);
+            
+            // If input and output buses are different, make a copy of the input buffer
+            // to prevent in-place modifications from affecting the input buffer
+            let processingBuffer = inputBuffer;
+            if (inputBus !== outputBus) {
+                processingBuffer = new Float32Array(inputBuffer.length);
+                processingBuffer.set(inputBuffer);
             }
-
+            
+            const result = processor.call(null, context, processingBuffer, params, time);
+            if (!result || result.length !== inputBuffer.length) {
+                continue; // Skip if result is invalid
+            }
+            
+            // Get the output buffer - all used buses should already be initialized
+            const outputBuffer = this.busBuffers.get(outputBus);
+            
+            // If input and output buses are the same,
+            // overwrite the output buffer with the result
+            if (inputBus === outputBus) {
+                outputBuffer.set(result);
+            } else {
+                // Otherwise, add the result to the existing output buffer
+                for (let i = 0; i < outputBuffer.length; i++) {
+                    outputBuffer[i] += result[i];
+                }
+            }
+            
             // Message sending control
             const currentTime = (this.currentFrame / sampleRate) * 1000; // ms
-            if (result && result.measurements) {
+            if (result.measurements) {
                 if (currentTime - this.lastMessageTime >= this.MESSAGE_INTERVAL) {
                     for (const [pluginId, data] of this.messageQueue) {
                         this.port.postMessage({
@@ -288,9 +370,12 @@ class PluginProcessor extends AudioWorkletProcessor {
             }
         }
 
-        // Copy final combined buffer to output channels
-        for (let i = 0; i < channelCount; i++) {
-            output[i].set(this.combinedBuffer.subarray(i * this.blockSize, (i + 1) * this.blockSize));
+        // Copy the default bus (bus 1) to the output
+        const defaultBus = this.busBuffers.get(1);
+        if (defaultBus) {
+            for (let i = 0; i < channelCount; i++) {
+                output[i].set(defaultBus.subarray(i * this.blockSize, (i + 1) * this.blockSize));
+            }
         }
         
         // Monitor output level
@@ -318,3 +403,4 @@ class PluginProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor('plugin-processor', PluginProcessor);
+

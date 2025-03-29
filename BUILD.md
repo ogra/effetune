@@ -54,7 +54,7 @@ The build configuration in `package.json` includes:
 - **File associations**: `.effetune_preset` files
 - **Build targets**:
   - Windows: NSIS installer and portable executable
-  - macOS: DMG
+  - macOS: DMG (x64 and arm64 architectures)
   - Linux: AppImage
 
 ### Build Commands
@@ -76,6 +76,21 @@ To build the application, use the following npm commands:
   npm run build:installer
   ```
 
+- **Build macOS application**:
+  ```bash
+  npm run build:mac
+  ```
+
+- **Build macOS application (ARM64 only)**:
+  ```bash
+  npm run build:mac:arm64
+  ```
+
+- **Build macOS application (x64 only)**:
+  ```bash
+  npm run build:mac:x64
+  ```
+
 - **Clean the build directory**:
   ```bash
   npm run clean
@@ -85,8 +100,12 @@ To build the application, use the following npm commands:
 
 After a successful build, you'll find the following in the `dist` directory:
 
-- **Portable application**: `EffeTune-x.xx.x-Portable.exe` (where x.xx.x is the version number)
-- **Installer**: `EffeTune-x.xx.x-Setup.exe` (NSIS installer)
+- **Windows Portable application**: `EffeTune-x.xx.x-Portable.exe` (where x.xx.x is the version number)
+- **Windows Installer**: `EffeTune-x.xx.x-Setup.exe` (NSIS installer)
+- **macOS application**:
+  - `EffeTune-x.xx.x-x64.dmg` (Intel Mac)
+  - `EffeTune-x.xx.x-arm64.dmg` (Apple Silicon Mac)
+- **Linux application**: `EffeTune-x.xx.x.AppImage`
 - **Other build artifacts**: Various files created during the build process
 
 The file naming convention has been configured in the `package.json` file to clearly distinguish between the portable application and the installer.

@@ -2,6 +2,7 @@ import { PluginManager } from './plugin-manager.js';
 import { AudioManager } from './audio-manager.js';
 import { UIManager } from './ui-manager.js';
 import { electronIntegration } from './electron-integration.js';
+import { applySerializedState } from './utils/serialization-utils.js';
 
 // Make electronIntegration globally accessible first
 window.electronIntegration = electronIntegration;
@@ -276,19 +277,18 @@ class App {
                 plugins.push(...savedState.flatMap(pluginState => {
                     try {
                         const plugin = this.pluginManager.createPlugin(pluginState.name);
-                        plugin.enabled = pluginState.enabled;
                         
-                        // Restore parameters efficiently
-                        if (plugin.setSerializedParameters) {
-                            plugin.setSerializedParameters(pluginState.parameters);
-                        } else if (plugin.setParameters) {
-                            plugin.setParameters({
-                                ...pluginState.parameters,
-                                enabled: pluginState.enabled
-                            });
-                        } else if (plugin.parameters) {
-                            Object.assign(plugin.parameters, pluginState.parameters);
-                        }
+                        // Create a state object in the format expected by applySerializedState
+                        const state = {
+                            nm: pluginState.name,
+                            en: pluginState.enabled,
+                            ...(pluginState.inputBus !== undefined && { ib: pluginState.inputBus }),
+                            ...(pluginState.outputBus !== undefined && { ob: pluginState.outputBus }),
+                            ...pluginState.parameters
+                        };
+                        
+                        // Apply serialized state
+                        applySerializedState(plugin, state);
 
                         plugin.updateParameters();
                         this.uiManager.expandedPlugins.add(plugin);

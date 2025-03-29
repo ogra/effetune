@@ -534,7 +534,8 @@ input[type="checkbox"] {
 .help-button,
 .delete-button,
 .move-up-button,
-.move-down-button {
+.move-down-button,
+.routing-button {
     padding: 4px 8px;
     background-color: #4d4d4d;
     border: 1px solid #5d5d5d;
@@ -575,6 +576,8 @@ input[type="checkbox"] {
 .help-button:hover,
 .delete-button:hover,
 .move-up-button:hover,
+.move-down-button:hover,
+.routing-button:hover,
 .move-down-button:hover {
     background-color: #5d5d5d;
 }
@@ -923,4 +926,85 @@ input[type="checkbox"] {
 .player-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Bus routing styles */
+.bus-info {
+    color: #4a9eff;
+    font-size: 12px;
+    margin-right: 10px;
+    padding: 2px 6px;
+    background-color: rgba(74, 158, 255, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(74, 158, 255, 0.2);
+}
+
+.routing-button {
+    margin-right: 5px;
+}
+
+.routing-button img {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.routing-dialog {
+    position: absolute;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    border-radius: 4px;
+    padding: 10px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+}
+
+.routing-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #4d4d4d;
+    font-weight: bold;
+}
+
+.routing-dialog-close {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.routing-dialog-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.routing-dialog-row label {
+    min-width: 80px;
+    margin-right: 10px;
+}
+
+.routing-dialog-row select {
+    flex-grow: 1;
+    padding: 4px;
+    background-color: #4d4d4d;
+    border: 1px solid #5d5d5d;
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+.routing-dialog-row select:focus {
+    outline: none;
+    border-color: #4a9eff;
 }

@@ -62,6 +62,11 @@
   "ui.saveSingleFile": "Save processed file ({size} MB)",
   "ui.saveMultipleFiles": "Save processed files ({size} MB)",
 
+  // Bus routing dialog (The buses here are the buses in the audio signal processing mixer)
+  "ui.busRouting": "Bus Routing",
+  "ui.inputBus": "Input Bus:",
+  "ui.outputBus": "Output Bus:",
+  
   // Main menu
   "menu.file": "File",
   "menu.file.save": "Save Pipeline",
