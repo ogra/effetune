@@ -14,7 +14,7 @@ const loPassProcessorFunction = `
 if (!parameters.enabled) return data;
 
 // Map parameter names for clarity
-const { freq, slope, channelCount, blockSize } = parameters;
+const { fr: freq, sl: slope, channelCount, blockSize } = parameters;
 
 // Compute number of Linkwitz-Riley filter stages (each stage is 2nd order = 12dB/oct)
 function computeStages(slope) {
@@ -121,31 +121,31 @@ return data;
 class LoPassFilterPlugin extends PluginBase {
   constructor() {
     super("Lo Pass Filter", "Low-pass filter with adjustable frequency and slope");
-    this.freq = 1000;  // Frequency in Hz (default: 1000Hz)
-    this.slope = -24;  // Slope (allowed values: 0, -12, -24, -36, -48, -60, -72, -84, -96 dB/oct)
+    this.fr = 1000;  // Frequency in Hz (default: 1000Hz)
+    this.sl = -24;  // Slope (allowed values: 0, -12, -24, -36, -48, -60, -72, -84, -96 dB/oct)
     this.registerProcessor(loPassProcessorFunction);
   }
 
-  setFreq(freq) { this.setParameters({ freq: freq }); }
-  setSlope(slope) { this.setParameters({ slope: slope }); }
+  setFreq(freq) { this.setParameters({ fr: freq }); }
+  setSlope(slope) { this.setParameters({ sl: slope }); }
 
   getParameters() {
     return {
       type: this.constructor.name,
       enabled: this.enabled,
-      freq: this.freq,
-      slope: this.slope
+      fr: this.fr,
+      sl: this.sl
     };
   }
 
   setParameters(params) {
     if (params.enabled !== undefined) this.enabled = params.enabled;
-    if (params.freq !== undefined)
-      this.freq = Math.max(1, Math.min(40000, typeof params.freq === "number" ? params.freq : parseFloat(params.freq)));
-    if (params.slope !== undefined) {
-      const intSlope = typeof params.slope === "number" ? params.slope : parseInt(params.slope);
+    if (params.fr !== undefined)
+      this.fr = Math.max(1, Math.min(40000, typeof params.fr === "number" ? params.fr : parseFloat(params.fr)));
+    if (params.sl !== undefined) {
+      const intSlope = typeof params.sl === "number" ? params.sl : parseInt(params.sl);
       const allowed = [0, -12, -24, -36, -48, -60, -72, -84, -96];
-      this.slope = allowed.includes(intSlope) ? intSlope : -24;
+      this.sl = allowed.includes(intSlope) ? intSlope : -24;
     }
     this.updateParameters();
   }
@@ -190,14 +190,14 @@ class LoPassFilterPlugin extends PluginBase {
       numberInput.autocomplete = "off";
       slider.addEventListener("input", e => {
         onInput(parseFloat(e.target.value));
-        numberInput.value = this.freq;
+        numberInput.value = this.fr;
         this.drawGraph(canvas);
       });
       numberInput.addEventListener("input", e => {
         onInput(parseFloat(e.target.value) || 0);
-        slider.value = this.freq;
+        slider.value = this.fr;
         this.drawGraph(canvas);
-        e.target.value = this.freq;
+        e.target.value = this.fr;
       });
       row.appendChild(label);
       row.appendChild(slider);
@@ -231,8 +231,8 @@ class LoPassFilterPlugin extends PluginBase {
     };
 
     // Create frequency parameter row
-    const freqRow = createRow("Frequency (Hz):", 1, 40000, 1, this.freq, v => this.setFreq(v));
-    freqRow.appendChild(createSlopeSelect(this.slope, v => this.setSlope(v), "LPF"));
+    const freqRow = createRow("Frequency (Hz):", 1, 40000, 1, this.fr, v => this.setFreq(v));
+    freqRow.appendChild(createSlopeSelect(this.sl, v => this.setSlope(v), "LPF"));
 
     // Create graph container and canvas
     const graphContainer = document.createElement("div");
@@ -303,7 +303,7 @@ class LoPassFilterPlugin extends PluginBase {
       if (absSlope === 0) return 0;
       return absSlope / 12; // Each stage is 12dB/oct
     }
-    const numStages = computeStages(this.slope);
+    const numStages = computeStages(this.sl);
 
     ctx.beginPath();
     ctx.strokeStyle = "#00ff00";
@@ -313,9 +313,9 @@ class LoPassFilterPlugin extends PluginBase {
       
       // Calculate Linkwitz-Riley low-pass response
       let lpfMag = 1;
-      if (this.slope !== 0) {
+      if (this.sl !== 0) {
         // Linkwitz-Riley filters are -6dB at the cutoff frequency
-        const wRatio = freq / this.freq;
+        const wRatio = freq / this.fr;
         
         // For 2nd order (LR2, -12dB/oct)
         if (numStages === 1) {
