@@ -259,6 +259,8 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Dynamics  | Multiband Compressor | 专业的 5 频段动态处理器，具有 FM 电台风格的声音塑形   | [详情](plugins/dynamics.md#multiband-compressor) |
 | EQ        | 15Band GEQ        | 15 频段图形均衡器                           | [详情](plugins/eq.md#15band-geq) |
 | EQ        | 5Band PEQ         | 专业参数均衡器，具有 5 个全可配置频段              | [详情](plugins/eq.md#5band-peq) |
+| EQ | Hi Pass Filter | 精确地去除不需要的低频 | [详情](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | 精确地去除不需要的高频 | [详情](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer| 针对低音量聆听的频率平衡校正                    | [详情](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | 高通和低通滤波器组合                         | [详情](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control      | 三频段音调控制                              | [详情](plugins/eq.md#tone-control) |

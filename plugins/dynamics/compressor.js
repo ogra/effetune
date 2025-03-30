@@ -450,11 +450,10 @@ class CompressorPlugin extends PluginBase {
             const outputDb = inputDb - gainReduction + gainDb;
             const x = i;
             const y = ((outputDb + 60) / 60) * height;
-            const clampedY = Math.max(0, Math.min(height, y));
             if (i === 0) {
-                ctx.moveTo(x, height - clampedY);
+                ctx.moveTo(x, height - y);
             } else {
-                ctx.lineTo(x, height - clampedY);
+                ctx.lineTo(x, height - y);
             }
         }
         ctx.stroke();

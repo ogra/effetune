@@ -410,9 +410,8 @@ class AutoLevelerPlugin extends PluginBase {
             for (let i = 0; i < buffer.length; i++) {
                 const value = buffer[i];
                 if (isNaN(value)) continue;
-                const clamped = Math.max(-48, Math.min(0, value));
                 const x = width * i / buffer.length;
-                const y = height * (1 - (clamped + 48) / 48);
+                const y = height * (1 - (value + 48) / 48);
                 if (!started) {
                     ctx.moveTo(x, y);
                     started = true;

@@ -261,6 +261,8 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Dynamics  | Multiband Compressor | FM 라디오 스타일의 사운드 셰이핑을 위한 전문 5밴드 다이내믹스 프로세서 | [세부 정보](plugins/dynamics.md#multiband-compressor) |
 | EQ        | 15Band GEQ         | 15밴드 그래픽 이퀄라이저                            | [세부 정보](plugins/eq.md#15band-geq) |
 | EQ        | 5Band PEQ          | 5개의 완전히 구성 가능한 밴드를 갖춘 전문 파라메트릭 이퀄라이저 | [세부 정보](plugins/eq.md#5band-peq) |
+| EQ | Hi Pass Filter | 정밀하게 원하지 않는 저주파를 제거합니다 | [세부 정보](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | 정밀하게 원하지 않는 고주파를 제거합니다 | [세부 정보](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer | 낮은 볼륨 청취를 위한 주파수 밸런스 보정             | [세부 정보](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range       | 하이패스 및 로우패스 필터 조합                      | [세부 정보](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control       | 3밴드 톤 컨트롤                                    | [세부 정보](plugins/eq.md#tone-control) |

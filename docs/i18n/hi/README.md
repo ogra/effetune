@@ -259,6 +259,8 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Dynamics | Multiband Compressor | FM रेडियो-स्टाइल साउंड शेपिंग के साथ पेशेवर 5-बैंड डायनामिक्स प्रोसेसर | [विवरण](plugins/dynamics.md#multiband-compressor) |
 | EQ       | 15Band GEQ         | 15-बैंड ग्राफिक इक्वलाइज़र                                | [विवरण](plugins/eq.md#15band-geq) |
 | EQ       | 5Band PEQ          | 5 पूरी तरह से कॉन्फ़िगर करने योग्य बैंड के साथ पेशेवर पैरामीट्रिक इक्वलाइज़र | [विवरण](plugins/eq.md#5band-peq) |
+| EQ | Hi Pass Filter | अनावश्यक निम्न आवृत्तियों को सटीकता से हटाएं | [विवरण](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | अनावश्यक उच्च आवृत्तियों को सटीकता से हटाएं | [विवरण](plugins/eq.md#lo-pass-filter) |
 | EQ       | Loudness Equalizer | कम वॉल्यूम सुनने के लिए आवृत्ति संतुलन सुधार                | [विवरण](plugins/eq.md#loudness-equalizer) |
 | EQ       | Narrow Range       | हाई-पास और लो-पास फ़िल्टर संयोजन                          | [विवरण](plugins/eq.md#narrow-range) |
 | EQ       | Tone Control       | तीन-बैंड टोन नियंत्रण                                      | [विवरण](plugins/eq.md#tone-control) |

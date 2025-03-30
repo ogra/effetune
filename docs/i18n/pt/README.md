@@ -259,6 +259,8 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Dynamics  | Multiband Compressor | Processador de dinâmica profissional de 5 bandas com modelagem de som no estilo rádio FM | [Detalhes](plugins/dynamics.md#multiband-compressor) |
 | EQ        | 15Band GEQ        | Equalizador gráfico de 15 bandas                                                   | [Detalhes](plugins/eq.md#15band-geq) |
 | EQ        | 5Band PEQ         | Equalizador paramétrico profissional com 5 bandas totalmente configuráveis         | [Detalhes](plugins/eq.md#5band-peq) |
+| EQ | Hi Pass Filter | Remove frequências baixas indesejadas com precisão | [Detalhes](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | Remove frequências altas indesejadas com precisão | [Detalhes](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer| Correção do equilíbrio de frequência para audição em volume baixo                  | [Detalhes](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | Combinação de filtro passa-alta e passa-baixa                                      | [Detalhes](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control      | Controle de tom de três bandas                                                     | [Detalhes](plugins/eq.md#tone-control) |

@@ -259,6 +259,8 @@
 | Dynamics | Multiband Compressor | معالج ديناميكي احترافي بخمس نطاقات مع تشكيل صوت على نمط إذاعة FM | [تفاصيل](plugins/dynamics.md#multiband-compressor) |
 | EQ       | 15Band GEQ      | مضبط ترددات بياني بـ 15 نطاق                                | [تفاصيل](plugins/eq.md#15band-geq)               |
 | EQ       | 5Band PEQ       | مضبط ترددات بارامتري احترافي مع 5 نطاقات قابلة للتعديل بالكامل | [تفاصيل](plugins/eq.md#5band-peq)                |
+| EQ | Hi Pass Filter | إزالة الترددات المنخفضة غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | إزالة الترددات العالية غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#lo-pass-filter) |
 | EQ       | Loudness Equalizer | تصحيح توازن الترددات للاستماع بمستوى صوت منخفض              | [تفاصيل](plugins/eq.md#loudness-equalizer)       |
 | EQ       | Narrow Range    | مزيج من مرشحات التردد العالي والمنخفض                       | [تفاصيل](plugins/eq.md#narrow-range)            |
 | EQ       | Tone Control    | تحكم في النغم بثلاث نطاقات                                  | [تفاصيل](plugins/eq.md#tone-control)             |

@@ -233,8 +233,9 @@ class SpectrogramPlugin extends PluginBase {
         const bufferPosition = message.measurements.bufferPosition;
         const [bufferL, bufferR] = message.measurements.buffer;
 
+        if (fftSize != bufferL.length) return audioBuffer;
+
         // Reset FFT buffers
-        this.real.fill(0);
         this.imag.fill(0);
 
         // Copy and window the time domain data using precomputed window
@@ -406,8 +407,11 @@ class SpectrogramPlugin extends PluginBase {
         // Channel parameter row
         const channelRow = document.createElement('div');
         channelRow.className = 'parameter-row';
+        
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelLabel.htmlFor = `${this.id}-${this.name}-channel-all`; // Add htmlFor attribute
+        
         channelRow.appendChild(channelLabel);
         const channels = ['All', 'Left', 'Right'];
         channels.forEach(chVal => {

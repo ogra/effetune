@@ -225,12 +225,13 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const bufferPosition = message.measurements.bufferPosition;
         const [bufferL, bufferR] = message.measurements.buffer;
 
+        if (fftSize != bufferL.length) return audioBuffer;
+
         // Reset FFT buffers
-        this.real.fill(0);
         this.imag.fill(0);
 
         // Copy and window the time domain data
-        let pos = bufferPosition;
+        let pos = bufferPosition % fftSize;
         for (let i = 0; i < fftSize; i++) {
             let sample = 0;
             if (this.ch === 'All') {
@@ -260,19 +261,19 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             
             // Convert to dB with corrections
             const db = 10 * Math.log10(rawPower + 1e-24) + totalCorrection;
-            // Clamp spectrum values between -144 and 0 dB
-            this.spectrum[i] = db < -144 ? -144 : db > 0 ? 0 : db;
+            this.spectrum[i] = db;
         }
 
         // Validate and update peaks
         const currentTime = message.measurements.time;
-        const deltaTime = currentTime - this.lastProcessTime;
+        const deltaTime = this.lastProcessTime < currentTime ?  currentTime - this.lastProcessTime: 0.02;
         const decay = 20 * deltaTime; // 20dB/sec decay rate
 
         if (!this.peaks || this.peaks.length !== halfFft) {
             this.peaks = new Float32Array(halfFft).fill(-144);
         }
 
+        const last = this.peaks[halfFft-1];
         for (let i = 0; i < halfFft; i++) {
             if (isNaN(this.peaks[i]) || this.peaks[i] < -144 || this.peaks[i] > 0) {
                 this.peaks[i] = -144;
@@ -382,6 +383,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
+        channelLabel.htmlFor = `${this.id}-${this.name}-channel-all`; // Add htmlFor attribute
         
         const channels = ['All', 'Left', 'Right'];
         const channelRadios = channels.map(ch => {
@@ -410,9 +412,8 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             label.appendChild(document.createTextNode(ch));
             return label;
         });
-
-        channelRow.appendChild(channelLabel);
-        channelRadios.forEach(radio => channelRow.appendChild(radio));
+channelRow.appendChild(channelLabel);
+channelRadios.forEach(radio => channelRow.appendChild(radio));
 
         // Graph container
         const graphContainer = document.createElement('div');
@@ -564,8 +565,8 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             const freq = (i * this.sampleRate / 2) / binCount;
             if (freq > 40000) continue;
             const x = Math.round(width * (Math.log10(Math.max(freq, 20)) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20)));
-            const spectrumLevel = Math.min(0, Math.max(this.dr, this.spectrum[i]));
-            const peakLevel = Math.min(0, Math.max(this.dr, this.peaks[i]));
+            const spectrumLevel = Math.min(0, this.spectrum[i]);
+            const peakLevel = Math.min(0, this.peaks[i]);
 
             if (!xToLevels.has(x)) {
                 xToLevels.set(x, [spectrumLevel, peakLevel]);

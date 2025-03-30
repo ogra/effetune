@@ -6,9 +6,11 @@ A collection of plugins that let you adjust different aspects of your music's so
 
 - [15Band GEQ](#15band-geq) - Detailed sound adjustment with 15 precise controls
 - [5Band PEQ](#5band-peq) - Professional parametric equalizer with flexible controls
+- [Hi Pass Filter](#hi-pass-filter) - Remove unwanted low frequencies with precision
+- [Lo Pass Filter](#lo-pass-filter) - Remove unwanted high frequencies with precision
 - [Loudness Equalizer](#loudness-equalizer) - Frequency balance correction for low volume listening
-- [Tone Control](#tone-control) - Simple bass, mid, and treble adjustment
 - [Narrow Range](#narrow-range) - Focus on specific parts of the sound
+- [Tone Control](#tone-control) - Simple bass, mid, and treble adjustment
 
 ## 15Band GEQ
 
@@ -59,85 +61,6 @@ A detailed sound adjustment tool with 15 separate controls, each affecting a spe
 - Easy-to-use sliders with precise control
 - One-click reset to default settings
 
-## Loudness Equalizer
-
-A specialized equalizer that automatically adjusts frequency balance based on your listening volume. This plugin compensates for the human ear's reduced sensitivity to low and high frequencies at lower volumes, ensuring a consistent and enjoyable listening experience regardless of playback level.
-
-### Listening Enhancement Guide
-- Low Volume Listening:
-  - Enhances bass and treble frequencies
-  - Maintains musical balance at quiet levels
-  - Compensates for human hearing characteristics
-- Volume-Dependent Processing:
-  - More enhancement at lower volumes
-  - Gradual reduction of processing as volume increases
-  - Natural sound at higher listening levels
-- Frequency Balance:
-  - Low shelf for bass enhancement (100-300Hz)
-  - High shelf for treble enhancement (3-6kHz)
-  - Smooth transition between frequency ranges
-
-### Parameters
-- **Average SPL** - Current listening level (60dB to 85dB)
-  - Lower values: More enhancement
-  - Higher values: Less enhancement
-  - Represents typical listening volume
-- **Low Frequency Controls**
-  - Frequency: Bass enhancement center (100Hz to 300Hz)
-  - Gain: Maximum bass boost (0dB to 15dB)
-  - Q: Shape of bass enhancement (0.5 to 1.0)
-- **High Frequency Controls**
-  - Frequency: Treble enhancement center (3kHz to 6kHz)
-  - Gain: Maximum treble boost (0dB to 15dB)
-  - Q: Shape of treble enhancement (0.5 to 1.0)
-
-### Visual Display
-- Real-time frequency response graph
-- Interactive parameter controls
-- Volume-dependent curve visualization
-- Precise numerical readouts
-
-## Tone Control
-
-A simple three-band sound adjuster for quick and easy sound personalization. Perfect for basic sound shaping without getting too technical.
-
-### Music Enhancement Guide
-- Classical Music:
-  - Light treble boost for more detail in strings
-  - Gentle bass boost for fuller orchestra sound
-  - Neutral mids for natural sound
-- Rock/Pop Music:
-  - Moderate bass boost for more impact
-  - Slight mid reduction for clearer sound
-  - Treble boost for crisp cymbals and details
-- Jazz Music:
-  - Warm bass for fuller sound
-  - Clear mids for instrument detail
-  - Gentle treble for cymbal sparkle
-- Electronic Music:
-  - Strong bass for deep impact
-  - Reduced mids for cleaner sound
-  - Enhanced treble for crisp details
-
-### Parameters
-- **Bass** - Controls the low sounds (-24dB to +24dB)
-  - Increase for more powerful bass
-  - Decrease for lighter, cleaner sound
-  - Affects the "weight" of the music
-- **Mid** - Controls the main body of sound (-24dB to +24dB)
-  - Increase for more prominent vocals/instruments
-  - Decrease for more spacious sound
-  - Affects the "fullness" of the music
-- **Treble** - Controls the high sounds (-24dB to +24dB)
-  - Increase for more sparkle and detail
-  - Decrease for smoother, softer sound
-  - Affects the "brightness" of the music
-
-### Visual Display
-- Easy-to-read graph showing your adjustments
-- Simple sliders for each control
-- Quick reset button
-
 ## 5Band PEQ
 
 A professional-grade parametric equalizer based on scientific principles, offering five fully configurable bands with precise frequency control. Perfect for both subtle sound refinement and corrective audio processing.
@@ -180,6 +103,122 @@ A professional-grade parametric equalizer based on scientific principles, offeri
 - Calibrated frequency and gain grid
 - Accurate numerical readouts for all parameters
 
+## Hi Pass Filter
+
+A precision high-pass filter that removes unwanted low frequencies while preserving the clarity of higher frequencies. Based on Linkwitz-Riley filter design for optimal phase response and transparent sound quality.
+
+### Listening Enhancement Guide
+- Remove Unwanted Rumble:
+  - Set frequency between 20-40Hz to eliminate subsonic noise
+  - Use steeper slopes (-24dB/oct or higher) for cleaner bass
+  - Ideal for vinyl recordings or live performances with stage vibrations
+- Clean Up Bass-Heavy Music:
+  - Set frequency between 60-100Hz to tighten bass response
+  - Use moderate slopes (-12dB/oct to -24dB/oct) for natural transition
+  - Helps prevent speaker overload and improves clarity
+- Create Special Effects:
+  - Set frequency between 200-500Hz for telephone-like voice effect
+  - Use steep slopes (-48dB/oct or higher) for dramatic filtering
+  - Combine with Lo Pass Filter for band-pass effects
+
+### Parameters
+- **Frequency (Hz)** - Controls where low frequencies are filtered out (1Hz to 40000Hz)
+  - Lower values: Only the very lowest frequencies are removed
+  - Higher values: More low frequencies are removed
+  - Adjust based on the specific low-frequency content you want to eliminate
+- **Slope** - Controls how aggressively frequencies below the cutoff are reduced
+  - Off: No filtering applied
+  - -12dB/oct: Gentle filtering (LR2 - 2nd order Linkwitz-Riley)
+  - -24dB/oct: Standard filtering (LR4 - 4th order Linkwitz-Riley)
+  - -36dB/oct: Stronger filtering (LR6 - 6th order Linkwitz-Riley)
+  - -48dB/oct: Very strong filtering (LR8 - 8th order Linkwitz-Riley)
+  - -60dB/oct to -96dB/oct: Extremely steep filtering for special applications
+
+### Visual Display
+- Real-time frequency response graph with logarithmic frequency scale
+- Clear visualization of the filter slope and cutoff point
+- Interactive controls for precise adjustment
+- Frequency grid with markers at key reference points
+
+## Lo Pass Filter
+
+A precision low-pass filter that removes unwanted high frequencies while preserving the warmth and body of lower frequencies. Based on Linkwitz-Riley filter design for optimal phase response and transparent sound quality.
+
+### Listening Enhancement Guide
+- Reduce Harshness and Sibilance:
+  - Set frequency between 8-12kHz to tame harsh recordings
+  - Use moderate slopes (-12dB/oct to -24dB/oct) for natural sound
+  - Helps reduce listening fatigue with bright recordings
+- Warm Up Digital Recordings:
+  - Set frequency between 12-16kHz to reduce digital "edge"
+  - Use gentle slopes (-12dB/oct) for subtle warming effect
+  - Creates a more analog-like sound character
+- Create Special Effects:
+  - Set frequency between 1-3kHz for vintage radio effect
+  - Use steep slopes (-48dB/oct or higher) for dramatic filtering
+  - Combine with Hi Pass Filter for band-pass effects
+- Control Noise and Hiss:
+  - Set frequency just above the musical content (typically 14-18kHz)
+  - Use steeper slopes (-36dB/oct or higher) for effective noise control
+  - Reduces tape hiss or background noise while preserving most musical content
+
+### Parameters
+- **Frequency (Hz)** - Controls where high frequencies are filtered out (1Hz to 40000Hz)
+  - Lower values: More high frequencies are removed
+  - Higher values: Only the very highest frequencies are removed
+  - Adjust based on the specific high-frequency content you want to eliminate
+- **Slope** - Controls how aggressively frequencies above the cutoff are reduced
+  - Off: No filtering applied
+  - -12dB/oct: Gentle filtering (LR2 - 2nd order Linkwitz-Riley)
+  - -24dB/oct: Standard filtering (LR4 - 4th order Linkwitz-Riley)
+  - -36dB/oct: Stronger filtering (LR6 - 6th order Linkwitz-Riley)
+  - -48dB/oct: Very strong filtering (LR8 - 8th order Linkwitz-Riley)
+  - -60dB/oct to -96dB/oct: Extremely steep filtering for special applications
+
+### Visual Display
+- Real-time frequency response graph with logarithmic frequency scale
+- Clear visualization of the filter slope and cutoff point
+- Interactive controls for precise adjustment
+- Frequency grid with markers at key reference points
+
+## Loudness Equalizer
+
+A specialized equalizer that automatically adjusts frequency balance based on your listening volume. This plugin compensates for the human ear's reduced sensitivity to low and high frequencies at lower volumes, ensuring a consistent and enjoyable listening experience regardless of playback level.
+
+### Listening Enhancement Guide
+- Low Volume Listening:
+  - Enhances bass and treble frequencies
+  - Maintains musical balance at quiet levels
+  - Compensates for human hearing characteristics
+- Volume-Dependent Processing:
+  - More enhancement at lower volumes
+  - Gradual reduction of processing as volume increases
+  - Natural sound at higher listening levels
+- Frequency Balance:
+  - Low shelf for bass enhancement (100-300Hz)
+  - High shelf for treble enhancement (3-6kHz)
+  - Smooth transition between frequency ranges
+
+### Parameters
+- **Average SPL** - Current listening level (60dB to 85dB)
+  - Lower values: More enhancement
+  - Higher values: Less enhancement
+  - Represents typical listening volume
+- **Low Frequency Controls**
+  - Frequency: Bass enhancement center (100Hz to 300Hz)
+  - Gain: Maximum bass boost (0dB to 15dB)
+  - Q: Shape of bass enhancement (0.5 to 1.0)
+- **High Frequency Controls**
+  - Frequency: Treble enhancement center (3kHz to 6kHz)
+  - Gain: Maximum treble boost (0dB to 15dB)
+  - Q: Shape of treble enhancement (0.5 to 1.0)
+
+### Visual Display
+- Real-time frequency response graph
+- Interactive parameter controls
+- Volume-dependent curve visualization
+- Precise numerical readouts
+
 ## Narrow Range
 
 A tool that lets you focus on specific parts of the music by filtering out unwanted frequencies. Useful for creating special sound effects or removing unwanted sounds.
@@ -218,3 +257,44 @@ A tool that lets you focus on specific parts of the music by filtering out unwan
 - Clear graph showing frequency response
 - Easy-to-adjust frequency controls
 - Simple slope selection buttons
+
+## Tone Control
+
+A simple three-band sound adjuster for quick and easy sound personalization. Perfect for basic sound shaping without getting too technical.
+
+### Music Enhancement Guide
+- Classical Music:
+  - Light treble boost for more detail in strings
+  - Gentle bass boost for fuller orchestra sound
+  - Neutral mids for natural sound
+- Rock/Pop Music:
+  - Moderate bass boost for more impact
+  - Slight mid reduction for clearer sound
+  - Treble boost for crisp cymbals and details
+- Jazz Music:
+  - Warm bass for fuller sound
+  - Clear mids for instrument detail
+  - Gentle treble for cymbal sparkle
+- Electronic Music:
+  - Strong bass for deep impact
+  - Reduced mids for cleaner sound
+  - Enhanced treble for crisp details
+
+### Parameters
+- **Bass** - Controls the low sounds (-24dB to +24dB)
+  - Increase for more powerful bass
+  - Decrease for lighter, cleaner sound
+  - Affects the "weight" of the music
+- **Mid** - Controls the main body of sound (-24dB to +24dB)
+  - Increase for more prominent vocals/instruments
+  - Decrease for more spacious sound
+  - Affects the "fullness" of the music
+- **Treble** - Controls the high sounds (-24dB to +24dB)
+  - Increase for more sparkle and detail
+  - Decrease for smoother, softer sound
+  - Affects the "brightness" of the music
+
+### Visual Display
+- Easy-to-read graph showing your adjustments
+- Simple sliders for each control
+- Quick reset button

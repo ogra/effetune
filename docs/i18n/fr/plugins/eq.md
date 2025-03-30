@@ -1,220 +1,292 @@
-# Equalizer Plugins
+# Plugins d'Égaliseur
+Une collection de plugins qui vous permet d'ajuster différents aspects du son de votre musique, des basses profondes aux aigus nets. Ces outils vous aident à personnaliser votre expérience d'écoute en renforçant ou en atténuant certains éléments sonores.
 
-Une collection de plugins qui vous permettent d'ajuster différents aspects du son de votre musique, des basses profondes aux aigus cristallins. Ces outils vous aident à personnaliser votre expérience d'écoute en améliorant ou en réduisant des éléments sonores spécifiques.
+## Liste des Plugins
 
-## Plugin List
-
-- [15Band GEQ](#15band-geq) - Ajustement détaillé du son avec 15 contrôles précis
-- [5Band PEQ](#5band-peq) - Égaliseur paramétrique professionnel avec contrôles flexibles
-- [Loudness Equalizer](#loudness-equalizer) - Correction de la balance des fréquences pour l'écoute à faible volume
-- [Tone Control](#tone-control) - Ajustement simple des basses, médiums et aigus
-- [Narrow Range](#narrow-range) - Concentration sur des parties spécifiques du son
+- [15Band GEQ](#15band-geq) - Réglage détaillé du son avec 15 contrôles précis
+- [5Band PEQ](#5band-peq) - Égaliseur paramétrique professionnel avec des contrôles flexibles
+- [Hi Pass Filter](#hi-pass-filter) - Éliminez avec précision les basses fréquences indésirables
+- [Lo Pass Filter](#lo-pass-filter) - Éliminez avec précision les hautes fréquences indésirables
+- [Loudness Equalizer](#loudness-equalizer) - Correction de l'équilibre des fréquences pour une écoute à faible volume
+- [Narrow Range](#narrow-range) - Concentrez-vous sur des parties spécifiques du son
+- [Tone Control](#tone-control) - Réglage simple des basses, médiums et aigus
 
 ## 15Band GEQ
-
-Un outil d'ajustement sonore détaillé avec 15 contrôles distincts, chacun affectant une partie spécifique du spectre sonore. Parfait pour affiner votre musique exactement comme vous l'aimez.
+Un outil de réglage du son détaillé avec 15 contrôles distincts, chacun affectant une partie spécifique du spectre sonore. Parfait pour ajuster votre musique exactement comme vous l'aimez.
 
 ### Guide d'Amélioration de l'Écoute
-- Région des Basses (25Hz-160Hz) :
-  - Améliorez la puissance des grosses caisses et des basses profondes
+- Région des basses (25Hz-160Hz):
+  - Renforcez la puissance de la grosse caisse et des basses profondes
   - Ajustez la plénitude des instruments de basse
-  - Contrôlez les sub-bass qui font vibrer la pièce
-- Bas-médiums (250Hz-630Hz) :
+  - Contrôlez les sub-basses capables de faire vibrer la pièce
+- Bas des médiums (250Hz-630Hz):
   - Ajustez la chaleur de la musique
   - Contrôlez la plénitude du son global
-  - Réduisez ou améliorez l'"épaisseur" du son
-- Hauts-médiums (1kHz-2.5kHz) :
+  - Réduisez ou accentuez l'épaisseur du son
+- Haut des médiums (1kHz-2.5kHz):
   - Rendez les voix plus claires et présentes
-  - Ajustez la proéminence des instruments principaux
-  - Contrôlez la sensation de "proximité" du son
-- Hautes Fréquences (4kHz-16kHz) :
+  - Ajustez la présence des instruments principaux
+  - Contrôlez l'aspect en avant du son
+- Hautes Fréquences (4kHz-16kHz):
   - Améliorez la netteté et le détail
-  - Contrôlez le "brillant" et l'"air" dans la musique
-  - Ajustez la luminosité globale
+  - Contrôlez l'éclat et l'air de la musique
+  - Ajustez la brillance globale
 
-### Parameters
-- **Band Gains** - Contrôles individuels pour chaque plage de fréquences (-12dB à +12dB)
+### Paramètres
+- **Gains de Bande** - Contrôles individuels pour chaque plage de fréquences (-12dB à +12dB)
   - Basses Profondes
-    - 25Hz : Sensation de basse la plus profonde
-    - 40Hz : Impact des basses profondes
-    - 63Hz : Puissance des basses
-    - 100Hz : Plénitude des basses
-    - 160Hz : Hautes basses
-  - Sons Graves
-    - 250Hz : Chaleur du son
-    - 400Hz : Plénitude du son
-    - 630Hz : Corps du son
-  - Sons Médiums
-    - 1kHz : Présence sonore principale
-    - 1.6kHz : Clarté du son
-    - 2.5kHz : Détail du son
-  - Sons Aigus
-    - 4kHz : Netteté du son
-    - 6.3kHz : Brillance du son
-    - 10kHz : Air du son
-    - 16kHz : Éclat du son
+    - 25Hz: Sensation de basse la plus faible
+    - 40Hz: Impact des basses profondes
+    - 63Hz: Puissance des basses
+    - 100Hz: Plénitude des basses
+    - 160Hz: Basses supérieures
+  - Son Bas
+    - 250Hz: Chaleur du son
+    - 400Hz: Plénitude du son
+    - 630Hz: Corps du son
+  - Son Moyen
+    - 1kHz: Présence du son principal
+    - 1.6kHz: Clarté du son
+    - 2.5kHz: Détail du son
+  - Son Aigu
+    - 4kHz: Netteté du son
+    - 6.3kHz: Brillance du son
+    - 10kHz: Air du son
+    - 16kHz: Éclat du son
 
 ### Affichage Visuel
 - Graphique en temps réel montrant vos ajustements sonores
-- Curseurs faciles à utiliser avec contrôle précis
+- Curseurs faciles à utiliser avec un contrôle précis
 - Réinitialisation en un clic aux paramètres par défaut
 
-## Loudness Equalizer
-
-Un égaliseur spécialisé qui ajuste automatiquement la balance des fréquences en fonction de votre volume d'écoute. Ce plugin compense la sensibilité réduite de l'oreille humaine aux basses et hautes fréquences à faible volume, assurant une expérience d'écoute cohérente et agréable quel que soit le niveau de lecture.
-
-### Guide d'Amélioration de l'Écoute
-- Écoute à Faible Volume :
-  - Amélioration des basses et hautes fréquences
-  - Maintien de l'équilibre musical à des niveaux silencieux
-  - Compensation des caractéristiques de l'audition humaine
-- Traitement Dépendant du Volume :
-  - Plus d'amélioration à faible volume
-  - Réduction progressive du traitement avec l'augmentation du volume
-  - Son naturel à des niveaux d'écoute plus élevés
-- Balance des Fréquences :
-  - Filtre en plateau bas pour l'amélioration des basses (100-300Hz)
-  - Filtre en plateau haut pour l'amélioration des aigus (3-6kHz)
-  - Transition douce entre les plages de fréquences
-
-### Paramètres
-- **Average SPL** - Niveau d'écoute actuel (60dB à 85dB)
-  - Valeurs plus basses : Plus d'amélioration
-  - Valeurs plus hautes : Moins d'amélioration
-  - Représente le volume d'écoute typique
-- **Contrôles Basses Fréquences**
-  - Fréquence : Centre d'amélioration des basses (100Hz à 300Hz)
-  - Gain : Boost maximum des basses (0dB à 15dB)
-  - Q : Forme de l'amélioration des basses (0.5 à 1.0)
-- **Contrôles Hautes Fréquences**
-  - Fréquence : Centre d'amélioration des aigus (3kHz à 6kHz)
-  - Gain : Boost maximum des aigus (0dB à 15dB)
-  - Q : Forme de l'amélioration des aigus (0.5 à 1.0)
-
-### Affichage Visuel
-- Graphique de réponse en fréquence en temps réel
-- Contrôles de paramètres interactifs
-- Visualisation de courbe dépendante du volume
-- Lectures numériques précises
-
-## Tone Control
-
-Un ajusteur de son à trois bandes simple pour une personnalisation sonore rapide et facile. Parfait pour une mise en forme basique du son sans devenir trop technique.
-
-### Guide d'Amélioration Musicale
-- Musique Classique :
-  - Léger boost des aigus pour plus de détail dans les cordes
-  - Boost doux des basses pour un son d'orchestre plus plein
-  - Médiums neutres pour un son naturel
-- Musique Rock/Pop :
-  - Boost modéré des basses pour plus d'impact
-  - Légère réduction des médiums pour un son plus clair
-  - Boost des aigus pour des cymbales et détails nets
-- Musique Jazz :
-  - Basses chaleureuses pour un son plus plein
-  - Médiums clairs pour le détail des instruments
-  - Aigus doux pour l'éclat des cymbales
-- Musique Électronique :
-  - Basses fortes pour un impact profond
-  - Médiums réduits pour un son plus propre
-  - Aigus améliorés pour des détails nets
-
-### Parameters
-- **Bass** - Contrôle les sons graves (-24dB à +24dB)
-  - Augmentez pour des basses plus puissantes
-  - Diminuez pour un son plus léger et propre
-  - Affecte le "poids" de la musique
-- **Mid** - Contrôle le corps principal du son (-24dB à +24dB)
-  - Augmentez pour des voix/instruments plus présents
-  - Diminuez pour un son plus spacieux
-  - Affecte la "plénitude" de la musique
-- **Treble** - Contrôle les sons aigus (-24dB à +24dB)
-  - Augmentez pour plus d'éclat et de détail
-  - Diminuez pour un son plus doux et lisse
-  - Affecte la "brillance" de la musique
-
-### Affichage Visuel
-- Graphique facile à lire montrant vos ajustements
-- Curseurs simples pour chaque contrôle
-- Bouton de réinitialisation rapide
-
 ## 5Band PEQ
+Un égaliseur paramétrique de qualité professionnelle basé sur des principes scientifiques, offrant cinq bandes entièrement configurables avec un contrôle précis des fréquences. Parfait pour un raffinement subtil du son ainsi que pour un traitement correctif audio.
 
-Un égaliseur paramétrique de qualité professionnelle basé sur des principes scientifiques, offrant cinq bandes entièrement configurables avec un contrôle précis des fréquences. Parfait pour l'affinement subtil du son et le traitement audio correctif.
-
-### Guide d'Amélioration du Son
-- Clarté Vocale et Instrumentale :
+### Guide d'Amélioration Sonore
+- Clarté des Voix et des Instruments:
   - Utilisez la bande 3.2kHz avec un Q modéré (1.0-2.0) pour une présence naturelle
-  - Appliquez des coupes étroites (Q 4.0-8.0) pour éliminer les résonances
-  - Ajoutez un air doux avec un filtre en plateau haut à 10kHz (+2 à +4dB)
-- Contrôle de la Qualité des Basses :
-  - Modelez les fondamentales avec un filtre en cloche à 100Hz
+  - Appliquez des coupes avec un Q étroit (4.0-8.0) pour éliminer les résonances
+  - Ajoutez une légère sensation d'air avec une étagère haute 10kHz (+2 à +4dB)
+- Contrôle de la Qualité des Basses:
+  - Façonnez les fondamentaux avec un filtre en cloche à 100Hz
   - Éliminez la résonance de la pièce en utilisant un Q étroit à des fréquences spécifiques
-  - Créez une extension douce des basses avec un filtre en plateau bas
-- Ajustement Scientifique du Son :
+  - Créez une extension de basse fluide avec une étagère basse
+- Réglage Scientifique du Son:
   - Ciblez des fréquences spécifiques avec précision
   - Utilisez des analyseurs pour identifier les zones problématiques
   - Appliquez des corrections mesurées avec un impact de phase minimal
 
 ### Paramètres Techniques
 - **Bandes de Précision**
-  - Bande 1 : 100Hz (Contrôle Sub & Basses)
-  - Bande 2 : 316Hz (Définition Bas-médiums)
-  - Bande 3 : 1.0kHz (Présence Médiums)
-  - Bande 4 : 3.2kHz (Détail Hauts-médiums)
-  - Bande 5 : 10kHz (Extension Hautes Fréquences)
-- **Contrôles Professionnels Par Bande**
-  - Fréquence Centrale : Espacée logarithmiquement pour une couverture optimale
-  - Plage de Gain : Ajustement précis ±18dB
-  - Facteur Q : Large 0.1 à Précis 10.0
-  - Types de Filtres Multiples :
-    - Peaking : Ajustement symétrique des fréquences
-    - Low/High Pass : Pente de 12dB/octave
-    - Low/High Shelf : Mise en forme spectrale douce
-    - Band Pass : Isolation fréquentielle ciblée
+  - Bande 1: 100Hz (Contrôle des Sub et des Basses)
+  - Bande 2: 316Hz (Définition des Bas-Médiums)
+  - Bande 3: 1.0kHz (Présence des Médiums)
+  - Bande 4: 3.2kHz (Détail des Hauts-Médiums)
+  - Bande 5: 10kHz (Extension des Hautes Fréquences)
+- **Contrôles Professionnels par Bande**
+  - Fréquence Centrale: Espacée logarithmiquement pour une couverture optimale
+  - Plage de Gain: Réglage précis de ±18dB
+  - Facteur Q: De 0.1 (large) à 10.0 (précis)
+  - Types de Filtres Multiples:
+    - En cloche : Réglage symétrique des fréquences
+    - Passe Bas/Haut : Pente de 12dB/octave
+    - Étagère Bas/Haut : Modelage spectral doux
+    - Passe Bande : Isolation ciblée des fréquences
 
 ### Affichage Technique
-- Visualisation haute résolution de la réponse en fréquence
+- Visualisation de la réponse en fréquence en haute résolution
 - Points de contrôle interactifs avec affichage précis des paramètres
 - Calcul en temps réel de la fonction de transfert
-- Grille calibrée de fréquences et de gain
-- Lectures numériques précises pour tous les paramètres
+- Grille de fréquences et de gains calibrée
+- Affichages numériques précis pour tous les paramètres
 
-## Narrow Range
-
-Un outil qui vous permet de vous concentrer sur des parties spécifiques de la musique en filtrant les fréquences indésirables. Utile pour créer des effets sonores spéciaux ou éliminer les sons indésirables.
+## Hi Pass Filter
+Un filtre passe-haut de précision qui élimine les basses fréquences indésirables tout en préservant la clarté des fréquences élevées. Basé sur le design de filtre Linkwitz-Riley pour une réponse en phase optimale et une qualité sonore transparente.
 
 ### Guide d'Amélioration de l'Écoute
-- Créez des effets sonores uniques :
-  - Effet "voix téléphonique"
-  - Son "vieille radio"
-  - Effet "sous l'eau"
-- Concentrez-vous sur des instruments spécifiques :
+- Éliminez les grondements indésirables:
+  - Réglez la fréquence entre 20-40Hz pour éliminer le bruit subsonique
+  - Utilisez des pentes plus raides (-24dB/oct ou plus) pour des basses plus propres
+  - Idéal pour les enregistrements vinyles ou les performances live avec des vibrations scéniques
+- Nettoyez la musique à dominante basse:
+  - Réglez la fréquence entre 60-100Hz pour resserrer la réponse des basses
+  - Utilisez des pentes modérées (-12dB/oct à -24dB/oct) pour une transition naturelle
+  - Aide à prévenir la surcharge des enceintes et améliore la clarté
+- Créez des effets spéciaux:
+  - Réglez la fréquence entre 200-500Hz pour un effet de voix de type téléphone
+  - Utilisez des pentes raides (-48dB/oct ou plus) pour un filtrage dramatique
+  - Combinez avec Lo Pass Filter pour des effets de passe-bande
+
+### Paramètres
+- **Frequency (Hz)** - Contrôle l'endroit où les basses fréquences sont filtrées (1Hz à 40000Hz)
+  - Valeurs inférieures : Seules les fréquences les plus basses sont supprimées
+  - Valeurs supérieures : Davantage de basses fréquences sont supprimées
+  - Réglez en fonction du contenu en basses fréquences spécifique que vous souhaitez éliminer
+- **Slope** - Contrôle la rapidité avec laquelle les fréquences en dessous du seuil sont atténuées
+  - Off : Aucun filtrage appliqué
+  - -12dB/oct : Filtrage doux (LR2 - filtre Linkwitz-Riley du 2ème ordre)
+  - -24dB/oct : Filtrage standard (LR4 - filtre Linkwitz-Riley du 4ème ordre)
+  - -36dB/oct : Filtrage plus marqué (LR6 - filtre Linkwitz-Riley du 6ème ordre)
+  - -48dB/oct : Filtrage très marqué (LR8 - filtre Linkwitz-Riley du 8ème ordre)
+  - -60dB/oct à -96dB/oct : Filtrage extrêmement raide pour des applications spéciales
+
+### Affichage Visuel
+- Graphique de réponse en fréquence en temps réel avec échelle logarithmique
+- Visualisation claire de la pente du filtre et du point de coupure
+- Contrôles interactifs pour un réglage précis
+- Grille de fréquences avec repères aux points de référence clés
+
+## Lo Pass Filter
+Un filtre passe-bas de précision qui élimine les hautes fréquences indésirables tout en préservant la chaleur et le corps des fréquences basses. Basé sur le design de filtre Linkwitz-Riley pour une réponse en phase optimale et une qualité sonore transparente.
+
+### Guide d'Amélioration de l'Écoute
+- Réduisez la dureté et la sibilance:
+  - Réglez la fréquence entre 8-12kHz pour dompter les enregistrements agressifs
+  - Utilisez des pentes modérées (-12dB/oct à -24dB/oct) pour un son naturel
+  - Aide à réduire la fatigue auditive avec des enregistrements brillants
+- Réchauffez les enregistrements numériques:
+  - Réglez la fréquence entre 12-16kHz pour atténuer le tranchant numérique
+  - Utilisez des pentes douces (-12dB/oct) pour un effet de réchauffement subtil
+  - Crée un caractère sonore plus analogue
+- Créez des effets spéciaux:
+  - Réglez la fréquence entre 1-3kHz pour un effet de radio vintage
+  - Utilisez des pentes raides (-48dB/oct ou plus) pour un filtrage dramatique
+  - Combinez avec Hi Pass Filter pour des effets de passe-bande
+- Contrôlez le bruit et le sifflement:
+  - Réglez la fréquence juste au-dessus du contenu musical (typiquement 14-18kHz)
+  - Utilisez des pentes plus raides (-36dB/oct ou plus) pour un contrôle efficace du bruit
+  - Réduit le sifflement des cassettes ou le bruit de fond tout en préservant l'essentiel du contenu musical
+
+### Paramètres
+- **Frequency (Hz)** - Contrôle l'endroit où les hautes fréquences sont supprimées (1Hz à 40000Hz)
+  - Valeurs inférieures : Davantage de hautes fréquences sont supprimées
+  - Valeurs supérieures : Seules les toutes plus hautes fréquences sont supprimées
+  - Réglez en fonction du contenu en hautes fréquences spécifique que vous souhaitez éliminer
+- **Slope** - Contrôle l'agressivité de la réduction des fréquences au-dessus du seuil de coupure
+  - Off : Aucun filtrage appliqué
+  - -12dB/oct : Filtrage doux (LR2 - filtre Linkwitz-Riley du 2ème ordre)
+  - -24dB/oct : Filtrage standard (LR4 - filtre Linkwitz-Riley du 4ème ordre)
+  - -36dB/oct : Filtrage plus marqué (LR6 - filtre Linkwitz-Riley du 6ème ordre)
+  - -48dB/oct : Filtrage très marqué (LR8 - filtre Linkwitz-Riley du 8ème ordre)
+  - -60dB/oct à -96dB/oct : Filtrage extrêmement raide pour des applications spéciales
+
+### Affichage Visuel
+- Graphique de réponse en fréquence en temps réel avec échelle logarithmique
+- Visualisation claire de la pente du filtre et du point de coupure
+- Contrôles interactifs pour un réglage précis
+- Grille de fréquences avec repères aux points de référence clés
+
+## Loudness Equalizer
+Un égaliseur spécialisé qui ajuste automatiquement l'équilibre des fréquences en fonction de votre niveau d'écoute. Ce plugin compense la sensibilité réduite de l'oreille humaine aux basses et hautes fréquences à faible volume, garantissant une expérience d'écoute cohérente et agréable quel que soit le niveau de lecture.
+
+### Guide d'Amélioration de l'Écoute
+- Écoute à Faible Volume:
+  - Renforce les fréquences de basse et d'aigus
+  - Maintient l'équilibre musical à des niveaux bas
+  - Compense les caractéristiques de l'audition humaine
+- Traitement Dépendant du Volume:
+  - Plus d'amélioration à faible volume
+  - Réduction progressive du traitement à mesure que le volume augmente
+  - Son naturel à des niveaux d'écoute plus élevés
+- Équilibre des Fréquences:
+  - Étagère basse pour l'amélioration des basses (100-300Hz)
+  - Étagère haute pour l'amélioration des aigus (3-6kHz)
+  - Transition fluide entre les plages de fréquences
+
+### Paramètres
+- **Average SPL** - Niveau d'écoute actuel (60dB à 85dB)
+  - Valeurs inférieures : Plus d'amélioration
+  - Valeurs supérieures : Moins d'amélioration
+  - Représente le volume d'écoute typique
+- **Contrôles des Basses Fréquences**
+  - Frequency: Centre d'amélioration des basses (100Hz à 300Hz)
+  - Gain: Boost maximal des basses (0dB à 15dB)
+  - Q: Forme de l'amélioration des basses (0.5 à 1.0)
+- **Contrôles des Hautes Fréquences**
+  - Frequency: Centre d'amélioration des aigus (3kHz à 6kHz)
+  - Gain: Boost maximal des aigus (0dB à 15dB)
+  - Q: Forme de l'amélioration des aigus (0.5 à 1.0)
+
+### Affichage Visuel
+- Graphique de réponse en fréquence en temps réel
+- Contrôles interactifs des paramètres
+- Visualisation de la courbe dépendante du volume
+- Affichages numériques précis
+
+## Narrow Range
+Un outil qui vous permet de vous concentrer sur des parties spécifiques de la musique en filtrant les fréquences indésirables. Utile pour créer des effets sonores spéciaux ou éliminer des sons indésirables.
+
+### Guide d'Amélioration de l'Écoute
+- Créez des effets sonores uniques:
+  - Effet « voix de téléphone »
+  - Son « vieille radio »
+  - Effet « sous-marin »
+- Concentrez-vous sur des instruments spécifiques:
   - Isolez les fréquences basses
   - Concentrez-vous sur la plage vocale
   - Mettez en valeur des instruments spécifiques
-- Supprimez les sons indésirables :
-  - Réduisez le grondement basse fréquence
-  - Coupez le sifflement haute fréquence excessif
+- Éliminez les sons indésirables:
+  - Réduisez le grondement des basses fréquences
+  - Coupez le sifflement excessif des hautes fréquences
   - Concentrez-vous sur les parties les plus importantes de la musique
 
-### Parameters
-- **HPF Frequency** - Contrôle l'endroit où les basses commencent à être atténuées (20Hz à 1000Hz)
-  - Valeurs plus élevées : Supprime davantage les basses
-  - Valeurs plus basses : Conserve davantage les basses
-  - Commencez par des valeurs basses et ajustez selon vos préférences
-- **HPF Slope** - Indique la rapidité de l'atténuation des basses (0 à -48 dB/octave)
-  - 0dB : Aucune atténuation (désactivé)
-  - De -6dB à -48dB : Atténuation de plus en plus forte par paliers de 6dB
-- **LPF Frequency** - Contrôle l'endroit où les aigus commencent à être atténués (200Hz à 20000Hz)
-  - Valeurs plus basses : Supprime davantage les aigus
-  - Valeurs plus élevées : Conserve davantage les aigus
-  - Commencez par des valeurs élevées et ajustez à la baisse si nécessaire
-- **LPF Slope** - Indique la rapidité de l'atténuation des aigus (0 à -48 dB/octave)
-  - 0dB : Aucune atténuation (désactivé)
-  - De -6dB à -48dB : Atténuation de plus en plus forte par paliers de 6dB
+### Paramètres
+- **HPF Frequency** - Contrôle l'endroit où les sons bas commencent à être réduits (20Hz à 1000Hz)
+  - Valeurs supérieures : Élimine davantage de basses
+  - Valeurs inférieures : Conserve plus de basses
+  - Commencez avec de faibles valeurs et ajustez selon vos préférences
+- **HPF Slope** - Contrôle la rapidité avec laquelle les sons bas sont atténués (0 à -48 dB/octave)
+  - 0dB : Aucune réduction (off)
+  - -6dB à -48dB : Réduction de plus en plus forte par paliers de 6dB
+- **LPF Frequency** - Contrôle l'endroit où les sons aigus commencent à être réduits (200Hz à 20000Hz)
+  - Valeurs inférieures : Élimine davantage d'aigus
+  - Valeurs supérieures : Conserve plus d'aigus
+  - Commencez par une valeur élevée et ajustez à la baisse si nécessaire
+- **LPF Slope** - Contrôle la rapidité avec laquelle les sons aigus sont atténués (0 à -48 dB/octave)
+  - 0dB : Aucune réduction (off)
+  - -6dB à -48dB : Réduction de plus en plus forte par paliers de 6dB
 
 ### Affichage Visuel
 - Graphique clair montrant la réponse en fréquence
 - Contrôles de fréquence faciles à ajuster
-- Boutons simples de sélection de pente
+- Boutons de sélection de pente simples
+
+## Tone Control
+Un ajusteur de son à trois bandes simple pour une personnalisation rapide et facile du son. Parfait pour une mise en forme basique du son sans trop de technicité.
+
+### Guide d'Amélioration Musicale
+- Musique Classique:
+  - Légère amplification des aigus pour plus de détails dans les cordes
+  - Amplification douce des basses pour un son orchestral plus riche
+  - Médiums neutres pour un son naturel
+- Musique Rock/Pop:
+  - Amplification modérée des basses pour plus d'impact
+  - Légère réduction des médiums pour un son plus clair
+  - Amplification des aigus pour des cymbales nettes et des détails
+- Musique Jazz:
+  - Basses chaudes pour un son plus riche
+  - Médiums clairs pour le détail des instruments
+  - Aigus doux pour l'éclat des cymbales
+- Musique Électronique:
+  - Basses puissantes pour un impact profond
+  - Médiums réduits pour un son plus clair
+  - Aigus renforcés pour des détails nets
+
+### Paramètres
+- **Bass** - Contrôle les sons graves (-24dB à +24dB)
+  - Augmentez pour des basses plus puissantes
+  - Diminuez pour un son plus léger et plus clair
+  - Affecte le « poids » de la musique
+- **Mid** - Contrôle le corps principal du son (-24dB à +24dB)
+  - Augmentez pour des voix/instruments plus présents
+  - Diminuez pour un son plus spacieux
+  - Affecte la « plénitude » de la musique
+- **Treble** - Contrôle les sons aigus (-24dB à +24dB)
+  - Augmentez pour plus d'éclat et de détails
+  - Diminuez pour un son plus doux et plus lisse
+  - Affecte la « brillance » de la musique
+
+### Affichage Visuel
+- Graphique facile à lire montrant vos ajustements
+- Curseurs simples pour chaque contrôle
+- Bouton de réinitialisation rapide

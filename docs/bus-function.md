@@ -8,7 +8,7 @@ The Bus feature enables flexible audio routing between effects, allowing more co
 - By default, if not specified otherwise, each effect uses **Main bus** for both input and output.
 - Up to four additional buses (**Bus 1 to Bus 4**) can be used.
 
-[Bus Function](../images/bus_function.png)
+![Bus Function](../images/bus_function.png)
 
 ## Setting Input and Output Buses for Effects
 

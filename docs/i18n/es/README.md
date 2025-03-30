@@ -261,6 +261,8 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Dynamics  | Multiband Compressor | Procesador dinámico profesional de 5 bandas con modelado de sonido al estilo de radio FM | [Detalles](plugins/dynamics.md#multiband-compressor) |
 | EQ        | 15Band GEQ | Ecualizador gráfico de 15 bandas | [Detalles](plugins/eq.md#15band-geq) |
 | EQ        | 5Band PEQ | Ecualizador paramétrico profesional con 5 bandas completamente configurables | [Detalles](plugins/eq.md#5band-peq) |
+| EQ | Hi Pass Filter | Elimina frecuencias bajas no deseadas con precisión | [Detalles](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | Elimina frecuencias altas no deseadas con precisión | [Detalles](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer | Corrección del balance de frecuencias para la escucha a bajo volumen | [Detalles](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range | Combinación de filtro pasa altos y pasa bajos | [Detalles](plugins/eq.md#narrow-range) |
 | EQ        | Tone Control | Control de tono de tres bandas | [Detalles](plugins/eq.md#tone-control) |

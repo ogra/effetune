@@ -265,6 +265,8 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Dynamics   | Multiband Compressor  | FMラジオ風のサウンドシェーピングを備えたプロフェッショナルな5バンドダイナミクスプロセッサ | [詳細](plugins/dynamics.md#multiband-compressor)           |
 | EQ         | 15Band GEQ            | 15バンドグラフィックイコライザー                           | [詳細](plugins/eq.md#15band-geq)                           |
 | EQ         | 5Band PEQ             | 5バンド全てが詳細に設定可能なプロフェッショナルパラメトリックイコライザー | [詳細](plugins/eq.md#5band-peq)                            |
+| EQ | Hi Pass Filter | 不要な低域を除去する | [詳細](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | 不要な高域を除去する | [詳細](plugins/eq.md#lo-pass-filter) |
 | EQ         | Loudness Equalizer    | 低音量再生時の周波数バランス補正                           | [詳細](plugins/eq.md#loudness-equalizer)                   |
 | EQ         | Narrow Range          | ハイパスとローパスフィルターの組み合わせ                   | [詳細](plugins/eq.md#narrow-range)                         |
 | EQ         | Tone Control          | 3バンドトーンコントロール                                  | [詳細](plugins/eq.md#tone-control)                         |

@@ -34,6 +34,8 @@ dynamics/gate: Gate | Dynamics | GatePlugin | css
 dynamics/multiband_compressor: Multiband Compressor | Dynamics | MultibandCompressorPlugin | css
 eq/fifteen_band_geq: 15Band GEQ | EQ | FifteenBandGEQPlugin | css
 eq/five_band_peq: 5Band PEQ | EQ | FiveBandPEQPlugin | css
+eq/hi_pass_filter: Hi Pass Filter | EQ | HiPassFilterPlugin | css
+eq/lo_pass_filter: Lo Pass Filter | EQ | LoPassFilterPlugin | css
 eq/loudness_equalizer: Loudness Equalizer | EQ | LoudnessEqualizerPlugin | css
 eq/narrow_range: Narrow Range | EQ | NarrowRangePlugin | css
 eq/tone_control: Tone Control | EQ | ToneControlPlugin | css

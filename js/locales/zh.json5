@@ -66,6 +66,7 @@
   "ui.busRouting": "总线路由",
   "ui.inputBus": "输入总线:",
   "ui.outputBus": "输出总线:",
+
   // 主菜单
   "menu.file": "文件",
   "menu.file.save": "保存流程",

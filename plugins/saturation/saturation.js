@@ -136,8 +136,7 @@ class SaturationPlugin extends PluginBase {
             const x = (i / width) * 2 - 1;
             const wet = Math.tanh(this.dr * (x + this.bs)) - Math.tanh(this.dr * this.bs);
             const y = ((1 - mixRatio) * x + mixRatio * wet) * Math.pow(10, this.gn / 20);
-            const clampedY = Math.max(-1, Math.min(1, y));
-            const canvasY = ((1 - clampedY) / 2) * height;
+            const canvasY = ((1 - y) / 2) * height;
             if (i === 0) {
                 ctx.moveTo(i, canvasY);
             } else {
