@@ -10,187 +10,340 @@
 //  - If the absolute slope is an even multiple of 6 (e.g. 24, 36, 48 dB/oct),
 //    the cascade is built entirely from second‑order stages.
 const processorFunction = `
+'use strict'; // Strict mode for potential optimizations
+
+// Early exit if processing is disabled
 if (!parameters.enabled) return data;
 
-// Map parameter names for clarity
-const { hf: hpfFreq, hs: hpfSlope, lf: lpfFreq, ls: lpfSlope, channelCount, blockSize } = parameters;
+// Extract parameters into local constants for potentially faster access
+// Assuming sampleRate is available either globally or via parameters
+const hpfFreq = parameters.hf;
+const hpfSlope = parameters.hs;
+const lpfFreq = parameters.lf;
+const lpfSlope = parameters.ls;
+const channelCount = parameters.channelCount;
+const blockSize = parameters.blockSize;
+const sampleRate = parameters.sampleRate; // Essential for coefficient calculation
 
-// Helper to compute number of stages from slope value (in dB/oct)
-function computeStages(slope) {
-  const absSlope = Math.abs(slope);
-  if (absSlope === 0) return { order1: 0, order2: 0 };
-  const n = absSlope / 6;
-  if (n % 2 === 1) {
-    // Odd: one first-order stage plus (n - 1)/2 second-order stages
-    return { order1: 1, order2: (n - 1) / 2 };
-  } else {
-    // Even: all second-order stages
-    return { order1: 0, order2: n / 2 };
+// --- Stage Calculation ---
+// Helper function to compute filter orders based on slope (dB/oct)
+// Kept inside as it's directly used here.
+function computeFilterStages(slope) {
+  const absSlope = slope < 0 ? -slope : slope; // Optimized Math.abs
+  if (absSlope < 3) return { order1: 0, order2: 0 }; // Treat slopes < 3dB/oct as off
+  // Round to nearest multiple of 6dB/oct represented order
+  const n = Math.round(absSlope / 6);
+  if (n === 0) return { order1: 0, order2: 0 };
+  if (n % 2 === 1) { // Odd total order (e.g., 6dB, 18dB)
+    return { order1: 1, order2: (n - 1) >> 1 }; // Use bitwise shift for division by 2
+  } else { // Even total order (e.g., 12dB, 24dB)
+    return { order1: 0, order2: n >> 1 }; // Use bitwise shift
   }
 }
 
-const hpfStages = computeStages(hpfSlope);
-const lpfStages = computeStages(lpfSlope);
-const hpf_order1_stages = hpfStages.order1;
-const hpf_order2_stages = hpfStages.order2;
-const lpf_order1_stages = lpfStages.order1;
-const lpf_order2_stages = lpfStages.order2;
-const totalHPFStages = hpf_order1_stages + hpf_order2_stages;
-const totalLPFStages = lpf_order1_stages + lpf_order2_stages;
+const hpfStages = computeFilterStages(hpfSlope);
+const lpfStages = computeFilterStages(lpfSlope);
 
-// --- Ensure proper reinitialization when slope parameters change ---
-if (!context.lastSlopes || context.lastSlopes.hpf !== hpfSlope || context.lastSlopes.lpf !== lpfSlope) {
-  context.filterStates = null;
-  context.lastSlopes = { hpf: hpfSlope, lpf: lpfSlope };
-  context.initialized = false;
+// --- Parameter Change Detection & State/Coefficient Management ---
+let needsReinit = false;
+let needsCoeffRecalcHPF = false;
+let needsCoeffRecalcLPF = false;
+
+// Initialize context if it doesn't exist
+if (typeof context === 'undefined' || context === null) {
+    context = {}; // Ensure context object exists
 }
 
-// Initialize or reset filter states if needed.
-// For first-order sections, we store one previous input and one previous output.
-// For second-order sections, we store two previous inputs and two previous outputs.
-if (!context.initialized ||
-    !context.filterStates ||
-    context.filterStates.hpf.length !== totalHPFStages ||
-    context.filterStates.lpf.length !== totalLPFStages) {
-  const createState = (order) => {
-    if (order === 1) {
-      return { x1: new Array(channelCount).fill(0), y1: new Array(channelCount).fill(0) };
-    } else { // order === 2
-      return {
-        x1: new Array(channelCount).fill(0),
-        x2: new Array(channelCount).fill(0),
-        y1: new Array(channelCount).fill(0),
-        y2: new Array(channelCount).fill(0)
-      };
+// Check for slope changes -> requires reinitialization
+if (context.lastHpfSlope !== hpfSlope || context.lastLpfSlope !== lpfSlope) {
+  context.lastHpfSlope = hpfSlope;
+  context.lastLpfSlope = lpfSlope;
+  // Store computed stage counts
+  context.hpfOrder1Stages = hpfStages.order1;
+  context.hpfOrder2Stages = hpfStages.order2;
+  context.lpfOrder1Stages = lpfStages.order1;
+  context.lpfOrder2Stages = lpfStages.order2;
+  context.filterStates = null; // Signal state structure needs update
+  needsReinit = true;
+}
+
+// Check for frequency changes -> requires coefficient recalculation
+if (context.lastHpfFreq !== hpfFreq) {
+  context.lastHpfFreq = hpfFreq;
+  needsCoeffRecalcHPF = true;
+}
+if (context.lastLpfFreq !== lpfFreq) {
+  context.lastLpfFreq = lpfFreq;
+  needsCoeffRecalcLPF = true;
+}
+
+// Initialize or re-initialize filter states if needed
+// State structure: { hpf: [state1_1, state1_2, state2_1, ...], lpf: [...] }
+if (needsReinit || !context.filterStates) {
+  const hpfOrder1 = context.hpfOrder1Stages;
+  const hpfOrder2 = context.hpfOrder2Stages;
+  const lpfOrder1 = context.lpfOrder1Stages;
+  const lpfOrder2 = context.lpfOrder2Stages;
+  const totalHPFStages = hpfOrder1 + hpfOrder2;
+  const totalLPFStages = lpfOrder1 + lpfOrder2;
+
+  context.filterStates = { hpf: new Array(totalHPFStages), lpf: new Array(totalLPFStages) };
+  const dcOffset = 1e-25; // Small offset to prevent denormals
+
+  let hpfIdx = 0;
+  // Init HPF 1st order states
+  for (let s = 0; s < hpfOrder1; s++, hpfIdx++) {
+    const state = { x1: new Float32Array(channelCount), y1: new Float32Array(channelCount) };
+    // Init with DC offset to prevent denormals - specific values may vary slightly but maintain small non-zero
+    for(let ch=0; ch<channelCount; ++ch) { state.x1[ch] = dcOffset; state.y1[ch] = dcOffset; }
+    context.filterStates.hpf[hpfIdx] = state;
+  }
+  // Init HPF 2nd order states
+  for (let s = 0; s < hpfOrder2; s++, hpfIdx++) {
+    const state = {
+      x1: new Float32Array(channelCount), x2: new Float32Array(channelCount),
+      y1: new Float32Array(channelCount), y2: new Float32Array(channelCount)
+    };
+    for(let ch=0; ch<channelCount; ++ch) { state.x1[ch] = dcOffset; state.x2[ch] = -dcOffset; state.y1[ch] = dcOffset; state.y2[ch] = -dcOffset;}
+    context.filterStates.hpf[hpfIdx] = state;
+  }
+
+  let lpfIdx = 0;
+   // Init LPF 1st order states
+  for (let s = 0; s < lpfOrder1; s++, lpfIdx++) {
+     const state = { x1: new Float32Array(channelCount), y1: new Float32Array(channelCount) };
+     for(let ch=0; ch<channelCount; ++ch) { state.x1[ch] = dcOffset; state.y1[ch] = dcOffset; }
+     context.filterStates.lpf[lpfIdx] = state;
+  }
+   // Init LPF 2nd order states
+  for (let s = 0; s < lpfOrder2; s++, lpfIdx++) {
+    const state = {
+      x1: new Float32Array(channelCount), x2: new Float32Array(channelCount),
+      y1: new Float32Array(channelCount), y2: new Float32Array(channelCount)
+    };
+    for(let ch=0; ch<channelCount; ++ch) { state.x1[ch] = dcOffset; state.x2[ch] = -dcOffset; state.y1[ch] = dcOffset; state.y2[ch] = -dcOffset;}
+    context.filterStates.lpf[lpfIdx] = state;
+  }
+
+  needsReinit = true; // Mark that reinitialization occurred
+  needsCoeffRecalcHPF = true; // Force recalc after reinit
+  needsCoeffRecalcLPF = true;
+}
+
+// Ensure coeffs object exists in context
+if (!context.coeffs) {
+    context.coeffs = {};
+}
+
+// --- Coefficient Calculation (only if needed) ---
+// Inlined constants for performance
+const PI = 3.141592653589793;
+const SQRT2 = 1.4142135623730951;
+
+// Recalculate HPF Coefficients if frequency changed or states were reinitialized
+if (needsCoeffRecalcHPF || needsReinit) {
+  const hpfOrder1 = context.hpfOrder1Stages;
+  const hpfOrder2 = context.hpfOrder2Stages;
+  const coeffs = context.coeffs;
+
+  // HPF 1st Order Coefficients (Bilinear Transform)
+  if (hpfOrder1 > 0) {
+    // tan() can produce very large/infinite values near Nyquist, handle potential issues
+    const tangentArg = PI * hpfFreq / sampleRate;
+    if (hpfFreq > 0 && tangentArg < (PI * 0.5 - 1e-9)) { // Avoid tan(pi/2)
+      const c = Math.tan(tangentArg);
+      const one_plus_c = 1 + c;
+      // Avoid division by zero if c approx -1 (freq near sampleRate/4)
+      const inv_one_plus_c = (one_plus_c !== 0) ? 1 / one_plus_c : 0; // Or handle differently?
+      coeffs.hp1_b0 = inv_one_plus_c;
+      coeffs.hp1_b1 = -inv_one_plus_c;
+      coeffs.hp1_a1 = -(1 - c) * inv_one_plus_c;
+    } else { // Freq 0 or >= Nyquist: Pass-through (matching original potential behavior more closely than hard zeroing)
+      coeffs.hp1_b0 = 1; coeffs.hp1_b1 = 0; coeffs.hp1_a1 = 0;
     }
-  };
-  context.filterStates = { hpf: [], lpf: [] };
-  for (let s = 0; s < hpf_order1_stages; s++) {
-    context.filterStates.hpf.push(createState(1));
+  } else { // No 1st order stages
+     coeffs.hp1_b0 = 1; coeffs.hp1_b1 = 0; coeffs.hp1_a1 = 0; // Default to pass-through
   }
-  for (let s = 0; s < hpf_order2_stages; s++) {
-    context.filterStates.hpf.push(createState(2));
+
+  // HPF 2nd Order Coefficients (Butterworth RBJ Cookbook formula)
+  if (hpfOrder2 > 0) {
+    if (hpfFreq > 0 && hpfFreq < sampleRate * 0.5) { // Ensure freq is valid
+      const w0 = 2 * PI * hpfFreq / sampleRate;
+      const cos_w0 = Math.cos(w0);
+      const alpha = Math.sin(w0) * (SQRT2 * 0.5); // Q = 1/SQRT2
+      const a0_inv = 1 / (1 + alpha); // Precompute inverse
+
+      coeffs.hp2_b0 = ((1 + cos_w0) * 0.5) * a0_inv;
+      coeffs.hp2_b1 = -(1 + cos_w0) * a0_inv; // = -2 * b0
+      coeffs.hp2_b2 = coeffs.hp2_b0;
+      coeffs.hp2_a1 = (-2 * cos_w0) * a0_inv;
+      coeffs.hp2_a2 = (1 - alpha) * a0_inv;
+    } else { // Freq 0 or >= Nyquist: Pass-through
+      coeffs.hp2_b0 = 1; coeffs.hp2_b1 = 0; coeffs.hp2_b2 = 0;
+      coeffs.hp2_a1 = 0; coeffs.hp2_a2 = 0;
+    }
+  } else { // No 2nd order stages
+      coeffs.hp2_b0 = 1; coeffs.hp2_b1 = 0; coeffs.hp2_b2 = 0;
+      coeffs.hp2_a1 = 0; coeffs.hp2_a2 = 0; // Default to pass-through
   }
-  for (let s = 0; s < lpf_order1_stages; s++) {
-    context.filterStates.lpf.push(createState(1));
+}
+
+// Recalculate LPF Coefficients if frequency changed or states were reinitialized
+if (needsCoeffRecalcLPF || needsReinit) {
+  const lpfOrder1 = context.lpfOrder1Stages;
+  const lpfOrder2 = context.lpfOrder2Stages;
+  const coeffs = context.coeffs;
+
+  // LPF 1st Order Coefficients (Bilinear Transform)
+  if (lpfOrder1 > 0) {
+    const tangentArg = PI * lpfFreq / sampleRate;
+     if (lpfFreq > 0 && tangentArg < (PI * 0.5 - 1e-9)) { // Avoid tan(pi/2)
+      const c = Math.tan(tangentArg);
+      const one_plus_c = 1 + c;
+      const inv_one_plus_c = (one_plus_c !== 0) ? 1 / one_plus_c : 0;
+      const c_term = c * inv_one_plus_c;
+      coeffs.lp1_b0 = c_term;
+      coeffs.lp1_b1 = c_term;
+      coeffs.lp1_a1 = -(1 - c) * inv_one_plus_c;
+    } else { // Freq 0 or >= Nyquist: Pass-through
+      coeffs.lp1_b0 = 1; coeffs.lp1_b1 = 0; coeffs.lp1_a1 = 0;
+    }
+  } else { // No 1st order stages
+     coeffs.lp1_b0 = 1; coeffs.lp1_b1 = 0; coeffs.lp1_a1 = 0; // Default to pass-through
   }
-  for (let s = 0; s < lpf_order2_stages; s++) {
-    context.filterStates.lpf.push(createState(2));
+
+  // LPF 2nd Order Coefficients (Butterworth RBJ Cookbook formula)
+  if (lpfOrder2 > 0) {
+    if (lpfFreq > 0 && lpfFreq < sampleRate * 0.5) { // Ensure freq is valid
+      const w0 = 2 * PI * lpfFreq / sampleRate;
+      const cos_w0 = Math.cos(w0);
+      const alpha = Math.sin(w0) * (SQRT2 * 0.5); // Q = 1/SQRT2
+      const a0_inv = 1 / (1 + alpha); // Precompute inverse
+
+      const term = (1 - cos_w0) * 0.5;
+      coeffs.lp2_b0 = term * a0_inv;
+      coeffs.lp2_b1 = (1 - cos_w0) * a0_inv; // = 2 * b0
+      coeffs.lp2_b2 = coeffs.lp2_b0;
+      coeffs.lp2_a1 = (-2 * cos_w0) * a0_inv;
+      coeffs.lp2_a2 = (1 - alpha) * a0_inv;
+    } else { // Freq 0 or >= Nyquist: Pass-through
+      coeffs.lp2_b0 = 1; coeffs.lp2_b1 = 0; coeffs.lp2_b2 = 0;
+      coeffs.lp2_a1 = 0; coeffs.lp2_a2 = 0;
+    }
+  } else { // No 2nd order stages
+      coeffs.lp2_b0 = 1; coeffs.lp2_b1 = 0; coeffs.lp2_b2 = 0;
+      coeffs.lp2_a1 = 0; coeffs.lp2_a2 = 0; // Default to pass-through
   }
-  context.initialized = true;
 }
 
-// --- Pre-calculate filter coefficients ---
 
-// First-order high-pass (HPF) coefficients (using bilinear transform)
-// Standard high-pass: y[n] = (1/(1+c))·(x[n] - x[n-1]) + ((1-c)/(1+c))·y[n-1]
-let hp1_b0, hp1_b1, hp1_a1;
-if (hpf_order1_stages > 0) {
-  let c = Math.tan(Math.PI * hpfFreq / sampleRate);
-  hp1_b0 = 1 / (1 + c);
-  hp1_b1 = -1 / (1 + c);
-  hp1_a1 = -((1 - c) / (1 + c));
+// --- Audio Processing ---
+const hpfStates = context.filterStates.hpf;
+const lpfStates = context.filterStates.lpf;
+const hpfOrder1Count = context.hpfOrder1Stages; // Use cached counts
+const hpfOrder2Count = context.hpfOrder2Stages;
+const lpfOrder1Count = context.lpfOrder1Stages;
+const lpfOrder2Count = context.lpfOrder2Stages;
+
+// Early exit if no filter stages are actually configured
+if (hpfOrder1Count === 0 && hpfOrder2Count === 0 && lpfOrder1Count === 0 && lpfOrder2Count === 0) {
+    return data;
 }
 
-// Second-order high-pass (HPF) coefficients (Butterworth, Q = 1/√2)
-let hp2_b0, hp2_b1, hp2_b2, hp2_a1, hp2_a2;
-if (hpf_order2_stages > 0) {
-  let w0 = 2 * Math.PI * hpfFreq / sampleRate;
-  let Q = 1 / Math.SQRT2;
-  let alpha = Math.sin(w0) / (2 * Q);
-  let a0 = 1 + alpha;
-  hp2_b0 = ((1 + Math.cos(w0)) / 2) / a0;
-  hp2_b1 = (-(1 + Math.cos(w0))) / a0;
-  hp2_b2 = ((1 + Math.cos(w0)) / 2) / a0;
-  hp2_a1 = (-2 * Math.cos(w0)) / a0;
-  hp2_a2 = (1 - alpha) / a0;
-}
+// Cache coefficients locally for the processing loop
+const {
+    hp1_b0, hp1_b1, hp1_a1, hp2_b0, hp2_b1, hp2_b2, hp2_a1, hp2_a2,
+    lp1_b0, lp1_b1, lp1_a1, lp2_b0, lp2_b1, lp2_b2, lp2_a1, lp2_a2
+} = context.coeffs;
 
-// First-order low-pass (LPF) coefficients (using bilinear transform)
-// Standard low-pass: y[n] = (c/(1+c))·(x[n] + x[n-1]) + ((1-c)/(1+c))·y[n-1]
-let lp1_b0, lp1_b1, lp1_a1;
-if (lpf_order1_stages > 0) {
-  let c = Math.tan(Math.PI * lpfFreq / sampleRate);
-  lp1_b0 = c / (1 + c);
-  lp1_b1 = c / (1 + c);
-  lp1_a1 = -((1 - c) / (1 + c));
-}
 
-// Second-order low-pass (LPF) coefficients (Butterworth, Q = 1/√2)
-let lp2_b0, lp2_b1, lp2_b2, lp2_a1, lp2_a2;
-if (lpf_order2_stages > 0) {
-  let w0 = 2 * Math.PI * lpfFreq / sampleRate;
-  let Q = 1 / Math.SQRT2;
-  let alpha = Math.sin(w0) / (2 * Q);
-  let a0 = 1 + alpha;
-  lp2_b0 = ((1 - Math.cos(w0)) / 2) / a0;
-  lp2_b1 = (1 - Math.cos(w0)) / a0;
-  lp2_b2 = ((1 - Math.cos(w0)) / 2) / a0;
-  lp2_a1 = (-2 * Math.cos(w0)) / a0;
-  lp2_a2 = (1 - alpha) / a0;
-}
-
-// --- Process audio ---
+// Process each channel
 for (let ch = 0, offset = 0; ch < channelCount; ch++, offset += blockSize) {
-  for (let i = 0; i < blockSize; i++) {
-    let sample = data[offset + i];
-    
-    // ----- High-Pass Filtering -----
-    let stageIndex = 0;
-    // Process first-order HPF stages (if any)
-    for (let s = 0; s < hpf_order1_stages; s++, stageIndex++) {
-      let state = context.filterStates.hpf[stageIndex];
-      let x = sample;
-      // Difference eq: y = hp1_b0*x + hp1_b1*x_prev - hp1_a1*y_prev
-      let y = hp1_b0 * x + hp1_b1 * state.x1[ch] - hp1_a1 * state.y1[ch];
-      state.x1[ch] = x;
-      state.y1[ch] = y;
-      sample = y;
+    // Process each sample in the block for the current channel
+    for (let i = 0; i < blockSize; i++) {
+        let sample = data[offset + i]; // Current input sample
+
+        // ----- High-Pass Filtering -----
+        let hpfStageIdx = 0;
+
+        // Apply 1st-order HPF stages
+        for (let s = 0; s < hpfOrder1Count; s++, hpfStageIdx++) {
+            const state = hpfStates[hpfStageIdx];
+            // Cache state specific to channel
+            const x1 = state.x1[ch];
+            const y1 = state.y1[ch];
+            const x_n = sample; // Input to this stage
+
+            // Difference Equation: y[n] = b0*x[n] + b1*x[n-1] - a1*y[n-1]
+            // Note: The RBJ formulas result in a1/a2 that need negation in the standard diff eq.
+            // Here, a1 is calculated as -((1-c)/(1+c)), so we ADD it.
+            // Let's stick to the original structure: y = b0*x + b1*x1 - a1*y1
+            const y_n = hp1_b0 * x_n + hp1_b1 * x1 - hp1_a1 * y1;
+
+            // Update state (use x_n before it's overwritten)
+            state.x1[ch] = x_n;
+            state.y1[ch] = y_n;
+            sample = y_n; // Output becomes input for next stage
+        }
+
+        // Apply 2nd-order HPF stages
+        for (let s = 0; s < hpfOrder2Count; s++, hpfStageIdx++) {
+            const state = hpfStates[hpfStageIdx];
+            // Cache state specific to channel
+            const x1 = state.x1[ch]; const x2 = state.x2[ch];
+            const y1 = state.y1[ch]; const y2 = state.y2[ch];
+            const x_n = sample; // Input to this stage
+
+            // Difference Equation: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+            // RBJ 'a' coeffs usually correspond to the feedback terms with signs appropriate for y[n] = ... - a1*y[n-1] ...
+            const y_n = hp2_b0 * x_n + hp2_b1 * x1 + hp2_b2 * x2 - hp2_a1 * y1 - hp2_a2 * y2;
+
+            // Update state (use x_n, y_n, x1, y1 before overwriting)
+            state.x2[ch] = x1; state.x1[ch] = x_n;
+            state.y2[ch] = y1; state.y1[ch] = y_n;
+            sample = y_n; // Output becomes input for next stage
+        }
+
+        // ----- Low-Pass Filtering -----
+        let lpfStageIdx = 0;
+
+        // Apply 1st-order LPF stages
+        for (let s = 0; s < lpfOrder1Count; s++, lpfStageIdx++) {
+            const state = lpfStates[lpfStageIdx];
+            const x1 = state.x1[ch];
+            const y1 = state.y1[ch];
+            const x_n = sample;
+
+            // Difference Equation: y[n] = b0*x[n] + b1*x[n-1] - a1*y[n-1]
+            // lp1_a1 calculated as -((1-c)/(1+c)) -> use subtraction as in original
+            const y_n = lp1_b0 * x_n + lp1_b1 * x1 - lp1_a1 * y1;
+
+            state.x1[ch] = x_n;
+            state.y1[ch] = y_n;
+            sample = y_n;
+        }
+
+        // Apply 2nd-order LPF stages
+        for (let s = 0; s < lpfOrder2Count; s++, lpfStageIdx++) {
+            const state = lpfStates[lpfStageIdx];
+            const x1 = state.x1[ch]; const x2 = state.x2[ch];
+            const y1 = state.y1[ch]; const y2 = state.y2[ch];
+            const x_n = sample;
+
+            // Difference Equation: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+            const y_n = lp2_b0 * x_n + lp2_b1 * x1 + lp2_b2 * x2 - lp2_a1 * y1 - lp2_a2 * y2;
+
+            state.x2[ch] = x1; state.x1[ch] = x_n;
+            state.y2[ch] = y1; state.y1[ch] = y_n;
+            sample = y_n;
+        }
+
+        // Write the final filtered sample back to the data array
+        data[offset + i] = sample;
     }
-    // Process second-order HPF stages (if any)
-    for (let s = 0; s < hpf_order2_stages; s++, stageIndex++) {
-      let state = context.filterStates.hpf[stageIndex];
-      let x = sample;
-      // Difference eq: y = hp2_b0*x + hp2_b1*x_prev + hp2_b2*x_prev2 - hp2_a1*y_prev - hp2_a2*y_prev2
-      let y = hp2_b0 * x + hp2_b1 * state.x1[ch] + hp2_b2 * state.x2[ch]
-              - hp2_a1 * state.y1[ch] - hp2_a2 * state.y2[ch];
-      state.x2[ch] = state.x1[ch];
-      state.x1[ch] = x;
-      state.y2[ch] = state.y1[ch];
-      state.y1[ch] = y;
-      sample = y;
-    }
-    
-    // ----- Low-Pass Filtering -----
-    stageIndex = 0;
-    // Process first-order LPF stages (if any)
-    for (let s = 0; s < lpf_order1_stages; s++, stageIndex++) {
-      let state = context.filterStates.lpf[stageIndex];
-      let x = sample;
-      // Difference eq: y = lp1_b0*x + lp1_b1*x_prev - lp1_a1*y_prev
-      let y = lp1_b0 * x + lp1_b1 * state.x1[ch] - lp1_a1 * state.y1[ch];
-      state.x1[ch] = x;
-      state.y1[ch] = y;
-      sample = y;
-    }
-    // Process second-order LPF stages (if any)
-    for (let s = 0; s < lpf_order2_stages; s++, stageIndex++) {
-      let state = context.filterStates.lpf[stageIndex];
-      let x = sample;
-      // Difference eq: y = lp2_b0*x + lp2_b1*x_prev + lp2_b2*x_prev2 - lp2_a1*y_prev - lp2_a2*y_prev2
-      let y = lp2_b0 * x + lp2_b1 * state.x1[ch] + lp2_b2 * state.x2[ch]
-              - lp2_a1 * state.y1[ch] - lp2_a2 * state.y2[ch];
-      state.x2[ch] = state.x1[ch];
-      state.x1[ch] = x;
-      state.y2[ch] = state.y1[ch];
-      state.y1[ch] = y;
-      sample = y;
-    }
-    
-    data[offset + i] = sample;
-  }
 }
-return data;
+
+return data; // Return the modified data array
 `;
 
 // Optimized NarrowRangePlugin class with simplified UI creation
@@ -222,15 +375,19 @@ class NarrowRangePlugin extends PluginBase {
 
   setParameters(params) {
     if (params.enabled !== undefined) this.enabled = params.enabled;
-    if (params.hf !== undefined)
-      this.hf = Math.max(20, Math.min(4000, typeof params.hf === "number" ? params.hf : parseFloat(params.hf)));
+    if (params.hf !== undefined) {
+      const value = typeof params.hf === "number" ? params.hf : parseFloat(params.hf);
+      this.hf = value < 20 ? 20 : (value > 4000 ? 4000 : value);
+    }
     if (params.hs !== undefined) {
       const intSlope = typeof params.hs === "number" ? params.hs : parseInt(params.hs);
       const allowed = [0, -6, -12, -18, -24, -30, -36, -42, -48];
       this.hs = allowed.includes(intSlope) ? intSlope : -12;
     }
-    if (params.lf !== undefined)
-      this.lf = Math.max(200, Math.min(40000, typeof params.lf === "number" ? params.lf : parseFloat(params.lf)));
+    if (params.lf !== undefined) {
+      const value = typeof params.lf === "number" ? params.lf : parseFloat(params.lf);
+      this.lf = value < 200 ? 200 : (value > 40000 ? 40000 : value);
+    }
     if (params.ls !== undefined) {
       const intSlope = typeof params.ls === "number" ? params.ls : parseInt(params.ls);
       const allowed = [0, -6, -12, -18, -24, -30, -36, -42, -48];

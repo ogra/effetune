@@ -15,28 +15,65 @@ class LevelMeterPlugin extends PluginBase {
 
         // Register processor function that measures audio levels
         this.registerProcessor(`
-            // Create result buffer
+            // Input data reference (assuming data is Float32Array)
+            // Parameters assumed available: parameters.channelCount, parameters.blockSize
+            // Time assumed available: time
+        
+            // 1. Create result buffer and copy data (as per original requirement)
             const result = new Float32Array(data.length);
-            result.set(data);
-            
-            // Calculate peaks for all channels
-            const peaks = new Float32Array(parameters.channelCount);
-            
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                let peak = 0;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    peak = Math.max(peak, Math.abs(data[offset + i]));
+            result.set(data); // Must keep if original output requires the buffer copy
+        
+            // 2. Calculate peaks efficiently
+            const numChannels = parameters.channelCount; // Cache parameter lookup
+            const blockSize = parameters.blockSize;     // Cache parameter lookup
+            // Allocate peak storage - Float32Array is appropriate and efficient
+            const peaks = new Float32Array(numChannels);
+        
+            // Iterate through channels
+            for (let ch = 0; ch < numChannels; ch++) {
+                const offset = ch * blockSize;
+                // Calculate the end index *once* per channel loop iteration
+                const end = offset + blockSize;
+                // Initialize peak for the current channel
+                let peak = 0.0;
+        
+                // Iterate through samples for the current channel
+                // Using direct indexing from offset to end avoids addition inside the tight loop
+                for (let i = offset; i < end; i++) {
+                    // Cache the sample value - avoids repeated array access if used multiple times (here only once, but good practice)
+                    const sample = data[i];
+                    // Calculate absolute value.
+                    const absSample = sample < 0 ? -sample : sample;
+                    // Update peak if current absolute sample is larger.
+                    // Math.max is also typically well-optimized. Direct comparison might be
+                    // negligibly faster/slower depending on the engine, but Math.max is clear.
+                    if (absSample > peak) {
+                         peak = absSample;
+                    }
+                    // Alternative using Math.max (likely similar performance):
+                    // peak = Math.max(peak, absSample);
                 }
+                // Store the calculated peak for the channel
                 peaks[ch] = peak;
             }
-
-            // Create measurements object
+        
+            // 3. Create measurements object efficiently
+            //    Avoid Array.from() and .map() which create intermediate arrays and objects unnecessarily.
+            //    Pre-allocate the standard JavaScript array for the desired output structure.
+            const channelMeasurements = new Array(numChannels);
+            // Populate the array directly, creating only the necessary objects.
+            for (let ch = 0; ch < numChannels; ch++) {
+                // Directly create the object structure required by the original code
+                channelMeasurements[ch] = { peak: peaks[ch] };
+            }
+        
+            // Assign measurements to the result buffer (as per original code)
             result.measurements = {
-                channels: Array.from(peaks).map(peak => ({ peak })),
-                time: time
+                channels: channelMeasurements,
+                time: time // Assuming 'time' is available in the scope from the process method arguments
             };
-
+        
+            // 4. Return the result buffer with measurements
             return result;
         `);
     }
@@ -60,7 +97,7 @@ class LevelMeterPlugin extends PluginBase {
 
     // Convert linear amplitude to dB
     amplitudeToDB(amplitude) {
-        return 20 * Math.log10(Math.max(amplitude, 1e-6));
+        return 20 * Math.log10(amplitude < 1e-6 ? 1e-6 : amplitude);
     }
 
     // Handle messages from audio processor
@@ -90,10 +127,9 @@ class LevelMeterPlugin extends PluginBase {
             const dbLevel = this.amplitudeToDB(channelPeak);
             
             // Update level with fall rate
-            this.lv[ch] = Math.max(
-                Math.max(-96, this.lv[ch] - this.FALL_RATE * deltaTime),
-                dbLevel
-            );
+            const fallingLevel = this.lv[ch] - this.FALL_RATE * deltaTime;
+            const clampedFallingLevel = fallingLevel < -96 ? -96 : fallingLevel;
+            this.lv[ch] = dbLevel > clampedFallingLevel ? dbLevel : clampedFallingLevel;
 
             // Update peak hold
             if (dbLevel > this.pl[ch]) {
@@ -104,13 +140,20 @@ class LevelMeterPlugin extends PluginBase {
                 // After hold time, let peak fall at the same rate as level
                 const fallingPeak = this.pl[ch] - this.FALL_RATE * deltaTime;
                 // But never fall below current level
-                this.pl[ch] = Math.max(fallingPeak, this.lv[ch]);
+                this.pl[ch] = fallingPeak > this.lv[ch] ? fallingPeak : this.lv[ch];
             }
         }
 
         // Update overload state
         const wasOverloaded = this.ol;
-        const maxPeak = Math.max(...message.measurements.channels.map(ch => ch.peak));
+        // Find maximum peak manually instead of using Math.max
+        let maxPeak = 0;
+        for (let i = 0; i < message.measurements.channels.length; i++) {
+            const peak = message.measurements.channels[i].peak;
+            if (peak > maxPeak) {
+                maxPeak = peak;
+            }
+        }
         if (maxPeak > 1.0) {
             this.ol = true;
             this.ot = time;
@@ -245,7 +288,8 @@ class LevelMeterPlugin extends PluginBase {
 
             // Draw level meter
             const level = this.lv[channel];
-            const levelWidth = Math.max(0, this.canvasWidth * (level - this.dbStart) / this.dbRange);
+            const rawLevelWidth = this.canvasWidth * (level - this.dbStart) / this.dbRange;
+            const levelWidth = rawLevelWidth < 0 ? 0 : rawLevelWidth;
             ctx.fillStyle = gradient;
             ctx.fillRect(0, y + 1, levelWidth, channelHeight);
 

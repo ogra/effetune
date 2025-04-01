@@ -173,7 +173,8 @@ class PluginProcessor extends AudioWorkletProcessor {
             for (let channel = 0; channel < input.length && !hasInputSignal; channel++) {
                 for (let i = 0; i < input[channel].length && !hasInputSignal; i++) {
                     // Check absolute value against threshold
-                    if (Math.abs(input[channel][i]) > threshold) {
+                    const sample = input[channel][i];
+                    if ((sample >= 0 ? sample : -sample) > threshold) {
                         hasInputSignal = true;
                         break;
                     }
@@ -386,7 +387,8 @@ class PluginProcessor extends AudioWorkletProcessor {
         for (let channel = 0; channel < output.length && !hasOutputSignal; channel++) {
             for (let i = 0; i < output[channel].length && !hasOutputSignal; i++) {
                 // Check absolute value against threshold
-                if (Math.abs(output[channel][i]) > threshold) {
+                const sample = output[channel][i];
+                if ((sample >= 0 ? sample : -sample) > threshold) {
                     hasOutputSignal = true;
                     break;
                 }

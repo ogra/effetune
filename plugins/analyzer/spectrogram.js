@@ -73,12 +73,15 @@ class SpectrogramPlugin extends PluginBase {
         }
 
         // Process input data for UI updates
-        for (let i = 0; i < blockSize; i++) {
-            for (let chIndex = 0; chIndex < channelCount; chIndex++) {
-                context.buffer[chIndex][context.bufferPosition] = data[chIndex * blockSize + i];
+        for (let chIndex = 0; chIndex < channelCount; chIndex++) {
+            const offset = chIndex * blockSize;
+            let bufferPosition = context.bufferPosition;
+            for (let i = 0; i < blockSize; i++) {
+                context.buffer[chIndex][bufferPosition] = data[offset + i];
+                bufferPosition = (bufferPosition + 1) & (fftSize - 1);
             }
-            context.bufferPosition = (context.bufferPosition + 1) % fftSize;
         }
+        context.bufferPosition = (context.bufferPosition + blockSize) & (fftSize - 1);
 
         // Send buffer to UI every half FFT size
         if (context.bufferPosition % (fftSize / 2) === 0) {
@@ -146,7 +149,8 @@ class SpectrogramPlugin extends PluginBase {
         const maxFreq = 40000;
         const logMin = Math.log10(minFreq);
         const logMax = Math.log10(maxFreq);
-        const y = 255 - Math.round(255 * (Math.log10(Math.max(freq, minFreq)) - logMin) / (logMax - logMin));
+        const freqClamped = freq < minFreq ? minFreq : freq;
+        const y = 255 - Math.round(255 * (Math.log10(freqClamped) - logMin) / (logMax - logMin));
         return y < 0 ? 0 : (y > 255 ? 255 : y);
     }
 
@@ -158,12 +162,13 @@ class SpectrogramPlugin extends PluginBase {
     // Parameter setters
     setDBRange(value) {
         const val = typeof value === 'number' ? value : parseFloat(value);
-        this.dr = Math.max(-144, Math.min(-48, val));
+        this.dr = val < -144 ? -144 : (val > -48 ? -48 : val);
         this.updateParameters();
     }
 
     setPoints(value) {
-        const newPoints = Math.max(8, Math.min(14, typeof value === 'number' ? value : parseFloat(value)));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        const newPoints = parsedValue < 8 ? 8 : (parsedValue > 14 ? 14 : parsedValue);
         if (newPoints === this.pt) return;
         const fftSize = 1 << newPoints;
         // Reinitialize arrays with new FFT size
@@ -233,7 +238,7 @@ class SpectrogramPlugin extends PluginBase {
         const bufferPosition = message.measurements.bufferPosition;
         const [bufferL, bufferR] = message.measurements.buffer;
 
-        if (fftSize != bufferL.length) return audioBuffer;
+        if (fftSize != bufferL.length || this.imag == null) return audioBuffer;
 
         // Reset FFT buffers
         this.imag.fill(0);

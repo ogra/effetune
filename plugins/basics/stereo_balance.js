@@ -14,11 +14,9 @@ class StereoBalancePlugin extends PluginBase {
                 channelCount, blockSize, type 
             } = parameters;
             
-            const currentBalance = getFadeValue(type, balance, time);
-            
             // Process left and right channels
-            const leftGain = currentBalance <= 0 ? 1 : 1 - currentBalance;
-            const rightGain = currentBalance >= 0 ? 1 : 1 + currentBalance;
+            const leftGain = balance <= 0 ? 1 : 1 - balance;
+            const rightGain = balance >= 0 ? 1 : 1 + balance;
             
             // Left channel (first block)
             for (let i = 0; i < parameters.blockSize; i++) {
@@ -26,9 +24,9 @@ class StereoBalancePlugin extends PluginBase {
             }
             
             // Right channel (next block)
-            const rightOffset = parameters.blockSize;
-            for (let i = 0; i < parameters.blockSize; i++) {
-                data[rightOffset + i] *= rightGain;
+            const len = data.length;
+            for (let i = parameters.blockSize; i < len; i++) {
+                data[i] *= rightGain;
             }
             
             return data;
@@ -38,7 +36,7 @@ class StereoBalancePlugin extends PluginBase {
     // Set parameters
     setParameters(params) {
         if (params.bl !== undefined) {
-            this.bl = Math.max(-1, Math.min(1, params.bl));
+            this.bl = params.bl < -1 ? -1 : (params.bl > 1 ? 1 : params.bl);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -91,7 +89,9 @@ class StereoBalancePlugin extends PluginBase {
         valueInput.name = `${this.id}-${this.name}-input`;
         valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
-            const value = Math.max(-100, Math.min(100, parseFloat(e.target.value) || 0)) / 100;
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const clampedValue = parsedValue < -100 ? -100 : (parsedValue > 100 ? 100 : parsedValue);
+            const value = clampedValue / 100;
             this.setBl(value);
             slider.value = value * 100;
             e.target.value = Math.round(value * 100);

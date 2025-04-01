@@ -11,110 +11,157 @@
 //  - 84dB/oct = 14th order Linkwitz-Riley (LR14)
 //  - 96dB/oct = 16th order Linkwitz-Riley (LR16)
 const loPassProcessorFunction = `
+'use strict'; // Enable strict mode for potential optimizations and error prevention
+
+// Early exit if processing is disabled
 if (!parameters.enabled) return data;
 
-// Map parameter names for clarity
-const { fr: freq, sl: slope, channelCount, blockSize } = parameters;
+// Extract parameters into local constants for potentially faster access
+const freq = parameters.fr;
+const slope = parameters.sl;
+const channelCount = parameters.channelCount;
+const blockSize = parameters.blockSize;
 
-// Compute number of Linkwitz-Riley filter stages (each stage is 2nd order = 12dB/oct)
-function computeStages(slope) {
-  const absSlope = Math.abs(slope);
-  if (absSlope === 0) return 0;
-  return absSlope / 12; // Each stage is 12dB/oct
-}
+// --- Calculate Number of Stages ---
+// Optimized replacement for Math.abs using conditional operator
+const absSlope = slope < 0 ? -slope : slope;
+// Each Linkwitz-Riley stage provides 12dB/oct slope
+const numStages = absSlope === 0 ? 0 : absSlope / 12;
 
-const numStages = computeStages(slope);
+// --- Parameter Change Detection & State Initialization ---
 
-// --- Ensure proper reinitialization when slope parameters change ---
-if (!context.lastSlope || context.lastSlope !== slope) {
-  context.filterStates = null;
+// Flags to track if parameters necessitate recalculation or reinitialization
+let needsReinit = false;
+let needsCoeffRecalc = false;
+
+// Check if slope changed, requiring state reinitialization
+if (context.lastSlope !== slope) {
   context.lastSlope = slope;
-  context.initialized = false;
+  context.numStages = numStages; // Store calculated numStages
+  context.filterStates = null; // Mark states for recreation
+  needsReinit = true;
 }
 
-// Initialize or reset filter states if needed
-if (!context.initialized || !context.filterStates || context.filterStates.length !== numStages) {
-  // For Linkwitz-Riley filters, each stage is 2nd order and needs 2 previous inputs and 2 previous outputs
-  const createState = () => {
-    return {
-      x1: new Float32Array(channelCount).fill(0),
-      x2: new Float32Array(channelCount).fill(0),
-      y1: new Float32Array(channelCount).fill(0),
-      y2: new Float32Array(channelCount).fill(0)
-    };
-  };
-  
-  // Initialize with a small DC offset to prevent denormals
-  context.filterStates = [];
-  for (let s = 0; s < numStages; s++) {
-    const state = createState();
-    const dcOffset = 1e-25;
-    for (let ch = 0; ch < channelCount; ch++) {
-      state.x1[ch] = dcOffset;
-      state.x2[ch] = -dcOffset;
-      state.y1[ch] = dcOffset;
-      state.y2[ch] = -dcOffset;
+// Check if frequency changed, requiring coefficient recalculation
+// Also recalculate if reinitializing (might be the first run)
+if (context.lastFreq !== freq) {
+  context.lastFreq = freq;
+  needsCoeffRecalc = true;
+}
+
+// Initialize or reinitialize filter states if slope changed or first run
+// Use the stored context.numStages
+if (needsReinit || !context.filterStates || context.filterStates.length !== context.numStages) {
+  const numStagesToInit = context.numStages; // Use stored value
+  // Avoid array allocation if zero stages are needed
+  if (numStagesToInit > 0) {
+    context.filterStates = new Array(numStagesToInit);
+    const dcOffset = 1e-25; // Small offset to prevent denormals
+    for (let s = 0; s < numStagesToInit; s++) {
+      // Create state object for the stage
+      const state = {
+        x1: new Float32Array(channelCount), // No need to fill(0) before setting offset
+        x2: new Float32Array(channelCount),
+        y1: new Float32Array(channelCount),
+        y2: new Float32Array(channelCount)
+      };
+      // Apply small DC offset to prevent denormal issues at start/reset
+      for (let ch = 0; ch < channelCount; ch++) {
+        state.x1[ch] = dcOffset;
+        state.x2[ch] = -dcOffset;
+        state.y1[ch] = dcOffset;
+        state.y2[ch] = -dcOffset;
+      }
+      context.filterStates[s] = state;
     }
-    context.filterStates.push(state);
+  } else {
+    // Explicitly handle the case of 0 stages
+    context.filterStates = []; // Ensure it's an empty array
   }
-  context.initialized = true;
+  needsReinit = true; // Mark that reinitialization occurred
+  needsCoeffRecalc = true; // Coefficients depend on filter structure/existence
 }
 
-// --- Calculate Linkwitz-Riley low-pass filter coefficients ---
-// Linkwitz-Riley filters are created by cascading Butterworth filters
-// Each stage is a 2nd-order filter (12dB/oct)
-const omega = Math.tan(Math.PI * freq / sampleRate);
-const omega2 = omega * omega;
-const SQRT2 = Math.SQRT2;
-const n = 1 / (omega2 + SQRT2 * omega + 1);
+// --- Coefficient Calculation (only if needed) ---
 
-// Coefficients for 2nd-order Linkwitz-Riley low-pass filter
-const b0 = omega2 * n;
-const b1 = 2 * b0;
-const b2 = b0;
-const a1 = 2 * (omega2 - 1) * n;
-const a2 = (omega2 - SQRT2 * omega + 1) * n;
+// Calculate coefficients only if frequency changed or state was reinitialized
+if (needsCoeffRecalc || !context.coeffs) {
+  // Check if filtering is actually needed before calculating
+  // Avoid calculations for 0 stages. Freq near Nyquist is okay for low-pass.
+  if (context.numStages > 0) {
+    // Pre-calculate constants for Linkwitz-Riley 2nd order low-pass
+    const omega = Math.tan(Math.PI * freq / sampleRate);
+    const omega2 = omega * omega;
+    const sqrt2 = 1.4142135623730951; // Math.SQRT2 constant inlined
+    const n = 1 / (omega2 + sqrt2 * omega + 1);
 
-// --- Process audio ---
-// Apply fade-in to prevent clicks when filter states are reset
-const fadeInLength = Math.min(blockSize, sampleRate * 0.005); // 5ms fade-in
-const fadeIn = !context.fadeInComplete;
-if (fadeIn) context.fadeInComplete = true;
+    // Calculate low-pass coefficients
+    const b0 = omega2 * n;
+    const b1 = 2 * b0; // Or 2 * omega2 * n
+    const b2 = b0; // Or omega2 * n
 
+    const a1 = 2 * (omega2 - 1) * n;
+    const a2 = (omega2 - sqrt2 * omega + 1) * n;
+
+    // Store coefficients directly in context to avoid recalculation
+    context.coeffs = { b0, b1, b2, a1, a2 };
+
+  } else {
+    // Store dummy/zero coefficients if no filtering is applied
+    // b0=1 passes signal through, others 0 means no feedback/feedforward delays
+    context.coeffs = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 };
+  }
+}
+
+// --- Audio Processing ---
+
+// Exit early if no filter stages are needed
+if (context.numStages === 0) {
+  return data; // No filtering needed, return original data
+}
+
+// Retrieve coefficients and states from context for use in loops
+const { b0, b1, b2, a1, a2 } = context.coeffs;
+const filterStates = context.filterStates;
+const activeNumStages = context.numStages; // Use the stored, consistent value
+
+// Process each channel
 for (let ch = 0, offset = 0; ch < channelCount; ch++, offset += blockSize) {
+  // Process each sample in the block for the current channel
   for (let i = 0; i < blockSize; i++) {
-    let sample = data[offset + i];
-    
-    // Apply cascaded Linkwitz-Riley low-pass filters
-    for (let s = 0; s < numStages; s++) {
-      const state = context.filterStates[s];
-      
-      // Apply 2nd-order low-pass filter
+    let sample = data[offset + i]; // Current input sample
+
+    // Apply cascaded filter stages
+    for (let s = 0; s < activeNumStages; s++) {
+      const state = filterStates[s]; // Get state for the current stage
+
+      // Retrieve previous inputs/outputs for this channel from state arrays
+      const x1 = state.x1[ch];
+      const x2 = state.x2[ch];
+      const y1 = state.y1[ch];
+      const y2 = state.y2[ch];
+
+      // Apply 2nd-order IIR filter difference equation
       // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
-      const x = sample;
-      const y = b0 * x + b1 * state.x1[ch] + b2 * state.x2[ch] -
-                a1 * state.y1[ch] - a2 * state.y2[ch];
-      
-      // Update filter state
-      state.x2[ch] = state.x1[ch];
-      state.x1[ch] = x;
-      state.y2[ch] = state.y1[ch];
-      state.y1[ch] = y;
-      
-      sample = y;
+      const x_n = sample; // Current input for this stage is output of previous (or original sample)
+      const y_n = b0 * x_n + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+
+      // Update state arrays for this channel *after* calculating output
+      state.x2[ch] = x1; // x[n-2] becomes previous x[n-1]
+      state.x1[ch] = x_n; // x[n-1] becomes current x[n]
+      state.y2[ch] = y1; // y[n-2] becomes previous y[n-1]
+      state.y1[ch] = y_n; // y[n-1] becomes current y[n]
+
+      // Output of this stage becomes input for the next stage
+      sample = y_n;
     }
-    
-    // Apply fade-in if needed to prevent clicks
-    if (fadeIn && i < fadeInLength) {
-      const fadeGain = i / fadeInLength;
-      sample *= fadeGain;
-    }
-    
+
+    // Write the final filtered sample back to the data array
     data[offset + i] = sample;
   }
 }
 
-return data;
+return data; // Return the modified data array
 `;
 
 // Lo Pass Filter Plugin class
@@ -140,8 +187,10 @@ class LoPassFilterPlugin extends PluginBase {
 
   setParameters(params) {
     if (params.enabled !== undefined) this.enabled = params.enabled;
-    if (params.fr !== undefined)
-      this.fr = Math.max(1, Math.min(40000, typeof params.fr === "number" ? params.fr : parseFloat(params.fr)));
+    if (params.fr !== undefined) {
+      const value = typeof params.fr === "number" ? params.fr : parseFloat(params.fr);
+      this.fr = value < 1 ? 1 : (value > 40000 ? 40000 : value);
+    }
     if (params.sl !== undefined) {
       const intSlope = typeof params.sl === "number" ? params.sl : parseInt(params.sl);
       const allowed = [0, -12, -24, -36, -48, -60, -72, -84, -96];

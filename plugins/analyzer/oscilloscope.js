@@ -556,7 +556,7 @@ class OscilloscopePlugin extends PluginBase {
       const newValue = typeof value === 'number' ? value : parseFloat(value);
       if (!isNaN(newValue)) {
         // Clamp to allowed range: 0.001 sec (1 ms) to 0.1 sec (100 ms)
-        this.displayTime = Math.max(0.001, Math.min(newValue, 0.1));
+        this.displayTime = newValue < 0.001 ? 0.001 : (newValue > 0.1 ? 0.1 : newValue);
         this.clearBuffer();
       }
       this.updateParameters();
@@ -586,7 +586,7 @@ class OscilloscopePlugin extends PluginBase {
     setTriggerLevel(value) {
       const newValue = typeof value === 'number' ? value : parseFloat(value);
       if (!isNaN(newValue)) {
-        this.triggerLevel = Math.max(-1, Math.min(1, newValue));
+        this.triggerLevel = newValue < -1 ? -1 : (newValue > 1 ? 1 : newValue);
         this.updateParameters();
       }
     }
@@ -603,7 +603,7 @@ class OscilloscopePlugin extends PluginBase {
     setHoldoff(value) {
       const newValue = typeof value === 'number' ? value : parseFloat(value);
       if (!isNaN(newValue)) {
-        this.holdoff = Math.max(1e-4, Math.min(newValue, 1e-2));
+        this.holdoff = newValue < 1e-4 ? 1e-4 : (newValue > 1e-2 ? 1e-2 : newValue);
       }
       this.updateParameters();
     }
@@ -612,7 +612,7 @@ class OscilloscopePlugin extends PluginBase {
     setDisplayLevel(value) {
       const newValue = typeof value === 'number' ? value : parseInt(value);
       if (!isNaN(newValue)) {
-        this.displayLevel = Math.max(-96, Math.min(0, newValue));
+        this.displayLevel = newValue < -96 ? -96 : (newValue > 0 ? 0 : newValue);
         this.updateParameters();
       }
     }
@@ -620,7 +620,7 @@ class OscilloscopePlugin extends PluginBase {
     setVerticalOffset(value) {
       const newValue = typeof value === 'number' ? value : parseFloat(value);
       if (!isNaN(newValue)) {
-        this.verticalOffset = Math.max(-1, Math.min(1, newValue));
+        this.verticalOffset = newValue < -1 ? -1 : (newValue > 1 ? 1 : newValue);
         this.updateParameters();
       }
     }

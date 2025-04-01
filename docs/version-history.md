@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.41 (Apr 1, 2025)
+- Effect processing is now about twice as efficient on average
+- Various minor improvements
+
 ### Version 1.40 (Mar 29, 2025)
 - Added bus functionality for more advanced routing
 - Various minor improvements

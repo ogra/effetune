@@ -60,21 +60,19 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             context.initialized = true;
         }
 
-        // Always process input data for UI updates
-        for (let i = 0; i < blockSize; i++) {
-            // Store in circular buffer
-            for (let ch = 0; ch < channelCount; ch++) {
-                context.buffer[ch][context.bufferPosition] = data[ch * blockSize + i];
-            }
-            context.bufferPosition++;
-            if (context.bufferPosition >= fftSize) {
-                context.bufferPosition -= fftSize;
+        // Process input data for UI updates
+        for (let chIndex = 0; chIndex < channelCount; chIndex++) {
+            const offset = chIndex * blockSize;
+            let bufferPosition = context.bufferPosition;
+            for (let i = 0; i < blockSize; i++) {
+                context.buffer[chIndex][bufferPosition] = data[offset + i];
+                bufferPosition = (bufferPosition + 1) & (fftSize - 1);
             }
         }
+        context.bufferPosition = (context.bufferPosition + blockSize) & (fftSize - 1);
 
         // Send buffer to UI every half FFT size
-        if (context.bufferPosition % (fftSize >> 1) === 0) {
-            // Create measurements object with buffer copy to prevent reference holding
+        if (context.bufferPosition % (fftSize / 2) === 0) {
             result.measurements = {
                 buffer: context.buffer.map(buf => Float32Array.from(buf)),
                 bufferPosition: context.bufferPosition,
@@ -134,13 +132,15 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
     // Parameter setters
     setDBRange(value) {
-        this.dr = Math.max(-144, Math.min(-48, typeof value === 'number' ? value : parseFloat(value)));
+        const val = typeof value === 'number' ? value : parseFloat(value);
+        this.dr = val < -144 ? -144 : (val > -48 ? -48 : val);
         this.updateParameters();
     }
 
     setPoints(value) {
-        // Set maximum value to 11
-        const newPoints = Math.max(8, Math.min(14, typeof value === 'number' ? value : parseFloat(value)));
+        // Set range between 8 and 14
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        const newPoints = parsedValue < 8 ? 8 : (parsedValue > 14 ? 14 : parsedValue);
         if (newPoints === this.pt) return;
         const fftSize = 1 << newPoints;
         
@@ -564,17 +564,21 @@ channelRadios.forEach(radio => channelRow.appendChild(radio));
         for (let i = 0; i < binCount; i++) {
             const freq = (i * this.sampleRate / 2) / binCount;
             if (freq > 40000) continue;
-            const x = Math.round(width * (Math.log10(Math.max(freq, 20)) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20)));
-            const spectrumLevel = Math.min(0, this.spectrum[i]);
-            const peakLevel = Math.min(0, this.peaks[i]);
+            // Replace Math.max with ternary for better performance
+            const freqClamped = freq < 20 ? 20 : freq;
+            const x = Math.round(width * (Math.log10(freqClamped) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20)));
+            // Replace Math.min with ternary for better performance
+            const spectrumLevel = this.spectrum[i] > 0 ? 0 : this.spectrum[i];
+            const peakLevel = this.peaks[i] > 0 ? 0 : this.peaks[i];
 
             if (!xToLevels.has(x)) {
                 xToLevels.set(x, [spectrumLevel, peakLevel]);
             } else {
                 const [currentSpectrum, currentPeak] = xToLevels.get(x);
+                // Replace Math.max with ternary for better performance
                 xToLevels.set(x, [
-                    Math.max(currentSpectrum, spectrumLevel),
-                    Math.max(currentPeak, peakLevel)
+                    currentSpectrum > spectrumLevel ? currentSpectrum : spectrumLevel,
+                    currentPeak > peakLevel ? currentPeak : peakLevel
                 ]);
             }
         }

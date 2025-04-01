@@ -22,243 +22,454 @@ class GatePlugin extends PluginBase {
 
     // Returns the processor code string with optimized block processing
     getProcessorCode() {
+        // NOTE: This is the optimized version.
+        // Original logic and input/output behavior are preserved,
+        // except for potential minor differences due to floating-point arithmetic optimizations
+        // (e.g., order of operations, avoiding redundant calculations)
+        // and LUT approximations (which were already present in the original code).
+    
+        // Function body as a string
         return `
             // Create a copy of the input data
             const result = new Float32Array(data.length);
-            result.set(data);
+            result.set(data); // Initial copy
+    
+            // --- Early exit if disabled ---
             if (!parameters.enabled) {
+                // Attach empty measurements object if required by the interface, even when disabled
+                // To match the original behavior strictly, only return result when disabled.
+                // If measurements are expected even when disabled, uncomment the next line:
+                // result.measurements = { time: parameters.time, gainReduction: 0 };
                 return result;
             }
-
+    
+            // --- Constants ---
             const MIN_ENVELOPE = 1e-6;
             const MIN_DB = -96;
-            const MAX_DB = 0;
-            const LOG2 = Math.log(2);
-            const LOG10_20 = 8.685889638065035; // 20/ln(10)
-            const gainFactor = 0.11512925464970229; // ln(10)/20
-
+            // const MAX_DB = 0; // Not used in the processing loop
+            const LOG2 = ${Math.log(2)}; // Embed constant value: 0.6931471805599453
+            const LOG10_20 = ${20 / Math.log(10)}; // Embed constant value: 8.685889638065035
+            const gainFactor = ${Math.log(10) / 20}; // Embed constant value: 0.11512925464970229
+    
+            // --- Context Initialization and Parameter Caching ---
+            let needsRecalculation = false; // Flag to check if dependent params need update
+    
             // Calculate attack and release coefficients if needed or if parameters changed
-            if (!context.timeConstants || 
-                context.lastAt !== parameters.at || 
-                context.lastRl !== parameters.rl || 
+            if (!context.timeConstants ||
+                context.lastAt !== parameters.at ||
+                context.lastRl !== parameters.rl ||
                 context.lastSampleRate !== parameters.sampleRate) {
-                
+    
                 const sampleRateMs = parameters.sampleRate / 1000;
+                // Ensure samples are at least 1 to avoid division by zero or NaN/Infinity coefficients
                 const attackSamples = Math.max(1, parameters.at * sampleRateMs);
                 const releaseSamples = Math.max(1, parameters.rl * sampleRateMs);
-                
+    
+                // Standard coefficients for single-pole IIR filter (envelope follower)
+                // alpha = exp(-log(2) / (time_constant_samples))
+                const attackCoeff = Math.exp(-LOG2 / attackSamples);
+                const releaseCoeff = Math.exp(-LOG2 / releaseSamples);
+    
                 context.timeConstants = {
-                    attack: Math.exp(-LOG2 / attackSamples),
-                    release: Math.exp(-LOG2 / releaseSamples)
+                    attack: attackCoeff,
+                    release: releaseCoeff,
+                    // Precompute (1 - coeff) for the envelope calculation
+                    oneMinusAttack: 1.0 - attackCoeff,
+                    oneMinusRelease: 1.0 - releaseCoeff
                 };
-                
+    
                 // Store parameters for future comparison
                 context.lastAt = parameters.at;
                 context.lastRl = parameters.rl;
                 context.lastSampleRate = parameters.sampleRate;
+                needsRecalculation = true; // Indicate coefficients changed
             }
-            
-            // Cache frequently used coefficients
+    
+            // Cache frequently used time constants
             const attackCoeff = context.timeConstants.attack;
             const releaseCoeff = context.timeConstants.release;
-
-            // Precompute gate parameters to avoid recalculating in inner loops
-            if (!context.gateParams || 
-                context.gateParams.th !== parameters.th || 
-                context.gateParams.rt !== parameters.rt || 
-                context.gateParams.kn !== parameters.kn || 
+            const oneMinusAttackCoeff = context.timeConstants.oneMinusAttack;
+            const oneMinusReleaseCoeff = context.timeConstants.oneMinusRelease;
+    
+            // Precompute gate parameters if needed or if parameters changed
+            if (!context.gateParams ||
+                context.gateParams.th !== parameters.th ||
+                context.gateParams.rt !== parameters.rt ||
+                context.gateParams.kn !== parameters.kn ||
                 context.gateParams.gn !== parameters.gn) {
-                
-                const halfKnee = parameters.kn * 0.5;
-                const invRatio = parameters.rt - 1;
-                
+    
+                const threshold = parameters.th; // dB
+                const ratio = parameters.rt;     // e.g., 2 for 2:1
+                const knee = parameters.kn;      // dB
+                const gain = parameters.gn;      // dB (Make-up Gain / Reduction Amount Floor)
+    
+                const halfKnee = knee * 0.5;
+                // Original code used rt - 1. This assumes rt is the ratio (>= 1).
+                const invRatio = ratio - 1.0; // For ratio=1, invRatio=0.
+    
                 context.gateParams = {
-                    th: parameters.th,
-                    rt: parameters.rt,
-                    kn: parameters.kn,
-                    gn: parameters.gn,
+                    th: threshold,
+                    rt: ratio, // Store original ratio
+                    kn: knee,
+                    gn: gain,
                     halfKnee: halfKnee,
-                    invRatio: invRatio
+                    invRatio: invRatio,
+                    kneeWidth: knee // Cache knee width for calculations
                 };
+    
+                // Invalidate precomputed makeup gain factor as 'gn' might have changed
+                context.precomputedMakeupGainFactor = undefined; // Use undefined to signal invalidation
+                needsRecalculation = true; // Indicate parameters changed
             }
-            
-            // Initialize envelope state per channel if not already set
+    
+            // Cache frequently used gate parameters
+            const gateParams = context.gateParams;
+            const threshold = gateParams.th;
+            const halfKnee = gateParams.halfKnee;
+            const invRatio = gateParams.invRatio; // Note: This is ratio - 1
+            const gainParam = gateParams.gn;    // Gain parameter in dB
+            const kneeWidth = gateParams.kn;    // Cached knee width
+    
+            // Initialize envelope state per channel if not already set or channel count changed
+            // Check channelCount directly as it's the dependency
             if (!context.envelopeStates || context.envelopeStates.length !== parameters.channelCount) {
                 context.envelopeStates = new Float32Array(parameters.channelCount).fill(MIN_ENVELOPE);
+                // No need to set needsRecalculation here, state init doesn't affect other params
             }
-            
-            // Create work buffer for calculations if it doesn't exist
-            if (!context.workBuffer || context.workBuffer.length !== parameters.blockSize) {
-                context.workBuffer = new Float32Array(parameters.blockSize);
-            }
-            
-            // Precompute lookup tables for expensive math operations if they don't exist
+    
+            // --- Lookup Table Initialization (if not present) ---
+            // This part remains the same as it's initialization logic
             if (!context.dbLookup) {
-                // Create lookup table for LOG10_20 * Math.log(x) operation
                 const DB_LOOKUP_SIZE = 4096;
-                const DB_LOOKUP_SCALE = DB_LOOKUP_SIZE / 10; // 0 to 10 range
+                // The original code scaled for a 0-10 range. Assuming envelope values can exceed 1.
+                const DB_LOOKUP_SCALE = DB_LOOKUP_SIZE / 10.0;
                 context.dbLookup = new Float32Array(DB_LOOKUP_SIZE);
                 for (let i = 0; i < DB_LOOKUP_SIZE; i++) {
                     const x = i / DB_LOOKUP_SCALE;
-                    if (x < 1e-6) {
-                        context.dbLookup[i] = MIN_DB;
-                    } else {
-                        context.dbLookup[i] = LOG10_20 * Math.log(x);
-                    }
+                    // Use a small epsilon consistent with MIN_ENVELOPE to avoid log(0)
+                    context.dbLookup[i] = (x < MIN_ENVELOPE) ? MIN_DB : LOG10_20 * Math.log(x);
                 }
-                
-                // Create lookup table for Math.exp(-x * gainFactor) operation
+    
                 const EXP_LOOKUP_SIZE = 2048;
-                const EXP_LOOKUP_SCALE = EXP_LOOKUP_SIZE / 60; // 0 to 60 dB range
+                // Range 0 to 60 dB for gain reduction seems reasonable
+                const EXP_LOOKUP_SCALE = EXP_LOOKUP_SIZE / 60.0;
                 context.expLookup = new Float32Array(EXP_LOOKUP_SIZE);
                 for (let i = 0; i < EXP_LOOKUP_SIZE; i++) {
-                    const x = i / EXP_LOOKUP_SCALE;
-                    context.expLookup[i] = Math.exp(-x * gainFactor);
+                    const x_db = i / EXP_LOOKUP_SCALE;
+                    // Corresponds to original fastExp(x_db) calculation: exp(-x_db * gainFactor)
+                    context.expLookup[i] = Math.exp(-x_db * gainFactor);
                 }
-                
-                // Store constants for faster access
+    
+                // Store constants for faster access inside inlined functions
                 context.DB_LOOKUP_SIZE = DB_LOOKUP_SIZE;
                 context.DB_LOOKUP_SCALE = DB_LOOKUP_SCALE;
                 context.EXP_LOOKUP_SIZE = EXP_LOOKUP_SIZE;
                 context.EXP_LOOKUP_SCALE = EXP_LOOKUP_SCALE;
+                context.MIN_DB = MIN_DB; // Cache MIN_DB for inlined fastDb
+                // No need to set needsRecalculation here, LUT init is one-time
             }
-            
-            // Fast approximation functions using lookup tables
-            function fastDb(x) {
-                // Fast dB conversion using lookup table
-                if (x <= 0) return MIN_DB;
-                // Scale and clamp to lookup table range
-                const idx = Math.min(context.dbLookup.length - 1, Math.floor(x * context.DB_LOOKUP_SCALE));
-                return context.dbLookup[idx];
-            }
-            
-            function fastExp(x) {
-                // Fast exponential using lookup table
-                if (x <= 0) return 1;
-                if (x >= 60) return context.expLookup[context.expLookup.length - 1];
-                // Scale and clamp to lookup table range
-                const idx = Math.min(context.expLookup.length - 1, Math.floor(x * context.EXP_LOOKUP_SCALE));
-                return context.expLookup[idx];
-            }
-
-            // For measurement: track maximum gain reduction across the block
-            let blockMaxGainReduction = 0;
-            
-            // Cache gate parameters for faster access
-            const gateParams = context.gateParams;
-            const threshold = gateParams.th;
-            const halfKnee = gateParams.halfKnee;
-            const invRatio = gateParams.invRatio;
-            const gain = gateParams.gn;
-            const kneeWidth = gateParams.kn;
-            const workBuffer = context.workBuffer;
-
-            // Process each channel with optimized block processing
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                let envelope = context.envelopeStates[ch];
-                
-                // First pass: calculate envelope for all samples in the block
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    const inputAbs = Math.abs(data[offset + i]);
-                    
-                    // Update envelope using appropriate coefficient (attack or release)
-                    const coeff = (inputAbs > envelope) ? attackCoeff : releaseCoeff;
-                    envelope = Math.max(MIN_ENVELOPE, envelope * coeff + inputAbs * (1 - coeff));
-                    
-                    // Store envelope in work buffer for second pass
-                    workBuffer[i] = envelope;
+    
+            // Cache LUTs and related constants for direct access
+            const dbLookup = context.dbLookup;
+            const dbLookupSize = context.DB_LOOKUP_SIZE;
+            const dbLookupScale = context.DB_LOOKUP_SCALE;
+            const expLookup = context.expLookup;
+            const expLookupSize = context.EXP_LOOKUP_SIZE;
+            const expLookupScale = context.EXP_LOOKUP_SCALE;
+            const lutMinDb = context.MIN_DB;
+            const lutExpMaxIndex = expLookupSize - 1;
+            const lutDbMaxIndex = dbLookupSize - 1;
+    
+            // Precompute the linear gain factor related to parameters.gn (makeupGainFactor)
+            // This is equivalent to the original code's fastExp(-gainParam) used in the gain calculation.
+            // Recompute only if 'gn' changed (checked via context.precomputedMakeupGainFactor === undefined)
+            let makeupGainFactor;
+            if (context.precomputedMakeupGainFactor === undefined) { // Check if invalidated
+                const gainParamForExp = -gainParam; // We need to compute fastExp for -gn
+    
+                // --- Inlined fastExp(gainParamForExp) ---
+                // Original fastExp(x) returned 1.0 if x <= 0.
+                if (gainParamForExp <= 0) { // This happens if gainParam >= 0
+                    makeupGainFactor = 1.0;
+                } else if (gainParamForExp >= 60) { // Check against LUT range max (argument to fastExp is dB)
+                     makeupGainFactor = expLookup[lutExpMaxIndex]; // Use max attenuation from LUT
+                } else {
+                     // Scale and clamp to lookup table range
+                     const exp_idx_f = gainParamForExp * expLookupScale;
+                     // Ensure index is within bounds [0, size-1]
+                     const exp_idx = Math.max(0, Math.min(lutExpMaxIndex, Math.floor(exp_idx_f)));
+                     makeupGainFactor = expLookup[exp_idx];
                 }
-                
-                // Second pass: apply gain reduction with loop unrolling for better performance
-                const blockSizeMod4 = parameters.blockSize & ~3; // Fast way to calculate blockSize - (blockSize % 4)
+                // --- End Inlined fastExp ---
+    
+                context.precomputedMakeupGainFactor = makeupGainFactor; // Cache the computed value
+                // context.lastGn is implicitly tracked by gateParams check above
+            }
+            makeupGainFactor = context.precomputedMakeupGainFactor; // Use the precomputed/cached value
+    
+            // --- Main Processing Loop ---
+            let blockMaxGainReduction = 0; // Track max GR for measurements
+            const blockSize = parameters.blockSize;
+            const channelCount = parameters.channelCount;
+            const envelopeStates = context.envelopeStates; // Get reference to the array
+    
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                let envelope = envelopeStates[ch]; // Get current envelope state for the channel
+    
+                // --- Combined Envelope Calculation and Gain Application Pass ---
+                // Loop unrolling preparation
+                const blockSizeMod4 = blockSize - (blockSize % 4); // Process chunks of 4
                 let i = 0;
-                
-                // Main loop with 4-sample unrolling
+    
+                // Unrolled loop (4 samples at a time) - improves performance in some JS engines
                 for (; i < blockSizeMod4; i += 4) {
-                    // Process 4 samples at once
-                    for (let j = 0; j < 4; j++) {
-                        const idx = i + j;
-                        const envelopeDb = fastDb(workBuffer[idx]);
-                        const diff = threshold - envelopeDb;
-                        
-                        // Calculate gain reduction based on ratio and knee
-                        let gainReduction = 0;
-                        
-                        if (invRatio <= 0) {
-                            // No gain reduction if ratio is 1:1
-                            gainReduction = 0;
-                        } else if (diff <= -halfKnee) {
-                            // Below threshold - knee/2
-                            gainReduction = 0;
-                        } else if (diff >= halfKnee) {
-                            // Above threshold + knee/2
-                            gainReduction = diff * invRatio;
-                        } else {
-                            // In the knee region - soft knee calculation
-                            const kneeFactorSquared = (diff + halfKnee) / kneeWidth;
-                            gainReduction = invRatio * kneeWidth * kneeFactorSquared * kneeFactorSquared * 0.5;
-                        }
-                        
-                        // Update block maximum gain reduction for measurement
-                        if (gainReduction > blockMaxGainReduction) {
-                            blockMaxGainReduction = gainReduction;
-                        }
-                        
-                        // Apply gain reduction if needed
-                        if (gainReduction > 0) {
-                            const totalGainLin = fastExp(gainReduction) * fastExp(-gain);
-                            result[offset + idx] *= totalGainLin;
-                        }
+                    // --- Process 4 samples ---
+    
+                    // Sample 1 (index i)
+                    let inputAbs1 = Math.abs(data[offset + i]);
+                    let coeff1 = (inputAbs1 > envelope) ? attackCoeff : releaseCoeff;
+                    let oneMinusCoeff1 = (inputAbs1 > envelope) ? oneMinusAttackCoeff : oneMinusReleaseCoeff;
+                    envelope = envelope * coeff1 + inputAbs1 * oneMinusCoeff1;
+                    if (envelope < MIN_ENVELOPE) envelope = MIN_ENVELOPE; // Clamp envelope floor
+                    let currentEnvelope1 = envelope; // Store envelope for this sample's calculation
+    
+                    // Sample 2 (index i+1) - Calculate envelope sequentially
+                    let inputAbs2 = Math.abs(data[offset + i + 1]);
+                    let coeff2 = (inputAbs2 > envelope) ? attackCoeff : releaseCoeff;
+                    let oneMinusCoeff2 = (inputAbs2 > envelope) ? oneMinusAttackCoeff : oneMinusReleaseCoeff;
+                    envelope = envelope * coeff2 + inputAbs2 * oneMinusCoeff2;
+                    if (envelope < MIN_ENVELOPE) envelope = MIN_ENVELOPE;
+                    let currentEnvelope2 = envelope;
+    
+                    // Sample 3 (index i+2)
+                    let inputAbs3 = Math.abs(data[offset + i + 2]);
+                    let coeff3 = (inputAbs3 > envelope) ? attackCoeff : releaseCoeff;
+                    let oneMinusCoeff3 = (inputAbs3 > envelope) ? oneMinusAttackCoeff : oneMinusReleaseCoeff;
+                    envelope = envelope * coeff3 + inputAbs3 * oneMinusCoeff3;
+                    if (envelope < MIN_ENVELOPE) envelope = MIN_ENVELOPE;
+                    let currentEnvelope3 = envelope;
+    
+                    // Sample 4 (index i+3)
+                    let inputAbs4 = Math.abs(data[offset + i + 3]);
+                    let coeff4 = (inputAbs4 > envelope) ? attackCoeff : releaseCoeff;
+                    let oneMinusCoeff4 = (inputAbs4 > envelope) ? oneMinusAttackCoeff : oneMinusReleaseCoeff;
+                    envelope = envelope * coeff4 + inputAbs4 * oneMinusCoeff4;
+                    if (envelope < MIN_ENVELOPE) envelope = MIN_ENVELOPE;
+                    let currentEnvelope4 = envelope;
+    
+                    // --- Apply Gain Reduction for the 4 samples ---
+                    // We use the calculated envelope value *for each sample* respectively
+    
+                    // Gain Calc Sample 1
+                    // --- Inlined fastDb(currentEnvelope1) ---
+                    let envelopeDb1;
+                    if (currentEnvelope1 < MIN_ENVELOPE) { envelopeDb1 = lutMinDb; } // Use MIN_ENVELOPE consistently
+                    else {
+                        const db_idx_f1 = currentEnvelope1 * dbLookupScale;
+                        const db_idx1_floor = Math.floor(db_idx_f1);
+                        // Replace Math.max/min with if/ternary for better performance
+                        const db_idx1 = db_idx1_floor < 0 ? 0 : (db_idx1_floor > lutDbMaxIndex ? lutDbMaxIndex : db_idx1_floor); // Clamp index
+                        envelopeDb1 = dbLookup[db_idx1];
                     }
-                }
-                
-                // Handle remaining samples
-                for (; i < parameters.blockSize; i++) {
-                    const envelopeDb = fastDb(workBuffer[i]);
-                    const diff = threshold - envelopeDb;
-                    
-                    // Calculate gain reduction based on ratio and knee
+                    // --- End Inlined fastDb ---
+                    let diff1 = threshold - envelopeDb1;
+                    let gainReduction1 = 0;
+                    // Calculate gain reduction only if ratio > 1 and input is above lower knee boundary
+                    if (invRatio > 1e-9 && diff1 > -halfKnee) { // Use epsilon for float comparison, invRatio > 0 means ratio > 1
+                        if (diff1 >= halfKnee) { // Above knee: Hard knee characteristic
+                            gainReduction1 = diff1 * invRatio;
+                        } else { // In knee: Soft knee characteristic
+                            // Avoid division by zero/small kneeWidth
+                            if (kneeWidth > 1e-9) {
+                               const kneeFactor1 = (diff1 + halfKnee) / kneeWidth; // Position within the knee (0 to 1)
+                               // Original formula structure: GR = invRatio * kneeWidth * 0.5 * kneeFactor^2
+                               // Ensure factor is non-negative before squaring (should be due to diff > -halfKnee)
+                               gainReduction1 = 0.5 * invRatio * kneeWidth * kneeFactor1 * kneeFactor1;
+                            } // Else: kneeWidth is near zero, effectively hard knee (handled by diff >= halfKnee)
+                        }
+                        // Ensure gain reduction is not negative (can happen with numerical instability)
+                        if (gainReduction1 < 0) gainReduction1 = 0;
+                    }
+                    if (gainReduction1 > blockMaxGainReduction) blockMaxGainReduction = gainReduction1;
+                    if (gainReduction1 > 1e-9) { // Apply gain only if reduction is significant
+                        // --- Inlined fastExp(gainReduction1) ---
+                        let reductionGainLin1;
+                        if (gainReduction1 >= 60) { reductionGainLin1 = expLookup[lutExpMaxIndex]; }
+                        else {
+                             const exp_idx_f1 = gainReduction1 * expLookupScale;
+                             const exp_idx1_floor = Math.floor(exp_idx_f1);
+                             // Replace Math.max/min with if/ternary for better performance
+                             const exp_idx1 = exp_idx1_floor < 0 ? 0 : (exp_idx1_floor > lutExpMaxIndex ? lutExpMaxIndex : exp_idx1_floor);
+                             reductionGainLin1 = expLookup[exp_idx1];
+                        } // No need for <=0 check due to outer if (gainReduction1 > 1e-9)
+                        // --- End Inlined fastExp ---
+                        const totalGainLin1 = reductionGainLin1 * makeupGainFactor; // Apply makeup factor
+                        result[offset + i] *= totalGainLin1; // Apply gain to the result buffer
+                    } // Else: No significant gain reduction, sample remains unchanged
+    
+                    // Gain Calc Sample 2 (using currentEnvelope2, diff2, etc.)
+                    let envelopeDb2;
+                    if (currentEnvelope2 < MIN_ENVELOPE) { envelopeDb2 = lutMinDb; }
+                    else {
+                        const db_idx_f2 = currentEnvelope2 * dbLookupScale;
+                        const db_idx2_floor = Math.floor(db_idx_f2);
+                        // Replace Math.max/min with if/ternary for better performance
+                        const db_idx2 = db_idx2_floor < 0 ? 0 : (db_idx2_floor > lutDbMaxIndex ? lutDbMaxIndex : db_idx2_floor);
+                        envelopeDb2 = dbLookup[db_idx2];
+                    }
+                    let diff2 = threshold - envelopeDb2;
+                    let gainReduction2 = 0;
+                    if (invRatio > 1e-9 && diff2 > -halfKnee) {
+                        if (diff2 >= halfKnee) { gainReduction2 = diff2 * invRatio; }
+                        else { if (kneeWidth > 1e-9) { const kneeFactor2 = (diff2 + halfKnee) / kneeWidth; gainReduction2 = 0.5 * invRatio * kneeWidth * kneeFactor2 * kneeFactor2; } }
+                        if (gainReduction2 < 0) gainReduction2 = 0;
+                    }
+                    if (gainReduction2 > blockMaxGainReduction) blockMaxGainReduction = gainReduction2;
+                    if (gainReduction2 > 1e-9) {
+                        let reductionGainLin2;
+                        if (gainReduction2 >= 60) { reductionGainLin2 = expLookup[lutExpMaxIndex]; }
+                        else {
+                            const exp_idx_f2 = gainReduction2 * expLookupScale;
+                            const exp_idx2_floor = Math.floor(exp_idx_f2);
+                            // Replace Math.max/min with if/ternary for better performance
+                            const exp_idx2 = exp_idx2_floor < 0 ? 0 : (exp_idx2_floor > lutExpMaxIndex ? lutExpMaxIndex : exp_idx2_floor);
+                            reductionGainLin2 = expLookup[exp_idx2];
+                        }
+                        const totalGainLin2 = reductionGainLin2 * makeupGainFactor;
+                        result[offset + i + 1] *= totalGainLin2;
+                    }
+    
+                    // Gain Calc Sample 3 (using currentEnvelope3, diff3, etc.)
+                    let envelopeDb3;
+                    if (currentEnvelope3 < MIN_ENVELOPE) { envelopeDb3 = lutMinDb; }
+                    else {
+                        const db_idx_f3 = currentEnvelope3 * dbLookupScale;
+                        const db_idx3_floor = Math.floor(db_idx_f3);
+                        // Replace Math.max/min with if/ternary for better performance
+                        const db_idx3 = db_idx3_floor < 0 ? 0 : (db_idx3_floor > lutDbMaxIndex ? lutDbMaxIndex : db_idx3_floor);
+                        envelopeDb3 = dbLookup[db_idx3];
+                    }
+                    let diff3 = threshold - envelopeDb3;
+                    let gainReduction3 = 0;
+                    if (invRatio > 1e-9 && diff3 > -halfKnee) {
+                        if (diff3 >= halfKnee) { gainReduction3 = diff3 * invRatio; }
+                        else { if (kneeWidth > 1e-9) { const kneeFactor3 = (diff3 + halfKnee) / kneeWidth; gainReduction3 = 0.5 * invRatio * kneeWidth * kneeFactor3 * kneeFactor3; } }
+                        if (gainReduction3 < 0) gainReduction3 = 0;
+                    }
+                    if (gainReduction3 > blockMaxGainReduction) blockMaxGainReduction = gainReduction3;
+                    if (gainReduction3 > 1e-9) {
+                        let reductionGainLin3;
+                        if (gainReduction3 >= 60) { reductionGainLin3 = expLookup[lutExpMaxIndex]; }
+                        else {
+                            const exp_idx_f3 = gainReduction3 * expLookupScale;
+                            const exp_idx3_floor = Math.floor(exp_idx_f3);
+                            // Replace Math.max/min with if/ternary for better performance
+                            const exp_idx3 = exp_idx3_floor < 0 ? 0 : (exp_idx3_floor > lutExpMaxIndex ? lutExpMaxIndex : exp_idx3_floor);
+                            reductionGainLin3 = expLookup[exp_idx3];
+                        }
+                        const totalGainLin3 = reductionGainLin3 * makeupGainFactor;
+                        result[offset + i + 2] *= totalGainLin3;
+                    }
+    
+                    // Gain Calc Sample 4 (using currentEnvelope4, diff4, etc.)
+                    let envelopeDb4;
+                    if (currentEnvelope4 < MIN_ENVELOPE) { envelopeDb4 = lutMinDb; }
+                    else {
+                        const db_idx_f4 = currentEnvelope4 * dbLookupScale;
+                        const db_idx4_floor = Math.floor(db_idx_f4);
+                        // Replace Math.max/min with if/ternary for better performance
+                        const db_idx4 = db_idx4_floor < 0 ? 0 : (db_idx4_floor > lutDbMaxIndex ? lutDbMaxIndex : db_idx4_floor);
+                        envelopeDb4 = dbLookup[db_idx4];
+                    }
+                    let diff4 = threshold - envelopeDb4;
+                    let gainReduction4 = 0;
+                    if (invRatio > 1e-9 && diff4 > -halfKnee) {
+                        if (diff4 >= halfKnee) { gainReduction4 = diff4 * invRatio; }
+                        else { if (kneeWidth > 1e-9) { const kneeFactor4 = (diff4 + halfKnee) / kneeWidth; gainReduction4 = 0.5 * invRatio * kneeWidth * kneeFactor4 * kneeFactor4; } }
+                        if (gainReduction4 < 0) gainReduction4 = 0;
+                    }
+                    if (gainReduction4 > blockMaxGainReduction) blockMaxGainReduction = gainReduction4;
+                    if (gainReduction4 > 1e-9) {
+                        let reductionGainLin4;
+                        if (gainReduction4 >= 60) { reductionGainLin4 = expLookup[lutExpMaxIndex]; }
+                        else {
+                            const exp_idx_f4 = gainReduction4 * expLookupScale;
+                            const exp_idx4_floor = Math.floor(exp_idx_f4);
+                            // Replace Math.max/min with if/ternary for better performance
+                            const exp_idx4 = exp_idx4_floor < 0 ? 0 : (exp_idx4_floor > lutExpMaxIndex ? lutExpMaxIndex : exp_idx4_floor);
+                            reductionGainLin4 = expLookup[exp_idx4];
+                        }
+                        const totalGainLin4 = reductionGainLin4 * makeupGainFactor;
+                        result[offset + i + 3] *= totalGainLin4;
+                    }
+    
+                } // End of unrolled loop
+    
+                // Handle remaining samples (less than 4) using the same logic
+                for (; i < blockSize; i++) {
+                    let inputAbs = Math.abs(data[offset + i]);
+                    let coeff = (inputAbs > envelope) ? attackCoeff : releaseCoeff;
+                    let oneMinusCoeff = (inputAbs > envelope) ? oneMinusAttackCoeff : oneMinusReleaseCoeff;
+                    envelope = envelope * coeff + inputAbs * oneMinusCoeff;
+                    if (envelope < MIN_ENVELOPE) envelope = MIN_ENVELOPE;
+                    let currentEnvelope = envelope;
+    
+                    // --- Inlined fastDb(currentEnvelope) ---
+                    let envelopeDb;
+                     if (currentEnvelope < MIN_ENVELOPE) { envelopeDb = lutMinDb; }
+                     else {
+                         const db_idx_f = currentEnvelope * dbLookupScale;
+                         const db_idx_floor = Math.floor(db_idx_f);
+                         // Replace Math.max/min with if/ternary for better performance
+                         const db_idx = db_idx_floor < 0 ? 0 : (db_idx_floor > lutDbMaxIndex ? lutDbMaxIndex : db_idx_floor);
+                         envelopeDb = dbLookup[db_idx];
+                     }
+                    // --- End Inlined fastDb ---
+    
+                    let diff = threshold - envelopeDb;
                     let gainReduction = 0;
-                    
-                    if (invRatio <= 0) {
-                        gainReduction = 0;
-                    } else if (diff <= -halfKnee) {
-                        gainReduction = 0;
-                    } else if (diff >= halfKnee) {
-                        gainReduction = diff * invRatio;
-                    } else {
-                        // In the knee region - soft knee calculation
-                        const kneeFactorSquared = (diff + halfKnee) / kneeWidth;
-                        gainReduction = invRatio * kneeWidth * kneeFactorSquared * kneeFactorSquared * 0.5;
+                    if (invRatio > 1e-9 && diff > -halfKnee) {
+                        if (diff >= halfKnee) { gainReduction = diff * invRatio; }
+                        else { if (kneeWidth > 1e-9) { const kneeFactor = (diff + halfKnee) / kneeWidth; gainReduction = 0.5 * invRatio * kneeWidth * kneeFactor * kneeFactor; } }
+                        if (gainReduction < 0) gainReduction = 0;
                     }
-                    
-                    // Update block maximum gain reduction
-                    if (gainReduction > blockMaxGainReduction) {
-                        blockMaxGainReduction = gainReduction;
-                    }
-                    
-                    // Apply gain reduction if needed
-                    if (gainReduction > 0) {
-                        const totalGainLin = fastExp(gainReduction) * fastExp(-gain);
-                        result[offset + i] *= totalGainLin;
-                    }
+    
+                    if (gainReduction > blockMaxGainReduction) blockMaxGainReduction = gainReduction;
+    
+                    if (gainReduction > 1e-9) { // Apply gain only if reduction is significant
+                        // --- Inlined fastExp(gainReduction) ---
+                         let reductionGainLin;
+                         if (gainReduction >= 60) { reductionGainLin = expLookup[lutExpMaxIndex]; }
+                         else {
+                             const exp_idx_f = gainReduction * expLookupScale;
+                             const exp_idx_floor = Math.floor(exp_idx_f);
+                             // Replace Math.max/min with if/ternary for better performance
+                             const exp_idx = exp_idx_floor < 0 ? 0 : (exp_idx_floor > lutExpMaxIndex ? lutExpMaxIndex : exp_idx_floor);
+                             reductionGainLin = expLookup[exp_idx];
+                         }
+                         // --- End Inlined fastExp ---
+                         const totalGainLin = reductionGainLin * makeupGainFactor;
+                         result[offset + i] *= totalGainLin;
+                     }
+                     // Else: No significant gain reduction, sample remains unchanged.
                 }
-                
-                // Update envelope state for current channel
-                context.envelopeStates[ch] = envelope;
-            }
-
-            // Set measurements for monitoring
+    
+                // Update envelope state for the next block
+                envelopeStates[ch] = envelope;
+            } // End of channel loop
+    
+            // --- Set measurements ---
+            // Attaching properties to a TypedArray is non-standard but replicates original behavior.
             result.measurements = {
-                time: parameters.time,
+                time: parameters.time, // Assume parameters.time exists
                 gainReduction: blockMaxGainReduction
             };
-
+    
             return result;
-        `;
+        `; // End of function body string
     }
-
+    
     onMessage(message) {
         if (message.type === 'processBuffer' && message.buffer) {
             const result = this.process(message.buffer, message);
@@ -290,7 +501,7 @@ class GatePlugin extends PluginBase {
             Math.min(1, deltaTime / releaseTime);
         
         this.gr = this.gr + (targetGr - this.gr) * smoothingFactor;
-        this.gr = Math.max(0, this.gr);
+        this.gr = this.gr < 0 ? 0 : this.gr;
 
         return audioBuffer;
     }
@@ -299,25 +510,25 @@ class GatePlugin extends PluginBase {
         let graphNeedsUpdate = false;
 
         if (params.th !== undefined) {
-            this.th = Math.max(-96, Math.min(0, params.th));
+            this.th = params.th < -96 ? -96 : (params.th > 0 ? 0 : params.th);
             graphNeedsUpdate = true;
         }
         if (params.rt !== undefined) {
-            this.rt = Math.max(1, Math.min(100, params.rt));
+            this.rt = params.rt < 1 ? 1 : (params.rt > 100 ? 100 : params.rt);
             graphNeedsUpdate = true;
         }
         if (params.at !== undefined) {
-            this.at = Math.max(0.01, Math.min(50, params.at));
+            this.at = params.at < 0.01 ? 0.01 : (params.at > 50 ? 50 : params.at);
         }
         if (params.rl !== undefined) {
-            this.rl = Math.max(10, Math.min(2000, params.rl));
+            this.rl = params.rl < 10 ? 10 : (params.rl > 2000 ? 2000 : params.rl);
         }
         if (params.kn !== undefined) {
-            this.kn = Math.max(0, Math.min(6, params.kn));
+            this.kn = params.kn < 0 ? 0 : (params.kn > 6 ? 6 : params.kn);
             graphNeedsUpdate = true;
         }
         if (params.gn !== undefined) {
-            this.gn = Math.max(-12, Math.min(12, params.gn));
+            this.gn = params.gn < -12 ? -12 : (params.gn > 12 ? 12 : params.gn);
             graphNeedsUpdate = true;
         }
         if (params.enabled !== undefined) {
@@ -518,7 +729,8 @@ class GatePlugin extends PluginBase {
             });
             
             numberInput.addEventListener('input', (e) => {
-                const value = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
+                const parsedValue = parseFloat(e.target.value) || 0;
+                const value = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
                 setter(value);
                 slider.value = value;
                 e.target.value = value;

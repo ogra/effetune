@@ -11,109 +11,151 @@ class WowFlutterPlugin extends PluginBase {
 
         // Register the audio processor
         this.registerProcessor(`
+            // Early exit if processing is disabled
             if (!parameters.enabled) return data;
 
-            // Constants
-            const MAX_BUFFER_SIZE = Math.ceil(0.1 * sampleRate); // 100ms buffer
-            const TWO_PI = 2 * Math.PI;
+            // --- Parameters ---
+            // Destructure parameters for potentially slightly faster access and clarity
+            const {
+                sampleRate, channelCount, blockSize,
+                rt: rate,          // Rate
+                dp: depth,         // Depth
+                rn: randomness,    // Randomness
+                rc: randomnessCutoff, // Randomness Cutoff Freq
+                cp: channelPhase,  // Channel Phase (degrees)
+                cs: channelSync    // Channel Sync (%)
+            } = parameters;
+
+            // --- Constants & Pre-calculated Coefficients ---
+            const MAX_BUFFER_SIZE = Math.ceil(0.1 * sampleRate); // 100ms buffer size in samples
+            const TWO_PI = Math.PI * 2;
             const DEG_TO_RAD = Math.PI / 180;
 
-            // Ensure context variables exist first
-            context.phase = context.phase || 0;
-            context.lpfState = context.lpfState || 0;
-            context.channelLpfStates = context.channelLpfStates || [];
+            // Hoisted calculations (compute once per block)
+            const phaseIncrement = TWO_PI * rate / sampleRate; // Phase change per sample
+            const lpfCoeff = Math.exp(-TWO_PI * randomnessCutoff / sampleRate); // LPF coefficient for noise
+            const oneMinusLpfCoeff = 1.0 - lpfCoeff;
+            const channelPhaseRad = channelPhase * DEG_TO_RAD; // Channel phase offset in radians
+            const syncRatio = channelSync / 100.0; // Channel sync ratio (0-1)
+            const oneMinusSyncRatio = 1.0 - syncRatio;
+            const delayMsToSamplesMultiplier = sampleRate / 1000.0; // Factor to convert delay ms to samples
+
+            // --- Context Initialization (ensures state exists) ---
+            // Initialize only if properties are missing
+            context.phase = context.phase || 0.0;
+            context.lpfState = context.lpfState || 0.0;
             context.sampleBufferPos = context.sampleBufferPos || 0;
 
-            // Initialize channel-specific LPF states if needed
-            if (context.channelLpfStates.length !== parameters.channelCount) {
-                context.channelLpfStates = new Array(parameters.channelCount).fill(0);
+            // Initialize channel-specific LPF states if count mismatch or missing
+            if (!context.channelLpfStates || context.channelLpfStates.length !== channelCount) {
+                context.channelLpfStates = new Float32Array(channelCount).fill(0.0); // Use Float32Array for typed performance
             }
 
-            // Initialize buffer if needed
+            // Initialize sample buffers if not done yet
             if (!context.initialized) {
-                context.sampleBuffer = new Array(parameters.channelCount)
-                    .fill()
-                    .map(() => new Float32Array(MAX_BUFFER_SIZE).fill(0));
+                context.sampleBuffer = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ++ch) {
+                     // Use Float32Array for typed performance, fill with 0.0
+                    context.sampleBuffer[ch] = new Float32Array(MAX_BUFFER_SIZE).fill(0.0);
+                }
                 context.initialized = true;
             }
 
-            // Calculate coefficients for randomness LPF
-            // Map shortened parameter names to their original names for clarity
-            const { 
-                rt: rate,              // rt: Rate (formerly rate)
-                dp: depth,             // dp: Depth (formerly depth)
-                rn: randomness,        // rn: Randomness (formerly randomness)
-                rc: randomnessCutoff,  // rc: Randomness Cutoff (formerly randomnessCutoff)
-                cp: channelPhase,      // cp: Channel Phase (in degrees)
-                cs: channelSync,       // cs: Channel Sync (in %)
-                channelCount, blockSize 
-            } = parameters;
+            // --- Local State Variables (minimize context lookups in loops) ---
+            let currentPhase = context.phase;
+            let commonLpfState = context.lpfState;
+            let bufferPos = context.sampleBufferPos;
+            const channelLpfStates = context.channelLpfStates; // Get reference to array
+            const sampleBuffers = context.sampleBuffer;        // Get reference to array of buffers
 
-            const lpfCoeff = Math.exp(-TWO_PI * randomnessCutoff / sampleRate);
-            const channelPhaseRad = channelPhase * DEG_TO_RAD;
-            const syncRatio = channelSync / 100;
+            // --- Main Processing Loop ---
+            for (let i = 0; i < blockSize; ++i) {
 
-            // Process each sample
-            for (let i = 0; i < parameters.blockSize; i++) {
-                // Calculate base wow flutter modulation
-                context.phase += TWO_PI * rate / sampleRate;
-                if (context.phase >= TWO_PI) context.phase -= TWO_PI;
+                // Update base phase (oscillator)
+                currentPhase += phaseIncrement;
+                // Faster modulo for positive numbers
+                if (currentPhase >= TWO_PI) {
+                    currentPhase -= TWO_PI;
+                }
 
-                // Generate noise for common LPF
-                const noise = Math.random();
-                context.lpfState = noise * (1 - lpfCoeff) + context.lpfState * lpfCoeff;
+                // Generate and filter common noise component
+                const noise = Math.random(); // unavoidable random call
+                commonLpfState = noise * oneMinusLpfCoeff + commonLpfState * lpfCoeff;
 
-                // Process each channel with phase offset
-                for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const buffer = context.sampleBuffer[ch];
-                    const offset = ch * parameters.blockSize;
+                // --- Channel Loop ---
+                for (let ch = 0; ch < channelCount; ++ch) {
+                    const buffer = sampleBuffers[ch]; // Local ref to current channel buffer
+                    const offset = ch * blockSize;    // Base index for this channel in 'data'
 
-                    // Store input sample in buffer
-                    const inputSample = data[offset + i];
-                    buffer[context.sampleBufferPos] = inputSample;
+                    // Store current input sample in the circular buffer
+                    buffer[bufferPos] = data[offset + i];
 
-                    // Apply channel phase offset
-                    const channelOffset = ch * channelPhaseRad;
-                    const channelPhase = context.phase + channelOffset;
-                    
-                    // Generate and filter noise for this channel
-                    const channelNoise = Math.random();
-                    context.channelLpfStates[ch] = channelNoise * (1 - lpfCoeff) + context.channelLpfStates[ch] * lpfCoeff;
-                    
-                    // Blend between channel-specific and common LPF based on sync ratio
-                    const filteredNoise = syncRatio * context.lpfState + (1 - syncRatio) * context.channelLpfStates[ch];
+                    // Calculate channel-specific phase (apply offset)
+                    // No need for modulo here, Math.cos handles periodicity
+                    const channelPhaseOffset = ch * channelPhaseRad;
+                    const currentChannelPhase = currentPhase + channelPhaseOffset;
 
-                    // Calculate delay time
-                    const baseDelay = (1 - Math.cos(channelPhase)) * 0.5; // 0-1 range
+                    // Generate and filter channel-specific noise component
+                    const channelNoise = Math.random(); // unavoidable random call
+                    let chLpfState = channelLpfStates[ch]; // Read current state
+                    chLpfState = channelNoise * oneMinusLpfCoeff + chLpfState * lpfCoeff;
+                    channelLpfStates[ch] = chLpfState; // Write back updated state
+
+                    // Blend common and channel-specific filtered noise based on sync ratio
+                    const filteredNoise = syncRatio * commonLpfState + oneMinusSyncRatio * chLpfState;
+
+                    // Calculate total delay time in ms
+                    // Base delay uses cosine wave (0 to 1 range) scaled by depth
+                    // Noise contribution is added, scaled by randomness factor
+                    const baseDelay = (1.0 - Math.cos(currentChannelPhase)) * 0.5; // 0..1 range
                     const noiseContribution = filteredNoise * randomness;
-                    const totalDelay = baseDelay * depth + noiseContribution;
+                    const totalDelay = baseDelay * depth + noiseContribution; // Total delay modulation in ms? (original assumes this scale)
 
-                    // Convert delay from ms to samples
-                    const delaySamples = (totalDelay / 1000) * sampleRate;
+                    // Convert delay to samples
+                    const delaySamples = totalDelay * delayMsToSamplesMultiplier;
 
-                    // Get delayed sample position with linear interpolation
-                    const delayPos = (context.sampleBufferPos - delaySamples + MAX_BUFFER_SIZE) % MAX_BUFFER_SIZE;
-                    const delayPosInt = Math.floor(delayPos);
-                    const delayPosFrac = delayPos - delayPosInt;
-                    const nextPos = (delayPosInt + 1) % MAX_BUFFER_SIZE;
+                    // Calculate read position in buffer using linear interpolation
+                    // Add MAX_BUFFER_SIZE before modulo to handle negative results correctly
+                    const delayPos = (bufferPos - delaySamples + MAX_BUFFER_SIZE);
+                    // Fast modulo % MAX_BUFFER_SIZE
+                    const delayPosWrapped = delayPos >= MAX_BUFFER_SIZE ? delayPos % MAX_BUFFER_SIZE : delayPos < 0 ? (delayPos % MAX_BUFFER_SIZE + MAX_BUFFER_SIZE) % MAX_BUFFER_SIZE : delayPos;
 
-                    // Apply interpolation
+                    // Use bitwise OR for fast floor (safe as delayPosWrapped is always positive)
+                    const delayPosInt = (delayPosWrapped | 0);
+                    const delayPosFrac = delayPosWrapped - delayPosInt;
+
+                    // Calculate index for the next sample, wrapping around buffer
+                    let nextPos = delayPosInt + 1;
+                    if (nextPos >= MAX_BUFFER_SIZE) { // Faster than modulo for simple increment wrap
+                         nextPos = 0;
+                    }
+
+                    // Linear interpolation
                     const sample1 = buffer[delayPosInt];
                     const sample2 = buffer[nextPos];
                     const interpolatedSample = sample1 + delayPosFrac * (sample2 - sample1);
 
-                    // Write to output
+                    // Write interpolated sample to output data array
                     data[offset + i] = interpolatedSample;
                 }
 
-                // Update buffer position
-                context.sampleBufferPos = (context.sampleBufferPos + 1) % MAX_BUFFER_SIZE;
+                // Update buffer write position, wrapping around
+                bufferPos++;
+                if (bufferPos >= MAX_BUFFER_SIZE) { // Faster than modulo for simple increment wrap
+                    bufferPos = 0;
+                }
             }
 
-            return data;
+            // --- Update Context State (write back local state) ---
+            context.phase = currentPhase;
+            context.lpfState = commonLpfState;
+            context.sampleBufferPos = bufferPos;
+            // Note: context.channelLpfStates was updated directly via the 'channelLpfStates' reference
+
+            return data; // Return the modified data buffer
         `);
     }
-
+    
     createUI() {
         const container = document.createElement('div');
         container.className = 'wow-flutter-plugin-ui plugin-parameter-ui';
@@ -196,22 +238,22 @@ class WowFlutterPlugin extends PluginBase {
 
     setParameters(params) {
         if (params.rt !== undefined) {
-            this.rt = Math.max(0.1, Math.min(20, params.rt));
+            this.rt = params.rt < 0.1 ? 0.1 : (params.rt > 20 ? 20 : params.rt);
         }
         if (params.dp !== undefined) {
-            this.dp = Math.max(0, Math.min(40, params.dp));
+            this.dp = params.dp < 0 ? 0 : (params.dp > 40 ? 40 : params.dp);
         }
         if (params.rn !== undefined) {
-            this.rn = Math.max(0, Math.min(40, params.rn));
+            this.rn = params.rn < 0 ? 0 : (params.rn > 40 ? 40 : params.rn);
         }
         if (params.rc !== undefined) {
-            this.rc = Math.max(0.1, Math.min(20, params.rc));
+            this.rc = params.rc < 0.1 ? 0.1 : (params.rc > 20 ? 20 : params.rc);
         }
         if (params.cp !== undefined) {
-            this.cp = Math.max(-180, Math.min(180, params.cp));
+            this.cp = params.cp < -180 ? -180 : (params.cp > 180 ? 180 : params.cp);
         }
         if (params.cs !== undefined) {
-            this.cs = Math.max(0, Math.min(100, params.cs));
+            this.cs = params.cs < 0 ? 0 : (params.cs > 100 ? 100 : params.cs);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;

@@ -11,76 +11,119 @@ class TremoloPlugin extends PluginBase {
 
         // Register the audio processor
         this.registerProcessor(`
+            // Strict mode for potential optimizations and catching silent errors
+            "use strict"; 
+        
+            // Initial check for processor enablement
             if (!parameters.enabled) return data;
-
-            // Constants
-            const TWO_PI = 2 * Math.PI;
-            const DEG_TO_RAD = Math.PI / 180;
-
-            // Ensure context variables exist first
-            context.phase = context.phase || 0;
-            context.lpfState = context.lpfState || 0;
-            context.channelLpfStates = context.channelLpfStates || [];
-
-            // Initialize channel-specific LPF states if needed
-            if (context.channelLpfStates.length !== parameters.channelCount) {
-                context.channelLpfStates = new Array(parameters.channelCount).fill(0);
+        
+            // --- Constants and Pre-calculations ---
+        
+            const TWO_PI = 6.283185307179586; // 2 * Math.PI
+            const DEG_TO_RAD = 0.017453292519943295; // Math.PI / 180
+        
+            // Cache frequently accessed parameters locally
+            const sampleRate = parameters.sampleRate;
+            const blockSize = parameters.blockSize;
+            const channelCount = parameters.channelCount;
+            const rate = parameters.rt;
+            const depth = parameters.dp;
+            const randomness = parameters.rn;
+            const randomnessCutoff = parameters.rc;
+            const channelPhase = parameters.cp;
+            const channelSync = parameters.cs;
+        
+            // Ensure context variables exist (using direct property access for potential minor speedup)
+            // Initialize state variables if they don't exist
+            if (context.phase === undefined) context.phase = 0;
+            if (context.lpfState === undefined) context.lpfState = 0;
+            if (context.channelLpfStates === undefined) context.channelLpfStates = [];
+        
+            // Initialize channel-specific LPF states array if needed
+            // Use direct length check and assignment
+            if (context.channelLpfStates.length !== channelCount) {
+                context.channelLpfStates = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ++ch) {
+                    context.channelLpfStates[ch] = 0.0;
+                }
             }
-
-            // Calculate coefficients for randomness LPF
-            // Map shortened parameter names to their original names for clarity
-            const { 
-                rt: rate,              // rt: Rate
-                dp: depth,             // dp: Depth (in dB)
-                rn: randomness,        // rn: Randomness (in dB)
-                rc: randomnessCutoff,  // rc: Randomness Cutoff
-                cp: channelPhase,      // cp: Channel Phase (in degrees)
-                cs: channelSync,       // cs: Channel Sync (in %)
-                channelCount, blockSize 
-            } = parameters;
-
+        
+            // Pre-calculate loop invariants
+            const phaseIncrement = TWO_PI * rate / sampleRate;
             const lpfCoeff = Math.exp(-TWO_PI * randomnessCutoff / sampleRate);
+            const invLpfCoeff = 1.0 - lpfCoeff; // Pre-calculate (1 - coeff)
             const channelPhaseRad = channelPhase * DEG_TO_RAD;
-            const syncRatio = channelSync / 100;
-
-            // Process each sample
-            for (let i = 0; i < parameters.blockSize; i++) {
-                // Calculate base tremolo modulation
-                context.phase += TWO_PI * rate / sampleRate;
-                if (context.phase >= TWO_PI) context.phase -= TWO_PI;
-
-                // Generate noise for common LPF
+            const syncRatio = channelSync * 0.01; // Divide by 100
+            const invSyncRatio = 1.0 - syncRatio; // Pre-calculate (1 - ratio)
+            const negDepth = -depth; // Pre-calculate for dB calculation
+            const negRandomnessX2 = -randomness * 2.0; // Pre-calculate for dB calculation
+            const inv20 = 0.05; // Pre-calculate 1/20 for dB to linear conversion
+        
+            // Load state variables into local variables for faster access within the loop
+            let phase = context.phase;
+            let lpfState = context.lpfState;
+            // Get a direct reference to the channel states array
+            const channelLpfStates = context.channelLpfStates; 
+        
+            // --- Main Processing Loop ---
+            for (let i = 0; i < blockSize; ++i) {
+                // --- Update Common Phase and LPF ---
+                phase += phaseIncrement;
+                // Faster wrap-around check (avoids modulo operator)
+                if (phase >= TWO_PI) {
+                    phase -= TWO_PI;
+                }
+        
+                // Generate and filter common noise
+                // Using pre-calculated (1 - lpfCoeff)
                 const noise = Math.random();
-                context.lpfState = noise * (1 - lpfCoeff) + context.lpfState * lpfCoeff;
-
-                // Process each channel with phase offset
-                for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const offset = ch * parameters.blockSize;
-                    
-                    // Apply channel phase offset
-                    const channelOffset = ch * channelPhaseRad;
-                    const channelPhase = context.phase + channelOffset;
-                    
-                    // Generate and filter noise for this channel
+                lpfState = noise * invLpfCoeff + lpfState * lpfCoeff;
+        
+                // --- Process Each Channel ---
+                for (let ch = 0; ch < channelCount; ++ch) {
+                    const offset = ch * blockSize;
+        
+                    // Calculate channel-specific phase
+                    const currentChannelPhase = phase + ch * channelPhaseRad;
+        
+                    // Generate and filter channel-specific noise
                     const channelNoise = Math.random();
-                    context.channelLpfStates[ch] = channelNoise * (1 - lpfCoeff) + context.channelLpfStates[ch] * lpfCoeff;
-                    
-                    // Blend between channel-specific and common LPF based on sync ratio
-                    const filteredNoise = syncRatio * context.lpfState + (1 - syncRatio) * context.channelLpfStates[ch];
-
-                    // Calculate volume modulation in dB
-                    const baseModulation = (1 - Math.cos(channelPhase)) * 0.5; // 0-1 range
-                    const noiseContribution = (filteredNoise - 0.5) * 2 * randomness; // -randomness to +randomness range
-                    const totalModulationDB = -(baseModulation * depth + noiseContribution);
-
-                    // Convert dB to linear gain
-                    const gain = Math.pow(10, totalModulationDB / 20);
-                    
-                    // Apply gain to input sample
+                    // Update the state array directly
+                    channelLpfStates[ch] = channelNoise * invLpfCoeff + channelLpfStates[ch] * lpfCoeff;
+        
+                    // Blend common and channel noise based on sync ratio
+                    // Using pre-calculated (1 - syncRatio)
+                    const filteredNoise = syncRatio * lpfState + invSyncRatio * channelLpfStates[ch];
+        
+                    // --- Calculate Gain ---
+                    // Calculate base modulation (0 to 1 range)
+                    // Math.cos is kept as it's fundamental to the LFO shape
+                    const baseModulation = (1.0 - Math.cos(currentChannelPhase)) * 0.5; 
+        
+                    // Calculate noise contribution (-randomness to +randomness range)
+                    // Using pre-calculated -randomness * 2
+                    const noiseContribution = (filteredNoise - 0.5) * negRandomnessX2;
+        
+                    // Calculate total modulation in dB
+                    // Using pre-calculated -depth
+                    const totalModulationDB = baseModulation * negDepth + noiseContribution;
+        
+                    // Convert dB to linear gain using Math.pow(10, db * 0.05)
+                    // Math.pow is generally necessary for accurate dB conversion
+                    const gain = Math.pow(10.0, totalModulationDB * inv20);
+        
+                    // Apply gain to the sample in the data buffer
                     data[offset + i] *= gain;
                 }
             }
-
+        
+            // --- Store Updated State ---
+            // Write local state variables back to context object
+            context.phase = phase;
+            context.lpfState = lpfState;
+            // channelLpfStates was modified in-place, no need to reassign context.channelLpfStates
+        
+            // Return the modified data buffer
             return data;
         `);
     }
@@ -167,22 +210,22 @@ class TremoloPlugin extends PluginBase {
 
     setParameters(params) {
         if (params.rt !== undefined) {
-            this.rt = Math.max(0.1, Math.min(20, params.rt));
+            this.rt = params.rt < 0.1 ? 0.1 : (params.rt > 20 ? 20 : params.rt);
         }
         if (params.dp !== undefined) {
-            this.dp = Math.max(0, Math.min(12, params.dp));
+            this.dp = params.dp < 0 ? 0 : (params.dp > 12 ? 12 : params.dp);
         }
         if (params.rn !== undefined) {
-            this.rn = Math.max(0, Math.min(96, params.rn));
+            this.rn = params.rn < 0 ? 0 : (params.rn > 96 ? 96 : params.rn);
         }
         if (params.rc !== undefined) {
-            this.rc = Math.max(1, Math.min(1000, params.rc));
+            this.rc = params.rc < 1 ? 1 : (params.rc > 1000 ? 1000 : params.rc);
         }
         if (params.cp !== undefined) {
-            this.cp = Math.max(-180, Math.min(180, params.cp));
+            this.cp = params.cp < -180 ? -180 : (params.cp > 180 ? 180 : params.cp);
         }
         if (params.cs !== undefined) {
-            this.cs = Math.max(0, Math.min(100, params.cs));
+            this.cs = params.cs < 0 ? 0 : (params.cs > 100 ? 100 : params.cs);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;

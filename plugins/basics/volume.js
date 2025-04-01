@@ -13,13 +13,9 @@ class VolumePlugin extends PluginBase {
             } = parameters;
             
             const gain = Math.pow(10, volume / 20);
-            const currentGain = getFadeValue(parameters.id, gain, time);
-            
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    data[offset + i] *= currentGain;
-                }
+            const len = data.length;
+            for (let i = 0; i < len ; i++) {
+                data[i] *= gain;
             }
             return data;
         `);
@@ -28,7 +24,7 @@ class VolumePlugin extends PluginBase {
     // Set parameters
     setParameters(params) {
         if (params.vl !== undefined) {
-            this.vl = Math.max(-60, Math.min(24, params.vl));
+            this.vl = params.vl < -60 ? -60 : (params.vl > 24 ? 24 : params.vl);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -80,7 +76,8 @@ class VolumePlugin extends PluginBase {
         valueInput.name = `${this.id}-${this.name}-input`;
         valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
-            const value = Math.max(-60, Math.min(24, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < -60 ? -60 : (parsedValue > 24 ? 24 : parsedValue);
             this.setVl(value);
             slider.value = value;
             e.target.value = value;

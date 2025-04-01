@@ -22,13 +22,11 @@ class SaturationPlugin extends PluginBase {
             const gainLinear = Math.pow(10, gain / 20);
             const biasOffset = Math.tanh(drive * bias);
 
-            for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                for (let i = 0; i < blockSize; i++) {
-                    const dry = data[offset + i];
-                    const wet = Math.tanh(drive * (dry + bias)) - biasOffset;
-                    data[offset + i] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
-                }
+            const len = data.length;
+            for (let i = 0; i < len; i++) {
+                const dry = data[i];
+                const wet = Math.tanh(drive * (dry + bias)) - biasOffset;
+                data[i] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
             }
             return data;
         `);
@@ -37,19 +35,19 @@ class SaturationPlugin extends PluginBase {
     setParameters(params) {
         let graphNeedsUpdate = false;
         if (params.dr !== undefined) {
-            this.dr = Math.max(0, Math.min(10, params.dr));
+            this.dr = params.dr < 0 ? 0 : (params.dr > 10 ? 10 : params.dr);
             graphNeedsUpdate = true;
         }
         if (params.bs !== undefined) {
-            this.bs = Math.max(-0.3, Math.min(0.3, params.bs));
+            this.bs = params.bs < -0.3 ? -0.3 : (params.bs > 0.3 ? 0.3 : params.bs);
             graphNeedsUpdate = true;
         }
         if (params.mx !== undefined) {
-            this.mx = Math.max(0, Math.min(100, params.mx));
+            this.mx = params.mx < 0 ? 0 : (params.mx > 100 ? 100 : params.mx);
             graphNeedsUpdate = true;
         }
         if (params.gn !== undefined) {
-            this.gn = Math.max(-18, Math.min(18, params.gn));
+            this.gn = params.gn < -18 ? -18 : (params.gn > 18 ? 18 : params.gn);
             graphNeedsUpdate = true;
         }
         if (params.enabled !== undefined) {
@@ -179,7 +177,8 @@ class SaturationPlugin extends PluginBase {
         driveValue.name = `${this.id}-${this.name}-drive-value`;
         driveValue.autocomplete = "off";
         driveValue.addEventListener('input', (e) => {
-            const value = Math.max(0, Math.min(10, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
             this.setDr(value);
             driveSlider.value = value;
             e.target.value = value;
@@ -221,7 +220,8 @@ class SaturationPlugin extends PluginBase {
         biasValue.name = `${this.id}-${this.name}-bias-value`;
         biasValue.autocomplete = "off";
         biasValue.addEventListener('input', (e) => {
-            const value = Math.max(-0.3, Math.min(0.3, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < -0.3 ? -0.3 : (parsedValue > 0.3 ? 0.3 : parsedValue);
             this.setBs(value);
             biasSlider.value = value;
             e.target.value = value;
@@ -263,7 +263,8 @@ class SaturationPlugin extends PluginBase {
         mixValue.name = `${this.id}-${this.name}-mix-value`;
         mixValue.autocomplete = "off";
         mixValue.addEventListener('input', (e) => {
-            const value = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < 0 ? 0 : (parsedValue > 100 ? 100 : parsedValue);
             this.setMx(value);
             mixSlider.value = value;
             e.target.value = value;
@@ -319,7 +320,8 @@ class SaturationPlugin extends PluginBase {
         gainValue.name = `${this.id}-${this.name}-gain-value`;
         gainValue.autocomplete = "off";
         gainValue.addEventListener('input', (e) => {
-            const value = Math.max(-18, Math.min(18, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < -18 ? -18 : (parsedValue > 18 ? 18 : parsedValue);
             this.setGn(value);
             gainSlider.value = value;
             e.target.value = value;

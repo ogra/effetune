@@ -2,7 +2,7 @@ class ToneControlPlugin extends PluginBase {
     static processorFunction = `
         if (!parameters.enabled) return data;
         
-        const { bs, md, tr, channelCount, blockSize } = parameters;
+        const { bs, md, tr, channelCount, blockSize, sampleRate } = parameters;
         
         // Initialize filter states in context if not exists
         // Filter states for second-order filters for bass, mid, and treble (x1, x2, y1, y2)
@@ -96,7 +96,7 @@ class ToneControlPlugin extends PluginBase {
                 let y = x;
                 
                 // Process Bass filter (Low Shelf)
-                if (Math.abs(bs) > 1e-6) {
+                if ((bs >= 0 ? bs : -bs) > 1e-6) {
                     let x0 = y;
                     let y0 = bassB0 * x0 + bassB1 * filterStates.bass1[ch] + bassB2 * filterStates.bass2[ch]
                              - bassA1 * filterStates.bass3[ch] - bassA2 * filterStates.bass4[ch];
@@ -108,7 +108,7 @@ class ToneControlPlugin extends PluginBase {
                 }
                 
                 // Process Mid filter (Peaking)
-                if (Math.abs(md) > 1e-6) {
+                if ((md >= 0 ? md : -md) > 1e-6) {
                     let x0 = y;
                     let y0 = midB0 * x0 + midB1 * filterStates.mid1[ch] + midB2 * filterStates.mid2[ch]
                              - midA1 * filterStates.mid3[ch] - midA2 * filterStates.mid4[ch];
@@ -120,7 +120,7 @@ class ToneControlPlugin extends PluginBase {
                 }
                 
                 // Process Treble filter (High Shelf)
-                if (Math.abs(tr) > 1e-6) {
+                if ((tr >= 0 ? tr : -tr) > 1e-6) {
                     let x0 = y;
                     let y0 = trebleB0 * x0 + trebleB1 * filterStates.treble1[ch] + trebleB2 * filterStates.treble2[ch]
                              - trebleA1 * filterStates.treble3[ch] - trebleA2 * filterStates.treble4[ch];
@@ -153,17 +153,20 @@ class ToneControlPlugin extends PluginBase {
 
     // Parameter setters
     setBass(value) {
-        this.bs = Math.max(-24, Math.min(24, typeof value === 'number' ? value : parseFloat(value)));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.bs = parsedValue < -24 ? -24 : (parsedValue > 24 ? 24 : parsedValue);
         this.updateParameters();
     }
 
     setMid(value) {
-        this.md = Math.max(-24, Math.min(24, typeof value === 'number' ? value : parseFloat(value)));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.md = parsedValue < -24 ? -24 : (parsedValue > 24 ? 24 : parsedValue);
         this.updateParameters();
     }
 
     setTreble(value) {
-        this.tr = Math.max(-24, Math.min(24, typeof value === 'number' ? value : parseFloat(value)));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.tr = parsedValue < -24 ? -24 : (parsedValue > 24 ? 24 : parsedValue);
         this.updateParameters();
     }
 

@@ -12,14 +12,9 @@ class DCOffsetPlugin extends PluginBase {
                 channelCount, blockSize, type 
             } = parameters;
             
-            const dcOffset = offset;
-            const currentOffset = getFadeValue(parameters.type, dcOffset, time);
-            
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const channelOffset = ch * parameters.blockSize;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    data[channelOffset + i] += currentOffset;
-                }
+            const len = data.length
+            for (let i = 0; i < len; i++) {
+                data[i] += offset;
             }
             return data;
         `);
@@ -28,7 +23,7 @@ class DCOffsetPlugin extends PluginBase {
     // Set parameters
     setParameters(params) {
         if (params.of !== undefined) {
-            this.of = Math.max(-1, Math.min(1, params.of));
+            this.of = params.of < -1 ? -1 : (params.of > 1 ? 1 : params.of);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -80,7 +75,8 @@ class DCOffsetPlugin extends PluginBase {
         valueInput.name = `${this.id}-${this.name}-input`;
         valueInput.autocomplete = "off";
         valueInput.addEventListener('input', (e) => {
-            const value = Math.max(-1, Math.min(1, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < -1 ? -1 : (parsedValue > 1 ? 1 : parsedValue);
             this.setOf(value);
             slider.value = value;
             e.target.value = value;

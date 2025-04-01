@@ -6,82 +6,135 @@ class HardClippingPlugin extends PluginBase {
 
         // Register processor function with 4x oversampling and additional one-pole IIR smoothing
         this.registerProcessor(`
+            // Early exit if disabled
             if (!parameters.enabled) return data;
-            
-            // Pre-calculate constants for efficiency
-            const { 
-                th: threshold,  // th: Threshold (-60 to 0 dB)
-                md: mode,       // md: Mode ('both', 'positive', 'negative')
-                channelCount, 
-                blockSize 
+
+            // --- Parameter Destructuring & Constant Calculation ---
+            const {
+                th: threshold,      // Threshold in dB (-60 to 0)
+                md: mode,           // Mode: 'both', 'positive', 'negative'
+                channelCount,
+                blockSize
             } = parameters;
-            const thresholdLinear = Math.pow(10, threshold / 20);
-            const OS = 4; // Oversampling factor
-            
-            // Allocate oversampling buffers per channel in context if needed
-            if (!context.osBuffer || context.osBuffer.length !== channelCount || context.osBuffer[0].length !== OS * blockSize) {
+
+            // Convert dB threshold to linear gain (do this once)
+            // Avoid Math.pow if threshold is 0 dB (thresholdLinear = 1.0)
+            const thresholdLinear = (threshold === 0) ? 1.0 : Math.pow(10, threshold / 20);
+            // Pre-calculate negative threshold for efficiency
+            const negThreshold = -thresholdLinear;
+
+            // Oversampling factor (fixed at 4x)
+            const OS = 4;
+            const osBlockSize = OS * blockSize; // Oversampled block size
+
+            // One-pole IIR filter coefficient and its complement
+            const lpCoeff = 0.3; // Smoothing factor (0 to 1)
+            const lpCoeff1 = 1.0 - lpCoeff; // Pre-calculate (1 - coeff)
+
+            // --- Context Initialization & Buffer Management ---
+            // Check if context needs initialization or buffer resizing
+            const needsReset = !context.osBuffer || context.osBuffer.length !== channelCount ||
+                               context.osBuffer[0].length !== osBlockSize ||
+                               !context.lpPrev || context.lpPrev.length !== channelCount;
+
+            if (needsReset) {
+                // Allocate/Reallocate oversampling buffers
                 context.osBuffer = new Array(channelCount);
                 for (let ch = 0; ch < channelCount; ch++) {
-                    context.osBuffer[ch] = new Float32Array(OS * blockSize);
+                    context.osBuffer[ch] = new Float32Array(osBlockSize);
                 }
+                // Allocate/Reallocate filter state only if necessary
+                if (!context.lpPrev || context.lpPrev.length !== channelCount) {
+                    context.lpPrev = new Array(channelCount).fill(0.0); // Initialize with 0.0
+                }
+                // Note: Existing filter states in lpPrev are preserved if only osBuffer was resized.
             }
-            // Allocate one-pole filter state per channel if not existing
-            if (!context.lpPrev || context.lpPrev.length !== channelCount) {
-                context.lpPrev = new Array(channelCount).fill(0);
-            }
-            // Smoothing factor for one-pole IIR filter (tweak between 0 (no smoothing) and 1)
-            const lpCoeff = 0.3;
-            
-            // Process each channel
+
+            // --- Main Processing Loop (Per Channel) ---
             for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                const os = context.osBuffer[ch];
-                
-                // Upsample: linear interpolation to OS times more samples
+                const offset = ch * blockSize; // Input/Output offset for this channel
+                // Cache context arrays/values for faster access within the loop
+                const os = context.osBuffer[ch]; // Oversampling buffer for this channel
+                let lpPrev = context.lpPrev[ch];   // IIR filter state (use let for update)
+
+                // --- 1. Upsampling (Linear Interpolation) ---
+                // Process input samples and fill the oversampling buffer 'os'
+                // We need the sample *before* the current block for the first interpolation step.
+                // However, the original code didn't explicitly handle state across blocks for interpolation.
+                // Replicating original behavior: first sample interpolates towards the second.
                 for (let j = 0; j < blockSize; j++) {
-                    const x0 = data[offset + j];
-                    const x1 = (j < blockSize - 1) ? data[offset + j + 1] : x0;
+                    const idx0 = offset + j;
+                    const x0 = data[idx0];
+                    // Handle boundary: For the last sample, interpolate towards itself (delta=0)
+                    const x1 = (j < blockSize - 1) ? data[idx0 + 1] : x0;
                     const delta = x1 - x0;
-                    os[OS * j]     = x0;
-                    os[OS * j + 1] = x0 + 0.25 * delta;
-                    os[OS * j + 2] = x0 + 0.5  * delta;
-                    os[OS * j + 3] = x0 + 0.75 * delta;
+                    const osBase = OS * j; // Base index in oversampling buffer
+
+                    // Perform 4x linear interpolation
+                    os[osBase    ] = x0;
+                    os[osBase + 1] = x0 + 0.25 * delta;
+                    os[osBase + 2] = x0 + 0.50 * delta; // Use 0.50 for clarity
+                    os[osBase + 3] = x0 + 0.75 * delta;
                 }
-                
-                // Apply hard clipping on the oversampled signal
-                for (let i = 0; i < OS * blockSize; i++) {
-                    let s = os[i];
-                    if (mode === 'both') {
+
+                // --- 2. Hard Clipping (Oversampled Domain) ---
+                // Apply clipping based on the selected mode.
+                // Branching on 'mode' outside the inner loop is more efficient.
+                if (mode === 'both') {
+                    for (let i = 0; i < osBlockSize; i++) {
+                        const s = os[i];
+                        // Use if/else if (faster than Math.min/max per requirement)
                         if (s > thresholdLinear) {
-                            s = thresholdLinear;
-                        } else if (s < -thresholdLinear) {
-                            s = -thresholdLinear;
+                            os[i] = thresholdLinear;
+                        } else if (s < negThreshold) {
+                            os[i] = negThreshold;
                         }
-                    } else if (mode === 'positive' && s > thresholdLinear) {
-                        s = thresholdLinear;
-                    } else if (mode === 'negative' && s < -thresholdLinear) {
-                        s = -thresholdLinear;
+                        // else: sample is within threshold, no change needed os[i] = s;
                     }
-                    os[i] = s;
+                } else if (mode === 'positive') {
+                    for (let i = 0; i < osBlockSize; i++) {
+                        const s = os[i];
+                        if (s > thresholdLinear) {
+                            os[i] = thresholdLinear;
+                        }
+                    }
+                } else { // Assume mode === 'negative'
+                    for (let i = 0; i < osBlockSize; i++) {
+                        const s = os[i];
+                        if (s < negThreshold) {
+                            os[i] = negThreshold;
+                        }
+                    }
                 }
-                
-                // Downsample: apply a simple FIR low-pass filter and decimate by factor OS
-                // FIR filter coefficients: [0.125, 0.375, 0.375, 0.125]
+                // Note: If 'mode' could be invalid, add a default case or error handling.
+
+                // --- 3. Downsampling (FIR + IIR Filtering & Decimation) ---
+                // Apply FIR and IIR filters, then write one sample back to the original data buffer for every OS samples processed.
                 for (let j = 0; j < blockSize; j++) {
-                    const base = OS * j;
-                    const w0 = os[base];
-                    const w1 = os[base + 1];
-                    const w2 = os[base + 2];
-                    const w3 = os[base + 3];
-                    let firOut = w0 * 0.125 + w1 * 0.375 + w2 * 0.375 + w3 * 0.125;
-                    
-                    // Additional one-pole IIR low-pass filter for further aliasing reduction
-                    const filtered = lpCoeff * firOut + (1 - lpCoeff) * context.lpPrev[ch];
-                    context.lpPrev[ch] = filtered;
-                    
+                    const osBase = OS * j; // Base index in oversampling buffer for the current output sample
+
+                    // Simple FIR low-pass filter coefficients: [0.125, 0.375, 0.375, 0.125]
+                    // This specific FIR filter averages 4 samples with weighting.
+                    const firOut = os[osBase    ] * 0.125 +
+                                 os[osBase + 1] * 0.375 +
+                                 os[osBase + 2] * 0.375 +
+                                 os[osBase + 3] * 0.125;
+
+                    // Additional one-pole IIR low-pass filter for smoothing / further aliasing reduction
+                    // Use pre-calculated (1.0 - lpCoeff) -> lpCoeff1
+                    const filtered = lpCoeff * firOut + lpCoeff1 * lpPrev;
+                    lpPrev = filtered; // Update the local filter state for the next sample
+
+                    // Write the final downsampled and filtered sample back to the original buffer
                     data[offset + j] = filtered;
                 }
+
+                // --- Update Context State ---
+                // Store the final IIR filter state back into the context for the next block
+                context.lpPrev[ch] = lpPrev;
             }
+
+            // Return the modified data buffer
             return data;
         `);
     }
@@ -91,7 +144,7 @@ class HardClippingPlugin extends PluginBase {
         let graphNeedsUpdate = false;
 
         if (params.th !== undefined) {
-            this.th = Math.max(-60, Math.min(0, params.th));
+            this.th = params.th < -60 ? -60 : (params.th > 0 ? 0 : params.th);
             graphNeedsUpdate = true;
         }
         if (params.md !== undefined) {
@@ -263,7 +316,8 @@ class HardClippingPlugin extends PluginBase {
         thresholdValue.name = `${this.id}-${this.name}-threshold-value`;
         thresholdValue.autocomplete = "off";
         thresholdValue.addEventListener('input', (e) => {
-            const value = Math.max(-60, Math.min(0, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < -60 ? -60 : (parsedValue > 0 ? 0 : parsedValue);
             this.setTh(value);
             thresholdSlider.value = value;
             e.target.value = value;

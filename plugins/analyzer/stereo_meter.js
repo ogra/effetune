@@ -24,85 +24,135 @@ class StereoMeterPlugin extends PluginBase {
     }
 
     // Register the Audio Worklet Processor
-    this.registerProcessor(`
-      // Compute a dynamic buffer size based on the sample rate.
-      const maxWindowSec = 1.0; // Maximum window time (1 second)
-      const requiredSamples = Math.ceil(parameters.sampleRate * maxWindowSec);
-      let computedBufferSize = 1;
-      while (computedBufferSize < requiredSamples) {
-        computedBufferSize *= 2;
+  this.registerProcessor(`
+    // --- Optimization: Pre-calculate constant ---
+    const RADIANS_TO_DEGREES = 180 / Math.PI;
+    // --- Optimization: Pre-calculate constant for decay ---
+    // -20 dB/s decay corresponds to amplitude multiplication by 10^(-t)
+    // Math.pow(10, -t) = Math.exp(-t * Math.LN10)
+    const LOG10 = Math.LN10; // Cache Math.LN10
+
+    // Compute a dynamic buffer size based on the sample rate.
+    const maxWindowSec = 1.0; // Maximum window time (1 second)
+    // --- Optimization: Use const for parameters that don't change locally ---
+    const sampleRate = parameters.sampleRate;
+    const requiredSamples = Math.ceil(sampleRate * maxWindowSec);
+    let computedBufferSize = 1;
+    // Use Math.pow and Math.ceil for potentially clearer intent and potential micro-optimization
+    // Although the original while loop is likely very fast anyway as requiredSamples is not excessively large.
+    // Let's stick to the original loop for exact behavior matching, as performance gain is negligible here.
+    while (computedBufferSize < requiredSamples) {
+      computedBufferSize *= 2;
+    }
+
+    // Initialize or update state if the buffer size has changed.
+    if (!context.initialized || context.bufferSize !== computedBufferSize) {
+      context.bufferSize = computedBufferSize;
+      // --- Optimization: Removed unused context.buffer allocation ---
+      // const { channelCount } = parameters; // channelCount only used for removed buffer
+      // context.buffer = new Array(channelCount);
+      // for (let i = 0; i < channelCount; i++) {
+      //   context.buffer[i] = new Float32Array(context.bufferSize);
+      // }
+      context.bufferPosition = 0;
+      context.initialized = true;
+      context.lastPeakUpdateTime = time; // Initialize peak update time
+      // Allocate necessary buffers
+      context.xBuffer = new Float32Array(context.bufferSize);
+      context.yBuffer = new Float32Array(context.bufferSize);
+      context.peakBuffer = new Float32Array(360); // Remains 360 regardless of bufferSize
+      // --- Optimization: Initialize peakBuffer to 0 explicitly if needed ---
+      // Although Float32Array is zero-initialized by default, being explicit can sometimes clarify.
+      // context.peakBuffer.fill(0); // Keep implicit zero-init for brevity matching original
+    }
+
+    const result = new Float32Array(data.length);
+    result.set(data); // Preserve the copy
+
+    // --- Optimization: Destructure parameters once ---
+    // Note: sampleRate already destructured above. channelCount is no longer needed here.
+    const { blockSize } = parameters; // Assuming data contains interleaved stereo channels
+
+    // --- Optimization: Alias context properties frequently accessed in the loop ---
+    // This reduces property lookups inside the hot loop.
+    const xBuffer = context.xBuffer;
+    const yBuffer = context.yBuffer;
+    const peakBuffer = context.peakBuffer;
+    const bufferSize = context.bufferSize;
+    // Use a local variable for bufferPosition within the loop
+    let currentPosition = context.bufferPosition;
+    // --- Optimization: Pre-calculate bufferSize - 1 for bitwise AND ---
+    const bufferMask = bufferSize - 1; // Valid because bufferSize is power of 2
+
+    // Process each sample in the current block.
+    for (let i = 0; i < blockSize; i++) {
+      // --- Optimization: Direct indexing assuming interleaved stereo ---
+      // data layout: [L0, R0, L1, R1, ...] -> This is NOT what the original code does.
+      // Original code accesses: left = data[i], right = data[i + blockSize]
+      // This assumes data layout: [L0, L1, ..., L(blockSize-1), R0, R1, ..., R(blockSize-1)]
+      // Assuming channelCount is 2 and data is planar (separate blocks per channel).
+      // Let's stick PRECISELY to the original access pattern.
+      const left = data[i];
+      const right = data[i + blockSize]; // Assumes planar layout [LLL...RRR...]
+
+      // Calculate x and y values.
+      const x = right - left; // x = R - L
+      const y = left + right; // y = L + R
+
+      // Store x and y in circular buffers using local alias.
+      xBuffer[currentPosition] = x;
+      yBuffer[currentPosition] = y;
+
+      // Compute angle (in degrees) and magnitude.
+      // --- Optimization: Use pre-calculated constant ---
+      const angle = -Math.atan2(y, x) * RADIANS_TO_DEGREES;
+      // --- Optimization: Calculation is necessary, sqrt/atan2 are inherent costs ---
+      const magnitude = Math.sqrt(x * x + y * y); // Can't avoid sqrt if true magnitude needed
+
+      // Update the peak value for the corresponding angle.
+      const angleIndex = ((Math.round(angle) % 360) + 360) % 360;
+
+      // Use local alias for peakBuffer access
+      if (magnitude > peakBuffer[angleIndex]) {
+        peakBuffer[angleIndex] = magnitude;
       }
-      
-      // Initialize or update state if the buffer size has changed.
-      if (!context.initialized || context.bufferSize !== computedBufferSize) {
-        context.bufferSize = computedBufferSize;
-        const { channelCount } = parameters;
-        context.buffer = new Array(channelCount);
-        for (let i = 0; i < channelCount; i++) {
-          context.buffer[i] = new Float32Array(context.bufferSize);
-        }
-        context.bufferPosition = 0;
-        context.initialized = true;
-        context.lastPeakUpdateTime = time;
-        context.xBuffer = new Float32Array(context.bufferSize);
-        context.yBuffer = new Float32Array(context.bufferSize);
-        context.peakBuffer = new Float32Array(360);
+
+      // Advance the circular buffer position using bitwise AND and local variable.
+      currentPosition = (currentPosition + 1) & bufferMask;
+    }
+    // --- Optimization: Update context state variable after the loop ---
+    context.bufferPosition = currentPosition;
+
+    // Apply a peak decay of -20 dB/s.
+    const lastPeakUpdateTime = context.lastPeakUpdateTime; // Use local var
+    const timeDelta = time - lastPeakUpdateTime;
+
+    if (timeDelta > 0) {
+      // --- Optimization: Use Math.exp and cached Math.LN10 ---
+      // Potentially faster than Math.pow(10, x) on some engines. Behavior is identical.
+      const decayFactor = Math.exp(-timeDelta * LOG10);
+      // Use local alias for peakBuffer access
+      // --- Optimization: Loop unrolling unlikely to help much for 360 iterations ---
+      for (let i = 0; i < 360; i++) {
+        peakBuffer[i] *= decayFactor;
       }
+      context.lastPeakUpdateTime = time; // Update time after applying decay
+    }
 
-      // Copy the input data to a result buffer.
-      const result = new Float32Array(data.length);
-      result.set(data);
+    // Attach measurements to the result array.
+    // Functionality requires attaching these exact properties.
+    result.measurements = {
+      xBuffer: context.xBuffer, // Return the buffer from context
+      yBuffer: context.yBuffer, // Return the buffer from context
+      peakBuffer: context.peakBuffer, // Return the buffer from context
+      currentPosition: context.bufferPosition, // Return the final position
+      time: time,
+      sampleRate: sampleRate // Use the value derived earlier
+    };
 
-      const { channelCount, blockSize } = parameters;
-      
-      // Process each sample in the current block.
-      for (let i = 0; i < blockSize; i++) {
-        const left = data[i];
-        const right = data[i + blockSize];
-
-        // Calculate x and y values.
-        const x = right - left; // x = R - L
-        const y = left + right; // y = L + R
-
-        // Store x and y in circular buffers.
-        context.xBuffer[context.bufferPosition] = x;
-        context.yBuffer[context.bufferPosition] = y;
-
-        // Compute angle (in degrees) and magnitude.
-        const angle = -Math.atan2(y, x) * 180 / Math.PI;
-        const magnitude = Math.sqrt(x * x + y * y);
-
-        // Update the peak value for the corresponding angle.
-        const angleIndex = ((Math.round(angle) % 360) + 360) % 360;
-        if (magnitude > context.peakBuffer[angleIndex]) {
-          context.peakBuffer[angleIndex] = magnitude;
-        }
-
-        // Advance the circular buffer position.
-        context.bufferPosition = (context.bufferPosition + 1) & (context.bufferSize - 1);
-      }
-
-      // Apply a peak decay of -20 dB/s.
-      const timeDelta = time - context.lastPeakUpdateTime;
-      if (timeDelta > 0) {
-        const decayFactor = Math.pow(10, -timeDelta);
-        for (let i = 0; i < 360; i++) {
-          context.peakBuffer[i] *= decayFactor;
-        }
-        context.lastPeakUpdateTime = time;
-      }
-
-      result.measurements = {
-        xBuffer: context.xBuffer,
-        yBuffer: context.yBuffer,
-        peakBuffer: context.peakBuffer,
-        currentPosition: context.bufferPosition,
-        time: time,
-        sampleRate: parameters.sampleRate
-      };
-
-      return result;
-    `);
+    // Return the copied input data with attached measurements.
+    return result;
+  `);
   }
 
   createUI() {
@@ -176,7 +226,7 @@ class StereoMeterPlugin extends PluginBase {
     const newValue = typeof value === 'number' ? value : parseFloat(value);
     if (!isNaN(newValue)) {
       // Clamp the value between 10 ms (0.01 sec) and 1000 ms (1 sec).
-      this.windowTime = Math.max(0.01, Math.min(newValue, 1.0));
+      this.windowTime = newValue < 0.01 ? 0.01 : (newValue > 1.0 ? 1.0 : newValue);
     }
     this.updateParameters();
   }
@@ -385,7 +435,7 @@ class StereoMeterPlugin extends PluginBase {
 
     // Draw the correlation bar on the left edge.
     const barThickness = 16;
-    const corrBarHeight = Math.abs(correlation) * centerY;
+    const corrBarHeight = (correlation >= 0 ? correlation : -correlation) * centerY;
     ctx.fillStyle = '#008000';
     if (correlation >= 0) {
       ctx.fillRect(0, centerY - corrBarHeight, barThickness, corrBarHeight);
@@ -413,7 +463,7 @@ class StereoMeterPlugin extends PluginBase {
 
     // Draw the energy difference bar at the bottom.
     const energyMax = 18;
-    const energyDiffClamped = Math.max(-energyMax, Math.min(energyMax, energyDiff));
+    const energyDiffClamped = energyDiff < -energyMax ? -energyMax : (energyDiff > energyMax ? energyMax : energyDiff);
     const halfCanvasWidth = width / 2;
     const energyBarLength = (energyDiffClamped / energyMax) * halfCanvasWidth;
     const energyBarY = height - barThickness;

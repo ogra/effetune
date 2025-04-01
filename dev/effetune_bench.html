@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EffeTune Plugin Benchmark</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .benchmark-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        .benchmark-table th, .benchmark-table td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+        .benchmark-table th {
+            background-color: #333;
+            color: #fff;
+        }
+        .benchmark-table tr:nth-child(even) {
+            background-color: #2a2a2a;
+        }
+        .benchmark-table tr:hover {
+            background-color: #383838;
+        }
+        .benchmark-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            border-left: 4px solid #9C27B0;
+        }
+        .benchmark-container h2 {
+            margin-top: 0;
+            color: #9C27B0;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .warning {
+            color: #FFC107;
+        }
+        .error {
+            color: #f44336;
+            margin: 5px 0;
+            padding: 8px;
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 3px solid #f44336;
+            border-radius: 2px;
+        }
+        /* Button style matching effetune.css */
+        .benchmark-button {
+            padding: 8px 16px;
+            background-color: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .benchmark-button:hover {
+            background-color: #3d3d3d;
+        }
+        .benchmark-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #benchmark-status {
+            margin-top: 10px;
+            color: #e0e0e0;
+        }
+        .copy-button {
+            padding: 6px 12px;
+            background-color: #444;
+            border: 1px solid #555;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        .copy-button:hover {
+            background-color: #555;
+        }
+        .copy-button:active {
+            background-color: #666;
+        }
+        .copy-button svg {
+            margin-right: 6px;
+            width: 16px;
+            height: 16px;
+        }
+        .copy-success {
+            margin-left: 10px;
+            color: #4CAF50;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .copy-success.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>EffeTune Plugin Performance Benchmark</h1>
+    <div id="benchmark-results" class="benchmark-container">
+        <h2>Plugin Performance Benchmark</h2>
+        <button id="run-benchmarks" class="benchmark-button">Run Benchmarks</button>
+        <div id="benchmark-status">Click "Run Benchmarks" to start performance testing.</div>
+        <div id="benchmark-table-container"></div>
+    </div>
+
+    <script type="module">
+        import { PluginManager } from '../js/plugin-manager.js';
+        import { loadScript, loadCSS } from '../js/script-loader.js';
+
+        // Customized plugin manager
+        class TestPluginManager extends PluginManager {
+            async loadPlugins() {
+                try {
+                    // Load plugins from parent directory
+                    const response = await fetch('../plugins/plugins.txt');
+                    const text = await response.text();
+                    
+                    // Parse plugins.txt
+                    const categories = {};
+                    const pluginDefinitions = new Map();
+                    let currentSection = null;
+
+                    // First load the base plugin class
+                    await loadScript('../plugins/plugin-base.js');
+
+                    text.split('\n').forEach(line => {
+                        line = line.trim();
+                        if (!line || line.startsWith('#')) return;
+
+                        if (line === '[categories]') {
+                            currentSection = 'categories';
+                        } else if (line === '[plugins]') {
+                            currentSection = 'plugins';
+                        } else if (currentSection === 'categories') {
+                            const [name, description] = line.split(':').map(s => s.trim());
+                            categories[name] = {
+                                description,
+                                plugins: []
+                            };
+                        } else if (currentSection === 'plugins') {
+                            const [path, info] = line.split(':').map(s => s.trim());
+                            const [displayName, category, className, hasCSS] = info.split('|').map(s => s.trim());
+                            pluginDefinitions.set(displayName, {
+                                path: `../plugins/${path}`,
+                                category,
+                                className,
+                                hasCSS: hasCSS === 'css'
+                            });
+                            categories[category].plugins.push(displayName);
+                        }
+                    });
+
+                    // Group plugins by category for parallel loading
+                    const categoryPlugins = {};
+                    for (const [displayName, {path, category, hasCSS}] of pluginDefinitions) {
+                        if (!categoryPlugins[category]) {
+                            categoryPlugins[category] = [];
+                        }
+                        categoryPlugins[category].push({displayName, path, hasCSS});
+                    }
+
+                    // Load plugins in parallel by category
+                    const loadCategory = async (plugins) => {
+                        const loadPromises = plugins.flatMap(({displayName, path, hasCSS}) => {
+                            const promises = [
+                                loadScript(`${path}.js`).catch(error => {
+                                    throw new Error(`Failed to load plugin script for ${displayName}: ${error.message}`);
+                                })
+                            ];
+                            
+                            if (hasCSS) {
+                                promises.push(
+                                    loadCSS(`${path}.css`).catch(error => {
+                                        throw new Error(`Failed to load CSS for ${displayName}: ${error.message}`);
+                                    })
+                                );
+                            }
+                            return promises;
+                        });
+                        
+                        await Promise.all(loadPromises);
+                    };
+
+                    // Load categories in parallel
+                    await Promise.all(
+                        Object.values(categoryPlugins).map(plugins => loadCategory(plugins))
+                    );
+
+                    // Initialize plugin classes mapping
+                    for (const [displayName, {className}] of pluginDefinitions) {
+                        if (!window[className]) {
+                            console.error(`Plugin class ${className} not found`);
+                            continue;
+                        }
+                        this.pluginClasses[displayName] = window[className];
+                    }
+
+                    // Store categories
+                    this.effectCategories = categories;
+
+                    console.log('Loaded plugin classes:', Object.keys(this.pluginClasses));
+                    console.log('Available categories:', categories);
+
+                    return {
+                        pluginClasses: this.pluginClasses,
+                        effectCategories: this.effectCategories
+                    };
+                } catch (error) {
+                    console.error('Error loading plugins:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // Create a random audio buffer for benchmarking
+        function createRandomAudioBuffer(sampleRate, duration, channelCount) {
+            const bufferSize = Math.ceil(sampleRate * duration);
+            const buffer = new Float32Array(bufferSize * channelCount);
+            
+            // Fill with random values between -1 and 1
+            for (let i = 0; i < buffer.length; i++) {
+                buffer[i] = Math.random() * 2 - 1;
+            }
+            
+            return buffer;
+        }
+        
+        // Benchmark a single plugin
+        async function benchmarkPlugin(plugin, audioBuffer, sampleRate, blockSize, channelCount) {
+            // Get plugin parameters and add required values
+            const params = plugin.getParameters();
+            params.channelCount = channelCount;
+            params.blockSize = blockSize;
+            params.sampleRate = sampleRate;
+            
+            // Enable the plugin for benchmarking
+            plugin.setEnabled(true);
+            
+            // Create a context object for the plugin
+            const context = {
+                sampleRate: sampleRate,
+                initialized: false
+            };
+            
+            // Calculate how many blocks are in the buffer
+            const totalBlocks = Math.floor(audioBuffer.length / (blockSize * channelCount));
+            
+            // Prepare for benchmarking
+            let processCount = 0;
+            let blockIndex = 0;
+            const startTime = performance.now();
+            const duration = 1000; // 1 second in milliseconds
+            
+            // Process blocks until 1 second has elapsed
+            while (performance.now() - startTime < duration) {
+                // Get the current block from the buffer
+                const blockOffset = (blockIndex % totalBlocks) * blockSize * channelCount;
+                const inputData = audioBuffer.slice(blockOffset, blockOffset + blockSize * channelCount);
+                
+                // Process the block
+                const time = blockIndex * blockSize / sampleRate;
+                plugin.executeProcessor(context, inputData, params, time);
+                
+                // Increment counters
+                processCount++;
+                blockIndex++;
+            }
+            
+            // Calculate calls per second
+            const elapsedTime = (performance.now() - startTime) / 1000; // Convert to seconds
+            const callsPerSecond = Math.round(processCount / elapsedTime);
+            
+            // Calculate speedup factor (how many times faster than real-time)
+            // At 96kHz, one second of real-time audio contains 96000 samples
+            // Each call processes BUFFER_SIZE samples
+            // So the number of blocks in one second of real-time audio is 96000 / BUFFER_SIZE
+            // The speedup factor is then (calls per second) / (blocks per second of real-time audio)
+            const blocksPerSecondRealtime = 96000 / blockSize;
+            const speedupFactor = callsPerSecond / blocksPerSecondRealtime;
+            
+            return {
+                name: plugin.constructor.name,
+                callsPerSecond: callsPerSecond,
+                totalCalls: processCount,
+                elapsedTime: elapsedTime.toFixed(3),
+                speedupFactor: speedupFactor.toFixed(1) // Format to 1 decimal place
+            };
+        }
+        
+        // Run benchmarks for all plugins
+        async function runBenchmarks() {
+            const benchmarkStatus = document.getElementById('benchmark-status');
+            const benchmarkTableContainer = document.getElementById('benchmark-table-container');
+            const runButton = document.getElementById('run-benchmarks');
+            
+            // Disable the run button during benchmarking
+            runButton.disabled = true;
+            benchmarkStatus.textContent = 'Initializing benchmarks...';
+            
+            try {
+                // Create a plugin manager and load plugins
+                const manager = new TestPluginManager();
+                const { pluginClasses } = await manager.loadPlugins();
+                
+                // Define benchmark parameters
+                const SAMPLE_RATE = 96000; // Using 96kHz sampling rate
+                const BUFFER_SIZE = 128;
+                const CHANNEL_COUNT = 2;
+                const BUFFER_DURATION = 1.5; // 1.5 seconds (longer than 1 second to ensure we have enough data)
+                
+                // Create a random audio buffer
+                benchmarkStatus.textContent = 'Creating audio buffer...';
+                const audioBuffer = createRandomAudioBuffer(SAMPLE_RATE, BUFFER_DURATION, CHANNEL_COUNT);
+                
+                // Benchmark results array
+                const results = [];
+                
+                // Benchmark each plugin
+                let pluginCount = Object.keys(pluginClasses).length;
+                let completedCount = 0;
+                
+                for (const [name, PluginClass] of Object.entries(pluginClasses)) {
+                    benchmarkStatus.textContent = `Benchmarking ${name} (${completedCount + 1}/${pluginCount})...`;
+                    
+                    // Create a plugin instance
+                    const plugin = manager.createPlugin(name);
+                    
+                    // Set special parameters for specific plugins
+                    let result;
+                    if (name === 'Pitch Shifter') {
+                        // Special parameters for PitchShift
+                        plugin.setParameters({ ps: 1 });
+                    } else if (name === 'Time Alignment') {
+                        // Special parameters for Time Alignment
+                        plugin.setParameters({ dl: 10 });
+                    } else if (name === '15Band GEQ') {
+                        // Special parameters for 15Band GEQ
+                        const params = {};
+                        for (let i = 0; i < 15; i++) {
+                            params['b' + i] = i % 2 === 0 ? 1 : -1; // Alternating 1, -1
+                        }
+                        plugin.setParameters(params);
+                    } else if (name === '5Band PEQ') {
+                        // Special parameters for 5Band PEQ
+                        const params = {};
+                        for (let i = 0; i < 5; i++) {
+                            params['g' + i] = i % 2 === 0 ? 1 : -1; // Alternating 1, -1
+                        }
+                        plugin.setParameters(params);
+                    }
+                    result = await benchmarkPlugin(plugin, audioBuffer, SAMPLE_RATE, BUFFER_SIZE, CHANNEL_COUNT);
+                    results.push(result);
+                    
+                    // Update progress
+                    completedCount++;
+                    
+                    // Add a small delay to prevent UI freezing
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                
+                // Sort results by calls per second (ascending)
+                results.sort((a, b) => a.callsPerSecond - b.callsPerSecond);
+                
+                // Create a table to display the results
+                benchmarkStatus.textContent = 'Benchmark completed!';
+                
+                // Create table
+                const table = document.createElement('table');
+                table.className = 'benchmark-table';
+                
+                // Create table header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                ['Plugin', 'Calls/Second', 'Total Calls', 'Time (s)', 'Speed@96k (×)'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Create table body
+                const tbody = document.createElement('tbody');
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+                    
+                    // Plugin name
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = result.name;
+                    row.appendChild(nameCell);
+                    
+                    // Calls per second
+                    const callsPerSecondCell = document.createElement('td');
+                    callsPerSecondCell.textContent = result.callsPerSecond.toLocaleString();
+                    row.appendChild(callsPerSecondCell);
+                    
+                    // Total calls
+                    const totalCallsCell = document.createElement('td');
+                    totalCallsCell.textContent = result.totalCalls.toLocaleString();
+                    row.appendChild(totalCallsCell);
+                    
+                    // Elapsed time
+                    const elapsedTimeCell = document.createElement('td');
+                    elapsedTimeCell.textContent = result.elapsedTime;
+                    row.appendChild(elapsedTimeCell);
+                    
+                    // Speedup factor
+                    const speedupCell = document.createElement('td');
+                    speedupCell.textContent = result.speedupFactor;
+                    row.appendChild(speedupCell);
+                    
+                    tbody.appendChild(row);
+                });
+                table.appendChild(tbody);
+                
+                // Clear previous results and add the table
+                benchmarkTableContainer.innerHTML = '';
+                benchmarkTableContainer.appendChild(table);
+                
+                // Add copy button for the table
+                const copyButtonContainer = document.createElement('div');
+                copyButtonContainer.style.textAlign = 'left';
+                
+                // Create copy button with clipboard icon
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy the results to the clipboard
+                `;
+                
+                // Create success message element
+                const successMessage = document.createElement('span');
+                successMessage.className = 'copy-success';
+                successMessage.textContent = 'The result was copied to the clipboard.!';
+                copyButtonContainer.appendChild(copyButton);
+                copyButtonContainer.appendChild(successMessage);
+                
+                // Add copy button after the table
+                benchmarkTableContainer.appendChild(copyButtonContainer);
+                
+                // Add event listener to copy button
+                copyButton.addEventListener('click', async () => {
+                    try {
+                        console.log('Copy button clicked, preparing table data...');
+                        
+                        // Convert table to text format
+                        let tableText = '';
+                        
+                        // Get header row
+                        const headerCells = table.querySelectorAll('thead th');
+                        const headers = Array.from(headerCells).map(cell => cell.textContent);
+                        tableText += headers.join('\t') + '\n';
+                        
+                        // Get data rows
+                        const rows = table.querySelectorAll('tbody tr');
+                        rows.forEach(row => {
+                            const cells = row.querySelectorAll('td');
+                            const rowData = Array.from(cells).map(cell => cell.textContent);
+                            tableText += rowData.join('\t') + '\n';
+                        });
+                        
+                        console.log('Table data prepared, attempting to copy to clipboard...');
+                        
+                        // Copy to clipboard
+                        await navigator.clipboard.writeText(tableText);
+                        
+                        console.log('Successfully copied to clipboard');
+                        
+                        // Show success message
+                        successMessage.classList.add('show');
+                        setTimeout(() => {
+                            successMessage.classList.remove('show');
+                        }, 2000);
+                    } catch (error) {
+                        console.error('Failed to copy table to clipboard:', error);
+                        alert('Failed to copy table to clipboard: ' + error.message);
+                    }
+                });
+                
+            } catch (error) {
+                benchmarkStatus.textContent = `Error during benchmarking: ${error.message}`;
+                console.error('Benchmark error:', error);
+            } finally {
+                // Re-enable the run button
+                runButton.disabled = false;
+            }
+        }
+        
+        // Add event listener to the run button
+        window.addEventListener('load', () => {
+            const runButton = document.getElementById('run-benchmarks');
+            runButton.addEventListener('click', runBenchmarks);
+        });
+    </script>
+</body>
+</html>

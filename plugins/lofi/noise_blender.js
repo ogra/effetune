@@ -9,94 +9,140 @@ class NoiseBlenderPlugin extends PluginBase {
         
         // Initialize noise generation state
         this.registerProcessor(`
-            // Initialize context for pink noise generation
-            if (!context.initialized) {
-                context.pinkNoise = new Array(parameters.channelCount).fill().map(() => ({
-                    b0: 0, b1: 0, b2: 0, b3: 0, b4: 0, b5: 0, b6: 0
-                }));
+            // --- Context Initialization & State Management ---
+            const { channelCount, blockSize, enabled } = parameters; // Cache parameters early
+
+            // Initialize pink noise state storage if needed
+            // Use Float32Array for performance (index access often faster than property access)
+            // Store 7 state variables (b0 to b6) per channel.
+            const needsInitialization = !context.initialized || !context.pinkNoiseState;
+            const channelCountChanged = context.initialized && context.pinkNoiseState?.length !== channelCount;
+
+            if (needsInitialization || channelCountChanged) {
+                context.pinkNoiseState = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ch++) {
+                    // Each channel gets a 7-element Float32Array for b0-b6 states
+                    context.pinkNoiseState[ch] = new Float32Array(7).fill(0.0);
+                }
                 context.initialized = true;
             }
 
-            // Reset if channel count changes
-            if (context.pinkNoise.length !== parameters.channelCount) {
-                context.pinkNoise = new Array(parameters.channelCount).fill().map(() => ({
-                    b0: 0, b1: 0, b2: 0, b3: 0, b4: 0, b5: 0, b6: 0
-                }));
-            }
+            // Early exit if disabled
+            if (!enabled) return data;
 
-            if (!parameters.enabled) return data;
-
-            // Map shortened parameter names to their original names for clarity
-            const { 
-                nt: noiseType,    // nt: Noise Type (formerly noiseType)
-                lv: level,        // lv: Level (formerly level)
-                pc: perChannel,   // pc: Per Channel (formerly perChannel)
-                channelCount, blockSize 
+            // --- Parameter Destructuring & Pre-calculation ---
+            const {
+                nt: noiseType,    // 'white' or 'pink'
+                lv: levelDb,      // Level in dB
+                pc: perChannel    // Generate noise per channel (boolean)
             } = parameters;
 
-            const levelGain = Math.pow(10, level / 20); // Convert dB to linear
-            
-            // Generate noise buffer for the block
-            const noiseBuffer = new Array(blockSize);
-            const pinkState = context.pinkNoise[0];
+            // Convert dB level to linear gain, handle very low levels efficiently
+            const levelGain = (levelDb <= -96.0) ? 0.0 : Math.pow(10.0, levelDb / 20.0);
 
-            // Generate noise once if not per channel
-            if (!perChannel) {
-                for (let i = 0; i < blockSize; i++) {
+            // --- Noise Generation ---
+
+            // Branch based on per-channel generation *before* main loops
+            if (perChannel) {
+                // --- Generate Unique Noise Per Channel ---
+                for (let ch = 0; ch < channelCount; ch++) {
+                    const offset = ch * blockSize; // Output buffer offset for this channel
+                    // Cache the state array for the current channel
+                    const pinkState = context.pinkNoiseState[ch]; // Float32Array([b0, b1, ..., b6])
+
+                    // Select noise generation function *outside* the inner sample loop
                     if (noiseType === 'white') {
-                        noiseBuffer[i] = (Math.random() * 2 - 1) * levelGain;
-                    } else {
-                        let white = Math.random() * 2 - 1;
-                        
-                        pinkState.b0 = 0.99886 * pinkState.b0 + white * 0.0555179;
-                        pinkState.b1 = 0.99332 * pinkState.b1 + white * 0.0750759;
-                        pinkState.b2 = 0.96900 * pinkState.b2 + white * 0.1538520;
-                        pinkState.b3 = 0.86650 * pinkState.b3 + white * 0.3104856;
-                        pinkState.b4 = 0.55000 * pinkState.b4 + white * 0.5329522;
-                        pinkState.b5 = -0.7616 * pinkState.b5 - white * 0.0168980;
-                        
-                        noiseBuffer[i] = (pinkState.b0 + pinkState.b1 + pinkState.b2 + pinkState.b3 + 
-                                        pinkState.b4 + pinkState.b5 + pinkState.b6 + white * 0.5362) * 0.11 * levelGain;
-                        pinkState.b6 = white * 0.115926;
-                    }
-                }
-            }
-
-            // Process each channel
-            for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                
-                if (perChannel) {
-                    const pinkState = context.pinkNoise[ch];
-                    // Generate unique noise for each channel
-                    for (let i = 0; i < blockSize; i++) {
-                        let noise;
-                        if (noiseType === 'white') {
-                            noise = (Math.random() * 2 - 1) * levelGain;
-                        } else {
-                            let white = Math.random() * 2 - 1;
-                            
-                            pinkState.b0 = 0.99886 * pinkState.b0 + white * 0.0555179;
-                            pinkState.b1 = 0.99332 * pinkState.b1 + white * 0.0750759;
-                            pinkState.b2 = 0.96900 * pinkState.b2 + white * 0.1538520;
-                            pinkState.b3 = 0.86650 * pinkState.b3 + white * 0.3104856;
-                            pinkState.b4 = 0.55000 * pinkState.b4 + white * 0.5329522;
-                            pinkState.b5 = -0.7616 * pinkState.b5 - white * 0.0168980;
-                            
-                            noise = (pinkState.b0 + pinkState.b1 + pinkState.b2 + pinkState.b3 + 
-                                    pinkState.b4 + pinkState.b5 + pinkState.b6 + white * 0.5362) * 0.11 * levelGain;
-                            pinkState.b6 = white * 0.115926;
+                        // White noise generation loop for this channel
+                        for (let i = 0; i < blockSize; i++) {
+                            const white = Math.random() * 2.0 - 1.0;
+                            data[offset + i] += white * levelGain; // Add scaled white noise
                         }
-                        data[offset + i] += noise;
-                    }
-                } else {
-                    // Use the pre-generated noise for all channels
+                    } else { // Pink noise generation loop for this channel
+                        // Cache state variables locally for the inner loop (read/write)
+                        let b0 = pinkState[0], b1 = pinkState[1], b2 = pinkState[2], b3 = pinkState[3];
+                        let b4 = pinkState[4], b5 = pinkState[5], b6 = pinkState[6];
+
+                        for (let i = 0; i < blockSize; i++) {
+                            const white = Math.random() * 2.0 - 1.0;
+
+                            // Apply Paul Kellett's filter coefficients (optimized access)
+                            b0 = 0.99886 * b0 + white * 0.0555179;
+                            b1 = 0.99332 * b1 + white * 0.0750759;
+                            b2 = 0.96900 * b2 + white * 0.1538520;
+                            b3 = 0.86650 * b3 + white * 0.3104856;
+                            b4 = 0.55000 * b4 + white * 0.5329522;
+                            b5 = -0.7616 * b5 - white * 0.0168980; // Note the sign difference
+
+                            // Calculate pink noise output
+                            const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                            b6 = white * 0.115926; // Update b6 state last
+
+                            // Add scaled pink noise to the output buffer
+                            data[offset + i] += pink * levelGain;
+                        }
+
+                        // Update the context state array with the final values for this block
+                        pinkState[0] = b0; pinkState[1] = b1; pinkState[2] = b2; pinkState[3] = b3;
+                        pinkState[4] = b4; pinkState[5] = b5; pinkState[6] = b6;
+                    } // End noise type check for this channel
+                } // End channel loop (perChannel === true)
+
+            } else {
+                // --- Generate Single Noise Source, Apply to All Channels ---
+                // Allocate a temporary buffer for the shared noise signal
+                const noiseBuffer = new Float32Array(blockSize);
+                // Use state from channel 0 for the shared pink noise generation
+                const pinkState = context.pinkNoiseState[0]; // Float32Array([b0, b1, ..., b6])
+
+                // Select noise generation function *outside* the inner sample loop
+                if (noiseType === 'white') {
+                    // White noise generation loop (fill noiseBuffer)
                     for (let i = 0; i < blockSize; i++) {
-                        data[offset + i] += noiseBuffer[i];
+                        const white = Math.random() * 2.0 - 1.0;
+                        noiseBuffer[i] = white * levelGain; // Store scaled white noise
                     }
-                }
-            }
-            
+                } else { // Pink noise generation loop (fill noiseBuffer)
+                    // Cache state variables locally for the inner loop (read/write)
+                    let b0 = pinkState[0], b1 = pinkState[1], b2 = pinkState[2], b3 = pinkState[3];
+                    let b4 = pinkState[4], b5 = pinkState[5], b6 = pinkState[6];
+
+                    for (let i = 0; i < blockSize; i++) {
+                        const white = Math.random() * 2.0 - 1.0;
+
+                        // Apply Paul Kellett's filter coefficients
+                        b0 = 0.99886 * b0 + white * 0.0555179;
+                        b1 = 0.99332 * b1 + white * 0.0750759;
+                        b2 = 0.96900 * b2 + white * 0.1538520;
+                        b3 = 0.86650 * b3 + white * 0.3104856;
+                        b4 = 0.55000 * b4 + white * 0.5329522;
+                        b5 = -0.7616 * b5 - white * 0.0168980;
+
+                        // Calculate pink noise output
+                        const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                        b6 = white * 0.115926;
+
+                        // Store scaled pink noise in the buffer
+                        noiseBuffer[i] = pink * levelGain;
+                    }
+
+                    // Update the context state array (channel 0) with the final values
+                    pinkState[0] = b0; pinkState[1] = b1; pinkState[2] = b2; pinkState[3] = b3;
+                    pinkState[4] = b4; pinkState[5] = b5; pinkState[6] = b6;
+                } // End noise type check (shared noise)
+
+                // --- Apply Shared Noise Buffer to All Channels ---
+                // Skip if gain is zero
+                if (levelGain !== 0.0) {
+                    for (let ch = 0; ch < channelCount; ch++) {
+                        const offset = ch * blockSize;
+                        for (let i = 0; i < blockSize; i++) {
+                            data[offset + i] += noiseBuffer[i]; // Add noise from buffer
+                        }
+                    }
+                } // End channel loop (!perChannel)
+            } // End perChannel check
+
+            // Return the modified data buffer
             return data;
         `);
     }
@@ -118,7 +164,7 @@ class NoiseBlenderPlugin extends PluginBase {
             this.nt = params.nt;
         }
         if (params.lv !== undefined) {
-            this.lv = Math.max(-96, Math.min(0, params.lv));
+            this.lv = params.lv < -96 ? -96 : (params.lv > 0 ? 0 : params.lv);
         }
         if (params.pc !== undefined) {
             this.pc = params.pc;
@@ -204,7 +250,8 @@ class NoiseBlenderPlugin extends PluginBase {
         });
 
         levelValue.addEventListener('input', (e) => {
-            const value = Math.max(-96, Math.min(0, parseFloat(e.target.value) || -96));
+            const parsedValue = parseFloat(e.target.value) || -96;
+            const value = parsedValue < -96 ? -96 : (parsedValue > 0 ? 0 : parsedValue);
             this.setParameters({ lv: value });
             levelSlider.value = value;
             e.target.value = value;

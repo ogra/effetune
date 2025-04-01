@@ -145,7 +145,7 @@ This module integrates the web application with Electron-specific features:
 ### Application Icon
 
 To change the application icon:
-1. Replace `favicon.ico` (Windows) and `images/icon.png` (macOS/Linux) with your custom icons
+1. Replace `images/favicon.ico` (Windows) and `images/icon.png` (macOS/Linux) with your custom icons
 2. Ensure the icons are referenced correctly in the `build` section of `package.json`
 
 ### Application Metadata

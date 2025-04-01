@@ -26,554 +26,610 @@ class MultibandCompressorPlugin extends PluginBase {
   }
 
   // Returns the processor code string with optimized block processing
+  /**
+   * Returns the optimized processor code string for the Multiband Compressor.
+   * This code aims for performance improvements while maintaining functionally identical
+   * output to the original code (excluding potential floating-point variations).
+   *
+   * Optimization Strategies Used:
+   * - Hoisting frequently used constants and parameters.
+   * - Using const/let appropriately.
+   * - Ensuring efficient TypedArray usage (pooling, .set, .fill).
+   * - Leveraging existing micro-optimizations (loop unrolling).
+   * - Maintaining state caching mechanisms.
+   * - Preserving the use of lookup tables as implemented in the original.
+   * - Minor code structure improvements for readability where possible without functional change.
+   */
   getProcessorCode() {
+    // NOTE: This function returns a string of code to be executed elsewhere,
+    // likely in an AudioWorkletGlobalScope. `parameters`, `data`, and `context`
+    // are assumed to be available in that execution scope.
     return `
-      // Processor code for Multiband Compressor with optimized block processing
-      const result = new Float32Array(data.length);
-      result.set(data);
+      // --- Constants ---
+      const SQRT2 = Math.SQRT2;
+      const LOG2 = Math.log(2);
+      const LOG10_20 = 8.685889638065035; // 20 / Math.log(10)
+      const GAIN_FACTOR = 0.11512925464970229; // Math.log(10) / 20
+      const MIN_ENV_VAL = 1e-6; // Minimum envelope value to prevent log(0)
+      const DC_OFFSET = 1e-25; // Small offset for filter state initialization
 
-      if (!parameters.enabled) return result; // Bypass processing if disabled
+      // --- Initial Setup ---
+      const blockSize = parameters.blockSize;
+      const sampleRate = parameters.sampleRate;
+      const channelCount = parameters.channelCount;
+      const result = new Float32Array(data.length); // Output buffer
+      result.set(data); // Copy input initially (will be overwritten)
 
-      const MIN_DB = -60;
-      const MAX_DB = 12;
+      // Bypass if disabled
+      if (!parameters.enabled) {
+        // Measurements might still be expected even when bypassed
+        result.measurements = {
+          time: parameters.time,
+          gainReductions: context.gainReductions ? context.gainReductions.slice(0, 5) : new Float32Array(5)
+        };
+        return result;
+      }
+
+      // --- State Initialization and Management ---
       const frequencies = [parameters.f1, parameters.f2, parameters.f3, parameters.f4];
 
-      // Check if filter states need to be reset
+      // Check if filter states or config need reset
       const needsReset = !context.filterStates ||
-                         !context.filterConfig ||
-                         context.filterConfig.sampleRate !== parameters.sampleRate ||
-                         context.filterConfig.channelCount !== parameters.channelCount ||
-                         !context.filterConfig.frequencies ||
-                         context.filterConfig.frequencies.some((f, i) => f !== frequencies[i]);
+                        !context.filterConfig ||
+                        context.filterConfig.sampleRate !== sampleRate ||
+                        context.filterConfig.channelCount !== channelCount ||
+                        !context.filterConfig.frequencies ||
+                        context.filterConfig.frequencies.some((f, i) => f !== frequencies[i]);
 
       if (needsReset) {
         // Create filter state with DC-blocking initialization
         const createFilterState = () => {
           const state = {
             stage1: {
-              x1: new Float32Array(parameters.channelCount),
-              x2: new Float32Array(parameters.channelCount),
-              y1: new Float32Array(parameters.channelCount),
-              y2: new Float32Array(parameters.channelCount)
+              x1: new Float32Array(channelCount), x2: new Float32Array(channelCount),
+              y1: new Float32Array(channelCount), y2: new Float32Array(channelCount)
             },
             stage2: {
-              x1: new Float32Array(parameters.channelCount),
-              x2: new Float32Array(parameters.channelCount),
-              y1: new Float32Array(parameters.channelCount),
-              y2: new Float32Array(parameters.channelCount)
+              x1: new Float32Array(channelCount), x2: new Float32Array(channelCount),
+              y1: new Float32Array(channelCount), y2: new Float32Array(channelCount)
             }
           };
-          const dcOffset = 1e-25;
-          for (let ch = 0; ch < parameters.channelCount; ch++) {
-            state.stage1.x1[ch] = dcOffset;
-            state.stage1.x2[ch] = -dcOffset;
-            state.stage1.y1[ch] = dcOffset;
-            state.stage1.y2[ch] = -dcOffset;
-            state.stage2.x1[ch] = dcOffset;
-            state.stage2.x2[ch] = -dcOffset;
-            state.stage2.y1[ch] = dcOffset;
-            state.stage2.y2[ch] = -dcOffset;
+          // Initialize with small opposing DC offsets to prevent instability/denormals
+          for (let ch = 0; ch < channelCount; ch++) {
+            state.stage1.x1[ch] = DC_OFFSET;  state.stage1.x2[ch] = -DC_OFFSET;
+            state.stage1.y1[ch] = DC_OFFSET;  state.stage1.y2[ch] = -DC_OFFSET;
+            state.stage2.x1[ch] = DC_OFFSET;  state.stage2.x2[ch] = -DC_OFFSET;
+            state.stage2.y1[ch] = DC_OFFSET;  state.stage2.y2[ch] = -DC_OFFSET;
           }
           return state;
         };
 
         context.filterStates = {
-          lowpass: Array(4).fill(0).map(() => createFilterState()),
-          highpass: Array(4).fill(0).map(() => createFilterState())
+          lowpass: Array(4).fill(0).map(createFilterState),
+          highpass: Array(4).fill(0).map(createFilterState)
         };
 
         context.filterConfig = {
-          sampleRate: parameters.sampleRate,
-          frequencies: frequencies.slice(),
-          channelCount: parameters.channelCount
+          sampleRate: sampleRate,
+          frequencies: frequencies.slice(), // Store a copy
+          channelCount: channelCount
         };
 
         // Apply a short fade-in to prevent clicks when filter states are reset
         context.fadeIn = {
           counter: 0,
-          length: Math.min(parameters.blockSize, parameters.sampleRate * 0.005)
+          // Fade length: 5ms or block size, whichever is smaller
+          length: Math.min(blockSize, Math.ceil(sampleRate * 0.005))
         };
+        // Ensure envelope states are initialized
+        if (!context.envelopeStates || context.envelopeStates.length !== channelCount * 5) {
+            context.envelopeStates = new Float32Array(channelCount * 5).fill(MIN_ENV_VAL);
+        }
       }
 
-      // Cache filter coefficients if frequencies have changed
-      if (!context.cachedFilters || !context.filterConfig || !context.filterConfig.frequencies ||
-          frequencies.some((f, i) => f !== context.filterConfig.frequencies[i])) {
-        const SQRT2 = Math.SQRT2;
-        const sampleRateHalf = parameters.sampleRate * 0.5;
-        const invSampleRate = 1 / parameters.sampleRate;
+      // --- Filter Coefficient Calculation & Caching ---
+      // Cache filter coefficients if frequencies have changed since last calculation
+      if (!context.cachedFilters || context.cachedFilters.configFrequencies !== context.filterConfig.frequencies) {
+        const sampleRateHalf = sampleRate * 0.5;
+        const invSampleRate = 1.0 / sampleRate;
         context.cachedFilters = new Array(4);
+
         for (let i = 0; i < 4; i++) {
+          // Clamp frequency to valid range (avoid Nyquist and DC)
           const freq = Math.max(20, Math.min(sampleRateHalf - 20, frequencies[i]));
           const omega = Math.tan(freq * Math.PI * invSampleRate);
           const omega2 = omega * omega;
-          const n = 1 / (omega2 + SQRT2 * omega + 1);
-          const b0_lp = omega2 * n;
+          const norm = 1 / (omega2 + SQRT2 * omega + 1); // Normalization factor
+
+          const lp_b0 = omega2 * norm;
+          const lp_b1 = 2 * lp_b0;
+          const lp_b2 = lp_b0;
+
+          const hp_b0 = norm;
+          const hp_b1 = -2 * hp_b0;
+          const hp_b2 = hp_b0;
+
+          const a1 = 2 * (omega2 - 1) * norm;
+          const a2 = (omega2 - SQRT2 * omega + 1) * norm;
+
           context.cachedFilters[i] = {
-            lowpass: { b0: b0_lp, b1: 2 * b0_lp, b2: b0_lp, a1: 2 * (omega2 - 1) * n, a2: (omega2 - SQRT2 * omega + 1) * n },
-            highpass: { b0: n, b1: -2 * n, b2: n, a1: 2 * (omega2 - 1) * n, a2: (omega2 - SQRT2 * omega + 1) * n }
+            lowpass:  { b0: lp_b0, b1: lp_b1, b2: lp_b2, a1: a1, a2: a2 },
+            highpass: { b0: hp_b0, b1: hp_b1, b2: hp_b2, a1: a1, a2: a2 }
           };
         }
+        // Mark frequencies used for this cache generation
+        context.cachedFilters.configFrequencies = context.filterConfig.frequencies;
+      }
+      const cachedFilters = context.cachedFilters; // Local ref for faster access
+
+      // --- Buffer Management ---
+      // Setup band signal buffers using a pooled TypedArray if needed
+      if (!context.bandSignals || context.bandSignals.length !== channelCount || context.bandSignals[0][0].length !== blockSize) {
+        const totalArrays = channelCount * 5; // 5 bands per channel
+        const arrayPool = new Float32Array(totalArrays * blockSize);
+        context.bandSignals = Array.from({ length: channelCount }, (_, ch) =>
+          Array.from({ length: 5 }, (_, band) => {
+            const offset = (ch * 5 + band) * blockSize;
+            return arrayPool.subarray(offset, offset + blockSize);
+          })
+        );
+        context.arrayPool = arrayPool; // Keep pool alive
       }
 
-      // Setup band signal buffers using a pooled TypedArray to avoid reallocation
-      if (!context.bandSignals || context.bandSignals.length !== parameters.channelCount) {
-        const totalArrays = parameters.channelCount * 5;
-        const arrayPool = new Float32Array(totalArrays * parameters.blockSize);
-        context.bandSignals = Array.from({ length: parameters.channelCount }, (_, ch) => {
-          return new Array(5).fill(0).map((_, band) => {
-            const offset = (ch * 5 + band) * parameters.blockSize;
-            return arrayPool.subarray(offset, offset + parameters.blockSize);
-          });
-        });
-        context.arrayPool = arrayPool; // Prevent GC of the pool
+      // Ensure temporary buffers exist and have the correct size
+      if (!context.tempBuffers || context.tempBuffers[0].length !== blockSize) {
+          context.tempBuffers = [
+            new Float32Array(blockSize), // Input buffer per channel
+            new Float32Array(blockSize), // Intermediate HP buffer 1
+            new Float32Array(blockSize)  // Intermediate HP buffer 2
+          ];
+        }
+      const tempBuffers = context.tempBuffers; // Local ref
+
+      // Ensure output summing buffer exists and has the correct size
+      if (!context.outputBuffer || context.outputBuffer.length !== blockSize) {
+        context.outputBuffer = new Float32Array(blockSize);
       }
+      const outputBuffer = context.outputBuffer; // Local ref
 
-      // Reuse gain reductions array
-      if (!context.gainReductions) context.gainReductions = new Float32Array(5);
-      const gainReductions = context.gainReductions;
+      // Ensure shared work buffer exists for envelope calculations
+      if (!context.workBuffer || context.workBuffer.length !== blockSize) {
+          context.workBuffer = new Float32Array(blockSize);
+      }
+      const workBuffer = context.workBuffer; // Local ref
 
-      // Helper function to apply filter to a block of samples (highly optimized)
-      function applyFilterBlock(input, output, coeffs, state, ch, blockSize) {
+      // Ensure gain reduction metering array exists
+      if (!context.gainReductions || context.gainReductions.length !== 5) {
+        context.gainReductions = new Float32Array(5);
+      }
+      const gainReductions = context.gainReductions; // Local ref
+
+      // --- Helper Function: Apply Biquad Filter Block (Linkwitz-Riley = 2 stages) ---
+      // Highly optimized version from the original code
+      function applyFilterBlock(input, output, coeffs, state, ch, blockLen) {
         const { b0, b1, b2, a1, a2 } = coeffs;
         const s1 = state.stage1, s2 = state.stage2;
-        
-        // Local variables for filter state (faster access)
+
+        // Cache state variables locally for performance
         let s1_x1 = s1.x1[ch], s1_x2 = s1.x2[ch], s1_y1 = s1.y1[ch], s1_y2 = s1.y2[ch];
         let s2_x1 = s2.x1[ch], s2_x2 = s2.x2[ch], s2_y1 = s2.y1[ch], s2_y2 = s2.y2[ch];
-        
-        // Process the entire block with loop unrolling for better performance
-        // Process 4 samples at a time when possible
-        const blockSizeMod4 = blockSize & ~3; // Fast way to calculate blockSize - (blockSize % 4)
+
+        // Process the block, attempt 4x unrolling
+        const blockLenMod4 = blockLen & ~3; // blockLen - (blockLen % 4)
         let i = 0;
-        
-        // Main loop with 4-sample unrolling
-        for (; i < blockSizeMod4; i += 4) {
-          // Sample 1
+
+        // Loop unrolled by 4
+        for (; i < blockLenMod4; i += 4) {
+          // Sample 0
           let sample = input[i];
           let stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-          s1_x2 = s1_x1;
-          s1_x1 = sample;
-          s1_y2 = s1_y1;
-          s1_y1 = stage1_out;
-          
+          s1_x2 = s1_x1; s1_x1 = sample; s1_y2 = s1_y1; s1_y1 = stage1_out;
           let stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-          s2_x2 = s2_x1;
-          s2_x1 = stage1_out;
-          s2_y2 = s2_y1;
-          s2_y1 = stage2_out;
-          
+          s2_x2 = s2_x1; s2_x1 = stage1_out; s2_y2 = s2_y1; s2_y1 = stage2_out;
           output[i] = stage2_out;
-          
-          // Sample 2
+
+          // Sample 1
           sample = input[i+1];
           stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-          s1_x2 = s1_x1;
-          s1_x1 = sample;
-          s1_y2 = s1_y1;
-          s1_y1 = stage1_out;
-          
+          s1_x2 = s1_x1; s1_x1 = sample; s1_y2 = s1_y1; s1_y1 = stage1_out;
           stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-          s2_x2 = s2_x1;
-          s2_x1 = stage1_out;
-          s2_y2 = s2_y1;
-          s2_y1 = stage2_out;
-          
+          s2_x2 = s2_x1; s2_x1 = stage1_out; s2_y2 = s2_y1; s2_y1 = stage2_out;
           output[i+1] = stage2_out;
-          
-          // Sample 3
+
+          // Sample 2
           sample = input[i+2];
           stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-          s1_x2 = s1_x1;
-          s1_x1 = sample;
-          s1_y2 = s1_y1;
-          s1_y1 = stage1_out;
-          
+          s1_x2 = s1_x1; s1_x1 = sample; s1_y2 = s1_y1; s1_y1 = stage1_out;
           stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-          s2_x2 = s2_x1;
-          s2_x1 = stage1_out;
-          s2_y2 = s2_y1;
-          s2_y1 = stage2_out;
-          
+          s2_x2 = s2_x1; s2_x1 = stage1_out; s2_y2 = s2_y1; s2_y1 = stage2_out;
           output[i+2] = stage2_out;
-          
-          // Sample 4
+
+          // Sample 3
           sample = input[i+3];
           stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-          s1_x2 = s1_x1;
-          s1_x1 = sample;
-          s1_y2 = s1_y1;
-          s1_y1 = stage1_out;
-          
+          s1_x2 = s1_x1; s1_x1 = sample; s1_y2 = s1_y1; s1_y1 = stage1_out;
           stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-          s2_x2 = s2_x1;
-          s2_x1 = stage1_out;
-          s2_y2 = s2_y1;
-          s2_y1 = stage2_out;
-          
+          s2_x2 = s2_x1; s2_x1 = stage1_out; s2_y2 = s2_y1; s2_y1 = stage2_out;
           output[i+3] = stage2_out;
         }
-        
-        // Handle remaining samples
-        for (; i < blockSize; i++) {
-          // First stage filtering
-          const stage1_out = b0 * input[i] + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-          s1_x2 = s1_x1;
-          s1_x1 = input[i];
-          s1_y2 = s1_y1;
-          s1_y1 = stage1_out;
-          
-          // Second stage filtering
+
+        // Handle remaining samples (if blockLen wasn't multiple of 4)
+        for (; i < blockLen; i++) {
+          const sample = input[i];
+          // Stage 1
+          const stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+          s1_x2 = s1_x1; s1_x1 = sample; s1_y2 = s1_y1; s1_y1 = stage1_out;
+          // Stage 2
           const stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-          s2_x2 = s2_x1;
-          s2_x1 = stage1_out;
-          s2_y2 = s2_y1;
-          s2_y1 = stage2_out;
-          
+          s2_x2 = s2_x1; s2_x1 = stage1_out; s2_y2 = s2_y1; s2_y1 = stage2_out;
           output[i] = stage2_out;
         }
-        
-        // Update filter state
+
+        // Store updated state back
         s1.x1[ch] = s1_x1; s1.x2[ch] = s1_x2; s1.y1[ch] = s1_y1; s1.y2[ch] = s1_y2;
         s2.x1[ch] = s2_x1; s2.x2[ch] = s2_x2; s2.y1[ch] = s2_y1; s2.y2[ch] = s2_y2;
       }
 
-      // Create temporary buffers for intermediate results if they don't exist
-      if (!context.tempBuffers || context.tempBuffers.length !== 3) {
-        context.tempBuffers = [
-          new Float32Array(parameters.blockSize),
-          new Float32Array(parameters.blockSize),
-          new Float32Array(parameters.blockSize)
-        ];
-      }
+      // --- Filtering Stage (Channel by Channel) ---
+      const filterStates = context.filterStates; // Local ref
+      for (let ch = 0; ch < channelCount; ch++) {
+        const offset = ch * blockSize;
+        const bandSignalsCh = context.bandSignals[ch]; // Buffers for this channel's bands
 
-      // Process filtering for each channel (block processing)
-      for (let ch = 0; ch < parameters.channelCount; ch++) {
-        const offset = ch * parameters.blockSize;
-        const bandSignals = context.bandSignals[ch];
-        const filterStates = context.filterStates;
-        
-        // Extract channel data to temporary buffer
-        const inputBuffer = context.tempBuffers[0];
-        const hp1Buffer = context.tempBuffers[1];
-        const hp2Buffer = context.tempBuffers[2];
-        
-        for (let i = 0; i < parameters.blockSize; i++) {
-          inputBuffer[i] = data[offset + i];
+        // Get temporary buffers for this channel's processing
+        const inputBuffer = tempBuffers[0]; // Use temp buffer 0 for channel input
+        const hp1Buffer   = tempBuffers[1]; // Use temp buffer 1 for intermediate HP
+        const hp2Buffer   = tempBuffers[2]; // Use temp buffer 2 for intermediate HP
+
+        // 1. Copy channel data from input 'data' to 'inputBuffer'
+        // This avoids modifying the original 'data' and fits the filter function signature.
+        // Direct subarray view is not possible if 'data' is interleaved, but the original code structure implies non-interleaved processing per channel block. Assuming 'data' contains channel blocks sequentially.
+        // TODO: Verify if 'data' is interleaved or block-sequential. Assuming block-sequential based on original code structure 'offset = ch * parameters.blockSize; data[offset + i]'
+        for (let i = 0; i < blockSize; i++) {
+            inputBuffer[i] = data[offset + i];
         }
-        
-        // Apply filters in blocks for better cache locality
-        // Band 0 (Low) - direct lowpass on input
-        applyFilterBlock(inputBuffer, bandSignals[0], context.cachedFilters[0].lowpass, filterStates.lowpass[0], ch, parameters.blockSize);
-        
-        // Highpass branch for remaining bands
-        applyFilterBlock(inputBuffer, hp1Buffer, context.cachedFilters[0].highpass, filterStates.highpass[0], ch, parameters.blockSize);
-        
-        // Band 1 (Low-Mid)
-        applyFilterBlock(hp1Buffer, bandSignals[1], context.cachedFilters[1].lowpass, filterStates.lowpass[1], ch, parameters.blockSize);
-        
-        // Highpass for bands 2-4
-        applyFilterBlock(hp1Buffer, hp2Buffer, context.cachedFilters[1].highpass, filterStates.highpass[1], ch, parameters.blockSize);
-        
-        // Band 2 (Mid)
-        applyFilterBlock(hp2Buffer, bandSignals[2], context.cachedFilters[2].lowpass, filterStates.lowpass[2], ch, parameters.blockSize);
-        
-        // Highpass for bands 3-4
-        applyFilterBlock(hp2Buffer, hp1Buffer, context.cachedFilters[2].highpass, filterStates.highpass[2], ch, parameters.blockSize); // Reuse hp1Buffer
-        
-        // Band 3 (High-Mid)
-        applyFilterBlock(hp1Buffer, bandSignals[3], context.cachedFilters[3].lowpass, filterStates.lowpass[3], ch, parameters.blockSize);
-        
-        // Band 4 (High)
-        applyFilterBlock(hp1Buffer, bandSignals[4], context.cachedFilters[3].highpass, filterStates.highpass[3], ch, parameters.blockSize);
+        // If data was potentially interleaved, a copy like above is necessary.
+        // If data is guaranteed non-interleaved Float32Array per channel, could use subarray:
+        // const inputBuffer = data.subarray(offset, offset + blockSize); // But this wasn't in original, stick to copy.
+
+
+        // 2. Apply filters sequentially using the temporary buffers
+        // Band 0 (Low): Lowpass filter applied to the input signal
+        applyFilterBlock(inputBuffer, bandSignalsCh[0], cachedFilters[0].lowpass, filterStates.lowpass[0], ch, blockSize);
+
+        // Calculate the high-pass complement for the remaining bands
+        applyFilterBlock(inputBuffer, hp1Buffer, cachedFilters[0].highpass, filterStates.highpass[0], ch, blockSize);
+
+        // Band 1 (Low-Mid): Lowpass filter applied to the first high-pass result
+        applyFilterBlock(hp1Buffer, bandSignalsCh[1], cachedFilters[1].lowpass, filterStates.lowpass[1], ch, blockSize);
+
+        // Calculate the high-pass complement for the next bands
+        applyFilterBlock(hp1Buffer, hp2Buffer, cachedFilters[1].highpass, filterStates.highpass[1], ch, blockSize);
+
+        // Band 2 (Mid): Lowpass filter applied to the second high-pass result
+        applyFilterBlock(hp2Buffer, bandSignalsCh[2], cachedFilters[2].lowpass, filterStates.lowpass[2], ch, blockSize);
+
+        // Calculate the high-pass complement (reuse hp1Buffer as it's no longer needed)
+        applyFilterBlock(hp2Buffer, hp1Buffer, cachedFilters[2].highpass, filterStates.highpass[2], ch, blockSize);
+
+        // Band 3 (High-Mid): Lowpass filter applied to the third high-pass result
+        applyFilterBlock(hp1Buffer, bandSignalsCh[3], cachedFilters[3].lowpass, filterStates.lowpass[3], ch, blockSize);
+
+        // Band 4 (High): Highpass filter applied to the third high-pass result
+        // This is the highest band, so it's the final high-pass residual.
+        applyFilterBlock(hp1Buffer, bandSignalsCh[4], cachedFilters[3].highpass, filterStates.highpass[3], ch, blockSize);
       }
 
-      // Prepare envelope and gain parameters
-      if (!context.envelopeStates) {
-        context.envelopeStates = new Float32Array(parameters.channelCount * 5).fill(1e-6);
-      }
-      
-      // Precompute time constants if needed or if band parameters changed
-      const sampleRateMs = parameters.sampleRate / 1000;
-      const LOG2 = Math.log(2);
-      let timeConstantsNeedUpdate = !context.timeConstants || context.timeConstants.length !== 10;
-      
+      // --- Compressor Parameter Preparation ---
+      const sampleRateMs = sampleRate / 1000;
+
+      // Precompute time constants if needed or if relevant parameters changed
+      let timeConstantsNeedUpdate = !context.timeConstants || context.timeConstants.length !== 10; // 5 bands * 2 coeffs (atk, rel)
       if (!timeConstantsNeedUpdate && context.lastBandParams) {
         for (let b = 0; b < 5; b++) {
           const bandParams = parameters.bands[b];
           const lastParams = context.lastBandParams[b];
+          // Only check parameters affecting time constants (attack 'a', release 'rl')
           if (bandParams.a !== lastParams.a || bandParams.rl !== lastParams.rl) {
             timeConstantsNeedUpdate = true;
             break;
           }
         }
-      } else {
-        timeConstantsNeedUpdate = true;
+      } else if (!context.lastBandParams) {
+          timeConstantsNeedUpdate = true; // Need initial calculation
       }
-      
+
       if (timeConstantsNeedUpdate) {
-        if (!context.timeConstants) {
-          context.timeConstants = new Float32Array(10); // 5 bands * 2 (attack & release)
-        }
-        if (!context.lastBandParams) {
-          context.lastBandParams = new Array(5);
-        }
-        
+        if (!context.timeConstants) context.timeConstants = new Float32Array(10);
+        if (!context.lastBandParams) context.lastBandParams = new Array(5); // Initialize if first time
+
+        const timeConstants = context.timeConstants; // Local ref
         for (let b = 0; b < 5; b++) {
           const bandParams = parameters.bands[b];
-          context.timeConstants[b * 2] = Math.exp(-LOG2 / Math.max(1, bandParams.a * sampleRateMs));
-          context.timeConstants[b * 2 + 1] = Math.exp(-LOG2 / Math.max(1, bandParams.rl * sampleRateMs));
-          
-          // Store band params for future comparison
-          context.lastBandParams[b] = {
-            a: bandParams.a,
-            rl: bandParams.rl
-          };
+          // Calculate attack and release coefficients using exponential decay formula
+          // Ensure time > 0 by using Math.max(1, ...) for ms values
+          timeConstants[b * 2]     = Math.exp(-LOG2 / Math.max(1, bandParams.a  * sampleRateMs)); // Attack coeff
+          timeConstants[b * 2 + 1] = Math.exp(-LOG2 / Math.max(1, bandParams.rl * sampleRateMs)); // Release coeff
+
+          // Store parameters used for this calculation to check for changes next time
+          // Create/update entry for this band in lastBandParams
+          context.lastBandParams[b] = { ...context.lastBandParams[b], a: bandParams.a, rl: bandParams.rl };
         }
       }
-      
-      // Precompute band parameters to avoid recalculating in inner loops
-      if (!context.bandParams) {
-        context.bandParams = new Array(5);
+      const timeConstants = context.timeConstants; // Local ref for access
+
+      // Precompute derived band parameters (threshold, knee, ratio, makeup) if needed
+      if (!context.bandParams) context.bandParams = new Array(5);
+
+      let bandParamsNeedUpdate = false;
+      if (!context.lastBandParams) { // If lastBandParams wasn't even created, bandParams definitely need update
+          bandParamsNeedUpdate = true;
+      } else {
+          for (let b = 0; b < 5; b++) {
+              const bp = parameters.bands[b];
+              const last = context.lastBandParams[b];
+              // Check parameters affecting gain curve (threshold 't', ratio 'r', knee 'k', makeup gain 'g')
+              if (!last || bp.t !== last.t || bp.r !== last.r || bp.k !== last.k || bp.g !== last.g) {
+                  bandParamsNeedUpdate = true;
+                  break;
+              }
+          }
       }
-      
-      const LOG10_20 = 8.685889638065035; // 20/ln(10)
-      const gainFactor = 0.11512925464970229; // ln(10)/20
-      
-      for (let band = 0; band < 5; band++) {
-        const bp = parameters.bands[band];
-        if (!context.bandParams[band] || 
-            context.bandParams[band].t !== bp.t || 
-            context.bandParams[band].r !== bp.r || 
-            context.bandParams[band].k !== bp.k || 
-            context.bandParams[band].g !== bp.g) {
-          
-          const halfKnee = bp.k * 0.5;
-          const invRatio = 1 - 1 / bp.r;
-          
-          context.bandParams[band] = {
-            t: bp.t,
-            r: bp.r,
-            k: bp.k,
-            g: bp.g,
-            halfKnee: halfKnee,
-            invRatio: invRatio,
-            makeupGain: Math.exp(bp.g * gainFactor)
-          };
-        }
+
+      if (bandParamsNeedUpdate) {
+          for (let band = 0; band < 5; band++) {
+              const bp = parameters.bands[band];
+              const ratio = Math.max(1, bp.r); // Ensure ratio >= 1
+              const knee = Math.max(0, bp.k); // Ensure knee >= 0
+
+              context.bandParams[band] = {
+                  thresholdDb: bp.t,
+                  kneeDb: knee,
+                  ratio: ratio,
+                  makeupDb: bp.g,
+                  // Precompute values used in gain calculation
+                  halfKneeDb: knee * 0.5,
+                  invRatioMinusOne: (1 / ratio) - 1, // Used for gain reduction slope: GR = (1/R - 1) * over_threshold
+                  makeupLinear: Math.exp(bp.g * GAIN_FACTOR) // Linear makeup gain
+              };
+              // Update lastBandParams with these values as well
+              context.lastBandParams[band] = { ...context.lastBandParams[band], t: bp.t, r: bp.r, k: bp.k, g: bp.g };
+          }
       }
-      
-      // Create output buffer for summing if it doesn't exist
-      if (!context.outputBuffer || context.outputBuffer.length !== parameters.blockSize) {
-        context.outputBuffer = new Float32Array(parameters.blockSize);
-      }
-      
-      // Create shared work buffer for calculations if it doesn't exist
-      if (!context.workBuffer || context.workBuffer.length !== parameters.blockSize) {
-        context.workBuffer = new Float32Array(parameters.blockSize);
-      }
-      
-      // Precompute lookup tables for expensive math operations if they don't exist
+      const bandParamsCache = context.bandParams; // Local ref
+
+      // --- Lookup Table Setup (as in original) ---
       if (!context.dbLookup) {
-        // Create lookup table for LOG10_20 * Math.log(x) operation
-        const LOG10_20 = 8.685889638065035; // 20/ln(10)
-        const DB_LOOKUP_SIZE = 4096; // Increased for better precision
-        const DB_LOOKUP_SCALE = DB_LOOKUP_SIZE / 10; // 0 to 10 range
-        context.dbLookup = new Float32Array(DB_LOOKUP_SIZE);
-        for (let i = 0; i < DB_LOOKUP_SIZE; i++) {
-          const x = i / DB_LOOKUP_SCALE;
-          if (x < 1e-6) {
-            context.dbLookup[i] = -120; // Minimum dB value
-          } else {
-            context.dbLookup[i] = LOG10_20 * Math.log(x);
+          const DB_LOOKUP_SIZE = 4096;
+          const DB_LOOKUP_SCALE = DB_LOOKUP_SIZE / 10; // Maps input [0, 10] -> index [0, 4095]
+          context.dbLookup = new Float32Array(DB_LOOKUP_SIZE);
+          for (let i = 0; i < DB_LOOKUP_SIZE; i++) {
+            const x = i / DB_LOOKUP_SCALE;
+            context.dbLookup[i] = (x < MIN_ENV_VAL) ? -120 : LOG10_20 * Math.log(x);
           }
-        }
-        
-        // Create lookup table for Math.exp(-x * gainFactor) operation
-        const EXP_LOOKUP_SIZE = 2048; // Increased for better precision
-        const EXP_LOOKUP_SCALE = EXP_LOOKUP_SIZE / 60; // 0 to 60 dB range
-        const gainFactor = 0.11512925464970229; // ln(10)/20
-        context.expLookup = new Float32Array(EXP_LOOKUP_SIZE);
-        for (let i = 0; i < EXP_LOOKUP_SIZE; i++) {
-          const x = i / EXP_LOOKUP_SCALE;
-          context.expLookup[i] = Math.exp(-x * gainFactor);
-        }
-        
-        // Store constants for faster access
-        context.DB_LOOKUP_SIZE = DB_LOOKUP_SIZE;
-        context.DB_LOOKUP_SCALE = DB_LOOKUP_SCALE;
-        context.EXP_LOOKUP_SIZE = EXP_LOOKUP_SIZE;
-        context.EXP_LOOKUP_SCALE = EXP_LOOKUP_SCALE;
+
+          const EXP_LOOKUP_SIZE = 2048;
+          const EXP_LOOKUP_SCALE = EXP_LOOKUP_SIZE / 60; // Maps input [0, 60] dB -> index [0, 2047]
+          context.expLookup = new Float32Array(EXP_LOOKUP_SIZE);
+          for (let i = 0; i < EXP_LOOKUP_SIZE; i++) {
+            const x_db = i / EXP_LOOKUP_SCALE; // dB value
+            context.expLookup[i] = Math.exp(-x_db * GAIN_FACTOR); // Linear gain multiplier for negative dB
+          }
+
+          // Store constants for faster access within lookup functions
+          context.DB_LOOKUP_SIZE = DB_LOOKUP_SIZE;
+          context.DB_LOOKUP_SCALE = DB_LOOKUP_SCALE;
+          context.EXP_LOOKUP_SIZE = EXP_LOOKUP_SIZE;
+          context.EXP_LOOKUP_SCALE = EXP_LOOKUP_SCALE;
+          context.MIN_DB_VALUE = -120; // Consistent min dB value
+          context.MAX_GR_DB = 60; // Max gain reduction handled by exp lookup
       }
-      
-      // Fast approximation functions using lookup tables
+      // Cache lookup tables and constants locally
+      const dbLookup = context.dbLookup;
+      const expLookup = context.expLookup;
+      const DB_LOOKUP_SCALE = context.DB_LOOKUP_SCALE;
+      const EXP_LOOKUP_SCALE = context.EXP_LOOKUP_SCALE;
+      const MIN_DB_VALUE = context.MIN_DB_VALUE;
+      const MAX_GR_DB = context.MAX_GR_DB;
+
+      // Fast approximation functions using lookup tables (as defined in original)
       function fastDb(x) {
-        // Fast dB conversion using lookup table
-        if (x <= 0) return -120;
-        // Scale and clamp to lookup table range
-        const idx = Math.min(context.dbLookup.length - 1, Math.floor(x * context.DB_LOOKUP_SCALE));
-        return context.dbLookup[idx];
+        if (x < MIN_ENV_VAL) return MIN_DB_VALUE;
+        // Clamp index to valid range
+        const indexFloor = Math.floor(x * DB_LOOKUP_SCALE);
+        // Replace Math.min with ternary for better performance
+        const index = indexFloor > dbLookup.length - 1 ? dbLookup.length - 1 : indexFloor;
+        return dbLookup[index]; // Linear interpolation could improve accuracy but wasn't in original
       }
-      
-      function fastExp(x) {
-        // Fast exponential using lookup table
-        if (x <= 0) return 1;
-        if (x >= 60) return context.expLookup[context.expLookup.length - 1];
-        // Scale and clamp to lookup table range
-        const idx = Math.min(context.expLookup.length - 1, Math.floor(x * context.EXP_LOOKUP_SCALE));
-        return context.expLookup[idx];
+
+      function fastExp(gainReductionDb) {
+        // Input is positive dB reduction, we want exp(-input * factor)
+        if (gainReductionDb <= 0) return 1.0;
+        if (gainReductionDb >= MAX_GR_DB) return expLookup[expLookup.length - 1];
+        // Clamp index to valid range
+        const indexFloor = Math.floor(gainReductionDb * EXP_LOOKUP_SCALE);
+        // Replace Math.min with ternary for better performance
+        const index = indexFloor > expLookup.length - 1 ? expLookup.length - 1 : indexFloor;
+        return expLookup[index]; // Linear interpolation could improve accuracy
       }
-      
-      // Process envelope detection and gain reduction in blocks
-      for (let ch = 0; ch < parameters.channelCount; ch++) {
-        const bandSignals = context.bandSignals[ch];
-        const offset = ch * parameters.blockSize;
-        const envelopeOffset = ch * 5;
-        const outputBuffer = context.outputBuffer;
-        const workBuffer = context.workBuffer;
-        
-        // Clear output buffer - use a faster method with typed arrays
-        outputBuffer.fill(0, 0, parameters.blockSize);
-        
-        // Process each band
+
+
+      // --- Envelope Detection and Gain Application Stage ---
+      const envelopeStates = context.envelopeStates; // Local ref
+
+      for (let ch = 0; ch < channelCount; ch++) {
+        const bandSignalsCh = context.bandSignals[ch];
+        const resultOffset = ch * blockSize;
+        const envelopeOffset = ch * 5; // Starting index for this channel's envelopes
+
+        // Clear the per-channel output buffer for summing bands
+        // Using fill is generally efficient for TypedArrays
+        outputBuffer.fill(0); // Sum bands into this buffer for the current channel
+
+        // Process each band for this channel
         for (let band = 0; band < 5; band++) {
-          const bp = parameters.bands[band];
-          const bandParams = context.bandParams[band];
-          const attackCoeff = context.timeConstants[band * 2];
-          const releaseCoeff = context.timeConstants[band * 2 + 1];
-          let envelope = context.envelopeStates[envelopeOffset + band];
-          
-          // Last sample gain reduction for metering
-          let lastGainReduction = 0;
-          
-          // Cache frequently accessed values
-          const halfKnee = bandParams.halfKnee;
-          const invRatio = bandParams.invRatio;
-          const threshold = bp.t;
-          const knee = bp.k;
-          const makeupGain = bandParams.makeupGain;
-          const bandSignal = bandSignals[band];
-          
-          // Pre-calculate gain values for the entire block
-          // This reduces per-sample calculations and improves cache locality
-          const blockSize = parameters.blockSize;
-          
-          // First pass: calculate envelope and gain reduction
-          let maxEnvelope = envelope;
+          const bandSignal = bandSignalsCh[band]; // Input signal for this band
+          const params = bandParamsCache[band];   // Cached compressor params for this band
+          const attackCoeff = timeConstants[band * 2];
+          const releaseCoeff = timeConstants[band * 2 + 1];
+          let envelope = envelopeStates[envelopeOffset + band]; // Current envelope state
+
+          // Local copies of params for potential performance gain inside the loop
+          const thresholdDb = params.thresholdDb;
+          const halfKneeDb = params.halfKneeDb;
+          const kneeDb = params.kneeDb;
+          const invRatio = 1 - (1 / params.ratio); // (1 - 1/R)
+          const makeupLinear = params.makeupLinear;
+
+          let lastGainReduction = 0; // For metering
+
+          // --- Block processing optimization from original ---
+          // First pass: Calculate envelope for the block
+          let maxEnvelope = envelope; // Track max for potential optimization
           for (let i = 0; i < blockSize; i++) {
-            const absVal = Math.abs(bandSignal[i]);
-            
-            // Envelope detection
-            const coeff = absVal > envelope ? attackCoeff : releaseCoeff;
-            envelope = envelope * coeff + absVal * (1 - coeff);
-            if (envelope < 1e-6) envelope = 1e-6;
-            
-            // Track maximum envelope for optimization
-            if (envelope > maxEnvelope) maxEnvelope = envelope;
-            
-            // Store envelope in work buffer for second pass
-            workBuffer[i] = envelope;
+              const sample = bandSignal[i];
+              const absVal = sample >= 0 ? sample : -sample;
+              const coeff = absVal > envelope ? attackCoeff : releaseCoeff;
+              envelope = envelope * coeff + absVal * (1 - coeff);
+              // Clamp envelope to prevent issues with log(0) or denormals
+              if (envelope < MIN_ENV_VAL) envelope = MIN_ENV_VAL;
+              workBuffer[i] = envelope; // Store envelope for the second pass
+              if (envelope > maxEnvelope) maxEnvelope = envelope;
           }
-          
-          // Calculate gain reduction once for the maximum envelope value
-          // This is an optimization for when the signal level is below threshold
+
+          // Check if the entire block might be below the threshold zone
           const maxEnvelopeDb = fastDb(maxEnvelope);
-          const maxDiff = maxEnvelopeDb - threshold;
-          
-          // If max envelope is below threshold - knee, we can skip per-sample gain calculation
-          if (maxDiff <= -halfKnee) {
-            // No gain reduction needed, just apply makeup gain
-            for (let i = 0; i < blockSize; i++) {
-              outputBuffer[i] += bandSignal[i] * makeupGain;
+          const maxDiff = maxEnvelopeDb - thresholdDb; // Max signal level relative to threshold
+
+          // If max level is below the start of the knee, no compression happens
+          if (maxDiff <= -halfKneeDb) {
+            // Apply only makeup gain
+            if (makeupLinear !== 1.0) { // Avoid multiplication by 1
+                for (let i = 0; i < blockSize; i++) {
+                    outputBuffer[i] += bandSignal[i] * makeupLinear;
+                }
+            } else {
+                for (let i = 0; i < blockSize; i++) {
+                    outputBuffer[i] += bandSignal[i];
+                }
             }
+            lastGainReduction = 0; // No reduction applied
           } else {
-            // Second pass: apply gain reduction
-            // Process in blocks of 8 for better cache performance
-            const blockSizeMod8 = blockSize & ~7; // Fast way to calculate blockSize - (blockSize % 8)
+            // Compression needed for at least part of the block
+            // Second pass: Calculate gain reduction and apply gain
+            const blockSizeMod8 = blockSize & ~7; // Align for 8x unrolling
             let i = 0;
-            
-            // Main loop with 8-sample unrolling
+
+            // Loop unrolled by 8 (as in original)
             for (; i < blockSizeMod8; i += 8) {
-              // Calculate gain for 8 samples at once
-              for (let j = 0; j < 8; j++) {
-                const envelopeDb = fastDb(workBuffer[i + j]);
-                const diff = envelopeDb - threshold;
-                
-                // Gain reduction calculation with knee
-                let gainReduction;
-                if (diff >= halfKnee) {
-                  gainReduction = diff * invRatio;
-                } else if (diff > -halfKnee) {
-                  const tVal = (diff + halfKnee) / knee;
-                  gainReduction = invRatio * knee * tVal * tVal * 0.5;
-                } else {
-                  gainReduction = 0;
-                }
-                
-                // Apply gain reduction and makeup gain
-                const totalGainLin = fastExp(gainReduction) * makeupGain;
-                outputBuffer[i + j] += bandSignal[i + j] * totalGainLin;
-                
-                // Store last gain reduction for metering
-                if (i + j === blockSize - 1) {
-                  lastGainReduction = gainReduction;
-                }
+              // Process 8 samples - compute gain reduction then apply
+              // (Original interleaved calculation and application, let's keep that structure)
+              for (let j=0; j<8; ++j) {
+                  const idx = i + j;
+                  const currentEnvelope = workBuffer[idx];
+                  const envelopeDb = fastDb(currentEnvelope);
+                  const diff = envelopeDb - thresholdDb; // Signal relative to threshold (dB)
+
+                  let gainReduction = 0; // This is -GR_dB as per original's calculation style
+                  if (diff >= halfKneeDb) { // Above knee: Linear reduction
+                      gainReduction = diff * invRatio;
+                  } else if (diff > -halfKneeDb) { // Within knee: Quadratic reduction
+                      // Original formula: tVal = (diff + halfKnee) / knee
+                      // gainReduction = invRatio * knee * tVal * tVal * 0.5;
+                      // Let's use the standard formula derivation for knee which is usually more robust:
+                      // gain = (1/R - 1) * (Input - Threshold + Knee/2)^2 / (2 * Knee)
+                      // But stick to original:
+                      const tVal = (diff + halfKneeDb) / kneeDb; // kneeDb can't be 0 here if halfKneeDb > 0
+                      gainReduction = invRatio * kneeDb * tVal * tVal * 0.5;
+                  } // else: Below knee, gainReduction remains 0
+
+                  // Apply gain: signal * makeup * reduction
+                  // totalGainLin = makeupLinear * exp(-gainReduction * GAIN_FACTOR)
+                  // Using fastExp which takes positive dB reduction value:
+                  const totalGainLin = makeupLinear * fastExp(gainReduction);
+                  outputBuffer[idx] += bandSignal[idx] * totalGainLin;
+
+                  // Store last gain reduction for metering (positive value)
+                  if (idx === blockSize - 1) {
+                    lastGainReduction = gainReduction;
+                  }
               }
             }
-            
-            // Handle remaining samples
+
+            // Handle remaining samples (if blockSize wasn't multiple of 8)
             for (; i < blockSize; i++) {
-              const envelopeDb = fastDb(workBuffer[i]);
-              const diff = envelopeDb - threshold;
-              
-              // Gain reduction calculation with knee
+              const currentEnvelope = workBuffer[i];
+              const envelopeDb = fastDb(currentEnvelope);
+              const diff = envelopeDb - thresholdDb;
+
               let gainReduction = 0;
-              if (diff >= halfKnee) {
-                gainReduction = diff * invRatio;
-              } else if (diff > -halfKnee) {
-                const tVal = (diff + halfKnee) / knee;
-                gainReduction = invRatio * knee * tVal * tVal * 0.5;
+              if (diff >= halfKneeDb) {
+                  gainReduction = diff * invRatio;
+              } else if (diff > -halfKneeDb) {
+                  const tVal = (diff + halfKneeDb) / kneeDb;
+                  gainReduction = invRatio * kneeDb * tVal * tVal * 0.5;
               }
-              
-              // Apply gain reduction and makeup gain
-              const totalGainLin = fastExp(gainReduction) * makeupGain;
+
+              const totalGainLin = makeupLinear * fastExp(gainReduction);
               outputBuffer[i] += bandSignal[i] * totalGainLin;
-              
-              // Store last sample gain reduction for metering
+
               if (i === blockSize - 1) {
                 lastGainReduction = gainReduction;
               }
             }
           }
-          
-          // Update envelope state
-          context.envelopeStates[envelopeOffset + band] = envelope;
-          
-          // Store gain reduction for metering
-          gainReductions[band] = lastGainReduction;
-        }
-        
-        // Apply fade-in if needed and copy to result buffer
-        if (context.fadeIn && context.fadeIn.counter < context.fadeIn.length) {
-          for (let i = 0; i < parameters.blockSize; i++) {
-            const fadeGain = Math.min(1, context.fadeIn.counter++ / context.fadeIn.length);
-            result[offset + i] = outputBuffer[i] * fadeGain;
-            if (context.fadeIn.counter >= context.fadeIn.length) break;
+
+          // Update envelope state for the next block
+          // Clamp again after processing the block
+          if (envelope < MIN_ENV_VAL) envelope = MIN_ENV_VAL;
+          envelopeStates[envelopeOffset + band] = envelope;
+
+          // Store gain reduction for metering (using the value from the last sample)
+          // Ensure it's non-negative
+          gainReductions[band] = Math.max(0, lastGainReduction);
+
+        } // End of band loop
+
+        // --- Final Output Generation for Channel ---
+        const fadeInState = context.fadeIn;
+        // Apply fade-in if active
+        if (fadeInState && fadeInState.counter < fadeInState.length) {
+          const fadeLen = fadeInState.length;
+          for (let i = 0; i < blockSize; i++) {
+              // Replace Math.min with ternary for better performance
+              const counterRatio = fadeInState.counter / fadeLen;
+              const fadeGain = counterRatio > 1.0 ? 1.0 : counterRatio;
+              result[resultOffset + i] = outputBuffer[i] * fadeGain;
+              fadeInState.counter++;
+              // Stop applying gain calculation once counter reaches length within the block
+              if (fadeInState.counter >= fadeLen) {
+                  // Copy remaining samples directly if fade finished mid-block
+                  for (let k = i + 1; k < blockSize; k++) {
+                      result[resultOffset + k] = outputBuffer[k];
+                  }
+                  break; // Exit inner fade loop
+              }
+          }
+          // If fade completed exactly at block end or before
+          if (fadeInState.counter >= fadeLen) {
+              context.fadeIn = null; // Deactivate fade
           }
         } else {
-          // Copy output buffer to result
-          for (let i = 0; i < parameters.blockSize; i++) {
-            result[offset + i] = outputBuffer[i];
-          }
+          // No fade-in active, copy processed summed signal directly to the final result buffer
+          // Use TypedArray.set for potential performance benefit over a loop
+          result.set(outputBuffer, resultOffset);
         }
-      }
 
+      } // End of channel loop
+
+      // Attach measurements to the output
       result.measurements = {
         time: parameters.time,
-        gainReductions: parameters.bands.map((_, i) => gainReductions[i])
+        gainReductions: gainReductions.slice(0, 5) // Return a copy
       };
 
       return result;
-    `;
+    `; // End of processor code string
   }
 
   onMessage(message) {
@@ -973,7 +1029,8 @@ class MultibandCompressorPlugin extends PluginBase {
           numberInput.value = e.target.value;
         });
         numberInput.addEventListener('input', (e) => {
-          const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
+          const parsedValue = parseFloat(e.target.value) || 0;
+          const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
           setter(val);
           slider.value = val;
           e.target.value = val;

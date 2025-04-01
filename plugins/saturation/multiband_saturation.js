@@ -19,304 +19,347 @@ class MultibandSaturationPlugin extends PluginBase {
     }
 
     getProcessorCode() {
+        // NOTE: This code runs in an AudioWorkletGlobalScope,
+        // different from the main thread's window context.
+        // Avoid using window, document, etc.
+        // Math, Float32Array, etc. are available.
+    
         return `
-            // Create a result buffer to avoid modifying the input data directly
+            // Create a result buffer. It starts as a copy of the input data.
             const result = new Float32Array(data.length);
-            result.set(data);
-            
-            if (!parameters.enabled) return result;
-
-            const frequencies = [parameters.f1, parameters.f2];
-
-            // Check if filter states need to be reset
-            const needsReset = !context.filterStates ||
-                             !context.filterConfig ||
-                             context.filterConfig.sampleRate !== parameters.sampleRate ||
-                             context.filterConfig.channelCount !== parameters.channelCount ||
-                             !context.filterConfig.frequencies ||
-                             context.filterConfig.frequencies.some((f, i) => f !== frequencies[i]);
-
+            result.set(data); // Copy input data efficiently
+    
+            // Cache frequently used parameters for faster access
+            const pEnabled = parameters.enabled;
+            if (!pEnabled) return result; // Early exit if disabled
+    
+            const pSampleRate = parameters.sampleRate;
+            const pChannelCount = parameters.channelCount;
+            const pBlockSize = parameters.blockSize;
+            // Ensure frequencies are always treated as an array of two elements
+            const pFrequencies = [parameters.f1 || 0, parameters.f2 || 0]; 
+            const pBands = parameters.bands; // Cache bands array reference
+    
+            // Check if filter states need to be reset (more efficiently)
+            const currentConfig = context.filterConfig;
+            const needsReset = !context.filterStates || // States don't exist
+                             !currentConfig ||           // Config doesn't exist
+                             currentConfig.sampleRate !== pSampleRate ||
+                             currentConfig.channelCount !== pChannelCount ||
+                             !currentConfig.frequencies || // Frequencies array missing in config
+                             currentConfig.frequencies.length !== 2 || // Length mismatch
+                             currentConfig.frequencies[0] !== pFrequencies[0] || // Direct frequency comparison
+                             currentConfig.frequencies[1] !== pFrequencies[1];
+    
             if (needsReset) {
-                // Create filter state with DC-blocking initialization
-                const createFilterState = () => {
-                    const state = {
-                        stage1: {
-                            x1: new Float32Array(parameters.channelCount),
-                            x2: new Float32Array(parameters.channelCount),
-                            y1: new Float32Array(parameters.channelCount),
-                            y2: new Float32Array(parameters.channelCount)
-                        },
-                        stage2: {
-                            x1: new Float32Array(parameters.channelCount),
-                            x2: new Float32Array(parameters.channelCount),
-                            y1: new Float32Array(parameters.channelCount),
-                            y2: new Float32Array(parameters.channelCount)
-                        }
-                    };
-                    const dcOffset = 1e-25;
-                    for (let ch = 0; ch < parameters.channelCount; ch++) {
-                        state.stage1.x1[ch] = dcOffset;
-                        state.stage1.x2[ch] = -dcOffset;
-                        state.stage1.y1[ch] = dcOffset;
-                        state.stage1.y2[ch] = -dcOffset;
-                        state.stage2.x1[ch] = dcOffset;
-                        state.stage2.x2[ch] = -dcOffset;
-                        state.stage2.y1[ch] = dcOffset;
-                        state.stage2.y2[ch] = -dcOffset;
-                    }
-                    return state;
-                };
-
+                const dcOffset = 1e-25; // Small epsilon for DC blocking initialization
+    
+                // Function to create initial state for one channel (no Float32Arrays needed here)
+                const createChannelFilterState = () => ({
+                    stage1: { x1: dcOffset, x2: -dcOffset, y1: dcOffset, y2: -dcOffset },
+                    stage2: { x1: dcOffset, x2: -dcOffset, y1: dcOffset, y2: -dcOffset }
+                });
+    
+                // Initialize filter states (Array of states per channel)
+                // Structure: filterStates.[lowpass|highpass][filterIndex][channelIndex]
                 context.filterStates = {
-                    lowpass: Array(2).fill(0).map(() => createFilterState()),
-                    highpass: Array(2).fill(0).map(() => createFilterState())
+                    lowpass: Array.from({ length: 2 }, () =>
+                        Array.from({ length: pChannelCount }, createChannelFilterState)
+                    ),
+                    highpass: Array.from({ length: 2 }, () =>
+                        Array.from({ length: pChannelCount }, createChannelFilterState)
+                    )
                 };
-
+    
+                // Store the configuration that led to this state reset
                 context.filterConfig = {
-                    sampleRate: parameters.sampleRate,
-                    frequencies: frequencies.slice(),
-                    channelCount: parameters.channelCount
+                    sampleRate: pSampleRate,
+                    frequencies: pFrequencies.slice(), // Store a copy
+                    channelCount: pChannelCount
                 };
-                
-                // Apply a short fade-in to prevent clicks when filter states are reset
+    
+                // Apply a short fade-in (crossfade) to prevent clicks on reset
+                const fadeLength = Math.floor(pSampleRate * 0.005);
                 context.fadeIn = {
                     counter: 0,
-                    length: Math.min(parameters.blockSize, parameters.sampleRate * 0.005)
+                    // Fade length: 5ms or block size, whichever is smaller
+                    length: fadeLength > pBlockSize ? pBlockSize : fadeLength
                 };
+                
+                // Clear cached filters forcing recalculation
+                context.cachedFilters = null; 
             }
-
-            // Helper function to apply cascaded Linkwitz-Riley filter to a block of samples
-            function applyFilterBlock(input, output, coeffs, state, ch, blockSize) {
-                const { b0, b1, b2, a1, a2 } = coeffs;
-                const s1 = state.stage1, s2 = state.stage2;
-                
-                // Local variables for filter state (faster access)
-                let s1_x1 = s1.x1[ch], s1_x2 = s1.x2[ch], s1_y1 = s1.y1[ch], s1_y2 = s1.y2[ch];
-                let s2_x1 = s2.x1[ch], s2_x2 = s2.x2[ch], s2_y1 = s2.y1[ch], s2_y2 = s2.y2[ch];
-                
-                // Process the entire block with loop unrolling for better performance
-                // Process 4 samples at a time when possible
-                const blockSizeMod4 = blockSize & ~3; // Fast way to calculate blockSize - (blockSize % 4)
-                let i = 0;
-                
-                // Main loop with 4-sample unrolling
-                for (; i < blockSizeMod4; i += 4) {
-                    // Sample 1
-                    let sample = input[i];
-                    let stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-                    s1_x2 = s1_x1;
-                    s1_x1 = sample;
-                    s1_y2 = s1_y1;
-                    s1_y1 = stage1_out;
-                    
-                    let stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-                    s2_x2 = s2_x1;
-                    s2_x1 = stage1_out;
-                    s2_y2 = s2_y1;
-                    s2_y1 = stage2_out;
-                    
-                    output[i] = stage2_out;
-                    
-                    // Sample 2
-                    sample = input[i+1];
-                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-                    s1_x2 = s1_x1;
-                    s1_x1 = sample;
-                    s1_y2 = s1_y1;
-                    s1_y1 = stage1_out;
-                    
-                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-                    s2_x2 = s2_x1;
-                    s2_x1 = stage1_out;
-                    s2_y2 = s2_y1;
-                    s2_y1 = stage2_out;
-                    
-                    output[i+1] = stage2_out;
-                    
-                    // Sample 3
-                    sample = input[i+2];
-                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-                    s1_x2 = s1_x1;
-                    s1_x1 = sample;
-                    s1_y2 = s1_y1;
-                    s1_y1 = stage1_out;
-                    
-                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-                    s2_x2 = s2_x1;
-                    s2_x1 = stage1_out;
-                    s2_y2 = s2_y1;
-                    s2_y1 = stage2_out;
-                    
-                    output[i+2] = stage2_out;
-                    
-                    // Sample 4
-                    sample = input[i+3];
-                    stage1_out = b0 * sample + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-                    s1_x2 = s1_x1;
-                    s1_x1 = sample;
-                    s1_y2 = s1_y1;
-                    s1_y1 = stage1_out;
-                    
-                    stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-                    s2_x2 = s2_x1;
-                    s2_x1 = stage1_out;
-                    s2_y2 = s2_y1;
-                    s2_y1 = stage2_out;
-                    
-                    output[i+3] = stage2_out;
-                }
-                
-                // Handle remaining samples
-                for (; i < blockSize; i++) {
-                    // First stage filtering
-                    const stage1_out = b0 * input[i] + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
-                    s1_x2 = s1_x1;
-                    s1_x1 = input[i];
-                    s1_y2 = s1_y1;
-                    s1_y1 = stage1_out;
-                    
-                    // Second stage filtering
-                    const stage2_out = b0 * stage1_out + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
-                    s2_x2 = s2_x1;
-                    s2_x1 = stage1_out;
-                    s2_y2 = s2_y1;
-                    s2_y1 = stage2_out;
-                    
-                    output[i] = stage2_out;
-                }
-                
-                // Update filter state
-                s1.x1[ch] = s1_x1; s1.x2[ch] = s1_x2; s1.y1[ch] = s1_y1; s1.y2[ch] = s1_y2;
-                s2.x1[ch] = s2_x1; s2.x2[ch] = s2_x2; s2.y1[ch] = s2_y1; s2.y2[ch] = s2_y2;
-            }
-
-            // Cache filter coefficients if frequencies have changed
-            if (!context.cachedFilters || !context.filterConfig || !context.filterConfig.frequencies ||
-                frequencies.some((f, i) => f !== context.filterConfig.frequencies[i])) {
-                const SQRT2 = Math.SQRT2;
-                const sampleRateHalf = parameters.sampleRate * 0.5;
-                const invSampleRate = 1 / parameters.sampleRate;
+    
+            // --- Filter Coefficient Calculation ---
+            // Calculate coefficients only if they haven't been cached for the current config
+            if (!context.cachedFilters) {
+                const SQRT2 = Math.SQRT2; // Cache Math constant
+                const sampleRateHalf = pSampleRate * 0.5;
+                const invSampleRate = 1.0 / pSampleRate;
                 context.cachedFilters = new Array(2);
+                const minFreq = 20.0; // Minimum reasonable frequency
+                const maxFreq = sampleRateHalf - 1.0; // Nyquist - margin
+    
                 for (let i = 0; i < 2; i++) {
-                    const freq = Math.max(20, Math.min(sampleRateHalf - 20, frequencies[i]));
+                    // Clamp frequency robustly, ensure it's within valid range
+                    const rawFreq = pFrequencies[i];
+                    const freq = rawFreq < minFreq ? minFreq : (rawFreq > maxFreq ? maxFreq : rawFreq);
+                    
+                    // Prewarp frequency
                     const omega = Math.tan(freq * Math.PI * invSampleRate);
                     const omega2 = omega * omega;
-                    const n = 1 / (omega2 + SQRT2 * omega + 1);
-                    const b0_lp = omega2 * n;
+                    const k = SQRT2 * omega; // Intermediate term for Butterworth
+                    const den = omega2 + k + 1.0; // Denominator
+                    const invDen = 1.0 / den; // Calculate inverse denominator once for efficiency
+    
+                    // Common denominator terms for a1, a2
+                    const a1_common = 2.0 * (omega2 - 1.0) * invDen;
+                    const a2_common = (omega2 - k + 1.0) * invDen;
+    
+                    // Lowpass coefficients (Transposed Direct Form II)
+                    const b0_lp = omega2 * invDen;
+                    const b1_lp = 2.0 * b0_lp; // b1 = 2 * b0
+                    // b2 = b0
+                    
+                    // Highpass coefficients (Transposed Direct Form II)
+                    const b0_hp = invDen;
+                    const b1_hp = -2.0 * b0_hp; // b1 = -2 * b0
+                    // b2 = b0
+    
                     context.cachedFilters[i] = {
-                        lowpass: { b0: b0_lp, b1: 2 * b0_lp, b2: b0_lp, a1: 2 * (omega2 - 1) * n, a2: (omega2 - SQRT2 * omega + 1) * n },
-                        highpass: { b0: n, b1: -2 * n, b2: n, a1: 2 * (omega2 - 1) * n, a2: (omega2 - SQRT2 * omega + 1) * n }
+                        lowpass:  { b0: b0_lp, b1: b1_lp, b2: b0_lp, a1: a1_common, a2: a2_common },
+                        highpass: { b0: b0_hp, b1: b1_hp, b2: b0_hp, a1: a1_common, a2: a2_common }
                     };
                 }
             }
-
-            // Setup band signal buffers using a pooled TypedArray to avoid reallocation
-            if (!context.bandSignals || context.bandSignals.length !== parameters.channelCount) {
-                const totalArrays = parameters.channelCount * 3;
-                const arrayPool = new Float32Array(totalArrays * parameters.blockSize);
-                context.bandSignals = Array.from({ length: parameters.channelCount }, (_, ch) => {
-                    return new Array(3).fill(0).map((_, band) => {
-                        const offset = (ch * 3 + band) * parameters.blockSize;
-                        return arrayPool.subarray(offset, offset + parameters.blockSize);
-                    });
-                });
-                context.arrayPool = arrayPool; // Prevent GC of the pool
+            // --- End Filter Coefficient Calculation ---
+    
+    
+            // --- Biquad Filter Application Function (Optimized) ---
+            // Applies a cascaded (2 stages) biquad filter using Transposed Direct Form II.
+            // stateArray: Array containing state objects for each channel.
+            function applyFilterBlock(input, output, coeffs, stateArray, ch, blockSize) {
+                // Retrieve the state object for the current channel
+                const state = stateArray[ch]; 
+                const s1 = state.stage1; // State for the first stage
+                const s2 = state.stage2; // State for the second stage
+    
+                // Cache coefficients locally for faster access inside the loop
+                const b0 = coeffs.b0, b1 = coeffs.b1, b2 = coeffs.b2;
+                const a1 = coeffs.a1, a2 = coeffs.a2;
+                
+                // Local variables for filter state registers (critical for performance)
+                // These hold the state between samples within the block.
+                let s1_x1 = s1.x1, s1_x2 = s1.x2, s1_y1 = s1.y1, s1_y2 = s1.y2;
+                let s2_x1 = s2.x1, s2_x2 = s2.x2, s2_y1 = s2.y1, s2_y2 = s2.y2;
+                
+                // Process the block with loop unrolling (4 samples at a time) for speed.
+                // Assumes blockSize is reasonably large.
+                const blockSizeMod4 = blockSize - (blockSize % 4); // Equivalent to blockSize & ~3
+                let i = 0;
+                
+                // Unrolled loop: Process 4 samples per iteration
+                for (; i < blockSizeMod4; i += 4) {
+                    // --- Sample 1 ---
+                    let x0_1 = input[i]; 
+                    let y1_1 = b0 * x0_1 + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1; s1_x1 = x0_1; s1_y2 = s1_y1; s1_y1 = y1_1; // Update stage 1 state
+                    let y2_1 = b0 * y1_1 + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1; s2_x1 = y1_1; s2_y2 = s2_y1; s2_y1 = y2_1; // Update stage 2 state
+                    output[i] = y2_1;
+    
+                    // --- Sample 2 ---
+                    let x0_2 = input[i + 1];
+                    let y1_2 = b0 * x0_2 + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1; s1_x1 = x0_2; s1_y2 = s1_y1; s1_y1 = y1_2;
+                    let y2_2 = b0 * y1_2 + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1; s2_x1 = y1_2; s2_y2 = s2_y1; s2_y1 = y2_2;
+                    output[i + 1] = y2_2;
+    
+                    // --- Sample 3 ---
+                    let x0_3 = input[i + 2];
+                    let y1_3 = b0 * x0_3 + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1; s1_x1 = x0_3; s1_y2 = s1_y1; s1_y1 = y1_3;
+                    let y2_3 = b0 * y1_3 + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1; s2_x1 = y1_3; s2_y2 = s2_y1; s2_y1 = y2_3;
+                    output[i + 2] = y2_3;
+    
+                    // --- Sample 4 ---
+                    let x0_4 = input[i + 3];
+                    let y1_4 = b0 * x0_4 + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1; s1_x1 = x0_4; s1_y2 = s1_y1; s1_y1 = y1_4;
+                    let y2_4 = b0 * y1_4 + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1; s2_x1 = y1_4; s2_y2 = s2_y1; s2_y1 = y2_4;
+                    output[i + 3] = y2_4;
+                }
+                
+                // Handle remaining samples (if blockSize is not a multiple of 4)
+                for (; i < blockSize; i++) {
+                    const x0 = input[i];
+                    const y1 = b0 * x0 + b1 * s1_x1 + b2 * s1_x2 - a1 * s1_y1 - a2 * s1_y2;
+                    s1_x2 = s1_x1; s1_x1 = x0; s1_y2 = s1_y1; s1_y1 = y1;
+                    
+                    const y2 = b0 * y1 + b1 * s2_x1 + b2 * s2_x2 - a1 * s2_y1 - a2 * s2_y2;
+                    s2_x2 = s2_x1; s2_x1 = y1; s2_y2 = s2_y1; s2_y1 = y2;
+                    
+                    output[i] = y2;
+                }
+                
+                // IMPORTANT: Update the filter state in the context object for the next block processing.
+                // Copy the final local state values back to the state object.
+                s1.x1 = s1_x1; s1.x2 = s1_x2; s1.y1 = s1_y1; s1.y2 = s1_y2;
+                s2.x1 = s2_x1; s2.x2 = s2_x2; s2.y1 = s2_y1; s2.y2 = s2_y2;
             }
-
-            // Create temporary buffers for intermediate results if they don't exist
-            if (!context.tempBuffers || context.tempBuffers.length !== 2) {
+            // --- End Biquad Filter Application Function ---
+    
+    
+            // --- Buffer Management ---
+            // Ensure band signal buffers (using a pooled Float32Array) exist and have the correct size.
+            // This avoids reallocation in every process call.
+            const requiredPoolSize = pChannelCount * 3 * pBlockSize; // 3 bands per channel
+            if (!context.arrayPool || context.arrayPool.length !== requiredPoolSize) {
+                context.arrayPool = new Float32Array(requiredPoolSize);
+                // Recreate the views (subarrays) into the pool
+                context.bandSignals = Array.from({ length: pChannelCount }, (_, ch) => 
+                    Array.from({ length: 3 }, (_, band) => {
+                        const offset = (ch * 3 + band) * pBlockSize;
+                        return context.arrayPool.subarray(offset, offset + pBlockSize);
+                    })
+                );
+            }
+    
+            // Ensure temporary buffers for intermediate filter results exist and have the correct block size.
+            if (!context.tempBuffers || context.tempBuffers[0].length !== pBlockSize) {
                 context.tempBuffers = [
-                    new Float32Array(parameters.blockSize),
-                    new Float32Array(parameters.blockSize)
+                    new Float32Array(pBlockSize),
+                    new Float32Array(pBlockSize)
                 ];
             }
-
-            // Process filtering for each channel (block processing)
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                const bandSignals = context.bandSignals[ch];
-                const filterStates = context.filterStates;
+            // --- End Buffer Management ---
+    
+    
+            // --- Main Processing Loop (Per Channel) ---
+            // Cache frequently accessed context properties before the loop
+            const bandSignals = context.bandSignals;
+            const filterStates = context.filterStates; // Contains lowpass/highpass states
+            const cachedFilters = context.cachedFilters; // Contains coefficients
+            const tempBuffers = context.tempBuffers;
+            const fadeInState = context.fadeIn; // Cache fade-in state object reference
+    
+            for (let ch = 0; ch < pChannelCount; ch++) {
+                const channelOffset = ch * pBlockSize; // Starting index for this channel in the main buffer
+                const channelBandSignals = bandSignals[ch]; // Subarrays for [low, mid, high] bands for this channel
                 
-                // Extract channel data to temporary buffer
-                const inputBuffer = context.tempBuffers[0];
-                const hp1Buffer = context.tempBuffers[1];
+                // Use temporary buffers for intermediate results to avoid extra allocations
+                const inputBuffer = tempBuffers[0]; // For storing the initial channel data
+                const hp1Buffer = tempBuffers[1];   // For storing the output of the first highpass filter
+    
+                // 1. Extract channel data efficiently using subarray view and set method
+                inputBuffer.set(data.subarray(channelOffset, channelOffset + pBlockSize));
                 
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    inputBuffer[i] = data[offset + i];
-                }
+                // 2. --- Filtering Stages ---
+                // Apply Linkwitz-Riley crossovers using the optimized filter function.
                 
-                // Apply filters in blocks for better cache locality
-                // Band 0 (Low) - direct lowpass on input
-                applyFilterBlock(inputBuffer, bandSignals[0], context.cachedFilters[0].lowpass, filterStates.lowpass[0], ch, parameters.blockSize);
+                // Band 0 (Low): Apply first lowpass filter directly to input. Output to channelBandSignals[0].
+                applyFilterBlock(inputBuffer, channelBandSignals[0], cachedFilters[0].lowpass, filterStates.lowpass[0], ch, pBlockSize);
                 
-                // Highpass branch for remaining bands
-                applyFilterBlock(inputBuffer, hp1Buffer, context.cachedFilters[0].highpass, filterStates.highpass[0], ch, parameters.blockSize);
+                // Calculate the first highpass branch. Output to hp1Buffer.
+                applyFilterBlock(inputBuffer, hp1Buffer, cachedFilters[0].highpass, filterStates.highpass[0], ch, pBlockSize);
                 
-                // Band 1 (Mid)
-                applyFilterBlock(hp1Buffer, bandSignals[1], context.cachedFilters[1].lowpass, filterStates.lowpass[1], ch, parameters.blockSize);
+                // Band 1 (Mid): Apply second lowpass filter to the highpass result (hp1Buffer). Output to channelBandSignals[1].
+                applyFilterBlock(hp1Buffer, channelBandSignals[1], cachedFilters[1].lowpass, filterStates.lowpass[1], ch, pBlockSize);
                 
-                // Band 2 (High)
-                applyFilterBlock(hp1Buffer, bandSignals[2], context.cachedFilters[1].highpass, filterStates.highpass[1], ch, parameters.blockSize);
+                // Band 2 (High): Apply second highpass filter to the highpass result (hp1Buffer). Output to channelBandSignals[2].
+                applyFilterBlock(hp1Buffer, channelBandSignals[2], cachedFilters[1].highpass, filterStates.highpass[1], ch, pBlockSize);
                 
-                // Process each band with saturation
+                // 3. --- Saturation per Band ---
                 for (let band = 0; band < 3; band++) {
-                    const bandParams = parameters.bands[band];
-                    const mixRatio = bandParams.mx / 100;
-                    const gainLinear = Math.pow(10, bandParams.gn / 20);
-                    const biasOffset = Math.tanh(bandParams.dr * bandParams.bs);
-                    const bandSignal = bandSignals[band];
+                    // Cache band-specific parameters locally for the inner loop
+                    const bandParams = pBands[band];
+                    const dr = bandParams.dr;             // Drive
+                    const bs = bandParams.bs;             // Bias
+                    const mixRatio = bandParams.mx / 100.0; // Mix (0.0 to 1.0)
+                    // Use exponentiation operator (**) for potentially better performance/readability
+                    const gainLinear = 10.0**(bandParams.gn / 20.0); 
+                    const biasOffset = Math.tanh(dr * bs); // Pre-calculate tanh offset due to bias
+                    const oneMinusMix = 1.0 - mixRatio;   // Pre-calculate (1 - mix) for wet/dry mixing
+    
+                    const bandSignalBuffer = channelBandSignals[band]; // Get the Float32Array for the current band
                     
-                    // Process saturation in blocks with loop unrolling
-                    const blockSize = parameters.blockSize;
-                    const blockSizeMod4 = blockSize & ~3;
+                    // Process saturation with loop unrolling (4 samples at a time)
+                    const blockSizeMod4 = pBlockSize - (pBlockSize % 4);
                     let i = 0;
-                    
-                    // Main loop with 4-sample unrolling
+    
+                    // Unrolled loop for saturation
                     for (; i < blockSizeMod4; i += 4) {
                         // Sample 1
-                        let dry = bandSignal[i];
-                        let wet = Math.tanh(bandParams.dr * (dry + bandParams.bs)) - biasOffset;
-                        bandSignal[i] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                        let dry1 = bandSignalBuffer[i];
+                        let wet1 = Math.tanh(dr * (dry1 + bs)) - biasOffset; // Apply drive, bias, tanh, and offset correction
+                        bandSignalBuffer[i] = (dry1 * oneMinusMix + wet1 * mixRatio) * gainLinear; // Mix and apply gain
                         
                         // Sample 2
-                        dry = bandSignal[i+1];
-                        wet = Math.tanh(bandParams.dr * (dry + bandParams.bs)) - biasOffset;
-                        bandSignal[i+1] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                        let dry2 = bandSignalBuffer[i+1];
+                        let wet2 = Math.tanh(dr * (dry2 + bs)) - biasOffset;
+                        bandSignalBuffer[i+1] = (dry2 * oneMinusMix + wet2 * mixRatio) * gainLinear;
                         
                         // Sample 3
-                        dry = bandSignal[i+2];
-                        wet = Math.tanh(bandParams.dr * (dry + bandParams.bs)) - biasOffset;
-                        bandSignal[i+2] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                        let dry3 = bandSignalBuffer[i+2];
+                        let wet3 = Math.tanh(dr * (dry3 + bs)) - biasOffset;
+                        bandSignalBuffer[i+2] = (dry3 * oneMinusMix + wet3 * mixRatio) * gainLinear;
                         
                         // Sample 4
-                        dry = bandSignal[i+3];
-                        wet = Math.tanh(bandParams.dr * (dry + bandParams.bs)) - biasOffset;
-                        bandSignal[i+3] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                        let dry4 = bandSignalBuffer[i+3];
+                        let wet4 = Math.tanh(dr * (dry4 + bs)) - biasOffset;
+                        bandSignalBuffer[i+3] = (dry4 * oneMinusMix + wet4 * mixRatio) * gainLinear;
                     }
                     
-                    // Handle remaining samples
-                    for (; i < blockSize; i++) {
-                        const dry = bandSignal[i];
-                        const wet = Math.tanh(bandParams.dr * (dry + bandParams.bs)) - biasOffset;
-                        bandSignal[i] = (dry * (1 - mixRatio) + wet * mixRatio) * gainLinear;
+                    // Handle remaining samples (if pBlockSize is not a multiple of 4)
+                    for (; i < pBlockSize; i++) {
+                        const dry = bandSignalBuffer[i];
+                        const wet = Math.tanh(dr * (dry + bs)) - biasOffset;
+                        bandSignalBuffer[i] = (dry * oneMinusMix + wet * mixRatio) * gainLinear;
                     }
-                }
+                } // End band saturation loop
                 
-                // Sum all bands and apply fade-in if needed
-                if (context.fadeIn && context.fadeIn.counter < context.fadeIn.length) {
-                    for (let i = 0; i < parameters.blockSize; i++) {
-                        const fadeGain = Math.min(1, context.fadeIn.counter++ / context.fadeIn.length);
-                        result[offset + i] = (bandSignals[0][i] + bandSignals[1][i] + bandSignals[2][i]) * fadeGain;
-                        if (context.fadeIn.counter >= context.fadeIn.length) break;
+                // 4. --- Sum Bands and Apply Fade-in ---
+                // Combine the processed bands back into the final result buffer for this channel.
+                const lowBand = channelBandSignals[0];
+                const midBand = channelBandSignals[1];
+                const highBand = channelBandSignals[2];
+    
+                // Check if fade-in is active (only happens right after reset)
+                if (fadeInState && fadeInState.counter < fadeInState.length) {
+                    const fadeLen = fadeInState.length; // Cache fade length
+                    let fadeCounter = fadeInState.counter; // Use local counter for performance
+                    let i = 0;
+                    // Apply fade-in gain ramp
+                    for (; i < pBlockSize && fadeCounter < fadeLen; i++, fadeCounter++) {
+                        const summedSample = lowBand[i] + midBand[i] + highBand[i];
+                        // Linear fade-in ramp
+                        const fadeGain = fadeCounter / fadeLen; 
+                        result[channelOffset + i] = summedSample * fadeGain; 
+                    }
+                    // Update the shared counter in the context object
+                    fadeInState.counter = fadeCounter; 
+    
+                    // If fade completed within this block, process the rest normally
+                    for (; i < pBlockSize; i++) {
+                         result[channelOffset + i] = lowBand[i] + midBand[i] + highBand[i];
                     }
                 } else {
-                    // Sum all bands without fade-in
-                    for (let i = 0; i < parameters.blockSize; i++) {
-                        result[offset + i] = bandSignals[0][i] + bandSignals[1][i] + bandSignals[2][i];
+                    // Standard case: Sum all bands without fade-in
+                    for (let i = 0; i < pBlockSize; i++) {
+                        result[channelOffset + i] = lowBand[i] + midBand[i] + highBand[i];
+                    }
+                    // Ensure fade state is marked as completed if it existed
+                    if (fadeInState) {
+                         fadeInState.counter = fadeInState.length; 
                     }
                 }
-            }
-
+            } // End channel loop
+            // --- End Main Processing Loop ---
+    
+            // Return the buffer containing the processed audio data
             return result;
         `;
     }
@@ -339,11 +382,14 @@ class MultibandSaturationPlugin extends PluginBase {
 
         // Update crossover frequencies with bounds checking
         if (params.f1 !== undefined) {
-            this.f1 = Math.max(20, Math.min(2000, params.f1));
+            const f1Value = params.f1;
+            this.f1 = f1Value < 20 ? 20 : (f1Value > 2000 ? 2000 : f1Value);
             graphNeedsUpdate = true;
         }
         if (params.f2 !== undefined) {
-            this.f2 = Math.max(200, Math.min(20000, Math.max(this.f1, params.f2)));
+            const f2Value = params.f2;
+            const minF2 = this.f1 > 200 ? this.f1 : 200;
+            this.f2 = f2Value < minF2 ? minF2 : (f2Value > 20000 ? 20000 : f2Value);
             graphNeedsUpdate = true;
         }
 
@@ -352,20 +398,48 @@ class MultibandSaturationPlugin extends PluginBase {
             params.bands.forEach((bandParams, i) => {
                 if (i < 3) {
                     const band = this.bands[i];
-                    if (bandParams.dr !== undefined) band.dr = Math.max(0, Math.min(10, bandParams.dr));
-                    if (bandParams.bs !== undefined) band.bs = Math.max(-0.3, Math.min(0.3, bandParams.bs));
-                    if (bandParams.mx !== undefined) band.mx = Math.max(0, Math.min(100, bandParams.mx));
-                    if (bandParams.gn !== undefined) band.gn = Math.max(-18, Math.min(18, bandParams.gn));
+                    if (bandParams.dr !== undefined) {
+                        const drValue = bandParams.dr;
+                        band.dr = drValue < 0 ? 0 : (drValue > 10 ? 10 : drValue);
+                    }
+                    if (bandParams.bs !== undefined) {
+                        const bsValue = bandParams.bs;
+                        band.bs = bsValue < -0.3 ? -0.3 : (bsValue > 0.3 ? 0.3 : bsValue);
+                    }
+                    if (bandParams.mx !== undefined) {
+                        const mxValue = bandParams.mx;
+                        band.mx = mxValue < 0 ? 0 : (mxValue > 100 ? 100 : mxValue);
+                    }
+                    if (bandParams.gn !== undefined) {
+                        const gnValue = bandParams.gn;
+                        band.gn = gnValue < -18 ? -18 : (gnValue > 18 ? 18 : gnValue);
+                    }
                 }
             });
             graphNeedsUpdate = true;
         } else if (params.band !== undefined) {
             const band = this.bands[params.band];
             if (!band) return;
-            if (params.dr !== undefined) { band.dr = Math.max(0, Math.min(10, params.dr)); graphNeedsUpdate = true; }
-            if (params.bs !== undefined) { band.bs = Math.max(-0.3, Math.min(0.3, params.bs)); graphNeedsUpdate = true; }
-            if (params.mx !== undefined) { band.mx = Math.max(0, Math.min(100, params.mx)); graphNeedsUpdate = true; }
-            if (params.gn !== undefined) { band.gn = Math.max(-18, Math.min(18, params.gn)); graphNeedsUpdate = true; }
+            if (params.dr !== undefined) {
+                const drValue = params.dr;
+                band.dr = drValue < 0 ? 0 : (drValue > 10 ? 10 : drValue);
+                graphNeedsUpdate = true;
+            }
+            if (params.bs !== undefined) {
+                const bsValue = params.bs;
+                band.bs = bsValue < -0.3 ? -0.3 : (bsValue > 0.3 ? 0.3 : bsValue);
+                graphNeedsUpdate = true;
+            }
+            if (params.mx !== undefined) {
+                const mxValue = params.mx;
+                band.mx = mxValue < 0 ? 0 : (mxValue > 100 ? 100 : mxValue);
+                graphNeedsUpdate = true;
+            }
+            if (params.gn !== undefined) {
+                const gnValue = params.gn;
+                band.gn = gnValue < -18 ? -18 : (gnValue > 18 ? 18 : gnValue);
+                graphNeedsUpdate = true;
+            }
         }
 
         if (params.enabled !== undefined) this.enabled = params.enabled;
@@ -543,7 +617,8 @@ class MultibandSaturationPlugin extends PluginBase {
                 numberInput.value = e.target.value;
             });
             numberInput.addEventListener('input', (e) => {
-                const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
+                const parsedValue = parseFloat(e.target.value) || 0;
+                const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
                 setter(val);
                 rangeInput.value = val;
                 e.target.value = val;
@@ -629,7 +704,8 @@ class MultibandSaturationPlugin extends PluginBase {
                 });
                 
                 numberInput.addEventListener('input', (e) => {
-                    const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
+                    const parsedValue = parseFloat(e.target.value) || 0;
+                    const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
                     setter(val);
                     slider.value = val;
                     e.target.value = val;

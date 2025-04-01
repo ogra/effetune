@@ -40,7 +40,7 @@ class BitCrusherPlugin extends PluginBase {
             // Ideal full-scale DAC output (sum of ideal weights): 1 - 0.5^(bitDepth)
             const idealFullScale = 1 - Math.pow(0.5, bitDepth);
             
-            const zohRatio = zohFreq / sampleRate;
+            const zohRatio = zohFreq / parameters.sampleRate;
             
             // Recalculate per-channel bit amplitudes if bitError, bitDepth, seed, or channelCount has changed.
             if (
@@ -135,25 +135,26 @@ class BitCrusherPlugin extends PluginBase {
 
     setParameters(params) {
         if (params.bd !== undefined) {
-            this.bd = Math.max(4, Math.min(24, Math.round(params.bd)));
+            const rounded = Math.round(params.bd);
+            this.bd = rounded < 4 ? 4 : (rounded > 24 ? 24 : rounded);
         }
         if (params.td !== undefined) {
             this.td = params.td;
         }
         if (params.zf !== undefined) {
-            this.zf = Math.max(4000, Math.min(96000, Math.round(params.zf / 100) * 100));
+            const rounded = Math.round(params.zf / 100) * 100;
+            this.zf = rounded < 4000 ? 4000 : (rounded > 96000 ? 96000 : rounded);
         }
         if (params.be !== undefined) {
             // Clamp Bit Error (be) to 0.00 - 10.00% with 0.01% precision
             let newBe = parseFloat(params.be);
-            newBe = Math.max(0.00, Math.min(10.00, Math.round(newBe * 100) / 100));
-            this.be = newBe;
+            const rounded = Math.round(newBe * 100) / 100;
+            this.be = rounded < 0.00 ? 0.00 : (rounded > 10.00 ? 10.00 : rounded);
         }
         if (params.sd !== undefined) {
             // Clamp seed to 0-1000 (integer steps)
             let newSeed = Math.round(params.sd);
-            newSeed = Math.max(0, Math.min(1000, newSeed));
-            this.sd = newSeed;
+            this.sd = newSeed < 0 ? 0 : (newSeed > 1000 ? 1000 : newSeed);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -231,7 +232,8 @@ class BitCrusherPlugin extends PluginBase {
         bitDepthValue.value = this.bd;
         bitDepthValue.autocomplete = "off";
         bitDepthValue.addEventListener('input', (e) => {
-            const value = Math.max(4, Math.min(24, parseInt(e.target.value) || 4));
+            const parsedValue = parseInt(e.target.value) || 4;
+            const value = parsedValue < 4 ? 4 : (parsedValue > 24 ? 24 : parsedValue);
             this.setBd(value);
             bitDepthSlider.value = value;
             e.target.value = value;
@@ -281,7 +283,8 @@ class BitCrusherPlugin extends PluginBase {
         zohFreqValue.value = this.zf;
         zohFreqValue.autocomplete = "off";
         zohFreqValue.addEventListener('input', (e) => {
-            const value = Math.max(4000, Math.min(96000, parseInt(e.target.value) || 4000));
+            const parsedValue = parseInt(e.target.value) || 4000;
+            const value = parsedValue < 4000 ? 4000 : (parsedValue > 96000 ? 96000 : parsedValue);
             this.setZf(value);
             zohFreqSlider.value = value;
             e.target.value = value;
@@ -316,7 +319,8 @@ class BitCrusherPlugin extends PluginBase {
         beValue.value = this.be;
         beValue.autocomplete = "off";
         beValue.addEventListener('input', (e) => {
-            const value = Math.max(0, Math.min(10, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
             this.setBe(value);
             beSlider.value = value;
             e.target.value = value;
@@ -351,7 +355,8 @@ class BitCrusherPlugin extends PluginBase {
         seedValue.value = this.sd;
         seedValue.autocomplete = "off";
         seedValue.addEventListener('input', (e) => {
-            const value = Math.max(0, Math.min(1000, parseInt(e.target.value) || 0));
+            const parsedValue = parseInt(e.target.value) || 0;
+            const value = parsedValue < 0 ? 0 : (parsedValue > 1000 ? 1000 : parsedValue);
             this.setSeed(value);
             seedSlider.value = value;
             e.target.value = value;

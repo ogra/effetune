@@ -1,6 +1,6 @@
 {
   "name": "effetune",
-  "version": "1.40.0",
+  "version": "1.41.0",
   "description": "Desktop Audio Effect Processor",
   "main": "main.js",
   "scripts": {
@@ -20,8 +20,8 @@
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "electron": "^35.0.2",
-    "electron-builder": "^24.13.3",
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.12",
     "fs-extra": "^11.3.0",
     "mkdirp": "^3.0.1",
     "png2icons": "^2.0.1",
@@ -124,7 +124,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "public.app-category.music",

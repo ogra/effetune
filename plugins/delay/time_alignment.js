@@ -118,7 +118,7 @@ class TimeAlignmentPlugin extends PluginBase {
         if (delay !== undefined) {
             const value = typeof delay === 'number' ? delay : parseFloat(delay);
             if (!isNaN(value)) {
-                this.dl = Math.max(0, Math.min(this.maxDelayTime, value));
+                this.dl = value < 0 ? 0 : (value > this.maxDelayTime ? this.maxDelayTime : value);
             }
         }
 

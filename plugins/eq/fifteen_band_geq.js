@@ -19,149 +19,173 @@ class FifteenBandGEQPlugin extends PluginBase {
     ];
 
     static processorFunction = `
-        if (!parameters.enabled) return data;
-        const NUM_BANDS = 15;
-        const { channelCount, blockSize } = parameters;
-        
-        // Initialize context if not exists
-        if (!context.initialized) {
-            // Use arrays indexed by band number for faster access instead of object properties
-            context.filterStates = new Array(NUM_BANDS);
-            context.coefficients = new Array(NUM_BANDS);
-            context.previousGains = new Array(NUM_BANDS).fill(0);
-            for (let i = 0; i < NUM_BANDS; i++) {
-                context.filterStates[i] = {
-                    x1: new Array(channelCount).fill(0),
-                    x2: new Array(channelCount).fill(0),
-                    y1: new Array(channelCount).fill(0),
-                    y2: new Array(channelCount).fill(0)
-                };
-                context.coefficients[i] = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 };
-            }
-            context.initialized = true;
+'use strict'; // Enable strict mode for potential optimizations
+
+// --- Constants ---
+const NUM_BANDS = 15;
+const GAIN_BYPASS_THRESHOLD = 0.01; // Threshold below which gain is considered zero for bypass
+const A0_THRESHOLD = 1e-8;          // Denominator threshold to prevent division by zero/instability
+const Q_FACTOR = 2.1;               // Fixed Q factor for all bands
+const PI = 3.141592653589793;
+const TWO_PI = 6.283185307179586;
+// Fixed band frequencies (more efficient than recreating array each call)
+const FREQUENCIES = [25, 40, 63, 100, 160, 250, 400, 630, 1000, 1600, 2500, 4000, 6300, 10000, 16000];
+
+// Early exit if processing is disabled
+if (!parameters.enabled) return data;
+
+// --- Parameter & Context Caching ---
+const { channelCount, blockSize, sampleRate } = parameters;
+// Pre-calculate for coefficient calculations
+const twoPiTimesSrInv = TWO_PI / sampleRate;
+
+// --- State Initialization & Management ---
+// Initialize context only once or if channel count changes.
+if (!context.initialized || context.lastChannelCount !== channelCount) {
+    context.filterStates = new Array(NUM_BANDS);
+    context.coefficients = new Array(NUM_BANDS); // Will store {b0, b1, b2, a1, a2} or null (for bypass)
+    context.previousGains = new Array(NUM_BANDS).fill(NaN); // Use NaN to force initial calculation
+    for (let i = 0; i < NUM_BANDS; i++) {
+        // Use Array.fill(0.0) for clarity with floating point numbers
+        context.filterStates[i] = {
+            x1: new Array(channelCount).fill(0.0), x2: new Array(channelCount).fill(0.0),
+            y1: new Array(channelCount).fill(0.0), y2: new Array(channelCount).fill(0.0)
+        };
+        // Initialize coefficients as null to ensure calculation on first run
+        context.coefficients[i] = null;
+    }
+    context.lastChannelCount = channelCount;
+    context.initialized = true;
+}
+
+// Cache context arrays
+const coefficients = context.coefficients;
+const filterStates = context.filterStates;
+const previousGains = context.previousGains;
+
+// --- Coefficient Calculation ---
+// Update coefficients only for bands where the gain parameter has changed.
+let coeffsNeedUpdate = false; // Flag if any coefficient was updated
+for (let i = 0; i < NUM_BANDS; i++) {
+    const currentGain = parameters['b' + i];
+
+    // Check if gain changed (using !== handles NaN comparison correctly for first run)
+    if (currentGain !== previousGains[i]) {
+        coeffsNeedUpdate = true; // Mark that at least one calculation is needed
+        previousGains[i] = currentGain; // Store the new gain value regardless of bypass
+
+        // Check for bypass condition (gain effectively zero)
+        const gainAbs = currentGain < 0 ? -currentGain : currentGain; // Optimized Math.abs
+        if (gainAbs < GAIN_BYPASS_THRESHOLD) {
+            coefficients[i] = null; // Set to null to signal bypass in processing loop
+            continue; // Skip calculation for this bypassed band
         }
-        
-        // Reset states if channel count changes
-        if (context.filterStates[0].x1.length !== channelCount) {
-            for (let i = 0; i < NUM_BANDS; i++) {
-                context.filterStates[i] = {
-                    x1: new Array(channelCount).fill(0),
-                    x2: new Array(channelCount).fill(0),
-                    y1: new Array(channelCount).fill(0),
-                    y2: new Array(channelCount).fill(0)
-                };
-            }
+
+        // --- Calculate Peaking Filter Coefficients ---
+        // Formula derived from RBJ Audio EQ Cookbook, adapted for A = sqrt(LinearGain)
+        const A = Math.sqrt(Math.pow(10, 0.05 * currentGain)); // A = sqrt(10^(G/20)) = sqrt(10^(G/10 * 0.5)) = (10^(G/10))^0.25 ? No, original was A=sqrt(10^(G/20)). Let's recalculate. 10^(G/20) -> sqrt is 10^(G/40). Original code used sqrt(linearGain) where linearGain = 10^(G/20). So A = sqrt(10^(G/20)) is correct.
+        // A = Math.pow(10, 0.025 * currentGain); // 10^(G/40) - This seems the correct interpretation for A in RBJ when gain G is in dB for peaking filter
+
+        const freq = FREQUENCIES[i];
+        const w0 = freq * twoPiTimesSrInv; // Calculate angular frequency
+
+        // Clamp w0 slightly away from 0 and PI to avoid trig issues
+        const clampedW0 = w0 < 1e-6 ? 1e-6 : (w0 > PI - 1e-6 ? PI - 1e-6 : w0);
+        const cosw0 = Math.cos(clampedW0);
+        const sinw0 = Math.sin(clampedW0);
+        // Ensure Q_FACTOR is positive if it were a parameter
+        const alpha = sinw0 / (2 * Q_FACTOR);
+
+        const alphaMulA = alpha * A;
+        const alphaDivA = alpha / A; // Ensure A is not zero (checked by gain threshold indirectly)
+        const neg2CosW0 = -2 * cosw0; // Pre-calculate common term
+
+        // Calculate raw coefficients (b's and a's from cookbook notation)
+        const b0_raw = 1 + alphaMulA;
+        const b1_raw = neg2CosW0;
+        const b2_raw = 1 - alphaMulA;
+        const a0_raw = 1 + alphaDivA;
+        const a1_raw = neg2CosW0;
+        const a2_raw = 1 - alphaDivA;
+
+        // --- Normalize Coefficients ---
+        const a0_abs = a0_raw < 0 ? -a0_raw : a0_raw;
+        if (a0_abs < A0_THRESHOLD) {
+            // Filter is potentially unstable or identity, treat as bypass
+            coefficients[i] = null;
+        } else {
+            // Normalize using multiplication by inverse for potential speedup
+            const invA0 = 1.0 / a0_raw;
+            coefficients[i] = {
+                b0: b0_raw * invA0,
+                b1: b1_raw * invA0,
+                b2: b2_raw * invA0,
+                // Store a1/a2 such that the difference equation uses subtraction:
+                // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+                // RBJ a1, a2 usually have signs matching this form already.
+                a1: a1_raw * invA0,
+                a2: a2_raw * invA0
+            };
         }
-        
-        const frequencies = [25, 40, 63, 100, 160, 250, 400, 630, 1000, 1600, 2500, 4000, 6300, 10000, 16000];
-        const Q = 2.1;
-        const TWO_PI = 2 * Math.PI;
-        
-        // Update coefficients only if gains have changed
-        for (let i = 0; i < NUM_BANDS; i++) {
-            const currentGain = parameters['b' + i];
-            if (currentGain !== context.previousGains[i]) {
-                const linearGain = Math.pow(10, currentGain / 20);
-                const freq = frequencies[i];
-                const w0 = TWO_PI * freq / sampleRate;
-                
-                // Optimize trigonometric calculations
-                const sinw0 = Math.sin(w0);
-                const cosw0 = Math.cos(w0);
-                const alpha = sinw0 / (2 * Q);
-                
-                // Calculate coefficients once
-                const sqrtGain = Math.sqrt(linearGain);
-                const alphaTimesA = alpha * sqrtGain;
-                const alphaOverA = alpha / sqrtGain;
-                
-                const a0 = 1 + alphaOverA;
-                const a1 = -2 * cosw0;
-                const a2 = 1 - alphaOverA;
-                const b0 = 1 + alphaTimesA;
-                const b1 = a1;
-                const b2 = 1 - alphaTimesA;
-                
-                // Store normalized coefficients
-                const coef = context.coefficients[i];
-                coef.b0 = b0 / a0;
-                coef.b1 = b1 / a0;
-                coef.b2 = b2 / a0;
-                coef.a1 = a1 / a0;
-                coef.a2 = a2 / a0;
-                
-                context.previousGains[i] = currentGain;
-            }
+    }
+}
+
+// --- Audio Processing ---
+const targetChannelSetting = parameters.ch;
+const processAllChannels = targetChannelSetting === 'All';
+// Determine start and end channels for processing loop
+const targetChannel = processAllChannels ? -1 : (targetChannelSetting === 'Left' ? 0 : 1);
+const startCh = processAllChannels ? 0 : (targetChannel < channelCount ? targetChannel : channelCount); // Handle invalid target channel gracefully
+const endCh = processAllChannels ? channelCount : startCh + 1;
+
+
+// Process samples block by block, channel by channel
+for (let ch = startCh; ch < endCh; ch++) {
+    const offset = ch * blockSize; // Calculate base offset for this channel once
+
+    // Iterate through each filter band
+    for (let bandIndex = 0; bandIndex < NUM_BANDS; bandIndex++) {
+        const coef = coefficients[bandIndex]; // Get pre-calculated coefficients
+
+        // Skip this band if it's bypassed (null coefficients)
+        if (coef === null) {
+            continue;
         }
-        
-        // Process each band
-        for (let bandIndex = 0; bandIndex < NUM_BANDS; bandIndex++) {
-            // Skip processing if gain is effectively zero
-            if (Math.abs(parameters['b' + bandIndex]) < 0.01) continue;
-            
-            const states = context.filterStates[bandIndex];
-            const coef = context.coefficients[bandIndex];
-            
-            // Process based on selected channel
-            const ch = parameters.ch;
-            if (ch === 'All') {
-                // Process all channels
-                for (let ch = 0; ch < channelCount; ch++) {
-                    const offset = ch * blockSize;
-                    // Load channel state into local variables to reduce repeated property lookups
-                    let x1 = states.x1[ch];
-                    let x2 = states.x2[ch];
-                    let y1 = states.y1[ch];
-                    let y2 = states.y2[ch];
-                    
-                    // Process each sample in the block
-                    for (let i = 0; i < blockSize; i++) {
-                        const sample = data[offset + i];
-                        const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
-                        // Update local states
-                        x2 = x1;
-                        x1 = sample;
-                        y2 = y1;
-                        y1 = y0;
-                        data[offset + i] = y0;
-                    }
-                    
-                    // Store back updated states for this channel
-                    states.x1[ch] = x1;
-                    states.x2[ch] = x2;
-                    states.y1[ch] = y1;
-                    states.y2[ch] = y2;
-                }
-            } else {
-                // Process only selected channel (Left = 0, Right = 1)
-                const targetCh = ch === 'Left' ? 0 : 1;
-                if (targetCh < channelCount) {
-                    const offset = targetCh * blockSize;
-                    let x1 = states.x1[targetCh];
-                    let x2 = states.x2[targetCh];
-                    let y1 = states.y1[targetCh];
-                    let y2 = states.y2[targetCh];
-                    
-                    for (let i = 0; i < blockSize; i++) {
-                        const sample = data[offset + i];
-                        const y0 = coef.b0 * sample + coef.b1 * x1 + coef.b2 * x2 - coef.a1 * y1 - coef.a2 * y2;
-                        x2 = x1;
-                        x1 = sample;
-                        y2 = y1;
-                        y1 = y0;
-                        data[offset + i] = y0;
-                    }
-                    
-                    states.x1[targetCh] = x1;
-                    states.x2[targetCh] = x2;
-                    states.y1[targetCh] = y1;
-                    states.y2[targetCh] = y2;
-                }
-            }
+
+        // Cache coefficients and state reference for the inner loop
+        const b0 = coef.b0; const b1 = coef.b1; const b2 = coef.b2;
+        const a1 = coef.a1; const a2 = coef.a2;
+        const state = filterStates[bandIndex];
+
+        // Load state specific to this channel into local variables (avoids repeated lookups)
+        let x1 = state.x1[ch]; let x2 = state.x2[ch];
+        let y1 = state.y1[ch]; let y2 = state.y2[ch];
+
+        // Process each sample in the block for the current band and channel
+        for (let i = 0; i < blockSize; i++) {
+            const dataIndex = offset + i;
+            const x_n = data[dataIndex]; // Current input sample for this band
+
+            // Apply the 2nd order IIR difference equation using local state
+            const y_n = b0 * x_n + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+
+            // Update local state variables efficiently
+            x2 = x1; x1 = x_n;
+            y2 = y1; y1 = y_n;
+
+            // Write the processed sample back to the main buffer
+            // This output becomes the input for the next band in the cascade
+            data[dataIndex] = y_n;
         }
-        
-        return data;
-    `;
+
+        // Store the updated local state variables back to the context state arrays for this channel
+        state.x1[ch] = x1; state.x2[ch] = x2;
+        state.y1[ch] = y1; state.y2[ch] = y2;
+    } // End loop over bands
+} // End loop over channels
+
+return data; // Return the modified buffer
+`;
 
     constructor() {
         super('15Band GEQ', '15-band graphic equalizer');
@@ -444,7 +468,7 @@ class FifteenBandGEQPlugin extends PluginBase {
             for (let index = 0; index < FifteenBandGEQPlugin.BANDS.length; index++) {
                 const gain = this['b' + index];
                 // Skip calculation if gain is effectively zero
-                if (Math.abs(gain) < 0.01) continue;
+                if ((gain >= 0 ? gain : -gain) < 0.01) continue;
                 
                 const bandFreq = FifteenBandGEQPlugin.BANDS[index].freq;
                 const bandResponse = gain * Math.exp(-Math.pow(Math.log(freq/bandFreq), 2) / (2 * Math.pow(0.5, 2)));

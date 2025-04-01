@@ -15,7 +15,7 @@ class SubSynthPlugin extends PluginBase {
     this.registerProcessor(`
       if (!parameters.enabled) return data;
       
-      const { sl, dl, slf, sls, shf, shs, dhf, dhs, channelCount, blockSize } = parameters;
+      const { sl, dl, slf, sls, shf, shs, dhf, dhs, channelCount, blockSize, sampleRate } = parameters;
       const sr = sampleRate;
       const subLevelGain = sl / 100;
       const dryLevelGain = dl / 100;  // New Dry Level gain
@@ -158,7 +158,7 @@ class SubSynthPlugin extends PluginBase {
         for (let i = 0; i < blockSize; i++) {
           const idx = offset + i;
           let dry = data[idx];
-          let sub = Math.abs(dry);
+          let sub = dry >= 0 ? dry : -dry;
           if (subLpfChain.length) sub = processChain(subLpfChain, subLpfStates, sub, ch);
           if (subHpfChain.length) sub = processChain(subHpfChain, subHpfStates, sub, ch);
           if (dryHpfChain.length) dry = processChain(dryHpfChain, dryHpfStates, dry, ch);
@@ -202,19 +202,19 @@ class SubSynthPlugin extends PluginBase {
     // Validate and set Sub Level (sl)
     if (params.sl !== undefined) {
       const value = typeof params.sl === "number" ? params.sl : parseFloat(params.sl);
-      if (!isNaN(value)) this.sl = Math.max(0, Math.min(200, value));
+      if (!isNaN(value)) this.sl = value < 0 ? 0 : (value > 200 ? 200 : value);
     }
 
     // Validate and set Dry Level (dl)
     if (params.dl !== undefined) {
       const value = typeof params.dl === "number" ? params.dl : parseFloat(params.dl);
-      if (!isNaN(value)) this.dl = Math.max(0, Math.min(200, value));
+      if (!isNaN(value)) this.dl = value < 0 ? 0 : (value > 200 ? 200 : value);
     }
 
     // Validate and set Sub LPF Frequency (slf)
     if (params.slf !== undefined) {
       const value = typeof params.slf === "number" ? params.slf : parseFloat(params.slf);
-      if (!isNaN(value)) this.slf = Math.max(5, Math.min(400, value));
+      if (!isNaN(value)) this.slf = value < 5 ? 5 : (value > 400 ? 400 : value);
     }
 
     // Validate and set Sub LPF Slope (sls)
@@ -227,7 +227,7 @@ class SubSynthPlugin extends PluginBase {
     // Validate and set Sub HPF Frequency (shf)
     if (params.shf !== undefined) {
       const value = typeof params.shf === "number" ? params.shf : parseFloat(params.shf);
-      if (!isNaN(value)) this.shf = Math.max(5, Math.min(400, value));
+      if (!isNaN(value)) this.shf = value < 5 ? 5 : (value > 400 ? 400 : value);
     }
 
     // Validate and set Sub HPF Slope (shs)
@@ -240,7 +240,7 @@ class SubSynthPlugin extends PluginBase {
     // Validate and set Dry HPF Frequency (dhf)
     if (params.dhf !== undefined) {
       const value = typeof params.dhf === "number" ? params.dhf : parseFloat(params.dhf);
-      if (!isNaN(value)) this.dhf = Math.max(5, Math.min(400, value));
+      if (!isNaN(value)) this.dhf = value < 5 ? 5 : (value > 400 ? 400 : value);
     }
 
     // Validate and set Dry HPF Slope (dhs)

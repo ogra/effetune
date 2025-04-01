@@ -299,7 +299,7 @@ class MultibandBalancePlugin extends PluginBase {
                     const balance = balanceValues[band];
                     const bandSignal = bandSignals[band];
                     
-                    if (Math.abs(balance) < 1e-6) {
+                    if ((balance >= 0 ? balance : -balance) < 1e-6) {
                         // Center position (balance = 0): no change
                         // Process in blocks with loop unrolling
                         const blockSizeMod4 = parameters.blockSize & ~3;
@@ -346,7 +346,9 @@ class MultibandBalancePlugin extends PluginBase {
             // Apply fade-in if needed and copy to result buffer
             if (context.fadeIn && context.fadeIn.counter < context.fadeIn.length) {
                 for (let i = 0; i < outputBuffer.length; i++) {
-                    const fadeGain = Math.min(1, context.fadeIn.counter++ / context.fadeIn.length);
+                    // Replace Math.min with ternary for better performance
+                    const counterRatio = context.fadeIn.counter++ / context.fadeIn.length;
+                    const fadeGain = counterRatio > 1 ? 1 : counterRatio;
                     result[i] = outputBuffer[i] * fadeGain;
                     if (context.fadeIn.counter >= context.fadeIn.length) break;
                 }
@@ -374,29 +376,32 @@ class MultibandBalancePlugin extends PluginBase {
     setParameters(params) {
         // Update crossover frequencies with bounds checking
         if (params.f1 !== undefined) {
-            this.f1 = Math.max(20, Math.min(500, params.f1));
+            this.f1 = params.f1 < 20 ? 20 : (params.f1 > 500 ? 500 : params.f1);
         }
         if (params.f2 !== undefined) {
-            this.f2 = Math.max(100, Math.min(2000, Math.max(this.f1, params.f2)));
+            const minF2 = this.f1 > 100 ? this.f1 : 100;
+            this.f2 = params.f2 < minF2 ? minF2 : (params.f2 > 2000 ? 2000 : params.f2);
         }
         if (params.f3 !== undefined) {
-            this.f3 = Math.max(500, Math.min(8000, Math.max(this.f2, params.f3)));
+            const minF3 = this.f2 > 500 ? this.f2 : 500;
+            this.f3 = params.f3 < minF3 ? minF3 : (params.f3 > 8000 ? 8000 : params.f3);
         }
         if (params.f4 !== undefined) {
-            this.f4 = Math.max(1000, Math.min(20000, Math.max(this.f3, params.f4)));
+            const minF4 = this.f3 > 1000 ? this.f3 : 1000;
+            this.f4 = params.f4 < minF4 ? minF4 : (params.f4 > 20000 ? 20000 : params.f4);
         }
 
         // Update band parameters if provided as an array
         if (Array.isArray(params.bands)) {
             params.bands.forEach((bandParams, i) => {
                 if (i < 5 && bandParams.balance !== undefined) {
-                    this.bands[i].balance = Math.max(-100, Math.min(100, bandParams.balance));
+                    this.bands[i].balance = bandParams.balance < -100 ? -100 : (bandParams.balance > 100 ? 100 : bandParams.balance);
                 }
             });
         } else if (params.band !== undefined && params.balance !== undefined) {
             // Update a single band's balance
             if (params.band >= 0 && params.band < 5) {
-                this.bands[params.band].balance = Math.max(-100, Math.min(100, params.balance));
+                this.bands[params.band].balance = params.balance < -100 ? -100 : (params.balance > 100 ? 100 : params.balance);
             }
         }
 
@@ -455,7 +460,8 @@ class MultibandBalancePlugin extends PluginBase {
             });
             
             numberInput.addEventListener('input', (e) => {
-                const val = Math.max(min, Math.min(max, parseFloat(e.target.value) || 0));
+                const parsedValue = parseFloat(e.target.value) || 0;
+                const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
                 setter(val);
                 rangeInput.value = val;
                 e.target.value = val;
@@ -519,7 +525,8 @@ class MultibandBalancePlugin extends PluginBase {
             });
             
             numberInput.addEventListener('input', (e) => {
-                const val = Math.max(-100, Math.min(100, parseFloat(e.target.value) || 0));
+                const parsedValue = parseFloat(e.target.value) || 0;
+                const val = parsedValue < -100 ? -100 : (parsedValue > 100 ? 100 : parsedValue);
                 this.setParameters({ band: bandIndex, balance: val });
                 slider.value = val;
                 e.target.value = val;

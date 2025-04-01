@@ -161,7 +161,7 @@ function createWindow() {
     y: windowState.y,
     minWidth: 1024,
     minHeight: 768,
-    icon: path.join(__dirname, 'favicon.ico'),
+    icon: path.join(__dirname, 'images/favicon.ico'),
     acceptFirstMouse: true, // Accept mouse events on window activation
     show: false, // Don't show the window until it's ready
     webPreferences: {
@@ -736,7 +736,7 @@ function createMenu() {
             if (mainWindow) {
               mainWindow.webContents.send('show-about-dialog', {
                 version: appVersion,
-                icon: path.join(__dirname, 'favicon.ico')
+                icon: path.join(__dirname, 'images/favicon.ico')
               });
             }
           }
@@ -1814,7 +1814,7 @@ ipcMain.handle('update-application-menu', (event, menuTemplate) => {
               if (mainWindow) {
                 mainWindow.webContents.send('show-about-dialog', {
                   version: appVersion,
-                  icon: path.join(__dirname, 'favicon.ico')
+                  icon: path.join(__dirname, 'images/favicon.ico')
                 });
               }
             }

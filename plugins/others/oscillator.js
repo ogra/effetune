@@ -10,98 +10,160 @@ class OscillatorPlugin extends PluginBase {
         
         // Register processor function
         this.registerProcessor(`
+            // Early exit if disabled
             if (!parameters.enabled) return data;
-            
-            // Initialize or update context state
-            context.phase = context.phase || 0;
-            context.pinkNoiseState = context.pinkNoiseState || new Array(16).fill(0);
 
-            const frequency = parameters.fr;
-            const volume = Math.pow(10, parameters.vl / 20); // Convert dB to linear gain
-            const panning = parameters.pn;
-            const waveform = parameters.wf;
-            // Get actual sample rate from parameters
-            const sampleRate = parameters.sampleRate;
-            const phaseIncrement = (2 * Math.PI * frequency) / sampleRate;
+            // --- Parameter & Context Destructuring / Caching ---
+            const { fr: frequency, vl: volumeDb, pn: panning, wf: waveform } = parameters;
+            const { channelCount, blockSize, sampleRate } = parameters;
 
-            // Generate samples first to ensure phase consistency across channels
-            // This prevents phase discontinuities at buffer boundaries
-            const samples = new Array(parameters.blockSize);
-            for (let i = 0; i < parameters.blockSize; i++) {
-                if (waveform === 'white') {
-                    samples[i] = Math.random() * 2 - 1;
-                } else if (waveform === 'pink') {
-                    // Pink noise using Voss-McCartney algorithm
-                    const row = Math.floor(Math.random() * 16);
-                    context.pinkNoiseState[row] = Math.random() * 2 - 1;
-                    samples[i] = context.pinkNoiseState.reduce((a, b) => a + b) / 16;
-                } else {
-                    // Oscillator waveforms
-                    switch (waveform) {
-                        case 'sine':
-                            samples[i] = Math.sin(context.phase);
-                            break;
-                        case 'square':
-                            samples[i] = context.phase < Math.PI ? 1 : -1;
-                            break;
-                        case 'triangle':
-                            // Triangle wave generation with correct frequency
-                            samples[i] = 2 * Math.abs(2 * (context.phase / (2 * Math.PI) - Math.floor(context.phase / (2 * Math.PI) + 0.5))) - 1;
-                            break;
-                        case 'sawtooth':
-                            samples[i] = (context.phase / Math.PI - 1);
-                            break;
-                    }
+            // Initialize or retrieve context state (phase & pink noise state)
+            let currentPhase = context.phase || 0.0; // Use local variable for oscillator phase
 
-                    // Update phase for oscillator waveforms
-                    // Important: Phase update must be done here, not in the channel loop
-                    // to maintain phase continuity across buffer boundaries
-                    if (waveform !== 'white' && waveform !== 'pink') {
-                        context.phase += phaseIncrement;
-                        if (context.phase >= 2 * Math.PI) {
-                            context.phase -= 2 * Math.PI;
-                        }
+            // Initialize pink noise state only if needed and waveform is pink
+            if (waveform === 'pink' && (!context.pinkNoiseState || context.pinkNoiseState.length !== 16)) {
+                // Use Float32Array for potential performance benefits
+                context.pinkNoiseState = new Float32Array(16).fill(0.0);
+            }
+            // Cache pink noise state locally if waveform is pink
+            const pinkNoiseState = (waveform === 'pink') ? context.pinkNoiseState : null;
+
+            // --- Pre-calculation before Sample Loop ---
+            const TWO_PI = Math.PI * 2.0;
+            const ONE_OVER_PI = 1.0 / Math.PI;
+            const ONE_OVER_TWO_PI = 1.0 / TWO_PI;
+
+            // Calculate linear volume gain from dB
+            const volume = (volumeDb <= -96.0) ? 0.0 : Math.pow(10.0, volumeDb / 20.0);
+
+            // Calculate phase increment per sample for oscillators
+            const safeSampleRate = (sampleRate > 0) ? sampleRate : 44100.0;
+            const phaseIncrement = (TWO_PI * frequency) / safeSampleRate;
+
+            // Pre-calculate panning gains
+            let clampedPanning = panning;
+            if (panning < -1.0) clampedPanning = -1.0;
+            else if (panning > 1.0) clampedPanning = 1.0;
+            const panAngle = (clampedPanning + 1.0) * Math.PI * 0.25;
+            const panGainL = Math.cos(panAngle);
+            const panGainR = Math.sin(panAngle);
+
+            // --- Generate Source Samples (Mono) ---
+            const samples = new Float32Array(blockSize); // Use Float32Array for samples
+
+            // --- Sample Generation ---
+
+            // Logic selection outside the main sample loop
+            if (waveform === 'white') {
+                // White noise generation loop
+                for (let i = 0; i < blockSize; i++) {
+                    samples[i] = Math.random() * 2.0 - 1.0;
+                }
+            } else if (waveform === 'pink' && pinkNoiseState) {
+                // Voss-McCartney Pink Noise Generation Loop (Optimized)
+                let pinkSum = 0.0;
+                for (let k = 0; k < 16; ++k) { pinkSum += pinkNoiseState[k]; } // Initial sum
+
+                for (let i = 0; i < blockSize; i++) {
+                    const randomIndex = (Math.random() * 16) | 0;
+                    pinkSum -= pinkNoiseState[randomIndex];
+                    const newValue = Math.random() * 2.0 - 1.0;
+                    pinkNoiseState[randomIndex] = newValue;
+                    pinkSum += newValue;
+                    samples[i] = pinkSum * 0.0625; // Output average (sum / 16)
+                }
+            } else { // Oscillator Waveforms (or fallback)
+                // --- Select Generator Function based on waveform string ---
+                let generateSampleFunction;
+                // Define generator functions using arrow functions for conciseness
+                // These functions take the current phase and return the sample value.
+                switch (waveform) {
+                    case 'sine':
+                        generateSampleFunction = (phase) => Math.sin(phase);
+                        break;
+                    case 'square':
+                        generateSampleFunction = (phase) => (phase < Math.PI) ? 1.0 : -1.0;
+                        break;
+                    case 'triangle':
+                        generateSampleFunction = (phase) => {
+                            const normalizedPhase = phase * ONE_OVER_TWO_PI;
+                            // Equivalent to 2 * abs(2 * (normalizedPhase - round(normalizedPhase))) - 1
+                            const phaseValue = 2.0 * (normalizedPhase - ((normalizedPhase + 0.5) | 0));
+                            const absPhaseValue = (phaseValue >= 0.0) ? phaseValue : -phaseValue; // Manual abs
+                            return 2.0 * absPhaseValue - 1.0;
+                        };
+                        break;
+                    case 'sawtooth':
+                        generateSampleFunction = (phase) => phase * ONE_OVER_PI - 1.0;
+                        break;
+                    default: // Fallback for unknown waveforms (output silence)
+                        // If waveform is not white/pink and not a known oscillator, generate silence.
+                        generateSampleFunction = (phase) => 0.0;
+                        break;
+                }
+
+                // --- Oscillator Sample Loop using the selected function ---
+                for (let i = 0; i < blockSize; i++) {
+                    // Call the selected function to generate the sample
+                    samples[i] = generateSampleFunction(currentPhase);
+
+                    // Update phase for the next sample
+                    currentPhase += phaseIncrement;
+
+                    // Wrap phase using if statements (often faster than float modulo)
+                    if (currentPhase >= TWO_PI) {
+                        currentPhase -= TWO_PI;
+                    } else if (currentPhase < 0.0) {
+                        currentPhase += TWO_PI;
                     }
                 }
-            }
+                // Update context phase only if an oscillator was actually processed
+                context.phase = currentPhase;
 
-            // Apply volume and panning to each channel
-            // Mix with input instead of overwriting
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                const panGain = ch === 0 ? 
-                    Math.cos((panning + 1) * Math.PI / 4) : // Left channel
-                    Math.cos((1 - panning) * Math.PI / 4);  // Right channel
+            } // End waveform type check
 
-                // Mix samples with input
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    data[offset + i] = data[offset + i] + (samples[i] * volume * panGain);
+
+            // --- Apply Volume, Panning, and Mix with Input ---
+            for (let ch = 0; ch < channelCount; ch++) {
+                const offset = ch * blockSize;
+                let channelPanGain = 1.0;
+                if (channelCount >= 2) {
+                    channelPanGain = (ch === 0) ? panGainL : panGainR;
+                    if (ch > 1) channelPanGain = 0.0; // Silence channels beyond stereo
                 }
-            }
+                const finalChannelGain = volume * channelPanGain;
 
-            return data;
+                if (finalChannelGain !== 0.0) { // Skip processing if gain is zero
+                    for (let i = 0; i < blockSize; i++) {
+                        data[offset + i] += samples[i] * finalChannelGain; // Mix with input
+                    }
+                }
+            } // End channel loop
+
+            // --- Context State Update ---
+            // Note: context.phase was updated within the oscillator block
+            // Note: context.pinkNoiseState (if used) was modified directly (in-place)
+
+            return data; // Return the modified input buffer
         `);
     }
 
     // Parameter setters with validation
     setFrequency(value) {
-        this.fr = Math.max(20, Math.min(96000, 
-            typeof value === 'number' ? value : parseFloat(value)
-        ));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.fr = parsedValue < 20 ? 20 : (parsedValue > 96000 ? 96000 : parsedValue);
         this.updateParameters();
     }
 
     setVolume(value) {
-        this.vl = Math.max(-96, Math.min(0, 
-            typeof value === 'number' ? value : parseFloat(value)
-        ));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.vl = parsedValue < -96 ? -96 : (parsedValue > 0 ? 0 : parsedValue);
         this.updateParameters();
     }
 
     setPanning(value) {
-        this.pn = Math.max(-1, Math.min(1, 
-            typeof value === 'number' ? value : parseFloat(value)
-        ));
+        const parsedValue = typeof value === 'number' ? value : parseFloat(value);
+        this.pn = parsedValue < -1 ? -1 : (parsedValue > 1 ? 1 : parsedValue);
         this.updateParameters();
     }
 

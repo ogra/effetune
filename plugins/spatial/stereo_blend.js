@@ -67,7 +67,7 @@ class StereoBlendPlugin extends PluginBase {
     // Set parameters
     setParameters(params) {
         if (params.stereo !== undefined) {
-            this.stereo = Math.max(0, Math.min(200, params.stereo));
+            this.stereo = params.stereo < 0 ? 0 : (params.stereo > 200 ? 200 : params.stereo);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -114,7 +114,8 @@ class StereoBlendPlugin extends PluginBase {
         stereoValue.name = `${this.id}-${this.name}-stereo-value`;
         stereoValue.autocomplete = "off";
         stereoValue.addEventListener('input', (e) => {
-            const value = Math.max(0, Math.min(200, parseFloat(e.target.value) || 0));
+            const parsedValue = parseFloat(e.target.value) || 0;
+            const value = parsedValue < 0 ? 0 : (parsedValue > 200 ? 200 : parsedValue);
             this.setStereo(value);
             stereoSlider.value = value;
             e.target.value = value;
