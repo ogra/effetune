@@ -111,7 +111,7 @@ class PitchShifterPlugin extends PluginBase {
                     // Process if output buffer runs low AND enough input samples are available
                     while (unread < targetUnread && processCounter >= windowSize) {
                         // Apply window function to the frame in input buffer
-                        // The window is shaped like: /\ (sqrt ramp up, flat top, sqrt ramp down)
+                        // The window is shaped like: / (sqrt ramp up, flat top, sqrt ramp down)
                         for (let j = 0; j < windowSize; j++) {
                             // Calculate read index for input buffer (circular)
                             let readIndex = inputWriteIndex + j;

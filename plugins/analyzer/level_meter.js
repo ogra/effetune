@@ -20,8 +20,7 @@ class LevelMeterPlugin extends PluginBase {
             // Time assumed available: time
         
             // 1. Create result buffer and copy data (as per original requirement)
-            const result = new Float32Array(data.length);
-            result.set(data); // Must keep if original output requires the buffer copy
+            const result = data; // Using direct reference instead of copying
         
             // 2. Calculate peaks efficiently
             const numChannels = parameters.channelCount; // Cache parameter lookup

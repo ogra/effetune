@@ -20,8 +20,6 @@ class FiveBandPEQPlugin extends PluginBase {
 
   // AudioWorklet processor function (internal processing)
   static processorFunction = `
-  'use strict'; // Enable strict mode
-  
   // --- Constants ---
   const BYPASS_THRESHOLD = 0.01; // Gain values (absolute) below this are treated as zero for bypass
   const A0_THRESHOLD = 1e-8;      // Minimum absolute value for a0 to prevent division by near-zero

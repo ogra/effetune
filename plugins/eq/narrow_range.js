@@ -10,8 +10,6 @@
 //  - If the absolute slope is an even multiple of 6 (e.g. 24, 36, 48 dB/oct),
 //    the cascade is built entirely from second‑order stages.
 const processorFunction = `
-'use strict'; // Strict mode for potential optimizations
-
 // Early exit if processing is disabled
 if (!parameters.enabled) return data;
 

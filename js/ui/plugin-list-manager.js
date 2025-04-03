@@ -372,7 +372,6 @@ export class PluginListManager {
                 
                 // Throttle dragover events
                 this.throttle(() => {
-                    const pipeline = document.getElementById('pipeline');
                     this.updateInsertionIndicator(touch.clientY);
                 }, this.dragOverThrottleDelay);
             }

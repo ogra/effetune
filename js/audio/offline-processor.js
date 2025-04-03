@@ -110,7 +110,6 @@ export class OfflineProcessor {
 
                 // Initialize bus buffers
                 const busBuffers = new Map();
-                const MAX_BUSES = 4;
                 
                 // First, determine which buses are used
                 const usedBuses = new Set([0]); // Main bus (index 0) is always used

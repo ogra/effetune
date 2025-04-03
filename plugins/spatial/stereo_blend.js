@@ -20,9 +20,8 @@ class StereoBlendPlugin extends PluginBase {
                 channelCount, blockSize 
             } = parameters;
             
-            // Create temporary buffer to store original data
-            const tempBuffer = new Float32Array(data.length);
-            tempBuffer.set(data);
+            // Use original data directly
+            const tempBuffer = data;
 
             // Calculate stereo width factor (-1 to 1)
             // 0%: Full mono

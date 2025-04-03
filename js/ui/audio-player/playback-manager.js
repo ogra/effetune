@@ -29,6 +29,8 @@ export class PlaybackManager {
       return;
     }
     
+    // Debug logs removed for release
+    
     // Clear current playlist if not appending
     if (!append) {
       this.playlist = [];
@@ -45,6 +47,7 @@ export class PlaybackManager {
           name: fileName,
           file: null // No File object for path-based entries
         };
+        // Debug logs removed for release
         this.playlist.push(trackEntry);
         this.originalPlaylist.push({...trackEntry}); // Store a copy in original playlist
       } else if (file instanceof File) {
@@ -54,10 +57,15 @@ export class PlaybackManager {
           name: file.name,
           file: file
         };
+        // Debug logs removed for release
         this.playlist.push(trackEntry);
         this.originalPlaylist.push({...trackEntry}); // Store a copy in original playlist
+      } else {
+        console.warn('Unknown file type in loadFiles:', typeof file, file);
       }
     });
+    
+    // Debug logs removed for release
   }
   
   /**

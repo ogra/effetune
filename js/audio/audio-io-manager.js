@@ -1,5 +1,3 @@
-import { AudioContextManager } from './audio-context-manager.js';
-
 /**
  * AudioIOManager - Manages audio input and output devices
  */
@@ -42,6 +40,9 @@ export class AudioIOManager {
                 const preferences = await window.electronIntegration.loadAudioPreferences();
                 if (preferences && preferences.inputDeviceId) {
                     audioConstraints.deviceId = { exact: preferences.inputDeviceId };
+                } else {
+                    console.log('No audio preferences found or no input device specified, using default audio input');
+                    // Use default input device by not specifying deviceId
                 }
             }
 
@@ -189,6 +190,7 @@ export class AudioIOManager {
             if (window.electronAPI && window.electronIntegration) {
                 // If running in Electron, try to use saved output device
                 const preferences = await window.electronIntegration.loadAudioPreferences();
+                // If we have preferences with an output device ID, try to use it
                 if (preferences && preferences.outputDeviceId) {
                     try {
                         // Create a new audio element for actual use
@@ -229,12 +231,10 @@ export class AudioIOManager {
                                 
                                 if (outputDevice) {
                                     await this.audioElement.setSinkId(preferences.outputDeviceId);
-                                    console.log(`Audio output set to: ${outputDevice.label || 'unnamed device'}`);
                                 } else {
                                     // Try to use the saved device ID directly even if we couldn't verify it
                                     try {
                                         await this.audioElement.setSinkId(preferences.outputDeviceId);
-                                        console.log(`Audio output set to saved device ID: ${preferences.outputDeviceId}`);
                                     } catch (directSinkError) {
                                         console.warn('Failed to set audio output to saved device, using default:', directSinkError);
                                         // Fall back to default device
@@ -247,13 +247,7 @@ export class AudioIOManager {
                                     this.audioElement.srcObject = this.destinationNode.stream;
                                 } else {
                                     console.warn('No destination stream available');
-                                    // Fall back to default output
-                                    try {
-                                        this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
-                                    } catch (connectError) {
-                                        console.error('Error connecting to default audio destination:', connectError);
-                                        return `Audio Error: Failed to connect to default audio destination: ${connectError.message}`;
-                                    }
+                                    // We already have a default connection from above
                                 }
                                 
                                 // Explicitly call play()
@@ -261,12 +255,11 @@ export class AudioIOManager {
                                     await this.audioElement.play();
                                 } catch (playError) {
                                     console.warn('Failed to play audio:', playError);
-                                    // Fall back to default output
-                                    this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                                    // We already have a default connection from above
                                 }
                             } catch (sinkError) {
                                 console.warn('Failed to set audio output device:', sinkError);
-                                this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                                // We already have a default connection from above
                                 
                                 // Still try to use the audio element as a fallback
                                 if (this.destinationNode && this.destinationNode.stream) {
@@ -275,8 +268,7 @@ export class AudioIOManager {
                             }
                         } else {
                             console.warn('Audio Output Devices API not supported in this browser');
-                            // Fall back to default output
-                            this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                            // We already have a default connection from above
                             
                             // Still try to use the audio element as a fallback
                             if (this.destinationNode && this.destinationNode.stream) {
@@ -287,11 +279,66 @@ export class AudioIOManager {
                         // Add event listeners for debugging
                         this.audioElement.addEventListener('error', (e) => {
                             // If there's an error with the audio element, make sure we're using the default output
+                            // We already have a default connection from above
+                        });
+                    } catch (error) {
+                        console.warn('Error setting up audio element with preferences:', error);
+                        // We already have a default connection from above
+                    }
+                } else {
+                    console.log('No audio preferences found or no output device specified, using default audio output');
+                    
+                    // Create a new audio element for the default device
+                    try {
+                        if (this.audioElement) {
+                            this.audioElement.pause();
+                            this.audioElement.srcObject = null;
+                        }
+                        
+                        this.audioElement = new Audio();
+                        this.audioElement.autoplay = true;
+                        this.audioElement.volume = 1.0;
+                        this.audioElement.muted = false;
+                        
+                        // Check for Audio Output Devices API support
+                        const hasSinkIdSupport = typeof this.audioElement.setSinkId === 'function';
+                        
+                        if (hasSinkIdSupport) {
+                            // Set to default device explicitly
+                            try {
+                                await this.audioElement.setSinkId('default');
+                                console.log('Audio output set to default device');
+                            } catch (sinkError) {
+                                console.warn('Failed to set audio output to default device:', sinkError);
+                            }
+                        }
+                        
+                        // Connect to destination if available
+                        if (this.destinationNode && this.destinationNode.stream) {
+                            this.audioElement.srcObject = this.destinationNode.stream;
+                            
+                            // Explicitly call play()
+                            try {
+                                await this.audioElement.play();
+                            } catch (playError) {
+                                console.warn('Failed to play audio:', playError);
+                                // Fall back to default output
+                                this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                            }
+                        } else {
+                            // If no destination stream, connect worklet to default destination
+                            this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                        }
+                        
+                        // Add event listeners for debugging
+                        this.audioElement.addEventListener('error', (e) => {
+                            // If there's an error with the audio element, make sure we're using the default output
                             if (!this.defaultDestinationConnection) {
                                 this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
                             }
                         });
                     } catch (error) {
+                        console.warn('Error setting up default audio device:', error);
                         // Ensure we have audio output in case of error
                         if (!this.defaultDestinationConnection) {
                             this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);

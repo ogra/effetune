@@ -3,8 +3,22 @@
  * Provides desktop-specific functionality when running in Electron
  */
 
-// Import path module for file operations
-const path = window.require ? window.require('path') : { basename: (p, ext) => p.split('/').pop().replace(ext, '') };
+// Import modules
+import { updateApplicationMenu } from './electron/menuIntegration.js';
+import { 
+  loadAudioPreferences, 
+  saveAudioPreferences, 
+  getAudioDevices, 
+  showAudioConfigDialog 
+} from './electron/audioIntegration.js';
+import { 
+  openPresetFile, 
+  exportPreset, 
+  importPreset, 
+  openMusicFile, 
+  processAudioFiles, 
+  getAudioMimeType 
+} from './electron/presetIntegration.js';
 
 class ElectronIntegration {
   constructor() {
@@ -22,95 +36,21 @@ class ElectronIntegration {
       this.patchDocumentationLinks();
     }
   }
+  
+  /**
+   * Add debug handler for drag and drop events (for development only)
+   * @private
+   */
+  addDragDropDebugHandler() {
+    // This method is kept for reference but not used in production
+  }
 
   /**
    * Update the application menu with translated labels
    * This method is called when translations are loaded
    */
   updateApplicationMenu() {
-    if (!this.isElectron || !window.uiManager) return;
-    
-    try {
-      // Get the t function from UIManager
-      const t = window.uiManager.t.bind(window.uiManager);
-      
-      // Create a menu template with translated labels
-      const menuTemplate = {
-        file: {
-          label: t('menu.file'),
-          submenu: [
-            { label: t('menu.file.save') },
-            { label: t('menu.file.saveAs') },
-            { type: 'separator' },
-            { label: t('menu.file.openMusicFile') },
-            { label: t('menu.file.processAudioFiles') },
-            { type: 'separator' },
-            { label: t('menu.file.exportPreset') },
-            { label: t('menu.file.importPreset') },
-            { type: 'separator' },
-            { label: t('menu.file.quit') }
-          ]
-        },
-        edit: {
-          label: t('menu.edit'),
-          submenu: [
-            { label: t('menu.edit.undo') },
-            { label: t('menu.edit.redo') },
-            { type: 'separator' },
-            { label: t('menu.edit.cut') },
-            { label: t('menu.edit.copy') },
-            { label: t('menu.edit.paste') },
-            { type: 'separator' },
-            { label: t('menu.edit.delete') },
-            { label: t('menu.edit.selectAll') }
-          ]
-        },
-        view: {
-          label: t('menu.view'),
-          submenu: [
-            { label: t('menu.view.reload') },
-            { type: 'separator' },
-            { label: t('menu.view.resetZoom') },
-            { label: t('menu.view.zoomIn') },
-            { label: t('menu.view.zoomOut') },
-            { type: 'separator' },
-            { label: t('menu.view.toggleFullscreen') }
-          ]
-        },
-        settings: {
-          label: t('menu.settings'),
-          submenu: [
-            { label: t('menu.settings.audioDevices') }
-          ]
-        },
-        help: {
-          label: t('menu.help'),
-          submenu: [
-            { label: t('menu.help.help') },
-            { type: 'separator' },
-            { label: t('menu.help.about') }
-          ]
-        }
-      };
-      
-      // Log the menu template for debugging
-      console.log('Menu template created, sending to main process');
-      
-      // Send the menu template to the main process to update the application menu
-      window.electronAPI.updateApplicationMenu(menuTemplate)
-        .then(result => {
-          if (result.success) {
-            console.log('Application menu updated successfully');
-          } else {
-            console.error('Failed to update application menu:', result.error);
-          }
-        })
-        .catch(error => {
-          console.error('Error updating application menu:', error);
-        });
-    } catch (error) {
-      console.error('Error creating menu template:', error);
-    }
+    return updateApplicationMenu(this.isElectron);
   }
 
   /**
@@ -206,7 +146,15 @@ class ElectronIntegration {
     
     // Listen for open preset file request from main process
     window.electronAPI.onOpenPresetFile((filePath) => {
-      this.openPresetFile(filePath);
+      
+      // Check if the app is already initialized (AudioWorklet is ready)
+      if (window.app && window.app.audioManager && window.app.audioManager.workletNode) {
+        // If the app is already initialized, load the preset file directly
+        this.openPresetFile(filePath);
+      } else {
+        // If the app is not yet initialized, store the path for later use
+        window.pendingPresetFilePath = filePath;
+      }
     });
     
     // Listen for open music file request from main process
@@ -217,10 +165,40 @@ class ElectronIntegration {
 
     // Listen for open music files request from main process (for command line arguments)
     window.electronAPI.onOpenMusicFiles((filePaths) => {
-      // Open music files from command line arguments
       if (filePaths && filePaths.length > 0) {
-        if (window.uiManager) {
-          window.uiManager.createAudioPlayer(filePaths, false);
+        // Debug logs removed for release
+        
+        // Check if the app is already initialized and not in first launch
+        if (window.app && window.app.audioManager && window.app.audioManager.workletNode &&
+            window.isFirstLaunch !== true) {
+          // If the app is already initialized and not in first launch, create audio player directly
+          
+          // Create audio player with the music files
+          // Use the existing audio preferences
+          if (window.uiManager) {
+            // Debug logs removed for release
+            // Store the files in a global variable for debugging
+            window._debugCommandLineMusicFiles = filePaths;
+            window.uiManager.createAudioPlayer(filePaths, false);
+          }
+        } else {
+          // If the app is not yet initialized or in first launch, store file paths for later use
+          // Debug logs removed for release
+          window.pendingMusicFiles = filePaths;
+          // Store the files in a global variable for debugging
+          window._debugPendingMusicFiles = filePaths;
+          
+          // Set useInputWithPlayer to false immediately, even during first launch
+          // This ensures the same behavior as drag and drop
+          if (window.electronIntegration && window.electronIntegration.audioPreferences) {
+            // Debug logs removed for release
+            window.electronIntegration.audioPreferences.useInputWithPlayer = false;
+          }
+          
+          // Also set a flag to indicate that command line music files should not use input
+          window._commandLineMusicFilesNoInput = true;
+          
+          // Debug logs removed for release
         }
       }
     });
@@ -263,123 +241,18 @@ class ElectronIntegration {
    * @param {string} filePath - Path to the preset file
    */
   async openPresetFile(filePath) {
-    if (!this.isElectron || !window.uiManager) {
-      console.error('Cannot open preset file: Electron integration or UI manager not available');
-      return;
-    }
-    
-    try {
-      // Set pipeline state flags to false
-      try {
-        // Simply set the flags directly
-        if (typeof window.ORIGINAL_PIPELINE_STATE_LOADED !== 'undefined') {
-          // Use a direct assignment if possible
-          window.ORIGINAL_PIPELINE_STATE_LOADED = false;
-        }
-        
-        // Set the regular flag
-        window.pipelineStateLoaded = false;
-        
-        // Force app.js to skip loading previous state by setting a direct flag
-        window.__FORCE_SKIP_PIPELINE_STATE_LOAD = true;
-      } catch (err) {
-        console.error('Error setting pipeline state flags:', err.message || String(err));
-      }
-      
-      // Verify file exists and has correct extension
-      if (!filePath.endsWith('.effetune_preset')) {
-        console.error('Not a preset file:', filePath);
-        window.uiManager.setError('Not a valid preset file');
-        setTimeout(() => window.uiManager.clearError(), 3000);
-        return;
-      }
-      
-      // Read file
-      // Reading preset file
-      const readResult = await window.electronAPI.readFile(filePath);
-      
-      if (!readResult.success) {
-        console.error('Failed to read preset file:', readResult.error);
-        window.uiManager.setError(`Failed to read preset file: ${readResult.error}`);
-        setTimeout(() => window.uiManager.clearError(), 3000);
-        return;
-      }
-      
-      // Parse the file content
-      // Parsing preset file content
-      let fileData;
-      try {
-        fileData = JSON.parse(readResult.content);
-      } catch (parseError) {
-        console.error('Failed to parse preset file JSON:', parseError);
-        window.uiManager.setError('Invalid preset file format');
-        setTimeout(() => window.uiManager.clearError(), 3000);
-        return;
-      }
-      
-      let presetData;
-      
-      // Handle different formats for backward compatibility
-      if (Array.isArray(fileData)) {
-        // Detected old preset format (array)
-        // Old format: direct array of pipeline plugins
-        presetData = {
-          name: path.basename(filePath, '.effetune_preset'),
-          timestamp: Date.now(),
-          pipeline: fileData
-        };
-      } else if (fileData.pipeline) {
-        // Detected new preset format (object with pipeline)
-        // New format: complete preset object
-        presetData = fileData;
-        // Update timestamp to current time
-        presetData.timestamp = Date.now();
-        // If no name is provided, use the filename
-        if (!presetData.name) {
-          presetData.name = path.basename(filePath, '.effetune_preset');
-        }
-      } else {
-        // Unknown format
-        console.error('Unknown preset format:', fileData);
-        window.uiManager.setError('Unknown preset format');
-        setTimeout(() => window.uiManager.clearError(), 3000);
-        return;
-      }
-      
-      // Set name to filename for display in UI
-      const fileName = path.basename(filePath, '.effetune_preset');
-      presetData.name = fileName;
-      
-      // Load the preset
-      // Loading preset into UI
-      window.uiManager.loadPreset(presetData);
-      
-      // Display message with filename using translation key
-      window.uiManager.setError('success.presetLoaded', false, { name: fileName });
-      setTimeout(() => window.uiManager.clearError(), 3000);
-    } catch (error) {
-      console.error('Error opening preset file:', error);
-      window.uiManager.setError(`Error opening preset file: ${error.message}`);
-      setTimeout(() => window.uiManager.clearError(), 3000);
-    }
+    return openPresetFile(this.isElectron, filePath);
   }
 
   /**
    * Load saved audio preferences
    */
   async loadAudioPreferences() {
-    if (!this.isElectron) return null;
-    
-    try {
-      const result = await window.electronAPI.loadAudioPreferences();
-      if (result.success && result.preferences) {
-        this.audioPreferences = result.preferences;
-      }
-      return this.audioPreferences;
-    } catch (error) {
-      console.error('Failed to load audio preferences:', error);
-      return null;
+    const preferences = await loadAudioPreferences(this.isElectron);
+    if (preferences) {
+      this.audioPreferences = preferences;
     }
+    return this.audioPreferences;
   }
 
   /**
@@ -387,484 +260,38 @@ class ElectronIntegration {
    * @param {Object} preferences - Audio device preferences
    */
   async saveAudioPreferences(preferences) {
-    if (!this.isElectron) return false;
-    
-    try {
-      this.audioPreferences = preferences;
-      const result = await window.electronAPI.saveAudioPreferences(preferences);
-      return result.success;
-    } catch (error) {
-      console.error('Failed to save audio preferences:', error);
-      return false;
-    }
+    this.audioPreferences = preferences;
+    return saveAudioPreferences(this.isElectron, preferences);
   }
-/**
- * Get available audio devices
- * @returns {Promise<Array>} List of audio devices
- */
-async getAudioDevices() {
-  if (!this.isElectron) return [];
-  
-  try {
-    // First try to get devices from Electron's main process
-    try {
-      const result = await window.electronAPI.getAudioDevices();
-      if (result.success && result.devices && result.devices.length > 0) {
-        return result.devices;
-      }
-    } catch (electronError) {
-      console.warn('Failed to get audio devices from Electron API:', electronError);
-      // Continue to browser API fallback
-    }
-    
-    // If Electron API fails or returns no devices, try browser's API directly
-    // This is especially important for output devices which can be enumerated
-    // even when microphone permission is denied
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      try {
-        console.log('Trying to enumerate devices using browser API');
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        
-        // Process and return the devices
-        return devices.map(device => ({
-          deviceId: device.deviceId,
-          kind: device.kind,
-          label: device.label || (device.kind === 'audioinput'
-            ? 'Microphone (no permission)'
-            : device.kind === 'audiooutput'
-              ? `Speaker ${device.deviceId.substring(0, 5)}`
-              : 'Unknown device')
-        }));
-      } catch (browserError) {
-        console.warn('Failed to enumerate devices using browser API:', browserError);
-      }
-    }
-    
-    // If we still have no devices, create default placeholders
-    // This ensures the user can at least select the default devices
-    return [
-      { deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' },
-      { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' }
-    ];
-  } catch (error) {
-    console.error('Failed to get audio devices:', error);
-    // Return default devices as fallback
-    return [
-      { deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' },
-      { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' }
-    ];
+
+  /**
+   * Get available audio devices
+   * @returns {Promise<Array>} List of audio devices
+   */
+  async getAudioDevices() {
+    return getAudioDevices(this.isElectron);
   }
-}
 
   /**
    * Show audio configuration dialog
    * @param {Function} callback - Callback function to be called when devices are selected
    */
   async showAudioConfigDialog(callback) {
-    if (!this.isElectron) return;
-    
-    try {
-      // Show "Configuring audio devices..." message
-      if (window.uiManager) {
-        window.uiManager.setError('status.configuringAudio');
-      }
-      
-      // Get available audio devices
-      const devices = await this.getAudioDevices();
-      
-      // Group devices by kind
-      const inputDevices = devices.filter(device => device.kind === 'audioinput');
-      const outputDevices = devices.filter(device => device.kind === 'audiooutput');
-      
-      // Ensure we have at least one default device in each category
-      if (inputDevices.length === 0) {
-        inputDevices.push({ deviceId: 'default', kind: 'audioinput', label: 'Default Microphone' });
-      }
-      
-      if (outputDevices.length === 0) {
-        outputDevices.push({ deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker' });
-      }
-      
-      console.log('Available input devices:', inputDevices);
-      console.log('Available output devices:', outputDevices);
-      
-      // Get current sample rate preference or default to 96000
-      const currentSampleRate = this.audioPreferences?.sampleRate || 96000;
-      
-      // Add window close event listener to clear error message
-      const clearErrorOnClose = () => {
-        if (window.uiManager) {
-          window.uiManager.clearError();
-        }
-        window.removeEventListener('beforeunload', clearErrorOnClose);
-      };
-      window.addEventListener('beforeunload', clearErrorOnClose);
-      
-      // Get translation function from UIManager
-      if (!window.uiManager) {
-        console.error('UIManager not available for translations');
-        return;
-      }
-      const t = window.uiManager.t.bind(window.uiManager);
-      
-      // Create dialog HTML
-      const dialogHTML = `
-        <div class="audio-config-dialog">
-          <h2>${t('dialog.audioConfig.title')}</h2>
-          <div class="device-section">
-            <label for="input-device">${t('dialog.audioConfig.inputDevice')}</label>
-            <select id="input-device">
-              ${inputDevices.map(device =>
-                `<option value="${device.deviceId}" ${this.audioPreferences?.inputDeviceId === device.deviceId ? 'selected' : ''}>${device.label}</option>`
-              ).join('')}
-            </select>
-            <div class="checkbox-container">
-              <input type="checkbox" id="use-input-with-player" ${this.audioPreferences?.useInputWithPlayer ? 'checked' : ''}>
-              <label for="use-input-with-player">${t('dialog.audioConfig.useInputWithPlayer')}</label>
-            </div>
-          </div>
-          <div class="device-section">
-            <label for="output-device">${t('dialog.audioConfig.outputDevice')}</label>
-            <select id="output-device">
-              ${outputDevices.map(device =>
-                `<option value="${device.deviceId}" ${this.audioPreferences?.outputDeviceId === device.deviceId ? 'selected' : ''}>${device.label}</option>`
-              ).join('')}
-            </select>
-          </div>
-          <div class="device-section">
-            <label for="sample-rate">${t('dialog.audioConfig.sampleRate')}</label>
-            <select id="sample-rate">
-              <option value="44100" ${currentSampleRate === 44100 ? 'selected' : ''}>44.1 kHz</option>
-              <option value="48000" ${currentSampleRate === 48000 ? 'selected' : ''}>48 kHz</option>
-              <option value="88200" ${currentSampleRate === 88200 ? 'selected' : ''}>88.2 kHz</option>
-              <option value="96000" ${currentSampleRate === 96000 ? 'selected' : ''}>96 kHz (Default)</option>
-              <option value="176400" ${currentSampleRate === 176400 ? 'selected' : ''}>176.4 kHz</option>
-              <option value="192000" ${currentSampleRate === 192000 ? 'selected' : ''}>192 kHz</option>
-              <option value="352800" ${currentSampleRate === 352800 ? 'selected' : ''}>352.8 kHz</option>
-              <option value="384000" ${currentSampleRate === 384000 ? 'selected' : ''}>384 kHz</option>
-            </select>
-          </div>
-          <div class="dialog-buttons">
-            <button id="cancel-button">${t('dialog.audioConfig.cancel')}</button>
-            <button id="apply-button">${t('dialog.audioConfig.apply')}</button>
-          </div>
-        </div>
-      `;
-      
-      // Create dialog element
-      const dialogElement = document.createElement('div');
-      dialogElement.className = 'modal-overlay';
-      dialogElement.innerHTML = dialogHTML;
-      document.body.appendChild(dialogElement);
-      
-      // Add dialog styles
-      const styleElement = document.createElement('style');
-      styleElement.textContent = `
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.7);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .audio-config-dialog {
-          background-color: #222;
-          border-radius: 8px;
-          padding: 20px;
-          width: 400px;
-          color: #fff;
-        }
-        .device-section {
-          margin-bottom: 15px;
-        }
-        .device-section label {
-          display: block;
-          margin-bottom: 5px;
-        }
-        .device-section select {
-          width: 100%;
-          padding: 8px;
-          background-color: #333;
-          color: #fff;
-          border: 1px solid #444;
-          border-radius: 4px;
-        }
-        .checkbox-container {
-          margin-top: 8px;
-          display: flex;
-          align-items: center;
-        }
-        .checkbox-container input[type="checkbox"] {
-          margin-right: 8px;
-        }
-        .checkbox-container label {
-          display: inline;
-          margin-bottom: 0;
-        }
-        .dialog-buttons {
-          display: flex;
-          justify-content: flex-end;
-          margin-top: 20px;
-        }
-        .dialog-buttons button {
-          padding: 8px 16px;
-          margin-left: 10px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        #cancel-button {
-          background-color: #555;
-          color: #fff;
-        }
-        #apply-button {
-          background-color: #007bff;
-          color: #fff;
-        }
-      `;
-      document.head.appendChild(styleElement);
-      
-      // Add event listeners
-      const cancelButton = document.getElementById('cancel-button');
-      const applyButton = document.getElementById('apply-button');
-      const inputSelect = document.getElementById('input-device');
-      const outputSelect = document.getElementById('output-device');
-      
-      // Cancel button
-      cancelButton.addEventListener('click', () => {
-        document.body.removeChild(dialogElement);
-        document.head.removeChild(styleElement);
-        // Clear the "Configuring audio devices..." message
-        if (window.uiManager) {
-          window.uiManager.clearError();
-        }
-      });
-      
-      // Apply button
-      applyButton.addEventListener('click', async () => {
-        const inputDeviceId = inputSelect.value;
-        const outputDeviceId = outputSelect.value;
-        
-        // Get selected device labels
-        const inputDevice = inputDevices.find(d => d.deviceId === inputDeviceId);
-        const outputDevice = outputDevices.find(d => d.deviceId === outputDeviceId);
-        
-        // Get selected sample rate
-        const sampleRateSelect = document.getElementById('sample-rate');
-        const selectedSampleRate = parseInt(sampleRateSelect.value, 10);
-        
-        // Get checkbox state
-        const useInputWithPlayerCheckbox = document.getElementById('use-input-with-player');
-        const useInputWithPlayer = useInputWithPlayerCheckbox ? useInputWithPlayerCheckbox.checked : false;
-        
-        const preferences = {
-          inputDeviceId,
-          outputDeviceId,
-          inputDeviceLabel: inputDevice?.label || '',
-          outputDeviceLabel: outputDevice?.label || '',
-          sampleRate: selectedSampleRate,
-          useInputWithPlayer: useInputWithPlayer
-        };
-        
-        console.log('Saving audio preferences');
-        
-        // Save preferences
-        const saveResult = await this.saveAudioPreferences(preferences);
-        
-        // Close dialog
-        document.body.removeChild(dialogElement);
-        document.head.removeChild(styleElement);
-        
-        // Clear the "Configuring audio devices..." message
-        // Note: We don't clear the error message here because we're about to show a new message
-        // and reload the page. The error will be cleared when the page reloads.
-        
-        // Get translation function from UIManager
-        if (!window.uiManager) {
-          console.error('UIManager not available for translations');
-          return;
-        }
-        const t = window.uiManager.t.bind(window.uiManager);
-        
-        // Show message about reloading
-        const messageElement = document.createElement('div');
-        messageElement.style.position = 'fixed';
-        messageElement.style.top = '50%';
-        messageElement.style.left = '50%';
-        messageElement.style.transform = 'translate(-50%, -50%)';
-        messageElement.style.backgroundColor = '#222';
-        messageElement.style.color = '#fff';
-        messageElement.style.padding = '20px';
-        messageElement.style.borderRadius = '8px';
-        messageElement.style.zIndex = '1000';
-        messageElement.style.textAlign = 'center';
-        messageElement.innerHTML = `<h3>${t('dialog.audioConfig.updatedTitle')}</h3><p>${t('dialog.audioConfig.updatedMessage')}</p>`;
-        document.body.appendChild(messageElement);
-        
-        // Wait a moment to show the message, then reload using Electron's API
-        setTimeout(() => {
-          // Save preferences to file as a backup
-          try {
-            // We'll use the userData path to save a backup of the preferences
-            // This is already being done by the main process, so we don't need to do it here
-            console.log('Audio preferences saved to file');
-          } catch (e) {
-            console.error('Failed to save preferences backup:', e);
-          }
-          
-          console.log('Requesting reload via Electron IPC...');
-          
-          // Use Electron's IPC to request a reload from the main process
-          // This is more reliable in Electron than using window.location methods
-          if (window.electronAPI) {
-            // Send a message to the main process to reload the window
-            window.electronAPI.reloadWindow()
-              .then(() => {
-                console.log('Reload request sent successfully');
-              })
-              .catch(error => {
-                console.error('Error sending reload request:', error);
-                
-                // As a last resort, try direct reload methods
-                console.log('Trying direct reload methods as fallback...');
-                try {
-                  // Try multiple reload methods as fallbacks
-                  window.location.href = window.location.href + '?t=' + Date.now();
-                  setTimeout(() => {
-                    window.location.reload(true);
-                  }, 100);
-                } catch (e) {
-                  console.error('All reload attempts failed:', e);
-                }
-              });
-          } else {
-            // Fallback for non-Electron environment
-            console.log('Electron API not available, using direct reload...');
-            window.location.reload(true);
-          }
-        }, 1500);
-      });
-    } catch (error) {
-      console.error('Failed to show audio config dialog:', error);
-    }
+    return showAudioConfigDialog(this.isElectron, this.audioPreferences, callback);
   }
 
   /**
    * Export current preset to a file
    */
   async exportPreset() {
-    if (!this.isElectron || !window.uiManager) return;
-
-    try {
-      // Get current preset data
-      const presetData = window.uiManager.getCurrentPresetData();
-      if (!presetData) {
-        console.error('No preset data available');
-        return;
-      }
-
-      // Show save dialog
-      const result = await window.electronAPI.showSaveDialog({
-        title: 'Export Preset',
-        defaultPath: `${presetData.name || 'preset'}.effetune_preset`,
-        filters: [
-          { name: 'EffeTune Preset Files', extensions: ['effetune_preset'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
-      });
-
-      if (result.canceled || !result.filePath) return;
-
-      // Remove name property from preset data before saving
-      const { name, ...presetDataWithoutName } = presetData;
-      
-      // Save the preset data object without name
-      const saveResult = await window.electronAPI.saveFile(
-        result.filePath,
-        JSON.stringify(presetDataWithoutName, null, 2)
-      );
-
-      if (!saveResult.success) {
-        console.error('Failed to save preset:', saveResult.error);
-      }
-    } catch (error) {
-      console.error('Error exporting preset:', error);
-    }
+    return exportPreset(this.isElectron);
   }
 
   /**
    * Import preset from a file
    */
   async importPreset() {
-    if (!this.isElectron || !window.uiManager) return;
-
-    try {
-      // Show open dialog
-      const result = await window.electronAPI.showOpenDialog({
-        title: 'Import Preset',
-        filters: [
-          { name: 'EffeTune Preset Files', extensions: ['effetune_preset'] },
-          { name: 'All Files', extensions: ['*'] }
-        ],
-        properties: ['openFile']
-      });
-
-      if (result.canceled || !result.filePaths || result.filePaths.length === 0) return;
-
-      // Read file
-      const readResult = await window.electronAPI.readFile(result.filePaths[0]);
-      
-      if (!readResult.success) {
-        console.error('Failed to read preset:', readResult.error);
-        return;
-      }
-
-      // Parse the file content
-      const fileData = JSON.parse(readResult.content);
-      
-      let presetData;
-      
-      // Handle different formats for backward compatibility
-      if (Array.isArray(fileData)) {
-        // Old format: direct array of pipeline plugins
-        presetData = {
-          name: 'Imported Preset',
-          timestamp: Date.now(),
-          pipeline: fileData
-        };
-      } else if (fileData.pipeline) {
-        // New format: complete preset object
-        presetData = fileData;
-        // Update timestamp to current time
-        presetData.timestamp = Date.now();
-        // If no name is provided, use a default
-        if (!presetData.name) {
-          presetData.name = 'Imported Preset';
-        }
-      } else {
-        // Unknown format
-        console.error('Unknown preset format');
-        return;
-      }
-      
-      // Set name to filename for display in UI
-      const fileName = path.basename(result.filePaths[0], '.effetune_preset');
-      presetData.name = fileName;
-      
-      // Load the preset
-      window.uiManager.loadPreset(presetData);
-      
-      // Display message with filename using translation key
-      window.uiManager.setError('success.presetLoaded', false, { name: fileName });
-      setTimeout(() => window.uiManager.clearError(), 3000);
-    } catch (error) {
-      console.error('Error importing preset:', error);
-    }
+    return importPreset(this.isElectron);
   }
 
   /**
@@ -872,36 +299,7 @@ async getAudioDevices() {
    * This function is called when the user selects "Open music file..." from the File menu
    */
   async openMusicFile() {
-    if (!this.isElectron) return;
-    
-    try {
-      // Use Electron's dialog to select music files
-      const result = await window.electronAPI.showOpenDialog({
-        title: 'Select Music Files',
-        properties: ['openFile', 'multiSelections'],
-        filters: [
-          { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
-      });
-      
-      if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
-        console.log('File selection canceled or no files selected');
-        return;
-      }
-      
-      // Send selected files to the audio player
-      if (window.uiManager) {
-        // Use existing player or create a new one
-        // The createAudioPlayer method now handles both cases
-        window.uiManager.createAudioPlayer(result.filePaths, false); // false = don't replace existing player
-      }
-    } catch (error) {
-      console.error('Error opening music files:', error);
-      if (window.uiManager) {
-        window.uiManager.setError(`Error opening music files: ${error.message}`);
-      }
-    }
+    return openMusicFile(this.isElectron);
   }
 
   /**
@@ -909,115 +307,7 @@ async getAudioDevices() {
    * This function is called when the user selects "Process Audio Files with Effects" from the File menu
    */
   processAudioFiles() {
-    if (!this.isElectron) return;
-    
-    // Processing audio files from menu
-    
-    try {
-      // Use Electron's dialog to select files directly
-      // This is a more reliable approach than trying to trigger a click on a DOM element
-      window.electronAPI.showOpenDialog({
-        title: 'Select Audio Files to Process',
-        properties: ['openFile', 'multiSelections'],
-        filters: [
-          { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
-      }).then(result => {
-        if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
-          console.log('File selection canceled or no files selected');
-          return;
-        }
-        
-        // Selected files for processing
-        
-        // Find the pipeline manager
-        if (!window.uiManager || !window.uiManager.pipelineManager) {
-          console.error('Could not find pipeline manager');
-          if (window.uiManager) {
-            window.uiManager.setError('Failed to process audio files: Pipeline manager not found');
-          }
-          return;
-        }
-        
-        const dropArea = window.uiManager.pipelineManager.dropArea;
-        if (!dropArea) {
-          console.error('Could not find drop area');
-          window.uiManager.setError('Failed to process audio files: Drop area not found');
-          return;
-        }
-        
-        // Get the drop area's position
-        const dropAreaRect = dropArea.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        // Calculate the scroll position to make the drop area visible
-        // We want the drop area to be in the lower part of the screen, but still fully visible
-        const targetScrollPosition = window.scrollY + dropAreaRect.top - (windowHeight * 0.3);
-        
-        // Scrolling to position for drop area
-        
-        // Scroll to the calculated position
-        window.scrollTo({
-          top: targetScrollPosition,
-          behavior: 'smooth'
-        });
-        
-        // Convert file paths to File objects
-        Promise.all(result.filePaths.map(async (filePath) => {
-          try {
-            // Read file content as binary
-            const fileResult = await window.electronAPI.readFile(filePath, true); // true for binary
-            if (!fileResult.success) {
-              throw new Error(`Failed to read file: ${fileResult.error}`);
-            }
-            
-            // Get file name from path
-            const fileName = filePath.split(/[\\/]/).pop();
-            
-            // Convert base64 to ArrayBuffer
-            const binaryString = atob(fileResult.content);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            // Create a File object
-            const blob = new Blob([bytes.buffer], { type: this.getAudioMimeType(fileName) });
-            return new File([blob], fileName, { type: blob.type });
-          } catch (error) {
-            console.error(`Error processing file ${filePath}:`, error);
-            window.uiManager.setError(`Error processing file ${filePath}: ${error.message}`);
-            return null;
-          }
-        })).then(files => {
-          // Filter out any failed files
-          const validFiles = files.filter(file => file);
-          
-          if (validFiles.length === 0) {
-            window.uiManager.setError('No valid audio files selected');
-            return;
-          }
-          
-          // Process the files
-          setTimeout(() => {
-            // Processing files with pipeline manager
-            window.uiManager.pipelineManager.processDroppedAudioFiles(validFiles);
-          }, 300);
-        }).catch(error => {
-          console.error('Error preparing files:', error);
-          window.uiManager.setError(`Error preparing files: ${error.message}`);
-        });
-      }).catch(error => {
-        console.error('Error showing open dialog:', error);
-        window.uiManager.setError(`Error showing open dialog: ${error.message}`);
-      });
-    } catch (error) {
-      console.error('Error processing audio files:', error);
-      if (window.uiManager) {
-        window.uiManager.setError(`Error processing audio files: ${error.message}`);
-      }
-    }
+    return processAudioFiles(this.isElectron);
   }
   
   /**
@@ -1026,17 +316,7 @@ async getAudioDevices() {
    * @returns {string} MIME type
    */
   getAudioMimeType(fileName) {
-    const extension = fileName.split('.').pop().toLowerCase();
-    const mimeTypes = {
-      'mp3': 'audio/mpeg',
-      'wav': 'audio/wav',
-      'ogg': 'audio/ogg',
-      'flac': 'audio/flac',
-      'm4a': 'audio/mp4',
-      'aac': 'audio/aac'
-    };
-    
-    return mimeTypes[extension] || 'audio/mpeg'; // Default to audio/mpeg
+    return getAudioMimeType(fileName);
   }
 
   /**

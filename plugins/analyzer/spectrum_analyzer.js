@@ -90,7 +90,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         // Bit reversal
         for (let i = 0; i < n; i++) {
-            const j = this.reverseBits(i, n);
+            const j = this.reverseBits(i);
             if (j > i) {
                 [real[i], real[j]] = [real[j], real[i]];
                 [imag[i], imag[j]] = [imag[j], imag[i]];
@@ -120,7 +120,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         }
     }
 
-    reverseBits(x, n) {
+    reverseBits(x) {
         let result = 0;
         const bits = this.pt;
         for (let i = 0; i < bits; i++) {
@@ -273,7 +273,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             this.peaks = new Float32Array(halfFft).fill(-144);
         }
 
-        const last = this.peaks[halfFft-1];
         for (let i = 0; i < halfFft; i++) {
             if (isNaN(this.peaks[i]) || this.peaks[i] < -144 || this.peaks[i] > 0) {
                 this.peaks[i] = -144;

@@ -97,8 +97,7 @@ class OscilloscopePlugin extends PluginBase {
     // ================================================================
     static processorFunction = `
       // Copy the input data into a result buffer.
-      const result = new Float32Array(data.length);
-      result.set(data);
+      const result = data;
   
       const { channelCount, blockSize } = parameters;
       // Use short parameter names:
@@ -795,7 +794,6 @@ class OscilloscopePlugin extends PluginBase {
   
       // Vertical scaling.
       const factor = 1 / Math.pow(10, this.displayLevel / 20);
-      const gridMax = Math.pow(10, this.displayLevel / 20);
       // Compute centerY based on Vertical Offset.
       const centerY = height / 2 - (this.verticalOffset * height / 2);
   

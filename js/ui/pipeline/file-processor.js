@@ -16,6 +16,9 @@ export class FileProcessor {
         this.progressContainer = null;
         this.progressBar = null;
         this.progressText = null;
+        
+        // Add a flag to track cancellation
+        this.isCancelled = false;
     }
     
     /**
@@ -214,6 +217,24 @@ export class FileProcessor {
     
     /**
      * Sets up file drag and drop handlers
+     *
+     * IMPORTANT DRAG & DROP BEHAVIOR NOTES:
+     * --------------------------------------
+     * 1. This handler is specifically for the file-drop-area element and should ONLY process audio files.
+     * 2. Preset files (.effetune_preset) should NOT be processed by this handler - they should be ignored
+     *    and allowed to bubble up to the global document handler in ui-event-handler.js.
+     * 3. When audio files are dragged over the file-drop-area:
+     *    - The file-drop-area should show the 'drag-active' class
+     *    - The body's 'drag-over' class should be removed
+     * 4. When preset files are dragged over the file-drop-area:
+     *    - The file-drop-area should NOT show any visual feedback
+     *    - The event should be prevented but allowed to bubble up
+     * 5. When audio files are dropped on the file-drop-area:
+     *    - They should be processed for offline processing (not played in the Player)
+     * 6. When preset files are dropped on the file-drop-area:
+     *    - They should be handled by the global document handler for preset loading
+     *
+     * DO NOT MODIFY THIS BEHAVIOR without thorough testing of all drag & drop scenarios!
      */
     setupFileDropHandlers() {
         // Handle file drag and drop for audio files only
@@ -227,6 +248,24 @@ export class FileProcessor {
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
                 const items = Array.from(e.dataTransfer.items);
                 
+                // Check for preset files first
+                const hasPresetFiles = items.some(item => {
+                    if (item.kind === 'file') {
+                        const file = item.getAsFile();
+                        if (file && file.name.toLowerCase().endsWith('.effetune_preset')) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                
+                // If preset files are detected, don't add drag-active class
+                if (hasPresetFiles) {
+                    // Prevent default to avoid browser opening the file
+                    e.preventDefault();
+                    return;
+                }
+                
                 // Check for audio files by MIME type or file extension
                 const hasAudioFiles = items.some(item => {
                     if (item.kind !== 'file') return false;
@@ -234,10 +273,13 @@ export class FileProcessor {
                     // Check by MIME type
                     if (item.type.startsWith('audio/')) return true;
                     
-                    // For items without a MIME type, try to check by file extension
-                    // This is a best effort since we can't access the filename directly from dataTransferItem
-                    // The full check will happen in the drop event
-                    return true; // Accept all files during dragenter, we'll filter in the drop event
+                    // For items without a MIME type, check by file extension
+                    const file = item.getAsFile();
+                    if (file && /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)) {
+                        return true;
+                    }
+                    
+                    return false;
                 });
                 
                 if (hasAudioFiles) {
@@ -255,15 +297,41 @@ export class FileProcessor {
             
             // Only handle audio files
             if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-                // Accept all files during dragover, we'll filter in the drop event
+                // Check for preset files first
+                const hasPresetFiles = Array.from(e.dataTransfer.items).some(item => {
+                    if (item.kind === 'file') {
+                        const file = item.getAsFile();
+                        if (file && file.name.toLowerCase().endsWith('.effetune_preset')) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                
+                // If preset files are detected, don't add drag-active class
+                if (hasPresetFiles) {
+                    // Prevent default to avoid browser opening the file
+                    e.preventDefault();
+                    return;
+                }
+                
+                // For audio files, add drag-active class
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'copy';
                 this.dropArea.classList.add('drag-active');
+                
+                // Remove drag-over class from body when over drop area
+                document.body.classList.remove('drag-over');
+                
             }
         }, { passive: false });
         
         this.dropArea.addEventListener('dragleave', (e) => {
-            this.dropArea.classList.remove('drag-active');
+            // Only remove drag-active if the mouse actually left the drop area
+            // Check if the related target is outside the drop area
+            if (!this.dropArea.contains(e.relatedTarget)) {
+                this.dropArea.classList.remove('drag-active');
+            }
         }, false);
         
         this.dropArea.addEventListener('drop', async (e) => {
@@ -279,14 +347,32 @@ export class FileProcessor {
                 return;
             }
             
-            // Get audio files only
+            // Always prevent default to avoid browser opening the file
+            e.preventDefault();
+            
+            // Get all dropped files
             const allFiles = Array.from(e.dataTransfer.files);
             
+            // Check for preset files
+            const presetFiles = allFiles.filter(file =>
+                file.name.toLowerCase().endsWith('.effetune_preset')
+            );
+            
+            // Check for audio files
             const audioFiles = allFiles.filter(file =>
                 file.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)
             );
             
-            // Only handle audio files
+            
+            // If there are preset files, let them be handled by the global handler
+            if (presetFiles.length > 0) {
+                // Remove drag active class
+                this.dropArea.classList.remove('drag-active');
+                // Don't call e.stopPropagation() to allow event to bubble up to document handler
+                return;
+            }
+            
+            // Handle audio files
             if (audioFiles.length > 0) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -300,7 +386,7 @@ export class FileProcessor {
                 // Remove drag active class
                 this.dropArea.classList.remove('drag-active');
             } else {
-                // Don't show error for non-audio files to allow preset files to be handled by global handler
+                // No audio or preset files
                 this.dropArea.classList.remove('drag-active');
             }
         }, { passive: false });
@@ -310,6 +396,9 @@ export class FileProcessor {
      * Show progress UI
      */
     showProgress() {
+        // Reset cancellation flag
+        this.isCancelled = false;
+        
         this.progressContainer.style.display = 'block';
         this.downloadContainer.style.display = 'none';
         this.progressBar.style.width = '0%';
@@ -320,15 +409,35 @@ export class FileProcessor {
             dropMessage.style.display = 'none';
         }
         
-        // Add cancel button handler
+        // Add cancel button handler with improved styling and event handling
         const cancelButton = this.progressContainer.querySelector('.cancel-button');
-        cancelButton.onclick = () => {
-            if (this.audioManager.isOfflineProcessing) {
+        
+        // Ensure the button is visible and clickable
+        cancelButton.style.position = 'relative';
+        cancelButton.style.zIndex = '10000';
+        cancelButton.style.pointerEvents = 'auto';
+        cancelButton.style.cursor = 'pointer';
+        
+        // Remove any existing click handlers
+        cancelButton.removeEventListener('click', this._cancelHandler);
+        
+        // Create a new handler and store a reference to it
+        this._cancelHandler = () => {
+            
+            // Set both flags to ensure cancellation
+            this.isCancelled = true;
+            if (this.audioManager) {
                 this.audioManager.isCancelled = true;
-                this.hideProgress();
-                this.setProgressText('Processing canceled');
             }
+            
+            // Hide progress and show message
+            this.hideProgress();
+            this.setProgressText('Processing canceled');
         };
+        
+        // Add the click handler
+        cancelButton.addEventListener('click', this._cancelHandler);
+        
     }
     
     /**
@@ -490,17 +599,33 @@ export class FileProcessor {
 
             // Process each file
             for (let i = 0; i < totalFiles; i++) {
+                // Check if processing was cancelled
+                if (this.isCancelled) {
+                    break;
+                }
+                
                 const file = files[i];
                 try {
                     // Create progress callback for this file
                     const progressCallback = (percent) => {
+                        // Check for cancellation during progress updates
+                        if (this.isCancelled) {
+                            return true; // Return true to signal cancellation
+                        }
+                        
                         const totalPercent = (i + percent / 100) / totalFiles * 100;
                         this.progressBar.style.width = `${Math.round(totalPercent)}%`;
                         this.setProgressText(`Processing file ${i + 1}/${totalFiles} (${Math.round(percent)}%)`);
+                        return false; // Return false to continue processing
                     };
 
                     // Process the file with progress updates
                     const blob = await this.audioManager.processAudioFile(file, progressCallback);
+                    
+                    // Check again if processing was cancelled
+                    if (this.isCancelled) {
+                        break;
+                    }
                     if (blob) {
                         const processedName = this.getProcessedFileName(file.name);
                         processedFiles.push({

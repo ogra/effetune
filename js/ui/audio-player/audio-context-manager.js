@@ -76,6 +76,8 @@ export class AudioContextManager {
     }
     
     // Set audio source based on whether we have a File object or a path
+    // Debug logs removed for release
+    
     if (track.file instanceof File) {
       // Revoke any existing object URL
       if (this.currentObjectURL) {
@@ -87,6 +89,7 @@ export class AudioContextManager {
       
       // Set the object URL as the source
       this.audioPlayer.audioElement.src = this.currentObjectURL;
+      // Debug logs removed for release
     } else if (track.path) {
       // Format path for different platforms
       let formattedPath = track.path;
@@ -101,6 +104,8 @@ export class AudioContextManager {
           formattedPath = `file://${formattedPath}`;
         }
       }
+      
+      // Debug logs removed for release
       
       this.audioPlayer.audioElement.src = formattedPath;
     } else {

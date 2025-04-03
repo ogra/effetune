@@ -54,7 +54,7 @@ export class AudioContextManager {
                 }
                 
                 // Default audio context options
-                let audioContextOptions = { latencyHint: 'playback' };
+                let audioContextOptions = { };
                 
                 // If running in Electron, try to use saved sample rate preference
                 if (window.electronAPI && window.electronIntegration) {
@@ -96,6 +96,27 @@ export class AudioContextManager {
                 }
             }
             
+            // Note: AudioWorklet loading is now deferred to loadAudioWorklet method
+            // This allows GUI to be fully rendered before AudioWorklet is created
+            
+            return '';
+        } catch (error) {
+            console.error('Audio context initialization error:', error);
+            return `Audio Error: ${error.message}`;
+        }
+    }
+    
+    /**
+     * Load audio worklet and create worklet node
+     * This is separated from initAudioContext to allow GUI to be fully rendered first
+     * @returns {Promise<string>} - Empty string on success, error message on failure
+     */
+    async loadAudioWorklet() {
+        try {
+            if (!this.audioContext) {
+                throw new Error('Audio context not initialized');
+            }
+            
             // Load audio worklet with absolute path
             const currentPath = window.location.pathname;
             const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
@@ -121,7 +142,7 @@ export class AudioContextManager {
             
             return '';
         } catch (error) {
-            console.error('Audio context initialization error:', error);
+            console.error('Failed to load audio worklet:', error);
             return `Audio Error: ${error.message}`;
         }
     }

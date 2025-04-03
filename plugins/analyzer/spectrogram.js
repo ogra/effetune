@@ -52,8 +52,7 @@ class SpectrogramPlugin extends PluginBase {
     // Processor function as a string (runs in separate context)
     static processorFunction = `
         // Create result buffer
-        const result = new Float32Array(data.length);
-        result.set(data);
+        const result = data;
 
         const { channelCount, blockSize, pt, ch } = parameters;
         const fftSize = Math.pow(2, pt);

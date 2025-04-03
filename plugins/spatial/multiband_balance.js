@@ -23,13 +23,10 @@ class MultibandBalancePlugin extends PluginBase {
 
     getProcessorCode() {
         return `
-            // Create a result buffer to avoid modifying the input data directly
-            const result = new Float32Array(data.length);
-
             if (!parameters.enabled) {
-                result.set(data);
-                return result;
+                return data;
             }
+            let result = data;
 
             const frequencies = [parameters.f1, parameters.f2, parameters.f3, parameters.f4];
             const blockSize = parameters.blockSize;

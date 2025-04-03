@@ -12,14 +12,16 @@ class PolarityInversionPlugin extends PluginBase {
                 channelCount, blockSize 
             } = parameters;
             
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                // Skip channels based on selection
-                if (channel === 'left' && ch !== 0) continue;
-                if (channel === 'right' && ch !== 1) continue;
-                
-                const channelOffset = ch * parameters.blockSize;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    data[channelOffset + i] *= -1;
+            if (channel[0] === 'a') {
+                const len = data.length;
+                for (let i = 0; i < len; i++) {
+                    data[i] = -data[i];
+                }
+            }else if (channelCount > 0) {
+                const channelOffset = channel[0] === 'l' || channelCount < 2 ? 0 : blockSize;
+                const channelEnd = channelOffset + blockSize;
+                for (let i = channelOffset; i < channelEnd; i++) {
+                    data[i] = -data[i];
                 }
             }
             return data;

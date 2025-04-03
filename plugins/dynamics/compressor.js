@@ -24,15 +24,12 @@ class CompressorPlugin extends PluginBase {
         return `
             // If compression is disabled, return the input immediately without processing
             if (!parameters.enabled) {
-                // Create a copy to ensure the original buffer isn't modified if reused elsewhere
-                const result = new Float32Array(data.length);
-                result.set(data);
                 // Attach measurements object even when disabled for consistent return type
-                result.measurements = {
+                data.measurements = {
                     time: parameters.time, // Pass time through
                     gainReduction: 0.0     // No gain reduction when disabled
                 };
-                return result;
+                return data;
             }
 
             // Allocate result buffer

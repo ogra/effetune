@@ -4,8 +4,7 @@
  */
 import {
     getSerializablePluginStateShort,
-    getSerializablePluginStateLong,
-    applySerializedState
+    getSerializablePluginStateLong
 } from '../../utils/serialization-utils.js';
 export class PipelineCore {
     /**
@@ -151,7 +150,6 @@ export class PipelineCore {
             this.handlePluginSelection(plugin, e);
             
             // Show routing dialog
-            console.log('Showing routing dialog for plugin:', plugin.name);
             this.showRoutingDialog(plugin, routingBtn);
         };
         header.appendChild(routingBtn);
@@ -731,7 +729,6 @@ export class PipelineCore {
         document.body.appendChild(dialog);
         
         // Add dialog to the document
-        console.log('Adding dialog to document');
         document.body.appendChild(dialog);
         
         // Prevent immediate closing by delaying the click handler

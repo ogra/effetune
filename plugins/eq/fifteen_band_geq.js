@@ -19,8 +19,6 @@ class FifteenBandGEQPlugin extends PluginBase {
     ];
 
     static processorFunction = `
-'use strict'; // Enable strict mode for potential optimizations
-
 // --- Constants ---
 const NUM_BANDS = 15;
 const GAIN_BYPASS_THRESHOLD = 0.01; // Threshold below which gain is considered zero for bypass

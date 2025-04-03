@@ -83,20 +83,14 @@ export class ClipboardManager {
      */
     async handlePaste(text) {
         try {
-            console.log('Clipboard text:', text);
-            
             // Check if the text is a URL with BASE64 encoded pipeline data
             if (text.startsWith('http://') || text.startsWith('https://')) {
-                console.log('Detected URL in clipboard');
-                
                 try {
                     // Try to extract the 'p' parameter from the URL
                     const url = new URL(text);
                     const pParam = url.searchParams.get('p');
                     
                     if (pParam) {
-                        console.log('Found p parameter in URL');
-                        
                         // Try to decode the p parameter as BASE64
                         try {
                             // Validate base64 format using regex

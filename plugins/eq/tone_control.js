@@ -1,141 +1,214 @@
 class ToneControlPlugin extends PluginBase {
     static processorFunction = `
-        if (!parameters.enabled) return data;
-        
-        const { bs, md, tr, channelCount, blockSize, sampleRate } = parameters;
-        
-        // Initialize filter states in context if not exists
-        // Filter states for second-order filters for bass, mid, and treble (x1, x2, y1, y2)
-        if (!context.initialized) {
-            context.filterStates = {
-                // Bass filter states (low-shelf)
-                bass1: new Array(channelCount).fill(0),
-                bass2: new Array(channelCount).fill(0),
-                bass3: new Array(channelCount).fill(0),
-                bass4: new Array(channelCount).fill(0),
-                // Mid filter states (peaking)
-                mid1: new Array(channelCount).fill(0),
-                mid2: new Array(channelCount).fill(0),
-                mid3: new Array(channelCount).fill(0),
-                mid4: new Array(channelCount).fill(0),
-                // Treble filter states (high-shelf)
-                treble1: new Array(channelCount).fill(0),
-                treble2: new Array(channelCount).fill(0),
-                treble3: new Array(channelCount).fill(0),
-                treble4: new Array(channelCount).fill(0)
-            };
-            context.initialized = true;
-        }
+    // Early exit if processing is disabled
+    if (!parameters.enabled) return data;
 
-        // Reset filter states if channel count changes
-        if (context.filterStates.bass1.length !== channelCount) {
-            Object.keys(context.filterStates).forEach(key => {
-                context.filterStates[key] = new Array(channelCount).fill(0);
-            });
-        }
+    // Extract parameters into local constants for potentially faster access
+    const { bs, md, tr, channelCount, blockSize, sampleRate } = parameters;
 
-        const filterStates = context.filterStates;
-        const sr = sampleRate; // Local sample rate
+    // --- Constants ---
+    const PI = 3.141592653589793;
+    const TWO_PI = 6.283185307179586;
+    const SQRT2 = 1.4142135623730951;
+    const GAIN_THRESHOLD = 1e-6; // Threshold to determine if gain is effectively non-zero
 
-        // --- Low Shelf filter coefficient calculation ---
-        // fc = 100Hz, using S=1 for shelving filter
-        let A = Math.pow(10, bs / 40); // A = 10^(bs/40)
-        let omega = 2 * Math.PI * 100 / sr;
-        let cosw = Math.cos(omega);
-        let sinw = Math.sin(omega);
-        // For shelving filter, alpha = sin(omega)/2 * sqrt(2) with S=1
-        let alpha = sinw / 2 * Math.sqrt(2);
-        let bassB0 = A * ((A + 1) - (A - 1) * cosw + 2 * Math.sqrt(A) * alpha);
-        let bassB1 = 2 * A * ((A - 1) - (A + 1) * cosw);
-        let bassB2 = A * ((A + 1) - (A - 1) * cosw - 2 * Math.sqrt(A) * alpha);
-        let bassA0 = (A + 1) + (A - 1) * cosw + 2 * Math.sqrt(A) * alpha;
-        let bassA1 = -2 * ((A - 1) + (A + 1) * cosw);
-        let bassA2 = (A + 1) + (A - 1) * cosw - 2 * Math.sqrt(A) * alpha;
+    // --- State Initialization & Management ---
+    // Initialize or reset filter states if it's the first run or channel count changed.
+    // States store previous inputs (x1, x2) and outputs (y1, y2) for each band.
+    if (!context.initialized || context.lastChannelCount !== channelCount) {
+        const numChannels = channelCount; // Use local variable for clarity
+        // Use Array.fill(0) to match original code's behavior exactly.
+        // Renamed state variables for better readability (e.g., bass_x1).
+        context.filterStates = {
+            bass_x1: new Array(numChannels).fill(0), bass_x2: new Array(numChannels).fill(0),
+            bass_y1: new Array(numChannels).fill(0), bass_y2: new Array(numChannels).fill(0),
+            mid_x1: new Array(numChannels).fill(0), mid_x2: new Array(numChannels).fill(0),
+            mid_y1: new Array(numChannels).fill(0), mid_y2: new Array(numChannels).fill(0),
+            treble_x1: new Array(numChannels).fill(0), treble_x2: new Array(numChannels).fill(0),
+            treble_y1: new Array(numChannels).fill(0), treble_y2: new Array(numChannels).fill(0)
+        };
+        context.lastChannelCount = numChannels;
+        context.initialized = true;
+    }
+
+    const states = context.filterStates; // Cache context's state object
+    const sr = sampleRate; // Local alias for sample rate
+
+    // --- Coefficient Calculation ---
+    // Coefficients are calculated in every block to strictly match the original code's behavior.
+
+    // Determine if each filter band needs processing based on gain threshold
+    // Optimized Math.abs check using direct comparison
+    const bassActive = bs > GAIN_THRESHOLD || bs < -GAIN_THRESHOLD;
+    const midActive = md > GAIN_THRESHOLD || md < -GAIN_THRESHOLD;
+    const trebleActive = tr > GAIN_THRESHOLD || tr < -GAIN_THRESHOLD;
+
+    // Declare coefficient variables with defaults (pass-through)
+    let bassB0 = 1.0, bassB1 = 0.0, bassB2 = 0.0, bassA1 = 0.0, bassA2 = 0.0;
+    let midB0 = 1.0, midB1 = 0.0, midB2 = 0.0, midA1 = 0.0, midA2 = 0.0;
+    let trebleB0 = 1.0, trebleB1 = 0.0, trebleB2 = 0.0, trebleA1 = 0.0, trebleA2 = 0.0;
+
+    // --- Low Shelf (Bass) Coefficients ---
+    // Calculated only if the bass gain is significant
+    if (bassActive) {
+        const A = Math.pow(10, 0.025 * bs); // Optimized gain conversion: 10^(G/40)
+        const omega = TWO_PI * 100 / sr;    // Fixed cutoff frequency: 100 Hz
+        const cosw = Math.cos(omega);
+        const sinw = Math.sin(omega);
+        // S=1 shelving filter slope parameter leads to sqrt(2) term
+        const alpha = sinw * 0.5 * SQRT2;
+        const sqrtA = Math.sqrt(A); // Calculate sqrt(A) once
+        const twoSqrtAAlpha = 2 * sqrtA * alpha;
+        const A_plus_1 = A + 1;
+        const A_minus_1 = A - 1;
+
+        // RBJ Cookbook Low Shelf coefficients
+        const commonTerm1 = A_plus_1 - A_minus_1 * cosw;
+        const commonTerm2 = A_plus_1 + A_minus_1 * cosw;
+
+        const b0_tmp = A * (commonTerm1 + twoSqrtAAlpha);
+        const b1_tmp = 2 * A * (A_minus_1 - A_plus_1 * cosw);
+        const b2_tmp = A * (commonTerm1 - twoSqrtAAlpha);
+        const a0_tmp = commonTerm2 + twoSqrtAAlpha;
+        const a1_tmp = -2 * (A_minus_1 + A_plus_1 * cosw);
+        const a2_tmp = commonTerm2 - twoSqrtAAlpha;
+
+        // Normalize coefficients by dividing by a0_tmp
+        // Use multiplication by the inverse for potential speed improvement
+        const invA0 = 1.0 / a0_tmp;
+        bassB0 = b0_tmp * invA0;
+        bassB1 = b1_tmp * invA0;
+        bassB2 = b2_tmp * invA0;
+        bassA1 = a1_tmp * invA0; // Corresponds to -a1 in the difference equation
+        bassA2 = a2_tmp * invA0; // Corresponds to -a2 in the difference equation
+    }
+
+    // --- Peaking EQ (Mid) Coefficients ---
+    // Calculated only if the mid gain is significant
+    if (midActive) {
+        const A = Math.pow(10, 0.025 * md); // Optimized gain conversion: 10^(G/40)
+        const omega = TWO_PI * 1000 / sr;   // Fixed center frequency: 1000 Hz
+        const cosw = Math.cos(omega);
+        const sinw = Math.sin(omega);
+        const Q = 0.7;                      // Fixed Q factor
+        const alpha = sinw / (2 * Q);
+
+        // RBJ Cookbook Peaking EQ coefficients
+        const alphaMulA = alpha * A;
+        const alphaDivA = alpha / A;
+        const neg2CosW = -2 * cosw; // Pre-calculate common term
+
+        const b0_tmp = 1 + alphaMulA;
+        const b1_tmp = neg2CosW;
+        const b2_tmp = 1 - alphaMulA;
+        const a0_tmp = 1 + alphaDivA;
+        const a1_tmp = neg2CosW;
+        const a2_tmp = 1 - alphaDivA;
+
         // Normalize coefficients
-        bassB0 /= bassA0; bassB1 /= bassA0; bassB2 /= bassA0;
-        bassA1 /= bassA0; bassA2 /= bassA0;
-        
-        // --- Mid filter coefficient calculation (Peaking) ---
-        // fc = 1000Hz, Q = 0.7
-        A = Math.pow(10, md / 40);
-        omega = 2 * Math.PI * 1000 / sr;
-        cosw = Math.cos(omega);
-        sinw = Math.sin(omega);
-        let Q = 0.7; // Q value for mid band is set to 0.7
-        alpha = sinw / (2 * Q);
-        let midB0 = 1 + alpha * A;
-        let midB1 = -2 * cosw;
-        let midB2 = 1 - alpha * A;
-        let midA0 = 1 + alpha / A;
-        let midA1 = -2 * cosw;
-        let midA2 = 1 - alpha / A;
-        midB0 /= midA0; midB1 /= midA0; midB2 /= midA0;
-        midA1 /= midA0; midA2 /= midA0;
-        
-        // --- High Shelf filter coefficient calculation ---
-        // fc = 10000Hz, using S=1 for shelving filter
-        A = Math.pow(10, tr / 40);
-        omega = 2 * Math.PI * 10000 / sr;
-        cosw = Math.cos(omega);
-        sinw = Math.sin(omega);
-        alpha = sinw / 2 * Math.sqrt(2);
-        let trebleB0 = A * ((A + 1) + (A - 1) * cosw + 2 * Math.sqrt(A) * alpha);
-        let trebleB1 = -2 * A * ((A - 1) + (A + 1) * cosw);
-        let trebleB2 = A * ((A + 1) + (A - 1) * cosw - 2 * Math.sqrt(A) * alpha);
-        let trebleA0 = (A + 1) - (A - 1) * cosw + 2 * Math.sqrt(A) * alpha;
-        let trebleA1 = 2 * ((A - 1) - (A + 1) * cosw);
-        let trebleA2 = (A + 1) - (A - 1) * cosw - 2 * Math.sqrt(A) * alpha;
-        trebleB0 /= trebleA0; trebleB1 /= trebleA0; trebleB2 /= trebleA0;
-        trebleA1 /= trebleA0; trebleA2 /= trebleA0;
-        
-        // --- Process each sample per channel using cascade of filters ---
-        for (let ch = 0; ch < channelCount; ch++) {
-            const offset = ch * blockSize;
-            for (let i = 0; i < blockSize; i++) {
-                let x = data[offset + i];
-                let y = x;
-                
-                // Process Bass filter (Low Shelf)
-                if ((bs >= 0 ? bs : -bs) > 1e-6) {
-                    let x0 = y;
-                    let y0 = bassB0 * x0 + bassB1 * filterStates.bass1[ch] + bassB2 * filterStates.bass2[ch]
-                             - bassA1 * filterStates.bass3[ch] - bassA2 * filterStates.bass4[ch];
-                    filterStates.bass2[ch] = filterStates.bass1[ch];
-                    filterStates.bass1[ch] = x0;
-                    filterStates.bass4[ch] = filterStates.bass3[ch];
-                    filterStates.bass3[ch] = y0;
-                    y = y0;
-                }
-                
-                // Process Mid filter (Peaking)
-                if ((md >= 0 ? md : -md) > 1e-6) {
-                    let x0 = y;
-                    let y0 = midB0 * x0 + midB1 * filterStates.mid1[ch] + midB2 * filterStates.mid2[ch]
-                             - midA1 * filterStates.mid3[ch] - midA2 * filterStates.mid4[ch];
-                    filterStates.mid2[ch] = filterStates.mid1[ch];
-                    filterStates.mid1[ch] = x0;
-                    filterStates.mid4[ch] = filterStates.mid3[ch];
-                    filterStates.mid3[ch] = y0;
-                    y = y0;
-                }
-                
-                // Process Treble filter (High Shelf)
-                if ((tr >= 0 ? tr : -tr) > 1e-6) {
-                    let x0 = y;
-                    let y0 = trebleB0 * x0 + trebleB1 * filterStates.treble1[ch] + trebleB2 * filterStates.treble2[ch]
-                             - trebleA1 * filterStates.treble3[ch] - trebleA2 * filterStates.treble4[ch];
-                    filterStates.treble2[ch] = filterStates.treble1[ch];
-                    filterStates.treble1[ch] = x0;
-                    filterStates.treble4[ch] = filterStates.treble3[ch];
-                    filterStates.treble3[ch] = y0;
-                    y = y0;
-                }
-                
-                data[offset + i] = y;
+        const invA0 = 1.0 / a0_tmp;
+        midB0 = b0_tmp * invA0;
+        midB1 = b1_tmp * invA0;
+        midB2 = b2_tmp * invA0;
+        midA1 = a1_tmp * invA0;
+        midA2 = a2_tmp * invA0;
+    }
+
+    // --- High Shelf (Treble) Coefficients ---
+    // Calculated only if the treble gain is significant
+    if (trebleActive) {
+        const A = Math.pow(10, 0.025 * tr); // Optimized gain conversion: 10^(G/40)
+        const omega = TWO_PI * 10000 / sr;  // Fixed cutoff frequency: 10000 Hz
+        const cosw = Math.cos(omega);
+        const sinw = Math.sin(omega);
+        // S=1 shelving filter slope parameter
+        const alpha = sinw * 0.5 * SQRT2;
+        const sqrtA = Math.sqrt(A);
+        const twoSqrtAAlpha = 2 * sqrtA * alpha;
+        const A_plus_1 = A + 1;
+        const A_minus_1 = A - 1;
+
+        // RBJ Cookbook High Shelf coefficients
+        const commonTerm1 = A_plus_1 + A_minus_1 * cosw;
+        const commonTerm2 = A_plus_1 - A_minus_1 * cosw;
+
+        const b0_tmp = A * (commonTerm1 + twoSqrtAAlpha);
+        const b1_tmp = -2 * A * (A_minus_1 + A_plus_1 * cosw);
+        const b2_tmp = A * (commonTerm1 - twoSqrtAAlpha);
+        const a0_tmp = commonTerm2 + twoSqrtAAlpha;
+        const a1_tmp = 2 * (A_minus_1 - A_plus_1 * cosw);
+        const a2_tmp = commonTerm2 - twoSqrtAAlpha;
+
+        // Normalize coefficients
+        const invA0 = 1.0 / a0_tmp;
+        trebleB0 = b0_tmp * invA0;
+        trebleB1 = b1_tmp * invA0;
+        trebleB2 = b2_tmp * invA0;
+        trebleA1 = a1_tmp * invA0;
+        trebleA2 = a2_tmp * invA0;
+    }
+
+    // --- Process Audio ---
+    // Process samples block by block, channel by channel
+    for (let ch = 0; ch < channelCount; ch++) {
+        const offset = ch * blockSize;
+
+        // Cache references to state arrays for the current channel for faster access inside inner loop
+        const b_x1 = states.bass_x1; const b_x2 = states.bass_x2;
+        const b_y1 = states.bass_y1; const b_y2 = states.bass_y2;
+        const m_x1 = states.mid_x1;  const m_x2 = states.mid_x2;
+        const m_y1 = states.mid_y1;  const m_y2 = states.mid_y2;
+        const t_x1 = states.treble_x1; const t_x2 = states.treble_x2;
+        const t_y1 = states.treble_y1; const t_y2 = states.treble_y2;
+
+        // Process each sample in the current block for the current channel
+        for (let i = 0; i < blockSize; i++) {
+            const idx = offset + i; // Direct index into the data buffer
+            let sample = data[idx]; // Current sample value
+
+            // Apply Bass filter (Low Shelf) if active
+            if (bassActive) {
+                const x_n = sample; // Input for this filter stage
+                // Retrieve previous state values for this channel
+                const x1 = b_x1[ch]; const x2 = b_x2[ch];
+                const y1 = b_y1[ch]; const y2 = b_y2[ch];
+                // Apply the 2nd order IIR difference equation:
+                // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+                const y_n = bassB0 * x_n + bassB1 * x1 + bassB2 * x2 - bassA1 * y1 - bassA2 * y2;
+                // Update state arrays for the next sample calculation
+                b_x2[ch] = x1; b_x1[ch] = x_n;
+                b_y2[ch] = y1; b_y1[ch] = y_n;
+                sample = y_n; // Output of this stage is input to the next
             }
+
+            // Apply Mid filter (Peaking) if active
+            if (midActive) {
+                const x_n = sample;
+                const x1 = m_x1[ch]; const x2 = m_x2[ch];
+                const y1 = m_y1[ch]; const y2 = m_y2[ch];
+                const y_n = midB0 * x_n + midB1 * x1 + midB2 * x2 - midA1 * y1 - midA2 * y2;
+                m_x2[ch] = x1; m_x1[ch] = x_n;
+                m_y2[ch] = y1; m_y1[ch] = y_n;
+                sample = y_n;
+            }
+
+            // Apply Treble filter (High Shelf) if active
+            if (trebleActive) {
+                const x_n = sample;
+                const x1 = t_x1[ch]; const x2 = t_x2[ch];
+                const y1 = t_y1[ch]; const y2 = t_y2[ch];
+                const y_n = trebleB0 * x_n + trebleB1 * x1 + trebleB2 * x2 - trebleA1 * y1 - trebleA2 * y2;
+                t_x2[ch] = x1; t_x1[ch] = x_n;
+                t_y2[ch] = y1; t_y1[ch] = y_n;
+                sample = y_n;
+            }
+
+            // Write the final processed sample back to the data buffer
+            data[idx] = sample;
         }
-        
-        return data;
+    }
+
+    return data; // Return the modified buffer
     `;
 
     constructor() {

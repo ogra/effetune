@@ -25,13 +25,12 @@ class MultibandSaturationPlugin extends PluginBase {
         // Math, Float32Array, etc. are available.
     
         return `
-            // Create a result buffer. It starts as a copy of the input data.
-            const result = new Float32Array(data.length);
-            result.set(data); // Copy input data efficiently
-    
             // Cache frequently used parameters for faster access
             const pEnabled = parameters.enabled;
-            if (!pEnabled) return result; // Early exit if disabled
+            if (!pEnabled) return data; // Early exit if disabled
+    
+            // Create a result buffer. It starts as a copy of the input data.
+            let result = data; // Use input data directly
     
             const pSampleRate = parameters.sampleRate;
             const pChannelCount = parameters.channelCount;

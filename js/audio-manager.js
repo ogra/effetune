@@ -44,12 +44,13 @@ export class AudioManager {
         window.audioManager = this;
     }
     /**
-     * Initialize audio system
+     * Initialize audio system (without AudioWorklet)
+     * This is the first phase of audio initialization that can happen before GUI is fully rendered
      * @returns {Promise<string>} - Empty string on success, error message on failure
      */
     async initAudio() {
         try {
-            // Initialize audio context
+            // Initialize audio context (without AudioWorklet)
             const contextResult = await this.contextManager.initAudioContext();
             if (contextResult) {
                 return contextResult;
@@ -65,30 +66,55 @@ export class AudioManager {
                 return outputResult;
             }
             
-            // Build initial pipeline
-            await this.rebuildPipeline(true);
+            // Note: We don't build the pipeline here anymore
+            // That will be done in initializeAudioWorklet after GUI is fully rendered
             
             // Resume context if suspended
             await this.contextManager.resumeAudioContext();
             
             // Update exposed properties for backward compatibility
+            // Note: workletNode will be null at this point
             this.updateExposedProperties();
-            
-            // Setup worklet message handler
-            this.workletNode.port.onmessage = (event) => {
-                const data = event.data;
-                if (data.type === 'sleepModeChanged') {
-                    // Dispatch sleep mode changed event
-                    this.dispatchEvent('sleepModeChanged', {
-                        isSleepMode: data.isSleepMode,
-                        sampleRate: this.audioContext.sampleRate
-                    });
-                }
-            };
             
             // Return any input error (like microphone access denied)
             // This allows the app to continue with file playback even if mic access is denied
             return inputResult || '';
+        } catch (error) {
+            return `Audio Error: ${error.message}`;
+        }
+    }
+    
+    /**
+     * Initialize AudioWorklet and create worklet node
+     * This is the second phase of audio initialization that happens after GUI is fully rendered
+     * @returns {Promise<string>} - Empty string on success, error message on failure
+     */
+    async initializeAudioWorklet() {
+        try {
+            // Load AudioWorklet and create worklet node
+            const workletResult = await this.contextManager.loadAudioWorklet();
+            if (workletResult) {
+                return workletResult;
+            }
+            
+            // Update exposed properties for backward compatibility
+            this.updateExposedProperties();
+            
+            // Setup worklet message handler
+            if (this.workletNode) {
+                this.workletNode.port.onmessage = (event) => {
+                    const data = event.data;
+                    if (data.type === 'sleepModeChanged') {
+                        // Dispatch sleep mode changed event
+                        this.dispatchEvent('sleepModeChanged', {
+                            isSleepMode: data.isSleepMode,
+                            sampleRate: this.audioContext.sampleRate
+                        });
+                    }
+                };
+            }
+            
+            return '';
         } catch (error) {
             return `Audio Error: ${error.message}`;
         }
@@ -157,15 +183,6 @@ export class AudioManager {
         if (this.contextManager.getSkipAudioInitDuringSampleRateChange()) {
             this.contextManager.setSkipAudioInitDuringSampleRateChange(false);
             return '';
-        }
-        
-        // Get current sample rate before reinitializing
-        let currentSampleRate = null;
-        if (window.electronAPI && window.electronIntegration) {
-            const preferences = await window.electronIntegration.loadAudioPreferences();
-            if (preferences && preferences.sampleRate) {
-                currentSampleRate = preferences.sampleRate;
-            }
         }
         
         // Initialize audio and rebuild pipeline

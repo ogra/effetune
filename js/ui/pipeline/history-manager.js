@@ -1,6 +1,8 @@
 /**
  * HistoryManager - Handles undo/redo functionality and state management
  */
+import { applySerializedState } from '../../utils/serialization-utils.js';
+
 export class HistoryManager {
     /**
      * Create a new HistoryManager instance
@@ -121,11 +123,9 @@ export class HistoryManager {
             state.forEach(pluginState => {
                 const plugin = this.pipelineManager.pluginManager.createPlugin(pluginState.nm);
                 if (plugin) {
-                    plugin.enabled = pluginState.en;
-                    const { nm, en, ...params } = pluginState;
-                    if (plugin.setParameters) {
-                        plugin.setParameters(params);
-                    }
+                    // Use applySerializedState to properly handle all properties including bus settings
+                    applySerializedState(plugin, pluginState);
+                    
                     this.audioManager.pipeline.push(plugin);
                     // Expand all plugins (same as loadPreset)
                     this.pipelineManager.expandedPlugins.add(plugin);

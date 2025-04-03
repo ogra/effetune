@@ -95,6 +95,7 @@
 
   "menu.settings": "Settings",
   "menu.settings.audioDevices": "Audio Devices...",
+  "menu.settings.performanceBenchmark": "Performance Benchmark",
 
   "menu.help": "Help",
   "menu.help.help": "Help",

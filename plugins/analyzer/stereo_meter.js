@@ -66,8 +66,7 @@ class StereoMeterPlugin extends PluginBase {
       // context.peakBuffer.fill(0); // Keep implicit zero-init for brevity matching original
     }
 
-    const result = new Float32Array(data.length);
-    result.set(data); // Preserve the copy
+    const result = data; // Direct reference instead of copy
 
     // --- Optimization: Destructure parameters once ---
     // Note: sampleRate already destructured above. channelCount is no longer needed here.

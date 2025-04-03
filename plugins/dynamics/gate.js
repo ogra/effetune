@@ -30,9 +30,8 @@ class GatePlugin extends PluginBase {
     
         // Function body as a string
         return `
-            // Create a copy of the input data
-            const result = new Float32Array(data.length);
-            result.set(data); // Initial copy
+            // Use the input data directly
+            const result = data;
     
             // --- Early exit if disabled ---
             if (!parameters.enabled) {
@@ -660,7 +659,6 @@ class GatePlugin extends PluginBase {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
         const height = canvas.height;
 
         ctx.save();

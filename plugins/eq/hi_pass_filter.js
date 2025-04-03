@@ -11,8 +11,6 @@
 //  - 84dB/oct = 14th order Linkwitz-Riley (LR14)
 //  - 96dB/oct = 16th order Linkwitz-Riley (LR16)
 const hiPassProcessorFunction = `
-'use strict'; // Enable strict mode for potential optimizations and error prevention
-
 // Early exit if processing is disabled
 if (!parameters.enabled) return data;
 

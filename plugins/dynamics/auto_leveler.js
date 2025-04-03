@@ -33,10 +33,8 @@ class AutoLevelerPlugin extends PluginBase {
 
             // Skip processing if disabled
             if (!parameters.enabled) {
-                // Return a copy of the input data
-                const result = new Float32Array(data.length);
-                result.set(data);
-                return result;
+                // Return the input data directly
+                return data;
             }
 
             // Initialize or reset context state if needed

@@ -57,8 +57,7 @@ class MultibandCompressorPlugin extends PluginBase {
       const blockSize = parameters.blockSize;
       const sampleRate = parameters.sampleRate;
       const channelCount = parameters.channelCount;
-      const result = new Float32Array(data.length); // Output buffer
-      result.set(data); // Copy input initially (will be overwritten)
+      const result = data; // Use input buffer directly
 
       // Bypass if disabled
       if (!parameters.enabled) {

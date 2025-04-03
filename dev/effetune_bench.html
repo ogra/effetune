@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>EffeTune Plugin Benchmark</title>
+    <title>EffeTune Benchmark</title>
+    <link rel="stylesheet" href="../effetune.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -77,6 +78,24 @@
             margin-top: 10px;
             color: #e0e0e0;
         }
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: #2a2a2a;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #9C27B0;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            margin-top: 5px;
+        }
         .copy-button {
             padding: 6px 12px;
             background-color: #444;
@@ -110,20 +129,60 @@
         .copy-success.show {
             opacity: 1;
         }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background-color: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .back-button:hover {
+            background-color: #3d3d3d;
+        }
+        .back-button svg {
+            margin-right: 6px;
+            width: 16px;
+            height: 16px;
+        }
+        h1 {
+            margin-top: 60px; /* Add margin to h1 to avoid overlap with back button */
+        }
     </style>
 </head>
 <body>
-    <h1>EffeTune Plugin Performance Benchmark</h1>
+    <button id="back-button" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to EffeTune
+    </button>
+    <h1>EffeTune Performance Benchmark</h1>
     <div id="benchmark-results" class="benchmark-container">
-        <h2>Plugin Performance Benchmark</h2>
+        <h2>Performance Benchmark</h2>
         <button id="run-benchmarks" class="benchmark-button">Run Benchmarks</button>
         <div id="benchmark-status">Click "Run Benchmarks" to start performance testing.</div>
+        <div id="progress-container" class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
         <div id="benchmark-table-container"></div>
     </div>
 
     <script type="module">
         import { PluginManager } from '../js/plugin-manager.js';
         import { loadScript, loadCSS } from '../js/script-loader.js';
+
+        // Define benchmark parameters
+        const SAMPLE_RATE = 96000; // Using 96kHz sampling rate
+        const BUFFER_SIZE = 128;
+        const CHANNEL_COUNT = 2;
 
         // Customized plugin manager
         class TestPluginManager extends PluginManager {
@@ -286,19 +345,15 @@
             
             // Calculate calls per second
             const elapsedTime = (performance.now() - startTime) / 1000; // Convert to seconds
-            const callsPerSecond = Math.round(processCount / elapsedTime);
+            const samplesPerSecond = Math.round((processCount * BUFFER_SIZE) / elapsedTime);
             
             // Calculate speedup factor (how many times faster than real-time)
             // At 96kHz, one second of real-time audio contains 96000 samples
-            // Each call processes BUFFER_SIZE samples
-            // So the number of blocks in one second of real-time audio is 96000 / BUFFER_SIZE
-            // The speedup factor is then (calls per second) / (blocks per second of real-time audio)
-            const blocksPerSecondRealtime = 96000 / blockSize;
-            const speedupFactor = callsPerSecond / blocksPerSecondRealtime;
+            const speedupFactor = samplesPerSecond / SAMPLE_RATE;
             
             return {
-                name: plugin.constructor.name,
-                callsPerSecond: callsPerSecond,
+                name: plugin.name,
+                samplesPerSecond: samplesPerSecond,
                 totalCalls: processCount,
                 elapsedTime: elapsedTime.toFixed(3),
                 speedupFactor: speedupFactor.toFixed(1) // Format to 1 decimal place
@@ -309,6 +364,8 @@
         async function runBenchmarks() {
             const benchmarkStatus = document.getElementById('benchmark-status');
             const benchmarkTableContainer = document.getElementById('benchmark-table-container');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
             const runButton = document.getElementById('run-benchmarks');
             
             // Disable the run button during benchmarking
@@ -321,9 +378,6 @@
                 const { pluginClasses } = await manager.loadPlugins();
                 
                 // Define benchmark parameters
-                const SAMPLE_RATE = 96000; // Using 96kHz sampling rate
-                const BUFFER_SIZE = 128;
-                const CHANNEL_COUNT = 2;
                 const BUFFER_DURATION = 1.5; // 1.5 seconds (longer than 1 second to ensure we have enough data)
                 
                 // Create a random audio buffer
@@ -336,6 +390,10 @@
                 // Benchmark each plugin
                 let pluginCount = Object.keys(pluginClasses).length;
                 let completedCount = 0;
+
+                // Show progress bar
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
                 
                 for (const [name, PluginClass] of Object.entries(pluginClasses)) {
                     benchmarkStatus.textContent = `Benchmarking ${name} (${completedCount + 1}/${pluginCount})...`;
@@ -372,15 +430,18 @@
                     // Update progress
                     completedCount++;
                     
+                    // Update progress bar
+                    progressBar.style.width = `${(completedCount / pluginCount) * 100}%`;
+                    
                     // Add a small delay to prevent UI freezing
                     await new Promise(resolve => setTimeout(resolve, 10));
                 }
                 
-                // Sort results by calls per second (ascending)
-                results.sort((a, b) => a.callsPerSecond - b.callsPerSecond);
-                
                 // Create a table to display the results
                 benchmarkStatus.textContent = 'Benchmark completed!';
+
+                // Hide progress bar after completion
+                progressContainer.style.display = 'none';
                 
                 // Create table
                 const table = document.createElement('table');
@@ -389,7 +450,7 @@
                 // Create table header
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                ['Plugin', 'Calls/Second', 'Total Calls', 'Time (s)', 'Speed@96k (×)'].forEach(text => {
+                ['Effect', 'Samples/sec', 'Real-Time Factor(x)'].forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
                     headerRow.appendChild(th);
@@ -404,25 +465,16 @@
                     
                     // Plugin name
                     const nameCell = document.createElement('td');
+                    // Remove "Plugin" from the end of the name if it exists
                     nameCell.textContent = result.name;
                     row.appendChild(nameCell);
                     
                     // Calls per second
-                    const callsPerSecondCell = document.createElement('td');
-                    callsPerSecondCell.textContent = result.callsPerSecond.toLocaleString();
-                    row.appendChild(callsPerSecondCell);
-                    
-                    // Total calls
-                    const totalCallsCell = document.createElement('td');
-                    totalCallsCell.textContent = result.totalCalls.toLocaleString();
-                    row.appendChild(totalCallsCell);
-                    
-                    // Elapsed time
-                    const elapsedTimeCell = document.createElement('td');
-                    elapsedTimeCell.textContent = result.elapsedTime;
-                    row.appendChild(elapsedTimeCell);
-                    
-                    // Speedup factor
+                    const samplesPerSecondCell = document.createElement('td');
+                    samplesPerSecondCell.textContent = result.samplesPerSecond.toLocaleString();
+                    row.appendChild(samplesPerSecondCell);
+
+                    // Real-Time Factor (previously Speedup factor)
                     const speedupCell = document.createElement('td');
                     speedupCell.textContent = result.speedupFactor;
                     row.appendChild(speedupCell);
@@ -463,8 +515,6 @@
                 // Add event listener to copy button
                 copyButton.addEventListener('click', async () => {
                     try {
-                        console.log('Copy button clicked, preparing table data...');
-                        
                         // Convert table to text format
                         let tableText = '';
                         
@@ -473,7 +523,7 @@
                         const headers = Array.from(headerCells).map(cell => cell.textContent);
                         tableText += headers.join('\t') + '\n';
                         
-                        // Get data rows
+                        // Get data rows (only 3 columns now)
                         const rows = table.querySelectorAll('tbody tr');
                         rows.forEach(row => {
                             const cells = row.querySelectorAll('td');
@@ -481,12 +531,8 @@
                             tableText += rowData.join('\t') + '\n';
                         });
                         
-                        console.log('Table data prepared, attempting to copy to clipboard...');
-                        
                         // Copy to clipboard
                         await navigator.clipboard.writeText(tableText);
-                        
-                        console.log('Successfully copied to clipboard');
                         
                         // Show success message
                         successMessage.classList.add('show');
@@ -505,6 +551,9 @@
             } finally {
                 // Re-enable the run button
                 runButton.disabled = false;
+                
+                // Hide progress bar in case of error
+                progressContainer.style.display = 'none';
             }
         }
         
@@ -512,6 +561,54 @@
         window.addEventListener('load', () => {
             const runButton = document.getElementById('run-benchmarks');
             runButton.addEventListener('click', runBenchmarks);
+            
+            // Add event listener to the back button
+            const backButton = document.getElementById('back-button');
+            backButton.addEventListener('click', () => {
+                // Navigate back to the main page
+                if (window.electronAPI) {
+                    // Use Electron API to navigate back
+                    window.electronAPI.navigateToMain()
+                        .then(result => {
+                            if (!result || !result.success) {
+                                console.error('Failed to navigate to main page:', result ? result.error : 'Unknown error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error navigating to main page:', error);
+                        });
+                } else {
+                    // Fallback for non-Electron environment
+                    window.location.href = '../effetune.html';
+                }
+            });
+            
+            // Disable menus except File->Exit when running in Electron
+            if (window.electronAPI) {
+                // Create a custom menu template with only File->Exit enabled
+                // Hide the application menu completely
+                window.electronAPI.hideApplicationMenu()
+                    .then(result => {
+                        if (result && result.success) {
+                        } else {
+                            console.error('Failed to hide application menu:', result ? result.error : 'Unknown error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error hiding application menu:', error);
+                    });
+            }
+        });
+        
+        // Handle page unload to restore menu when navigating away
+        window.addEventListener('beforeunload', () => {
+            if (window.electronAPI) {
+                // Try to restore the default menu
+                window.electronAPI.restoreDefaultMenu()
+                    .catch(error => {
+                        console.error('Error restoring default menu:', error);
+                    });
+            }
         });
     </script>
 </body>

@@ -2,11 +2,9 @@ import { PluginListManager } from './ui/plugin-list-manager.js';
 import { PipelineManager } from './ui/pipeline-manager.js';
 import { StateManager } from './ui/state-manager.js';
 import { AudioPlayer } from './ui/audio-player.js';
-import { electronIntegration } from './electron-integration.js';
 import {
     getSerializablePluginStateShort,
-    convertPresetToShortFormat,
-    convertLongToShortFormat
+    convertPresetToShortFormat
 } from './utils/serialization-utils.js';
 
 export class UIManager {
@@ -56,7 +54,6 @@ export class UIManager {
         this.initLocalization().then(() => {
             // Update UI texts after translations are loaded
             this.updateUITexts();
-            console.log('UI texts updated with translations');
         }).catch(error => {
             console.error('Failed to initialize localization:', error);
         });
@@ -310,8 +307,6 @@ export class UIManager {
      */
     async initLocalization() {
         try {
-            console.log(`Initializing localization for language: ${this.userLanguage}`);
-            
             // Always load English translations first for fallback
             await this.loadEnglishTranslations();
             
@@ -360,7 +355,6 @@ export class UIManager {
             
             // Parse the JSON content
             this.englishTranslations = JSON.parse(jsonContent);
-            console.log('English translations loaded successfully');
             
             // If user language is English, set translations to English
             if (this.userLanguage === 'en') {

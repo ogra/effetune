@@ -140,6 +140,197 @@ export class UIEventHandler {
         if (this.pipelineManager.fileProcessor) {
             this.pipelineManager.fileProcessor.setupFileDropHandlers();
         }
+        
+        // Setup global drag and drop handlers (for browser environment only)
+        //
+        // IMPORTANT DRAG & DROP BEHAVIOR NOTES:
+        // --------------------------------------
+        // 1. These handlers are for the entire document and handle both music files and preset files.
+        // 2. The behavior differs based on file type and drop target:
+        //
+        //    A. Music Files (.mp3, .wav, etc.):
+        //       - When dragged over the main window (not file-drop-area):
+        //         * body gets 'drag-over' class
+        //       - When dropped on the main window (not file-drop-area):
+        //         * Files are played in the Player
+        //       - When dragged/dropped on file-drop-area:
+        //         * Handled by FileProcessor.js for offline processing
+        //
+        //    B. Preset Files (.effetune_preset):
+        //       - When dragged over ANY part of the window:
+        //         * body gets 'drag-over' class
+        //         * file-drop-area should NOT show 'drag-active' class
+        //       - When dropped ANYWHERE in the window:
+        //         * Preset is loaded into the Effect Pipeline
+        //
+        // 3. Visual feedback is critical:
+        //    - 'drag-over' on body = will be played or loaded as preset
+        //    - 'drag-active' on file-drop-area = will be processed offline
+        //
+        // 4. Event propagation is carefully managed:
+        //    - For preset files: events bubble up to document handlers
+        //    - For music files on file-drop-area: events are stopped
+        //    - For music files elsewhere: events bubble up to document handlers
+        //
+        // DO NOT MODIFY THIS BEHAVIOR without thorough testing of all drag & drop scenarios!
+        if (!window.electronIntegration || !window.electronIntegration.isElectron) {
+            // Add CSS for drag-over effect directly to the document
+            const style = document.createElement('style');
+            style.id = 'drag-drop-style';
+            style.textContent = `
+                body.drag-over {
+                    position: relative;
+                }
+                
+                body.drag-over::before {
+                    content: '';
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 120, 255, 0.1);
+                    border: 2px dashed rgba(0, 120, 255, 0.5);
+                    pointer-events: none;
+                    z-index: 9999;
+                }
+            `;
+            
+            // Remove any existing style with the same ID
+            const existingStyle = document.getElementById('drag-drop-style');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Add the new style
+            document.head.appendChild(style);
+
+// Handle dragover for the entire document
+            // Handle dragover for the entire document
+            document.addEventListener('dragover', (e) => {
+                // Always prevent default for dragover to enable drop
+                e.preventDefault();
+                
+                // Check if this is a file drag - use a more permissive check
+                if (e.dataTransfer && (
+                    // Check for items
+                    (e.dataTransfer.items && Array.from(e.dataTransfer.items).some(item => item.kind === 'file')) ||
+                    // Also check types array
+                    (e.dataTransfer.types && e.dataTransfer.types.includes('Files'))
+                )) {
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = 'copy';
+                    
+                    // Check if the target is the file-drop-area or a child of it
+                    const fileDropArea = e.target.closest('.file-drop-area');
+                    if (fileDropArea) {
+                        // Remove drag-over from body when over file-drop-area
+                        document.body.classList.remove('drag-over');
+                        return;
+                    }
+                    
+                    // Check for preset files or music files
+                    const items = Array.from(e.dataTransfer.items);
+                    
+                    // Add visual feedback for any file drag
+                    document.body.classList.add('drag-over');
+                    
+                    // Force a reflow to ensure the style is applied
+                    void document.body.offsetHeight;
+                    
+                    return false;
+                }
+            }, true); // Use capture phase
+            
+            // Handle dragleave for the entire document
+            document.addEventListener('dragleave', (e) => {
+                // Only handle if we're leaving the document and it's a file drag
+                if ((!e.relatedTarget || e.relatedTarget === document.documentElement) &&
+                    document.body.classList.contains('drag-over')) {
+                    document.body.classList.remove('drag-over');
+                }
+            }, true); // Use capture phase
+            
+            // Handle drop for the entire document
+            document.addEventListener('drop', (e) => {
+                // Check if this is a file drop
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    // Check if the target is the file-drop-area or a child of it
+                    const fileDropArea = e.target.closest('.file-drop-area');
+                    if (fileDropArea) {
+                        // Allow the drop event to propagate to the file-drop-area handler
+                        document.body.classList.remove('drag-over');
+                        return;
+                    }
+                    
+                    // For other areas, prevent default behavior
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.body.classList.remove('drag-over');
+                    
+                    // Process the dropped files
+                    const files = Array.from(e.dataTransfer.files);
+                    
+                    // Check for preset files
+                    const presetFiles = files.filter(file =>
+                        file.name.toLowerCase().endsWith('.effetune_preset')
+                    );
+                    
+                    // Check for music files
+                    const musicFiles = files.filter(file =>
+                        file.type.startsWith('audio/') ||
+                        /\.(mp3|wav|ogg|flac|m4a|aac|aiff|wma|alac)$/i.test(file.name)
+                    );
+                    
+                    // Process preset files first (if any)
+                    if (presetFiles.length > 0) {
+                        // Read the preset file content
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            try {
+                                const fileData = event.target.result;
+                                const presetData = JSON.parse(fileData);
+                                
+                                // Load the preset using the UI manager
+                                if (window.uiManager) {
+                                    window.uiManager.loadPreset(presetData);
+                                }
+                            } catch (error) {
+                                console.error('Failed to parse preset file:', error);
+                                if (window.uiManager) {
+                                    window.uiManager.setError('Invalid preset file format', true);
+                                }
+                            }
+                        };
+                        reader.onerror = (error) => {
+                            console.error('Failed to read preset file:', error);
+                            if (window.uiManager) {
+                                window.uiManager.setError('Failed to read preset file', true);
+                            }
+                        };
+                        reader.readAsText(presetFiles[0]);
+                    }
+                    // Process music files (if any and no preset files)
+                    else if (musicFiles.length > 0) {
+                        // For browser environment, create audio player directly with the files
+                        if (window.uiManager) {
+                            // Convert File objects to URLs
+                            const fileUrls = musicFiles.map(file => URL.createObjectURL(file));
+                            
+                            // Create audio player with the file URLs
+                            window.uiManager.createAudioPlayer(fileUrls, false);
+                            
+                            // Clean up object URLs when they're no longer needed
+                            window.addEventListener('unload', () => {
+                                fileUrls.forEach(url => URL.revokeObjectURL(url));
+                            }, { once: true });
+                        }
+                    }
+                    
+                    return false;
+                }
+            }, true); // Use capture phase
+        }
     }
     
     /**

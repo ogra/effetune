@@ -11,9 +11,6 @@ class TremoloPlugin extends PluginBase {
 
         // Register the audio processor
         this.registerProcessor(`
-            // Strict mode for potential optimizations and catching silent errors
-            "use strict"; 
-        
             // Initial check for processor enablement
             if (!parameters.enabled) return data;
         

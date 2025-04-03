@@ -66,6 +66,9 @@ contextBridge.exposeInMainWorld(
     // Get app version
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     
+    // Get command line preset file
+    getCommandLinePresetFile: () => ipcRenderer.invoke('get-command-line-preset-file'),
+    
     // Reload window
     reloadWindow: () => ipcRenderer.invoke('reload-window'),
     
@@ -74,6 +77,18 @@ contextBridge.exposeInMainWorld(
     
     // Update application menu with translations
     updateApplicationMenu: (menuTemplate) => ipcRenderer.invoke('update-application-menu', menuTemplate),
+    
+    // Hide application menu
+    hideApplicationMenu: () => ipcRenderer.invoke('hide-application-menu'),
+    
+    // Restore default application menu
+    restoreDefaultMenu: () => ipcRenderer.invoke('restore-default-menu'),
+    
+    // Navigate back to main page
+    navigateToMain: () => ipcRenderer.invoke('navigate-to-main'),
+    
+    // Get current application menu template
+    getApplicationMenu: () => ipcRenderer.invoke('get-application-menu'),
     
     // Get path
     getPath: (name) => ipcRenderer.invoke('getPath', name),
@@ -93,6 +108,11 @@ contextBridge.exposeInMainWorld(
     // Listen for audio files dropped event
     onAudioFilesDropped: (callback) => {
       ipcRenderer.on('audio-files-dropped', (event, filePaths) => callback(filePaths));
+    },
+    
+    // Signal that the renderer is ready to receive music files
+    signalReadyForMusicFiles: () => {
+      ipcRenderer.send('renderer-ready-for-music-files');
     }
   }
 );
@@ -103,9 +123,6 @@ contextBridge.exposeInMainWorld(
     // Get the real path of a file
     getRealPath: (file) => {
       try {
-        // Log the file object for debugging
-        console.log('getRealPath file:', file);
-        
         // In Electron, we need to use IPC to get the file path
         // because nodeIntegration is false
         return ipcRenderer.invoke('get-file-path', {
@@ -123,9 +140,6 @@ contextBridge.exposeInMainWorld(
     // Get real paths for multiple files
     getRealPaths: (files) => {
       try {
-        // Log the files for debugging
-        console.log('getRealPaths files:', files);
-        
         // Use IPC to get file paths
         return ipcRenderer.invoke('get-file-paths', Array.from(files).map(file => ({
           name: file.name,
@@ -142,11 +156,10 @@ contextBridge.exposeInMainWorld(
     // Handle dropped files
     handleDroppedFiles: (files) => {
       try {
-        console.log('Handling dropped files in preload:', files.length);
+        // Process dropped files in the main process
         
         // Get file paths directly
         const filePaths = Array.from(files).map(file => file.path).filter(Boolean);
-        console.log('File paths in preload:', filePaths);
         
         // If we have file paths, send them to main process
         if (filePaths.length > 0) {
@@ -169,7 +182,7 @@ contextBridge.exposeInMainWorld(
     // Handle dropped preset file
     handleDroppedPresetFile: (file) => {
       try {
-        console.log('Handling dropped preset file in preload:', file.name);
+        // Process dropped preset file in the main process
         
         // Send file info to main process to get path
         return ipcRenderer.invoke('handle-dropped-preset-file', {
@@ -185,6 +198,30 @@ contextBridge.exposeInMainWorld(
     }
   }
 );
+
+// Add a direct event listener for drag and drop events
+// This is a diagnostic addition to help debug the drag and drop issues
+document.addEventListener('DOMContentLoaded', () => {
+  // Add global drag and drop event listeners
+  document.addEventListener('dragover', (e) => {
+    // Only log once per second to avoid flooding the console
+    if (!window._lastDragOverLog || Date.now() - window._lastDragOverLog > 1000) {
+      window._lastDragOverLog = Date.now();
+    }
+  }, false);
+  
+  document.addEventListener('drop', (e) => {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // Try to get file paths
+      const filePaths = Array.from(e.dataTransfer.files).map(file => file.path).filter(Boolean);
+      
+      // Send to main process
+      if (filePaths.length > 0) {
+        ipcRenderer.send('files-dropped', filePaths);
+      }
+    }
+  }, false);
+});
 
 // Note: We're not adding drag and drop event listeners here anymore
 // to avoid conflicts with the existing drag and drop functionality

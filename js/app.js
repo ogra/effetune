@@ -45,9 +45,7 @@ async function writePipelineStateToFile() {
         // Use the IPC method to save pipeline state to file
         const result = await window.electronAPI.savePipelineStateToFile(latestPipelineState);
         
-        if (result.success) {
-            console.log('Pipeline state saved to file on app exit');
-        } else {
+        if (!result.success) {
             console.error('Failed to save pipeline state to file:', result.error);
         }
     } catch (error) {
@@ -72,7 +70,7 @@ async function loadPipelineState() {
     }
     
     try {
-        // Get app path from Electron
+        // Get app path from Electron - this should respect portable mode settings
         const appPath = await window.electronAPI.getPath('userData');
         
         // Use path.join for cross-platform compatibility
@@ -82,6 +80,7 @@ async function loadPipelineState() {
         const fileExists = await window.electronAPI.fileExists(filePath);
         
         if (!fileExists) {
+            console.log('Pipeline state file does not exist at path:', filePath);
             return null;
         }
         
@@ -103,15 +102,8 @@ async function loadPipelineState() {
 }
 
 // Set up event listener for preset file opening from command line arguments
-if (window.electronAPI && window.electronAPI.onOpenPresetFile) {
-  window.electronAPI.onOpenPresetFile((filePath) => {
-    if (window.electronIntegration) {
-      window.electronIntegration.openPresetFile(filePath);
-    } else {
-      console.error('Cannot open preset file: electronIntegration not available');
-    }
-  });
-}
+// This is now handled in electron-integration.js to avoid duplicate event handlers
+// The path will be stored in window.pendingPresetFilePath for later use
 
 // Add a style to hide the UI immediately during first launch
 // This will be removed after the splash screen is closed
@@ -171,6 +163,13 @@ isFirstLaunchPromise.then(isFirstLaunch => {
     window.isFirstLaunchConfirmed = false;
 });
 
+// Configuration for initialization wait times (in milliseconds)
+const INITIALIZATION_CONFIG = {
+    // Wait time between AudioWorklet initialization and pipeline initialization/building
+    // Set to 0 to disable wait
+    AUDIOWORKLET_TO_PIPELINE_WAIT: 500
+};
+
 class App {
     constructor() {
         // Initialize core components
@@ -194,20 +193,19 @@ class App {
             this.uiManager.showLoadingSpinner();
             
             // Display app version first
-            await this.displayAppVersion();
+            await displayAppVersion();
 
-            // Load plugins
+            // Load plugins (definitions only, not instances)
             await this.pluginManager.loadPlugins();
 
             // Initialize UI components (non-blocking)
             this.uiManager.initPluginList();
             this.uiManager.initDragAndDrop();
 
-            // Initialize audio
+            // Initialize audio context and input/output (without AudioWorklet)
+            // This allows the audio context to be created early, but defers
+            // the heavy AudioWorklet initialization until after GUI is rendered
             const audioInitResult = await this.audioManager.initAudio();
-            
-            // Debug log to check what's being returned
-            console.log('Audio initialization result:', audioInitResult);
             
             // Store the audio initialization result for later
             this.audioInitResult = audioInitResult;
@@ -216,198 +214,527 @@ class App {
             if (audioInitResult && typeof audioInitResult === 'string' && audioInitResult.startsWith('Audio Error:')) {
                 this.hasAudioError = true;
                 console.warn('Audio initialization error detected:', audioInitResult); // Just log the error, don't display it yet
-            } else {
-                console.log('No audio initialization error detected');
             }
             
+            // Initialize audio UI components that don't depend on AudioWorklet
             this.uiManager.initAudio();
-
-            // Initialize pipeline
-            let savedState = null;
-            const plugins = [];
             
-            // Check if running in Electron environment
-            const isElectron = window.electronIntegration && window.electronIntegration.isElectron;
+            // Initialize basic UI without pipeline
+            this.uiManager.updatePipelineUI(true);
             
-            // Check if this is first launch (during splash screen)
-            const isFirstLaunch = window.isFirstLaunch === true;
+            // Hide loading spinner to show the UI is ready
+            this.uiManager.hideLoadingSpinner();
             
-            // If this is the first launch (during splash screen), don't initialize pipeline
-            // This prevents overwriting existing settings during splash screen
-            if (isFirstLaunch && isElectron) {
-                this.uiManager.hideLoadingSpinner();
-                return;
+            // Wait for next frame to ensure UI is rendered
+            await new Promise(resolve => requestAnimationFrame(() => {
+                // Use a second requestAnimationFrame to ensure UI is fully rendered
+                requestAnimationFrame(resolve);
+            }));
+            
+            // First initialize AudioWorklet (before creating plugins)
+            await this.initializeAudioWorklet();
+            
+            // Optional wait after AudioWorklet initialization
+            if (INITIALIZATION_CONFIG.AUDIOWORKLET_TO_PIPELINE_WAIT > 0) {
+                await new Promise(resolve => setTimeout(resolve, INITIALIZATION_CONFIG.AUDIOWORKLET_TO_PIPELINE_WAIT));
             }
             
-            // Try to load pipeline state from file if in Electron environment and no preset file was specified via command line
-            // Check for the force skip flag first
-            if (window.__FORCE_SKIP_PIPELINE_STATE_LOAD === true) {
-                // Clear the flag after using it
-                window.__FORCE_SKIP_PIPELINE_STATE_LOAD = false;
-                return null;
+            // Initialize pipeline state and build audio pipeline as a single operation
+            // This ensures plugins are created with AudioWorklet already initialized
+            await this.initializeAndBuildPipeline();
+            
+            // Set up event listeners and finalize initialization
+            this.setupEventListeners();
+            
+            // Display any errors
+            this.handleErrors();
+            // Signal to the main process that we're ready to receive music files
+            if (window.electronAPI && window.electronAPI.signalReadyForMusicFiles) {
+                // Debug logs removed for release
+                window.electronAPI.signalReadyForMusicFiles();
             }
             
-            // Use the ORIGINAL_PIPELINE_STATE_LOADED value if available, as it can't be changed
-            const shouldLoadPipeline = window.ORIGINAL_PIPELINE_STATE_LOADED !== undefined
-                ? window.ORIGINAL_PIPELINE_STATE_LOADED === true
-                : window.pipelineStateLoaded === true;
-                
-            if (isElectron && shouldLoadPipeline) {
-                try {
-                    savedState = await loadPipelineState();
-                } catch (error) {
-                    // Error loading pipeline state, will use default
-                    console.error('Error loading pipeline state:', error);
-                }
-            }
+            // Process command line arguments after all initialization is complete
+            this.processCommandLineArguments();
             
-            // If no saved state from file, try URL state (for web version)
-            if (!savedState) {
-                savedState = this.uiManager.parsePipelineState();
-            }
             
-            // Check if savedState is empty array but file exists
-            // This could happen if the file was just created with empty content
-            if (savedState && Array.isArray(savedState) && savedState.length === 0) {
-                savedState = null; // Force default plugin initialization
-            }
-            
-            if (savedState && savedState.length > 0) {
-                // Restore pipeline from saved state
-                plugins.push(...savedState.flatMap(pluginState => {
-                    try {
-                        const plugin = this.pluginManager.createPlugin(pluginState.name);
-                        
-                        // Create a state object in the format expected by applySerializedState
-                        const state = {
-                            nm: pluginState.name,
-                            en: pluginState.enabled,
-                            ...(pluginState.inputBus !== undefined && { ib: pluginState.inputBus }),
-                            ...(pluginState.outputBus !== undefined && { ob: pluginState.outputBus }),
-                            ...pluginState.parameters
-                        };
-                        
-                        // Apply serialized state
-                        applySerializedState(plugin, state);
-
-                        plugin.updateParameters();
-                        this.uiManager.expandedPlugins.add(plugin);
-                        return plugin;
-                    } catch (error) {
-                        console.warn(`Failed to create plugin '${pluginState.name}': ${error.message}`);
-                        return []; // Return empty array for flatMap to filter out this plugin
-                    }
-                }));
-            } else {
-                // Initialize default plugins
-                const defaultPlugins = [
-                    { name: 'Volume', config: { volume: -6 } },
-                    { name: 'Level Meter' }
-                ];
-                
-                plugins.push(...defaultPlugins.flatMap(config => {
-                    try {
-                        const plugin = this.pluginManager.createPlugin(config.name);
-                        if (config.config?.volume !== undefined) {
-                            plugin.setVl(config.config.volume);
-                        }
-                        this.uiManager.expandedPlugins.add(plugin);
-                        return plugin;
-                    } catch (error) {
-                        console.warn(`Failed to create default plugin '${config.name}': ${error.message}`);
-                        return []; // Return empty array for flatMap to filter out this plugin
-                    }
-                }));
-            }
-            
-            // Update pipeline and UI in parallel
-            await Promise.all([
-                (async () => {
-                    this.audioManager.pipeline = plugins;
-                    await this.audioManager.rebuildPipeline();
-                })(),
-                (async () => {
-                    this.uiManager.updatePipelineUI();
-                    this.uiManager.updateURL();
-                    this.uiManager.hideLoadingSpinner();
-                })()
-            ]);
-            // Add F1 key event listener for help documentation
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'F1') {
-                    event.preventDefault(); // Prevent default browser behavior
-                    const whatsThisLink = document.querySelector('.whats-this');
-                    if (whatsThisLink) {
-                        whatsThisLink.click();
-                    }
-                }
-            });
-
-            // Check sample rate after initialization
-            if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
-                this.uiManager.setError('error.lowSampleRate', true, { sampleRate: this.audioManager.audioContext.sampleRate });
-            }
-
-            // Clear any existing error messages
-            this.uiManager.clearError();
-
-            // Auto-resume audio context when page gains focus
-            // Auto-resume audio context when page gains focus
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden && this.audioManager.audioContext &&
-                    this.audioManager.audioContext.state === 'suspended') {
-                    this.audioManager.audioContext.resume();
-                }
-            });
-
-            // Display microphone error message at the very end of initialization if there was one
-            if (this.hasAudioError) {
-                // Show a non-blocking warning message to the user
-                this.uiManager.setError(this.uiManager.t('error.microphoneAccessDenied'), false);
-                setTimeout(() => window.uiManager.clearError(), 3000);
-            }
         } catch (error) {
+            console.error('Initialization error:', error);
             this.uiManager.setError(error.message, true);
         }
     }
-    
+
     /**
-     * Display application version from package.json
+     * Initialize AudioWorklet only (without pipeline)
+     * @returns {Promise<void>}
      */
-    async displayAppVersion() {
-        try {
-            const versionElement = document.getElementById('app-version');
-            if (!versionElement) return;
+    async initializeAudioWorklet() {
+        // Skip if this is the first launch (during splash screen)
+        const isElectron = window.electronIntegration && window.electronIntegration.isElectron;
+        const isFirstLaunch = window.isFirstLaunch === true;
+        if (isFirstLaunch && isElectron) {
+            return;
+        }
+        
+        // Skip if force skip flag is set
+        if (window.__FORCE_SKIP_PIPELINE_STATE_LOAD === true) {
+            return;
+        }
+        
+        // Initialize AudioWorklet only (no pipeline building)
+        const workletResult = await this.audioManager.initializeAudioWorklet();
+        
+        // Check for errors
+        if (workletResult && typeof workletResult === 'string' && workletResult.startsWith('Audio Error:')) {
+            this.hasAudioError = true;
+            console.warn('AudioWorklet initialization error:', workletResult);
+        }
+    }
+
+    /**
+     * Initialize and build pipeline as a single operation
+     * This ensures plugins are created with AudioWorklet already initialized
+     * @returns {Promise<void>}
+     */
+    async initializeAndBuildPipeline() {
+        // Check if running in Electron environment
+        const isElectron = window.electronIntegration && window.electronIntegration.isElectron;
+        
+        // Check if this is first launch (during splash screen)
+        const isFirstLaunch = window.isFirstLaunch === true;
+        
+        // If this is the first launch (during splash screen), don't initialize pipeline
+        // This prevents overwriting existing settings during splash screen
+        if (isFirstLaunch && isElectron) {
+            return;
+        }
+        
+        // Try to load pipeline state from file if in Electron environment and no preset file was specified via command line
+        // Check for the force skip flag first
+        if (window.__FORCE_SKIP_PIPELINE_STATE_LOAD === true) {
+            // Clear the flag after using it
+            window.__FORCE_SKIP_PIPELINE_STATE_LOAD = false;
+            return;
+        }
+        
+        // Check if a command line preset file was specified
+        // This is the proper time to load the preset file - after AudioWorklet is initialized
+        // We only load the preset file here, not in the event handler, to ensure it's loaded at the right time
+        // First check the pendingPresetFilePath (set by onOpenPresetFile event)
+        let commandLinePresetFile = window.pendingPresetFilePath || null;
+        
+        // If not found, try to get it directly from the API
+        if (!commandLinePresetFile && window.electronAPI && window.electronAPI.getCommandLinePresetFile) {
+            try {
+                commandLinePresetFile = await window.electronAPI.getCommandLinePresetFile();
+            } catch (error) {
+                console.error('Error getting command line preset file:', error);
+            }
+        }
+        
+        // If a command line preset file was specified, load it instead of the previous state
+        if (commandLinePresetFile) {
+            // Debug logs removed for release
             
-            // Get version from Electron if available
-            if (window.electronIntegration && window.electronIntegration.isElectron) {
-                const version = await window.electronIntegration.getAppVersion();
-                versionElement.textContent = version;
-            } else {
-                // For web version, fetch package.json from the relative path
+            // Set pipeline state flags to false to prevent loading previous state
+            window.pipelineStateLoaded = false;
+            if (typeof window.ORIGINAL_PIPELINE_STATE_LOADED !== 'undefined') {
+                window.ORIGINAL_PIPELINE_STATE_LOADED = false;
+            }
+            window.__FORCE_SKIP_PIPELINE_STATE_LOAD = true;
+            
+            // Check if there's an audio player active
+            const hasAudioPlayer = this.uiManager && this.uiManager.audioPlayer;
+            // Debug logs removed for release
+            
+            if (window.electronIntegration) {
                 try {
-                    const response = await fetch('./package.json');
-                    if (response.ok) {
-                        const packageData = await response.json();
-                        versionElement.textContent = packageData.version;
-                    } else {
-                        console.error('Failed to fetch package.json:', response.status);
-                        versionElement.textContent = '';
+                    // Read the preset file directly
+                    const readResult = await window.electronAPI.readFile(commandLinePresetFile);
+                    
+                    if (!readResult.success) {
+                        throw new Error(readResult.error);
                     }
-                } catch (fetchError) {
-                    console.error('Error fetching package.json:', fetchError);
-                    versionElement.textContent = '';
+                    
+                    // Parse the file content
+                    let fileData;
+                    try {
+                        fileData = JSON.parse(readResult.content);
+                    } catch (parseError) {
+                        console.error('Failed to parse preset file JSON:', parseError);
+                        throw new Error('Invalid preset file format');
+                    }
+                    
+                    // Process the preset data
+                    const path = window.require ? window.require('path') : { basename: (p, ext) => p.split('/').pop().replace(ext, '') };
+                    const fileName = path.basename(commandLinePresetFile, '.effetune_preset');
+                    
+                    // Create preset data object
+                    let presetData;
+                    if (Array.isArray(fileData)) {
+                        presetData = {
+                            name: fileName,
+                            timestamp: Date.now(),
+                            pipeline: fileData
+                        };
+                    } else if (fileData.pipeline) {
+                        presetData = fileData;
+                        presetData.timestamp = Date.now();
+                        presetData.name = fileName;
+                    } else {
+                        throw new Error('Unknown preset format');
+                    }
+                    
+                    // Load the preset directly into UI
+                    this.uiManager.loadPreset(presetData);
+                    
+                    // Rebuild the pipeline to ensure audio processing works correctly
+                    // Debug logs removed for release
+                    
+                    // Force disconnect all existing connections first
+                    if (this.audioManager.workletNode) {
+                        try {
+                            this.audioManager.workletNode.disconnect();
+                        } catch (e) {
+                            // Ignore errors if already disconnected
+                            // Debug logs removed for release
+                        }
+                    }
+                    
+                    // Rebuild pipeline with force flag to ensure complete rebuild
+                    await this.audioManager.rebuildPipeline(true);
+                    // Debug logs removed for release
+                    
+                    // If there was an audio player, make sure it's properly connected to the new pipeline
+                    if (hasAudioPlayer && this.uiManager.audioPlayer) {
+                        // Debug logs removed for release
+                        // Force reconnection of the audio player to the new pipeline
+                        if (this.uiManager.audioPlayer.contextManager) {
+                            try {
+                                this.uiManager.audioPlayer.contextManager.connectToAudioContext();
+                                // Debug logs removed for release
+                            } catch (reconnectError) {
+                                console.error('Error reconnecting audio player:', reconnectError);
+                            }
+                        }
+                    }
+                    
+                    // Clear the pending preset file path
+                    window.pendingPresetFilePath = null;
+                    
+                    return;
+                } catch (error) {
+                    console.error('Error loading preset file:', error);
                 }
             }
+        }
+        
+        // Load pipeline state
+        let savedState = null;
+        const plugins = [];
+        
+        // Use the ORIGINAL_PIPELINE_STATE_LOADED value if available, as it can't be changed
+        const shouldLoadPipeline = window.ORIGINAL_PIPELINE_STATE_LOADED !== undefined
+            ? window.ORIGINAL_PIPELINE_STATE_LOADED === true
+            : window.pipelineStateLoaded === true;
+            
+        if (isElectron && shouldLoadPipeline) {
+            try {
+                savedState = await loadPipelineState();
+            } catch (error) {
+                // Error loading pipeline state, will use default
+                console.error('Error loading pipeline state:', error);
+            }
+        }
+        
+        // If no saved state from file, try URL state (for web version)
+        if (!savedState) {
+            savedState = this.uiManager.parsePipelineState();
+        }
+        
+        // Check if savedState is empty array but file exists
+        // This could happen if the file was just created with empty content
+        if (savedState && Array.isArray(savedState) && savedState.length === 0) {
+            savedState = null; // Force default plugin initialization
+        }
+        
+        if (savedState && savedState.length > 0) {
+            // Restore pipeline from saved state
+            plugins.push(...savedState.flatMap(pluginState => {
+                try {
+                    const plugin = this.pluginManager.createPlugin(pluginState.name);
+                    
+                    // Create a state object in the format expected by applySerializedState
+                    const state = {
+                        nm: pluginState.name,
+                        en: pluginState.enabled,
+                        ...(pluginState.inputBus !== undefined && { ib: pluginState.inputBus }),
+                        ...(pluginState.outputBus !== undefined && { ob: pluginState.outputBus }),
+                        ...pluginState.parameters
+                    };
+                    
+                    // Apply serialized state
+                    applySerializedState(plugin, state);
+
+                    plugin.updateParameters();
+                    this.uiManager.expandedPlugins.add(plugin);
+                    return plugin;
+                } catch (error) {
+                    console.warn(`Failed to create plugin '${pluginState.name}': ${error.message}`);
+                    return []; // Return empty array for flatMap to filter out this plugin
+                }
+            }));
+        } else {
+            // Initialize default plugins
+            const defaultPlugins = [
+                { name: 'Volume', config: { volume: -6 } },
+                { name: 'Level Meter' }
+            ];
+            
+            plugins.push(...defaultPlugins.flatMap(config => {
+                try {
+                    const plugin = this.pluginManager.createPlugin(config.name);
+                    if (config.config?.volume !== undefined) {
+                        plugin.setVl(config.config.volume);
+                    }
+                    this.uiManager.expandedPlugins.add(plugin);
+                    return plugin;
+                } catch (error) {
+                    console.warn(`Failed to create default plugin '${config.name}': ${error.message}`);
+                    return []; // Return empty array for flatMap to filter out this plugin
+                }
+            }));
+        }
+        
+        // Set the pipeline in audioManager
+        this.audioManager.pipeline = plugins;
+        
+        // Update UI
+        this.uiManager.updatePipelineUI(true);
+        this.uiManager.updateURL();
+        
+        // Important: Build the audio pipeline immediately after creating plugins
+        // This ensures audio processing is connected properly
+        try {
+            // Force disconnect all existing connections first
+            if (this.audioManager.workletNode) {
+                try {
+                    this.audioManager.workletNode.disconnect();
+                } catch (e) {
+                    // Ignore errors if already disconnected
+                    console.log('Worklet node was already disconnected');
+                }
+            }
+            
+            // Rebuild pipeline to ensure audio processing is connected
+            await this.audioManager.rebuildPipeline(true);
+            
         } catch (error) {
-            console.error('Failed to display app version:', error);
-            // Don't display version in case of error
-            const versionElement = document.getElementById('app-version');
-            if (versionElement) {
-                versionElement.textContent = '';
+            console.error('Error building audio pipeline:', error);
+            // Try one more time after a short delay
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await this.audioManager.rebuildPipeline(true);
+            console.log('Audio pipeline rebuilt after error');
+        }
+    }
+
+    /**
+     * Set up event listeners
+     */
+    setupEventListeners() {
+        // Add F1 key event listener for help documentation
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'F1') {
+                event.preventDefault(); // Prevent default browser behavior
+                const whatsThisLink = document.querySelector('.whats-this');
+                if (whatsThisLink) {
+                    whatsThisLink.click();
+                }
+            }
+        });
+
+        // Auto-resume audio context when page gains focus
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && this.audioManager.audioContext &&
+                this.audioManager.audioContext.state === 'suspended') {
+                this.audioManager.audioContext.resume();
+            }
+        });
+    }
+
+    /**
+     * Handle and display any errors
+     */
+    handleErrors() {
+        // Check sample rate after initialization
+        if (this.audioManager.audioContext && this.audioManager.audioContext.sampleRate < 88200) {
+            this.uiManager.setError('error.lowSampleRate', true, { sampleRate: this.audioManager.audioContext.sampleRate });
+        }
+
+        // Clear any existing error messages
+        this.uiManager.clearError();
+
+        // Display microphone error message if there was one
+        if (this.hasAudioError) {
+            // Show a non-blocking warning message to the user
+            this.uiManager.setError(this.uiManager.t('error.microphoneAccessDenied'), false);
+            setTimeout(() => window.uiManager.clearError(), 3000);
+        }
+    }
+
+    /**
+     * Process command line arguments after all initialization is complete
+     * This method handles both preset files and music files passed via command line
+     */
+    processCommandLineArguments() {
+        // Check if running in Electron environment
+        const isElectron = window.electronIntegration && window.electronIntegration.isElectron;
+        if (!isElectron) return;
+
+        // Debug logs removed for release
+
+        // We no longer need to process preset files here as they are handled in initializeAndBuildPipeline
+        // This prevents double-loading of preset files
+
+        // Process command line music files if specified
+        if (window.pendingMusicFiles && window.pendingMusicFiles.length > 0) {
+            // Debug logs removed for release
+            
+            // Set useInputWithPlayer to false for command line music files
+            if (window.electronIntegration && window.electronIntegration.audioPreferences) {
+                window.electronIntegration.audioPreferences.useInputWithPlayer = false;
+                
+                // Make sure the audio manager is updated with this preference
+                if (this.audioManager) {
+                    this.audioManager.useInputWithPlayer = false;
+                }
+            }
+            
+            // Use the UIManager to create an audio player and load the files
+            if (this.uiManager) {
+                // Debug logs removed for release
+                
+                // Convert file paths to File objects to match drag and drop behavior
+                // This is the key fix for the music file command line argument issue
+                const convertPathsToFileObjects = async (filePaths) => {
+                    try {
+                        return await Promise.all(filePaths.map(async (filePath) => {
+                            // Read file content as binary
+                            const fileResult = await window.electronAPI.readFile(filePath, true); // true for binary
+                            if (!fileResult.success) {
+                                console.error(`Failed to read file: ${fileResult.error}`);
+                                return null;
+                            }
+                            
+                            // Get file name from path
+                            const fileName = filePath.split(/[\\/]/).pop();
+                            
+                            // Convert base64 to ArrayBuffer
+                            const binaryString = atob(fileResult.content);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            
+                            // Create a File object with the appropriate MIME type
+                            const extension = fileName.split('.').pop().toLowerCase();
+                            const mimeTypes = {
+                                'mp3': 'audio/mpeg',
+                                'wav': 'audio/wav',
+                                'ogg': 'audio/ogg',
+                                'flac': 'audio/flac',
+                                'm4a': 'audio/mp4',
+                                'aac': 'audio/aac'
+                            };
+                            const mimeType = mimeTypes[extension] || 'audio/mpeg';
+                            
+                            // Create a File object
+                            const blob = new Blob([bytes.buffer], { type: mimeType });
+                            return new File([blob], fileName, { type: mimeType });
+                        }));
+                    } catch (error) {
+                        console.error('Error converting paths to File objects:', error);
+                        return [];
+                    }
+                };
+                
+                // Convert paths to File objects and create audio player
+                convertPathsToFileObjects(window.pendingMusicFiles)
+                    .then(fileObjects => {
+                        // Filter out any null values (failed conversions)
+                        const validFiles = fileObjects.filter(file => file);
+                        
+                        if (validFiles.length > 0) {
+                            // Debug logs removed for release
+                            
+                            // Make sure the _commandLineMusicFilesNoInput flag is set
+                            // This ensures the audio player doesn't use input with the music files
+                            if (window._commandLineMusicFilesNoInput !== true) {
+                                // Debug logs removed for release
+                                window._commandLineMusicFilesNoInput = true;
+                            }
+                            
+                            this.uiManager.createAudioPlayer(validFiles, false);
+                            
+                            // Start playback automatically after a short delay to ensure audio is loaded
+                            setTimeout(() => {
+                                // Debug logs removed for release
+                                if (this.uiManager.audioPlayer) {
+                                    this.uiManager.audioPlayer.play();
+                                }
+                            }, 1000);
+                        } else {
+                            console.error('No valid files after conversion');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error in file conversion process:', error);
+                    });
+                
+                // Clear the pending music files after processing
+                window.pendingMusicFiles = [];
             }
         }
     }
+}
+
+/**
+ * Display application version from package.json
+ */
+async function displayAppVersion() {
+    try {
+        const versionElement = document.getElementById('app-version');
+        if (!versionElement) return;
+        
+        // Get version from Electron if available
+        if (window.electronIntegration && window.electronIntegration.isElectron) {
+            const version = await window.electronIntegration.getAppVersion();
+            versionElement.textContent = version;
+        } else {
+            // For web version, fetch package.json from the relative path
+            try {
+                const response = await fetch('./package.json');
+                if (response.ok) {
+                    const packageData = await response.json();
+                    versionElement.textContent = packageData.version;
+                } else {
+                    console.error('Failed to fetch package.json:', response.status);
+                    versionElement.textContent = '';
+                }
+            } catch (fetchError) {
+                console.error('Error fetching package.json:', fetchError);
+                versionElement.textContent = '';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to display app version:', error);
+        // Don't display version in case of error
+        const versionElement = document.getElementById('app-version');
+        if (versionElement) {
+            versionElement.textContent = '';
+        }
+    }
+    
 }
 
 // Make savePipelineState globally accessible for pipeline manager
@@ -423,314 +750,29 @@ window.addEventListener('beforeunload', async (event) => {
 isFirstLaunchPromise.then(isFirstLaunch => {
     // Store the first launch status for other components
     window.isFirstLaunchConfirmed = isFirstLaunch;
+    window.isFirstLaunch = isFirstLaunch;
     
-    // Create and initialize the app
+    // Create app instance
     const app = new App();
     
-    // Update the audio manager's first launch flag with the confirmed value
-    app.audioManager.isFirstLaunch = isFirstLaunch;
+    // Store app instance globally
+    window.app = app;
     
-    // Make uiManager globally accessible for plugins
-    window.uiManager = app.uiManager;
-    
-    // Initialize the app
-    app.initialize();
-    
-    // Add event listener for the "Open Music" button
-    const openMusicButton = document.getElementById('openMusicButton');
-    if (openMusicButton) {
-        // Create a hidden file input element for web browser environment
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.multiple = true;
-        fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-        
-        // Add change event listener to the file input
-        fileInput.addEventListener('change', (event) => {
-            if (event.target.files && event.target.files.length > 0) {
-                // Convert FileList to Array
-                const files = Array.from(event.target.files);
-                // Pass File objects directly to the audio player
-                if (window.uiManager) {
-                    window.uiManager.createAudioPlayer(files, false);
-                }
-            }
-        });
-        
-        // Add click event listener to the button
-        openMusicButton.addEventListener('click', () => {
-            // If in Electron environment, use Electron's file dialog
-            if (window.electronIntegration && window.electronIntegration.isElectron) {
-                window.electronIntegration.openMusicFile();
-            } else {
-                // In web browser environment, trigger the file input
-                fileInput.click();
-            }
-        });
-    }
-}).catch(error => {
-    // Initialize anyway in case of error
-    window.isFirstLaunchConfirmed = false;
-    const app = new App();
-    window.uiManager = app.uiManager;
-    app.initialize();
-    
-    // Add event listener for the "Open Music" button even in case of error
-    const openMusicButton = document.getElementById('openMusicButton');
-    if (openMusicButton) {
-        // Create a hidden file input element for web browser environment
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.multiple = true;
-        fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-        
-        // Add change event listener to the file input
-        fileInput.addEventListener('change', (event) => {
-            if (event.target.files && event.target.files.length > 0) {
-                // Convert FileList to Array
-                const files = Array.from(event.target.files);
-                // Pass File objects directly to the audio player
-                if (window.uiManager) {
-                    window.uiManager.createAudioPlayer(files, false);
-                }
-            }
-        });
-        
-        // Add click event listener to the button
-        openMusicButton.addEventListener('click', () => {
-            // If in Electron environment, use Electron's file dialog
-            if (window.electronIntegration && window.electronIntegration.isElectron) {
-                window.electronIntegration.openMusicFile();
-            } else {
-                // In web browser environment, trigger the file input
-                fileInput.click();
-            }
-        });
-    }
-});
-
-// Add global drag and drop support for preset files and music files
-document.addEventListener('dragover', (e) => {
-    // Check for files
-    if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-        // Check if we're dragging over the file drop area
-        const isOverFileDropArea = e.target.closest('.file-drop-area') !== null;
-        
-        // Always prevent default to allow drop
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        
-        // Only add drag-over class to body if not over the file drop area
-        if (!isOverFileDropArea) {
-            document.body.classList.add('drag-over');
-        } else {
-            // Explicitly remove drag-over class when over the drop area
-            document.body.classList.remove('drag-over');
-        }
-        return;
-    }
-}, true); // Use capture phase to ensure this handler runs first
-
-// Remove visual feedback when drag leaves the document
-document.addEventListener('dragleave', (e) => {
-    // Only handle if we're leaving the document
-    if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
-        document.body.classList.remove('drag-over');
-    }
-}, true); // Use capture phase
-
-// Add CSS for drag-over effect
-const style = document.createElement('style');
-style.textContent = `
-    body.drag-over::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 120, 255, 0.1);
-        border: 2px dashed rgba(0, 120, 255, 0.5);
-        pointer-events: none;
-        z-index: 9999;
-    }
-`;
-document.head.appendChild(style);
-
-/**
- * Process preset file data and load it into the application
- * @param {Object} fileData - The parsed JSON data from the preset file
- * @param {string} fileName - The name of the preset file without extension
- */
-function processPresetFileData(fileData, fileName) {
-    let presetData;
-    
-    if (fileData.pipeline) {
-        // New format: complete preset object
-        presetData = fileData;
-        // Update timestamp to current time
-        presetData.timestamp = Date.now();
-
-        presetData.name = fileName;
-    } else {
-        // Unknown format
-        window.uiManager.setError('error.unknownPresetFormat');
-        setTimeout(() => window.uiManager.clearError(), 3000);
-        return;
-    }
-    
-    // Load the preset
-    window.uiManager.loadPreset(presetData);
-    window.uiManager.setError('success.presetLoaded', false, { name: fileName });
-    setTimeout(() => window.uiManager.clearError(), 3000);
-}
-
-/**
- * Handle errors during preset file loading
- * @param {Error} error - The error that occurred
- * @param {string} message - Custom error message to display
- */
-function handlePresetFileError(error, message) {
-    console.error(message, error);
-    // Check if message is a translation key
-    if (message === 'Failed to parse preset file') {
-        window.uiManager.setError('error.failedToParsePresetFile');
-    } else if (message === 'Failed to read preset file') {
-        window.uiManager.setError('error.failedToReadPresetFile');
-    } else {
-        window.uiManager.setError(message);
-    }
-    setTimeout(() => window.uiManager.clearError(), 3000);
-}
-
-/**
- * Read the content of a preset file and process it
- * @param {File} presetFile - The preset file to read
- * @param {string} fileName - The name of the preset file without extension
- */
-function readPresetFileContent(presetFile, fileName) {
-    try {
-        const reader = new FileReader();
-        
-        reader.onload = (event) => {
-            try {
-                const fileData = JSON.parse(event.target.result);
-                processPresetFileData(fileData, fileName);
-            } catch (error) {
-                handlePresetFileError(error, 'Failed to parse preset file');
-            }
-        };
-        
-        reader.onerror = () => {
-            handlePresetFileError(new Error('FileReader error'), 'Failed to read preset file');
-        };
-        
-        reader.readAsText(presetFile);
-    } catch (error) {
-        handlePresetFileError(error, 'Failed to read preset file');
-    }
-}
-
-// Audio file handling
-
-document.addEventListener('drop', async (e) => {
-    // Check for files
-    if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Remove all visual feedback
-        document.body.classList.remove('drag-over');
-        document.querySelectorAll('.drag-active').forEach(el => {
-            el.classList.remove('drag-active');
-        });
-        
-        // Check if we're dropping on the file drop area
-        const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
-        
-        // Check if we're in a browser environment
-        const isBrowser = !window.electronIntegration || !window.electronIntegration.isElectron;
-        
-        // For preset files, we can handle them in both environments
-        // For music files, we'll check the environment later
-        
-        // Get all dropped files
-        const files = Array.from(e.dataTransfer.files);
-        
-        // Check for preset files first
-        const presetFiles = files.filter(file => file.name.endsWith('.effetune_preset'));
-        
-        if (presetFiles.length > 0) {
-            // Handle preset file
-            const presetFile = presetFiles[0]; // Take the first preset file if multiple are dropped
-            const fileName = presetFile.name.replace('.effetune_preset', '');
-            
-            // Try to read the preset file directly
-            try {
-                readPresetFileContent(presetFile, fileName);
-            } catch (error) {
-                console.error('Error reading preset file:', error);
-                window.uiManager.setError('error.failedToReadPresetFile', true);
-                setTimeout(() => window.uiManager.clearError(), 3000);
-            }
-            
-            return; // Don't process music files if we found a preset file
-        }
-        
-        // Process music files
-        // Filter for audio files
-        const musicFiles = files.filter(file =>
-            file.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)
-        );
-        
-        if (musicFiles.length > 0) {
-            if (isBrowser) {
-                // In browser environment, check if the drop target is the file-drop-area
-                const isDroppedOnFileDropArea = e.target.closest('.file-drop-area') !== null;
-                // Check if we have a drop area for offline processing
-                const fileProcessor = window.uiManager?.pipelineManager?.fileProcessor;
-                const dropArea = fileProcessor?.dropArea;
-                
-                // Check if the target or any of its parents has the class 'file-drop-area'
-                const isOnDropArea = e.target.closest('.file-drop-area') !== null;
-                
-                if (fileProcessor && isOnDropArea) {
-                    // Process files if they were dropped on the file-drop-area
-                    fileProcessor.processDroppedAudioFiles(musicFiles);
-                } else {
-                    // Pass File objects directly to the audio player
-                    if (window.uiManager) {
-                        window.uiManager.createAudioPlayer(musicFiles, false);
-                    }
-                }
-            } else {
-                // Pass File objects directly to the audio player
-                if (window.uiManager) {
-                    window.uiManager.createAudioPlayer(musicFiles, false);
-                }
-            }
-        } else {
-            window.uiManager.setError('error.noMusicFilesFound', true);
-            setTimeout(() => window.uiManager.clearError(), 3000);
-        }
-    }
-}, true); // Use capture phase to ensure this handler runs first
-
-// Also listen for audio-files-dropped event from main process as a backup
-if (window.electronAPI && window.electronAPI.onAudioFilesDropped) {
-    // Register the callback
-    window.electronAPI.onAudioFilesDropped((filePaths) => {
-        if (filePaths && filePaths.length > 0) {
-            // Play the music files using UIManager
-            if (window.uiManager) {
-                window.uiManager.createAudioPlayer(filePaths, false);
-            }
-        }
+    // Initialize app
+    app.initialize().catch(error => {
+        console.error('Failed to initialize app:', error);
     });
-}
-
-// app.initialize() is now called inside the isFirstLaunchPromise.then() block
+}).catch(error => {
+    console.error('Failed to check first launch status:', error);
+    
+    // Create app instance anyway
+    const app = new App();
+    
+    // Store app instance globally
+    window.app = app;
+    
+    // Initialize app
+    app.initialize().catch(error => {
+        console.error('Failed to initialize app:', error);
+    });
+});

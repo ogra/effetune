@@ -1,6 +1,6 @@
 # Version History
 
-### Version 1.41 (Apr 1, 2025)
+### Version 1.41 (Apr 3, 2025)
 - Effect processing is now about twice as efficient on average
 - Various minor improvements
 
