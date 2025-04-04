@@ -20,7 +20,29 @@ export class PluginListManager {
         this.availableEffectsTitle = document.getElementById('availableEffectsTitle');
         this.isSearchActive = false;
 
+        // Pull tab functionality
+        this.pullTab = document.getElementById('pluginListPullTab');
+        this.mainContainer = document.querySelector('.main-container');
+        this.isCollapsed = false;
+        
+        // Sidebar button functionality
+        this.sidebarButton = document.getElementById('sidebarButton');
+        
+        // Width threshold for auto collapse/expand
+        this.widthThreshold = 1500;
+
+        // Setup event handlers
         this.setupSearchFunctionality();
+        this.setupPullTabFunctionality();
+        this.setupTouchSwipeFunctionality();
+        
+        // Initialize after app is fully loaded
+        this.initializeAfterAppLoaded();
+        
+        // We'll initialize the window width check after the app is fully initialized
+        window.addEventListener('load', () => {
+            this.checkWindowWidthAndAdjust();
+        });
 
         // Add keyboard shortcut for search
         window.addEventListener('keydown', (e) => {
@@ -63,6 +85,149 @@ export class PluginListManager {
         this.dragOverThrottleDelay = 100;
         this.rafId = null;
     }
+    
+    // Toggle the collapsed state of the plugin list
+    togglePluginListCollapse() {
+        this.isCollapsed = !this.isCollapsed;
+        
+        if (this.isCollapsed) {
+            // Collapse the plugin list
+            this.pluginList.classList.add('collapsed');
+            this.pullTab.classList.add('collapsed');
+            this.pullTab.textContent = '▶'; // Show right arrow when collapsed
+            this.mainContainer.classList.add('plugin-list-collapsed');
+            
+            // Position at the very left edge of the screen, ignoring body padding
+            this.pullTab.style.left = '0';
+            
+            // Update pipeline transform
+            this.updatePositions();
+        } else {
+            // Expand the plugin list
+            this.pluginList.classList.remove('collapsed');
+            this.pullTab.classList.remove('collapsed');
+            this.pullTab.textContent = '◀'; // Show left arrow when expanded
+            this.mainContainer.classList.remove('plugin-list-collapsed');
+            
+            // Reset pipeline transform
+            const pipeline = document.getElementById('pipeline');
+            if (pipeline) {
+                pipeline.style.transform = 'none';
+            }
+            
+            // Important: Delay updating the pull tab position to ensure correct calculation
+            // after the plugin list has fully expanded
+            setTimeout(() => {
+                this.updatePositions();
+            }, 50);
+        }
+    }
+    
+    // Update positions for the pull tab and pipeline
+    updatePositions() {
+        // Get the actual width of the plugin list including padding
+        const pluginListRect = this.pluginList.getBoundingClientRect();
+        const pluginListWidth = pluginListRect.width;
+        const bodyPadding = 20; // Body padding value
+        
+        // Calculate positions
+        const expandedLeftPosition = pluginListWidth + bodyPadding;
+        
+        // Store the original position if not already stored
+        if (this.originalExpandedPosition === null) {
+            this.originalExpandedPosition = expandedLeftPosition;
+        }
+        
+        // Set pull tab position when expanded - use the original position for consistency
+        if (!this.isCollapsed) {
+            this.pullTab.style.left = this.originalExpandedPosition + 'px';
+        }
+        
+        // Set transform for pipeline when collapsed
+        const pipeline = document.getElementById('pipeline');
+        if (this.isCollapsed && pipeline) {
+            pipeline.style.transform = `translateX(-${pluginListWidth}px)`;
+            
+            // Update main container width to exactly match the pipeline width
+            const pipelineWidth = pipeline.offsetWidth;
+            this.mainContainer.style.width = `${pipelineWidth}px`;
+            this.mainContainer.style.maxWidth = '100%';
+        } else if (pipeline) {
+            pipeline.style.transform = 'none';
+            
+            // Reset main container width
+            this.mainContainer.style.width = '';
+            this.mainContainer.style.maxWidth = '';
+        }
+    }
+    
+    setupPullTabFunctionality() {
+        if (!this.pullTab) return;
+        
+        // Set initial state - pull tab shows ◀ when expanded
+        this.pullTab.textContent = '◀';
+        
+        // Get the pipeline element
+        const pipeline = document.getElementById('pipeline');
+        
+        // Store the original position of the pull tab
+        let originalExpandedPosition = null;
+        
+        // Store the original position in the instance variable
+        this.originalExpandedPosition = null;
+        
+        // Update positions and check window width on resize
+        window.addEventListener('resize', () => {
+            this.updatePositions();
+            this.checkWindowWidthAndAdjust();
+        });
+        
+        this.pullTab.addEventListener('click', () => {
+            // Use the togglePluginListCollapse method to handle the collapse/expand functionality
+            this.togglePluginListCollapse();
+        });
+        
+        // Initial position update
+        this.updatePositions();
+    }
+    
+    // Setup touch swipe functionality to expand the collapsed plugin list
+    setupTouchSwipeFunctionality() {
+        // Only add touch swipe functionality if touch events are supported
+        if ('ontouchstart' in window) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            const swipeThreshold = 50; // Minimum distance required for a swipe
+            
+            // Add touch event listeners to the document body
+            document.body.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            document.body.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].clientX;
+                
+                // Calculate swipe distance
+                const swipeDistance = touchEndX - touchStartX;
+                
+                // If the plugin list is collapsed and user swipes right from left edge
+                if (this.isCollapsed &&
+                    touchStartX < 30 && // Only detect swipes starting from left edge
+                    swipeDistance > swipeThreshold) {
+                    
+                    // Expand the plugin list (same as clicking the pull tab)
+                    this.togglePluginListCollapse();
+                }
+            }, { passive: true });
+        }
+        
+        // Connect sidebar button if it exists
+        if (this.sidebarButton) {
+            this.sidebarButton.addEventListener('click', () => {
+                this.togglePluginListCollapse();
+            });
+        }
+    }
 
     // Throttle function with RAF
     throttle(func, delay) {
@@ -78,7 +243,70 @@ export class PluginListManager {
             });
         }
     }
-
+    
+    // Check and adjust the collapse state based on window width
+    checkWindowWidthAndAdjust() {
+        // Only proceed if the app is fully initialized
+        if (!window.app || !window.app.initialized) {
+            return;
+        }
+        const windowWidth = window.innerWidth;
+        
+        // If window width is less than threshold and plugin list is expanded, collapse it
+        if (windowWidth < this.widthThreshold && !this.isCollapsed) {
+            this.togglePluginListCollapse();
+        }
+        // If window width is greater than threshold and plugin list is collapsed, expand it
+        else if (windowWidth >= this.widthThreshold && this.isCollapsed) {
+            this.togglePluginListCollapse();
+        }
+    }
+    
+    // Initialize after app is fully loaded
+    initializeAfterAppLoaded() {
+        // We need to wait for the app to be fully initialized
+        // This means waiting for the app.initialized flag to be true
+        // We'll use a MutationObserver to detect when the app is initialized
+        
+        // First, check if the app is already initialized
+        if (window.app && window.app.initialized) {
+            this.checkWindowWidthAndAdjust();
+            return;
+        }
+        
+        // If not, set up a listener for the app object
+        if (!window.appInitializedListener) {
+            window.appInitializedListener = true;
+            
+            // Create a function to check app initialization
+            const checkAppInitialized = () => {
+                if (window.app && window.app.initialized) {
+                    // App is initialized, perform the window width check
+                    this.checkWindowWidthAndAdjust();
+                    return true;
+                }
+                return false;
+            };
+            
+            // Try to check immediately
+            if (checkAppInitialized()) {
+                return;
+            }
+            
+            // Set up a polling mechanism to check periodically
+            const intervalId = setInterval(() => {
+                if (checkAppInitialized()) {
+                    clearInterval(intervalId);
+                }
+            }, 200);
+            
+            // Also set up a timeout to clear the interval after a reasonable time
+            setTimeout(() => {
+                clearInterval(intervalId);
+            }, 10000); // 10 seconds max wait time
+        }
+    }
+    
     // Update insertion indicator position
     updateInsertionIndicator(clientY) {
         const pipelineList = document.getElementById('pipelineList');
@@ -299,6 +527,9 @@ export class PluginListManager {
             pipelineManager.updatePipelineUI();
             pipelineManager.audioManager.rebuildPipeline();
             pipelineManager.updateURL();
+            
+            // Check window width and adjust plugin list collapse state
+            this.checkWindowWidthAndAdjust();
 
             // Auto-scroll to show newly added plugin if it was appended at the end
             if (insertIndex === pipelineManager.audioManager.pipeline.length - 1) {
@@ -402,6 +633,9 @@ export class PluginListManager {
                     };
                     
                     pipeline.dispatchEvent(dropEvent);
+                    
+                    // Check window width and adjust plugin list collapse state after drop
+                    setTimeout(() => this.checkWindowWidthAndAdjust(), 100);
                 }
 
                 // Cleanup

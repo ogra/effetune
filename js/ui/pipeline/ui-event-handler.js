@@ -463,6 +463,11 @@ export class UIEventHandler {
             
             requestAnimationFrame(() => {
                 this.core.updatePipelineUI();
+                
+                // Check window width and adjust plugin list collapse state after adding a plugin
+                if (this.pipelineManager.pluginListManager) {
+                    this.pipelineManager.pluginListManager.checkWindowWidthAndAdjust();
+                }
             });
         }
     }

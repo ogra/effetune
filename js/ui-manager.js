@@ -48,6 +48,7 @@ export class UIManager {
         this.initPipelineManager();
         this.initShareButton();
         this.initPresetManagement();
+        this.initOpenMusicButton();
         
         // Initialize localization after everything else is set up
         // This is an async operation, but we can't make the constructor async
@@ -602,6 +603,57 @@ export class UIManager {
         
         // Delegate preset management to PipelineManager
         // PipelineManager already initializes these elements in its constructor
+    }
+    
+    /**
+     * Initialize open music button
+     * Handles opening music files in both Electron and browser environments
+     */
+    initOpenMusicButton() {
+        // Get the open music button element
+        this.openMusicButton = document.getElementById('openMusicButton');
+        
+        if (this.openMusicButton) {
+            this.openMusicButton.addEventListener('click', () => {
+                // Check if running in Electron environment
+                const isElectron = window.electronIntegration && window.electronIntegration.isElectronEnvironment();
+                
+                if (isElectron) {
+                    // Use Electron's openMusicFile function
+                    window.electronIntegration.openMusicFile();
+                } else {
+                    // Browser environment - create a file input element
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = 'audio/*';
+                    fileInput.multiple = true;
+                    fileInput.style.display = 'none';
+                    
+                    // Add event listener for file selection
+                    fileInput.addEventListener('change', (e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                            // Convert File objects to URLs
+                            const fileUrls = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+                            
+                            // Create audio player with the file URLs
+                            this.createAudioPlayer(fileUrls, false);
+                            
+                            // Clean up object URLs when they're no longer needed
+                            window.addEventListener('unload', () => {
+                                fileUrls.forEach(url => URL.revokeObjectURL(url));
+                            }, { once: true });
+                        }
+                        
+                        // Remove the file input element
+                        document.body.removeChild(fileInput);
+                    });
+                    
+                    // Add the file input to the document and trigger click
+                    document.body.appendChild(fileInput);
+                    fileInput.click();
+                }
+            });
+        }
     }
     
     /**

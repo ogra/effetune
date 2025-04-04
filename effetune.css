@@ -2,6 +2,8 @@
 .title-container {
     position: relative;
     margin-bottom: 20px;
+    width: auto;
+    box-sizing: border-box;
 }
 
 /* Header with subtitle */
@@ -18,12 +20,12 @@ h1 {
     vertical-align: middle;
     object-fit: contain;
 }
-
 .subtitle-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     margin-top: 8px;
+    gap: 10px;
 }
 
 .subtitle {
@@ -37,12 +39,8 @@ h1 {
 body {
     font-family: Arial, sans-serif;
     font-size: 14px;
-    max-width: 1424px;
-    width: calc(100vw - 60px);
     margin: 0 auto;
     padding: 20px;
-    margin-left: max(0px, calc((100vw - 1424px) / 2 - 20));
-    margin-right: max(0px, calc((100vw - 1424px) / 2 - 20));
     background-color: #1e1e1e;
     color: #ffffff;
     user-select: none;
@@ -50,6 +48,9 @@ body {
     -webkit-app-region: no-drag;
     -moz-user-select: none;
     -ms-user-select: none;
+    width: max-content;
+    display: inline-block;
+    transition: padding-left 0.3s ease;
 }
 
 /* Override user-select for input elements */
@@ -119,10 +120,26 @@ input[type="checkbox"] {
     background-color: #3d3d3d;
 }
 
+.sidebar-button {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.sidebar-button img {
+    width: 16px;
+    height: 16px;
+}
+
 .whats-this {
     color: #666;
     text-decoration: none;
     font-size: 14px;
+    margin-left: auto;
 }
 
 .message-display {
@@ -141,6 +158,13 @@ input[type="checkbox"] {
     display: flex;
     gap: 20px;
     min-height: calc(100vh - 150px);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* When plugin list is collapsed, adjust the main container */
+.main-container.plugin-list-collapsed {
+    gap: 0;
 }
 
 /* Plugin list */
@@ -152,7 +176,62 @@ input[type="checkbox"] {
     position: relative;
     min-width: 200px;
     min-height: 200px; /* Ensure minimum height for spinner positioning */
+    transition: transform 0.3s ease, margin-left 0.3s ease;
+    z-index: 20; /* Higher than pipeline but lower than pull tab */
 }
+
+/* Pull tab for plugin list */
+.plugin-list-pull-tab {
+    position: fixed; /* Keep fixed positioning */
+    right: auto; /* Reset right positioning */
+    left: 300px; /* Initial position - will be updated by JS */
+    top: 50vh; /* Center vertically in viewport */
+    transform: translateY(-50%);
+    width: 15px;
+    height: 60px;
+    background-color: #2d2d2d;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    font-size: 8px;
+    z-index: 0;
+    transition: left 0.3s ease;
+}
+
+.plugin-list-pull-tab:hover {
+    background-color: #3d3d3d;
+    color: #fff;
+}
+
+.plugin-list.collapsed {
+    transform: translateX(-100%); /* Move completely off-screen based on its own width */
+    margin-left: -20px; /* Ensure it's completely hidden */
+}
+
+.plugin-list-pull-tab.collapsed {
+    left: 0; /* Position at the very left edge of the screen */
+}
+
+.main-container.plugin-list-collapsed .pipeline {
+    margin-left: 20px; /* Maintain body padding */
+    flex-grow: 1; /* Expand to take up available space */
+    /* width: calc(100% - 15px);*/ /* Ensure it takes the full width minus the pull tab */
+    position: relative;
+    /* Transform will be set dynamically by JS based on actual plugin list width */
+}
+
+/* When plugin list is collapsed, adjust the main container */
+.main-container.plugin-list-collapsed {
+    padding-left: 0;
+    margin-left: 0;
+    width: calc(100% - 300px); /* Reduce width by the plugin list width */
+    transition: width 0.3s ease;
+}
+
+/* Don't modify body padding */
 
 .plugin-list-header {
     display: flex;
@@ -272,7 +351,6 @@ input[type="checkbox"] {
     padding: 10px;
     background-color: #4d4d4d;
     border-radius: 4px;
-    z-index: 1000;
     margin-left: 10px;
 }
 
@@ -326,6 +404,9 @@ input[type="checkbox"] {
     display: flex;
     flex-direction: column;
     position: relative;
+    transition: margin-left 0.3s ease, transform 0.3s ease;
+    z-index: 10; /* Lower than plugin list */
+    width: 1084px;
 }
 
 .drag-message {
@@ -473,6 +554,7 @@ input[type="checkbox"] {
     background-color: #3d3d3d;
     border-radius: 4px;
     transition: background-color 0.2s;
+    width: 1064px;
 }
 
 .pipeline-item.selected {

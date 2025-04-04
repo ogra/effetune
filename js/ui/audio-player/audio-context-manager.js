@@ -119,6 +119,9 @@ export class AudioContextManager {
     // Connect to audio context if not already connected
     this.connectToAudioContext();
     
+    // Set up MediaSession API handlers
+    this.setupMediaSessionHandlers();
+    
     // Resume playback if it was playing
     if (wasPlaying) {
       this.audioPlayer.audioElement.play().catch(() => {});
@@ -424,7 +427,60 @@ export class AudioContextManager {
         artist: artist || 'Unknown Artist',
         album: album || 'Unknown Album'
       });
+      
+      // Update playback state
+      navigator.mediaSession.playbackState = this.audioPlayer.audioElement.paused ? 'paused' : 'playing';
+      
+      // Set up MediaSession handlers if not already set
+      this.setupMediaSessionHandlers();
     }
+  }
+  
+  /**
+   * Set up MediaSession API action handlers for media controls
+   */
+  setupMediaSessionHandlers() {
+    if (!('mediaSession' in navigator)) return;
+    
+    // Play action handler
+    navigator.mediaSession.setActionHandler('play', () => {
+      this.audioPlayer.play();
+      navigator.mediaSession.playbackState = 'playing';
+    });
+    
+    // Pause action handler
+    navigator.mediaSession.setActionHandler('pause', () => {
+      this.audioPlayer.pause();
+      navigator.mediaSession.playbackState = 'paused';
+    });
+    
+    // Next track action handler
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      this.audioPlayer.playNext();
+    });
+    
+    // Previous track action handler
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      this.audioPlayer.playPrevious();
+    });
+    
+    // Stop action handler
+    navigator.mediaSession.setActionHandler('stop', () => {
+      this.audioPlayer.pause();
+      navigator.mediaSession.playbackState = 'paused';
+    });
+    
+    // Seek to action handler
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime !== undefined && this.audioPlayer.audioElement) {
+        this.audioPlayer.audioElement.currentTime = details.seekTime;
+        
+        // Update UI if available
+        if (this.audioPlayer.ui) {
+          this.audioPlayer.ui.updateTimeDisplay();
+        }
+      }
+    });
   }
   
   /**
@@ -503,6 +559,15 @@ export class AudioContextManager {
    */
   disconnect() {
     try {
+      // Clear MediaSession handlers when disconnecting
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('stop', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
+      }
       // First, pause playback to prevent any further events
       if (this.audioPlayer.audioElement && !this.audioPlayer.audioElement.paused) {
         this.audioPlayer.audioElement.pause();
