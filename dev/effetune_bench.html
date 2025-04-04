@@ -7,15 +7,19 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 20px;
             background: #1e1e1e;
             color: #fff;
+            box-sizing: border-box;
+            width: 100%;
         }
         .benchmark-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             font-family: monospace;
+            table-layout: fixed;
         }
         .benchmark-table th, .benchmark-table td {
             border: 1px solid #444;
@@ -38,10 +42,18 @@
             background: #2d2d2d;
             border-radius: 4px;
             border-left: 4px solid #9C27B0;
+            width: 100%;
+            box-sizing: border-box;
         }
         .benchmark-container h2 {
             margin-top: 0;
             color: #9C27B0;
+        }
+        .benchmark-container h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            font-size: 1.2em;
         }
         .success {
             color: #4CAF50;
@@ -60,15 +72,15 @@
         /* Button style matching effetune.css */
         .benchmark-button {
             padding: 8px 16px;
-            background-color: #2d2d2d;
+            background-color: #9b27b0c0;
             border: 1px solid #3d3d3d;
             color: #ffffff;
             cursor: pointer;
             border-radius: 4px;
-            margin-bottom: 15px;
+            margin-right: 15px;
         }
         .benchmark-button:hover {
-            background-color: #3d3d3d;
+            background-color: #9C27B0;
         }
         .benchmark-button:disabled {
             opacity: 0.5;
@@ -154,6 +166,13 @@
         }
         h1 {
             margin-top: 60px; /* Add margin to h1 to avoid overlap with back button */
+            display: block;
+            font-size: 2em;
+            margin-block-end: 0.67em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            font-weight: bold;
+            unicode-bidi: isolate;
         }
     </style>
 </head>
@@ -167,7 +186,22 @@
     <h1>EffeTune Performance Benchmark</h1>
     <div id="benchmark-results" class="benchmark-container">
         <h2>Performance Benchmark</h2>
-        <button id="run-benchmarks" class="benchmark-button">Run Benchmarks</button>
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="margin-right: 15px; display: flex; align-items: center;">
+                <button id="run-benchmarks" class="benchmark-button" style="height: 35px;">Run Benchmarks</button>
+                <label for="sample-rate" style="margin-right: 8px;">Sampling Frequency:</label>
+                <select id="sample-rate" style="padding: 8px; background-color: #2d2d2d; color: #fff; border: 1px solid #3d3d3d; border-radius: 4px; height: 35px;">
+                    <option value="44100">44.1kHz</option>
+                    <option value="48000">48kHz</option>
+                    <option value="88200">88.2kHz</option>
+                    <option value="96000" selected>96kHz</option>
+                    <option value="176400">176.4kHz</option>
+                    <option value="192000">192kHz</option>
+                    <option value="352800">352.8kHz</option>
+                    <option value="384000">384kHz</option>
+                </select>
+            </div>
+        </div>
         <div id="benchmark-status">Click "Run Benchmarks" to start performance testing.</div>
         <div id="progress-container" class="progress-container">
             <div id="progress-bar" class="progress-bar"></div>
@@ -180,7 +214,7 @@
         import { loadScript, loadCSS } from '../js/script-loader.js';
 
         // Define benchmark parameters
-        const SAMPLE_RATE = 96000; // Using 96kHz sampling rate
+        let SAMPLE_RATE = 96000; // Default to 96kHz, will be updated from select
         const BUFFER_SIZE = 128;
         const CHANNEL_COUNT = 2;
 
@@ -367,9 +401,14 @@
             const progressContainer = document.getElementById('progress-container');
             const progressBar = document.getElementById('progress-bar');
             const runButton = document.getElementById('run-benchmarks');
+            const sampleRateSelect = document.getElementById('sample-rate');
+            
+            // Get the selected sample rate
+            SAMPLE_RATE = parseInt(sampleRateSelect.value);
             
             // Disable the run button during benchmarking
             runButton.disabled = true;
+            sampleRateSelect.disabled = true;
             benchmarkStatus.textContent = 'Initializing benchmarks...';
             
             try {
@@ -450,7 +489,7 @@
                 // Create table header
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                ['Effect', 'Samples/sec', 'Real-Time Factor(x)'].forEach(text => {
+                ['Effect', 'Samples/sec', 'Real-Time Factor(x)', 'CPU usage (%)'].forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
                     headerRow.appendChild(th);
@@ -479,12 +518,26 @@
                     speedupCell.textContent = result.speedupFactor;
                     row.appendChild(speedupCell);
                     
+                    // CPU usage (%)
+                    const cpuUsageCell = document.createElement('td');
+                    const cpuUsage = (1 / parseFloat(result.speedupFactor)) * 100;
+                    cpuUsageCell.textContent = cpuUsage.toFixed(1);
+                    row.appendChild(cpuUsageCell);
+                    
                     tbody.appendChild(row);
                 });
                 table.appendChild(tbody);
                 
-                // Clear previous results and add the table
+                // Clear previous results and add the title and table
                 benchmarkTableContainer.innerHTML = '';
+                
+                // Add table title with the selected sample rate
+                const tableTitle = document.createElement('h3');
+                const sampleRateKHz = SAMPLE_RATE / 1000;
+                tableTitle.textContent = `Processing Speed at ${sampleRateKHz}kHz Sampling Frequency`;
+                benchmarkTableContainer.appendChild(tableTitle);
+                
+                // Add the table
                 benchmarkTableContainer.appendChild(table);
                 
                 // Add copy button for the table
@@ -523,7 +576,7 @@
                         const headers = Array.from(headerCells).map(cell => cell.textContent);
                         tableText += headers.join('\t') + '\n';
                         
-                        // Get data rows (only 3 columns now)
+                        // Get data rows
                         const rows = table.querySelectorAll('tbody tr');
                         rows.forEach(row => {
                             const cells = row.querySelectorAll('td');
@@ -549,8 +602,9 @@
                 benchmarkStatus.textContent = `Error during benchmarking: ${error.message}`;
                 console.error('Benchmark error:', error);
             } finally {
-                // Re-enable the run button
+                // Re-enable the run button and sample rate select
                 runButton.disabled = false;
+                sampleRateSelect.disabled = false;
                 
                 // Hide progress bar in case of error
                 progressContainer.style.display = 'none';
