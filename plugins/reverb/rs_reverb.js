@@ -24,6 +24,8 @@ class RSReverbPlugin extends PluginBase {
             const channelCount = parameters.channelCount;
             const blockSize = parameters.blockSize;
             const sampleRate = parameters.sampleRate; // Define sampleRate at the beginning
+            // Room size scaling factor
+            const roomScale = parameters.rs / 10.0;
             
             // Initialize context state if needed
             if (!context.initialized || context.sampleRate !== sampleRate) {
@@ -35,7 +37,7 @@ class RSReverbPlugin extends PluginBase {
                     const baseDelays = [19, 29, 41, 47, 23, 31, 37, 43];
                     context.randomizedDelays = new Array(baseDelays.length);
                     for (let i = 0; i < baseDelays.length; i++) {
-                        context.randomizedDelays[i] = baseDelays[i] + Math.random();
+                        context.randomizedDelays[i] = (baseDelays[i] + Math.random() - 0.5) * roomScale;
                     }
                 }
                 
@@ -146,9 +148,6 @@ class RSReverbPlugin extends PluginBase {
             const dryGain = wetMix <= 0.5 ? 1.0 : 2.0 * (1.0 - wetMix);
             const wetGain = wetMix <= 0.5 ? 2.0 * wetMix : 1.0;
             
-            // Room size scaling factor
-            const roomScale = parameters.rs / 10.0;
-            
             // Reverb time coefficient (calculate once)
             const rtCoeff = 1 / parameters.rt;
             
@@ -157,7 +156,7 @@ class RSReverbPlugin extends PluginBase {
             for (let i = 0; i < context.randomizedDelays.length; i++) {
                 const delayTime = context.randomizedDelays[i] * 0.001;
                 const gain = Math.pow(0.001, delayTime * rtCoeff);
-                feedbackGains[i] = Math.min(0.9, Math.max(-0.9, gain * roomScale));
+                feedbackGains[i] = Math.min(0.99, Math.max(-0.99, gain));
             }
 
             // Precalculate values used in the inner loop

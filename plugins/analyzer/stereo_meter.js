@@ -215,8 +215,8 @@ class StereoMeterPlugin extends PluginBase {
 
     container.appendChild(graphContainer);
 
-    // Start the animation loop.
-    this.startAnimation();
+    this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+    this.observer.observe(this.canvas);
 
     return container;
   }
@@ -259,21 +259,36 @@ class StereoMeterPlugin extends PluginBase {
     this.currentMeasurements = measurements;
   }
 
+  handleIntersect(entries) {
+    entries.forEach(entry => {
+        this.isVisible = entry.isIntersecting;
+        if (this.isVisible) {
+            this.startAnimation();
+        } else {
+            this.stopAnimation();
+        }
+    });
+  }
+
   startAnimation() {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-      this.animationId = null;
-    }
-    const animate = (timestamp) => {
-      if (!this.canvas) return;
-      // Draw at approximately 60 FPS (~16 ms interval)
-      if (timestamp - this.lastDrawTime >= 16) {
+    if (this.animationFrameId) return;
+
+    const animate = () => {
+        if (!this.isVisible) {
+            this.stopAnimation();
+            return;
+        }
         this.drawMeter();
-        this.lastDrawTime = timestamp;
-      }
-      this.animationId = requestAnimationFrame(animate);
+        this.animationFrameId = requestAnimationFrame(animate);
     };
-    this.animationId = requestAnimationFrame(animate);
+    animate();
+  }
+
+  stopAnimation() {
+    if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+    }
   }
 
   drawMeter() {

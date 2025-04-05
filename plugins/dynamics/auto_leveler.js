@@ -354,17 +354,36 @@ class AutoLevelerPlugin extends PluginBase {
     setRt(value) { this.setParameters({ rt: value }); }
     setGt(value) { this.setParameters({ gt: value }); }
 
+    handleIntersect(entries) {
+        entries.forEach(entry => {
+            this.isVisible = entry.isIntersecting;
+            if (this.isVisible) {
+                this.startAnimation();
+            } else {
+                this.stopAnimation();
+            }
+        });
+    }
+
     startAnimation() {
+        if (this.animationFrameId) return;
+
+        const animate = () => {
+            if (!this.isVisible) {
+                this.stopAnimation();
+                return;
+            }
+            this.drawGraph();
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    stopAnimation() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-        const animate = () => {
-            if (!this.canvas) return;
-            this.drawGraph();
-            this.animationFrameId = requestAnimationFrame(animate);
-        };
-        this.animationFrameId = requestAnimationFrame(animate);
     }
 
     drawGraph() {
@@ -530,8 +549,8 @@ class AutoLevelerPlugin extends PluginBase {
         
         container.appendChild(graphContainer);
         
-        // Start animation
-        this.startAnimation();
+        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        this.observer.observe(this.canvas);
 
         return container;
     }

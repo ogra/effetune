@@ -479,21 +479,42 @@ class SpectrogramPlugin extends PluginBase {
         this.canvas = canvas;
         // Cache main canvas context for performance
         this.canvasCtx = this.canvas.getContext('2d', { alpha: false });
-        this.startAnimation();
+        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        this.observer.observe(this.canvas);
+
         return container;
     }
 
+    handleIntersect(entries) {
+        entries.forEach(entry => {
+            this.isVisible = entry.isIntersecting;
+            if (this.isVisible) {
+                this.startAnimation();
+            } else {
+                this.stopAnimation();
+            }
+        });
+    }
+
     startAnimation() {
+        if (this.animationFrameId) return;
+
+        const animate = () => {
+            if (!this.isVisible) {
+                this.stopAnimation();
+                return;
+            }
+            this.drawGraph();
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    stopAnimation() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-        const animate = () => {
-            if (!this.canvas) return;
-            this.drawGraph();
-            this.animationFrameId = requestAnimationFrame(animate);
-        };
-        this.animationFrameId = requestAnimationFrame(animate);
     }
 
     cleanup() {
@@ -573,6 +594,7 @@ class SpectrogramPlugin extends PluginBase {
 
     drawGraph() {
         if (!this.canvasCtx) return;
+
         const ctx = this.canvasCtx;
         const width = this.canvas.width;
         const height = this.canvas.height;

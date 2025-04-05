@@ -23,13 +23,12 @@ class StereoBlendPlugin extends PluginBase {
             // Use original data directly
             const tempBuffer = data;
 
-            // Calculate stereo width factor (-1 to 1)
             // 0%: Full mono
             // 60-90%: Reduced width for headphone listening (more natural soundstage)
             // 100%: Original stereo image
             // 110-130%: Enhanced stereo for speaker listening
             // 200%: Maximum stereo width (use with caution)
-            const widthFactor = (stereo - 100) / 100;
+            const sideGain = stereo / 100;
 
             const rightOffset = blockSize;
             
@@ -42,8 +41,8 @@ class StereoBlendPlugin extends PluginBase {
                 const mid = (leftSample + rightSample) * 0.5;
                 const side = (leftSample - rightSample) * 0.5;
                 
-                // Apply width factor
-                const scaledSide = side * (1 + widthFactor);
+                // Apply side gain
+                const scaledSide = side * sideGain;
                 
                 // Reconstruct stereo
                 data[i] = mid + scaledSide;
@@ -66,7 +65,7 @@ class StereoBlendPlugin extends PluginBase {
     // Set parameters
     setParameters(params) {
         if (params.stereo !== undefined) {
-            this.stereo = params.stereo < 0 ? 0 : (params.stereo > 200 ? 200 : params.stereo);
+            this.stereo = params.stereo < -200 ? -200 : (params.stereo > 200 ? 200 : params.stereo);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -91,7 +90,7 @@ class StereoBlendPlugin extends PluginBase {
         
         const stereoSlider = document.createElement('input');
         stereoSlider.type = 'range';
-        stereoSlider.min = 0;
+        stereoSlider.min = -200;
         stereoSlider.max = 200;
         stereoSlider.step = 1;
         stereoSlider.value = this.stereo;
@@ -114,7 +113,7 @@ class StereoBlendPlugin extends PluginBase {
         stereoValue.autocomplete = "off";
         stereoValue.addEventListener('input', (e) => {
             const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 200 ? 200 : parsedValue);
+            const value = parsedValue < -200 ? -200 : (parsedValue > 200 ? 200 : parsedValue);
             this.setStereo(value);
             stereoSlider.value = value;
             e.target.value = value;

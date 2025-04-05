@@ -234,23 +234,42 @@ class LevelMeterPlugin extends PluginBase {
         this.dbRange = dbRange;
         this.dbStart = dbStart;
 
-        // Start animation loop after UI elements are set up
-        this.startAnimation();
+        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        this.observer.observe(this.foregroundCanvas);
 
         return container;
     }
 
-    // Start animation loop
-    startAnimation() {
-        const animate = () => {
-            const currentTime = performance.now();
-            if (currentTime - this.lastMeterUpdateTime >= this.METER_UPDATE_INTERVAL) {
-                this.updateMeter();
-                this.lastMeterUpdateTime = currentTime;
+    handleIntersect(entries) {
+        entries.forEach(entry => {
+            this.isVisible = entry.isIntersecting;
+            if (this.isVisible) {
+                this.startAnimation();
+            } else {
+                this.stopAnimation();
             }
+        });
+    }
+
+    startAnimation() {
+        if (this.animationFrameId) return;
+
+        const animate = () => {
+            if (!this.isVisible) {
+                this.stopAnimation();
+                return;
+            }
+            this.updateMeter();
             this.animationFrameId = requestAnimationFrame(animate);
         };
-        this.animationFrameId = requestAnimationFrame(animate);
+        animate();
+    }
+
+    stopAnimation() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
     }
 
     // Clean up resources when plugin is removed
@@ -258,7 +277,7 @@ class LevelMeterPlugin extends PluginBase {
         // Note: Do not stop UI updates here
         // Only clean up resources that need explicit cleanup
     }
-
+   
     // Update meter display
     updateMeter() {
         if (!this.foregroundCanvas) return;

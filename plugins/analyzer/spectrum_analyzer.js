@@ -411,8 +411,8 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             label.appendChild(document.createTextNode(ch));
             return label;
         });
-channelRow.appendChild(channelLabel);
-channelRadios.forEach(radio => channelRow.appendChild(radio));
+        channelRow.appendChild(channelLabel);
+        channelRadios.forEach(radio => channelRow.appendChild(radio));
 
         // Graph container
         const graphContainer = document.createElement('div');
@@ -466,23 +466,42 @@ channelRadios.forEach(radio => channelRow.appendChild(radio));
         // Store canvas reference
         this.canvas = canvas;
 
-        // Start animation immediately
-        this.startAnimation();
+        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        this.observer.observe(this.canvas);
 
         return container;
     }
 
+    handleIntersect(entries) {
+        entries.forEach(entry => {
+            this.isVisible = entry.isIntersecting;
+            if (this.isVisible) {
+                this.startAnimation();
+            } else {
+                this.stopAnimation();
+            }
+        });
+    }
+
     startAnimation() {
+        if (this.animationFrameId) return;
+
+        const animate = () => {
+            if (!this.isVisible) {
+                this.stopAnimation();
+                return;
+            }
+            this.drawGraph();
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    stopAnimation() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-        const animate = () => {
-            if (!this.canvas) return;
-            this.drawGraph();
-            this.animationFrameId = requestAnimationFrame(animate);
-        };
-        this.animationFrameId = requestAnimationFrame(animate);
     }
 
     cleanup() {

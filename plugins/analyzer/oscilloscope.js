@@ -542,9 +542,9 @@ class OscilloscopePlugin extends PluginBase {
   
       container.appendChild(graphContainer);
   
-      // Start the animation loop.
-      this.startAnimation();
-  
+      this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+      this.observer.observe(this.canvas);
+
       return container;
     }
   
@@ -758,22 +758,37 @@ class OscilloscopePlugin extends PluginBase {
       return audioBuffer;
     }
   
-    // ---------------------------
-    // startAnimation: Begin the drawing loop.
-    // ---------------------------
-    startAnimation() {
-      if (this.animationId) {
-        cancelAnimationFrame(this.animationId);
-        this.animationId = null;
-      }
-      const animate = () => {
-        if (!this.canvas) return;
-        this.drawWaveform();
-        this.animationId = requestAnimationFrame(animate);
-      };
-      this.animationId = requestAnimationFrame(animate);
+    handleIntersect(entries) {
+      entries.forEach(entry => {
+          this.isVisible = entry.isIntersecting;
+          if (this.isVisible) {
+              this.startAnimation();
+          } else {
+              this.stopAnimation();
+          }
+      });
     }
-  
+
+    startAnimation() {
+        if (this.animationFrameId) return;
+
+        const animate = () => {
+            if (!this.isVisible) {
+                this.stopAnimation();
+                return;
+            }
+            this.drawWaveform();
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    stopAnimation() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
     // ---------------------------
     // drawWaveform: Render grid and waveform.
     //
