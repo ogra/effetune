@@ -314,16 +314,8 @@ export class UIEventHandler {
                     else if (musicFiles.length > 0) {
                         // For browser environment, create audio player directly with the files
                         if (window.uiManager) {
-                            // Convert File objects to URLs
-                            const fileUrls = musicFiles.map(file => URL.createObjectURL(file));
-                            
-                            // Create audio player with the file URLs
-                            window.uiManager.createAudioPlayer(fileUrls, false);
-                            
-                            // Clean up object URLs when they're no longer needed
-                            window.addEventListener('unload', () => {
-                                fileUrls.forEach(url => URL.revokeObjectURL(url));
-                            }, { once: true });
+                            // Pass the File objects directly to preserve original file names
+                            window.uiManager.createAudioPlayer(musicFiles, false);
                         }
                     }
                     

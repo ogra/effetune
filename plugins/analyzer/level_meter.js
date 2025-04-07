@@ -1,8 +1,8 @@
 class LevelMeterPlugin extends PluginBase {
     constructor() {
         super('Level Meter', 'Displays audio level with peak hold');
-        this.lv = new Array(2).fill(-96);     // lv: Levels (formerly levels) - Range: -96 to 0 dB
-        this.pl = new Array(2).fill(-96);     // pl: Peak Levels (formerly peakLevels) - Range: -96 to 0 dB
+        this.lv = new Array(2).fill(-144);     // lv: Levels (formerly levels) - Range: -144 to 0 dB
+        this.pl = new Array(2).fill(-144);     // pl: Peak Levels (formerly peakLevels) - Range: -144 to 0 dB
         this.ph = new Array(2).fill(0);       // ph: Peak Hold Times (formerly peakHoldTimes)
         this.ol = false;                      // ol: Overload (formerly overload)
         this.ot = 0;                          // ot: Overload Time (formerly overloadTime)
@@ -12,6 +12,7 @@ class LevelMeterPlugin extends PluginBase {
         this.lastProcessTime = performance.now() / 1000;
         this.lastMeterUpdateTime = 0;
         this.METER_UPDATE_INTERVAL = 16; // Match with plugin-base.js
+        this.observer = null;
 
         // Register processor function that measures audio levels
         this.registerProcessor(`
@@ -96,7 +97,7 @@ class LevelMeterPlugin extends PluginBase {
 
     // Convert linear amplitude to dB
     amplitudeToDB(amplitude) {
-        return 20 * Math.log10(amplitude < 1e-6 ? 1e-6 : amplitude);
+        return 20 * Math.log10(amplitude < 1e-8 ? 1e-8 : amplitude);
     }
 
     // Handle messages from audio processor
@@ -127,7 +128,7 @@ class LevelMeterPlugin extends PluginBase {
             
             // Update level with fall rate
             const fallingLevel = this.lv[ch] - this.FALL_RATE * deltaTime;
-            const clampedFallingLevel = fallingLevel < -96 ? -96 : fallingLevel;
+            const clampedFallingLevel = fallingLevel < -144 ? -144 : fallingLevel;
             this.lv[ch] = dbLevel > clampedFallingLevel ? dbLevel : clampedFallingLevel;
 
             // Update peak hold
@@ -169,6 +170,9 @@ class LevelMeterPlugin extends PluginBase {
 
     // Create UI elements for the plugin
     createUI() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
         const container = document.createElement('div');
         container.className = 'level-meter-plugin-ui';
 
@@ -234,7 +238,9 @@ class LevelMeterPlugin extends PluginBase {
         this.dbRange = dbRange;
         this.dbStart = dbStart;
 
-        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        if (this.observer == null) {
+            this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        }
         this.observer.observe(this.foregroundCanvas);
 
         return container;

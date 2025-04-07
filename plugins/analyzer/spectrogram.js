@@ -47,6 +47,8 @@ class SpectrogramPlugin extends PluginBase {
 
         // Register processor function (used e.g. in an AudioWorklet)
         this.registerProcessor(SpectrogramPlugin.processorFunction);
+
+        this.observer = null;
     }
 
     // Processor function as a string (runs in separate context)
@@ -331,6 +333,9 @@ class SpectrogramPlugin extends PluginBase {
     }
 
     createUI() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
@@ -479,7 +484,9 @@ class SpectrogramPlugin extends PluginBase {
         this.canvas = canvas;
         // Cache main canvas context for performance
         this.canvasCtx = this.canvas.getContext('2d', { alpha: false });
-        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        if (this.observer == null) {
+            this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        }
         this.observer.observe(this.canvas);
 
         return container;

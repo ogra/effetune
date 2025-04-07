@@ -73,6 +73,8 @@ class OscilloscopePlugin extends PluginBase {
       // Register Audio Worklet Processor
       // ---------------------------
       this.registerProcessor(OscilloscopePlugin.processorFunction);
+
+      this.observer = null;
     }
   
     // clearBuffer: Clears the internal circular buffer and accumulation state.
@@ -171,6 +173,9 @@ class OscilloscopePlugin extends PluginBase {
     // All comments are in English.
     // ================================================================
     createUI() {
+      if (this.observer) {
+        this.observer.disconnect();
+      }
       const container = document.createElement('div');
       container.className = 'plugin-parameter-ui';
   
@@ -542,7 +547,9 @@ class OscilloscopePlugin extends PluginBase {
   
       container.appendChild(graphContainer);
   
-      this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+      if (this.observer == null) {
+        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+      }
       this.observer.observe(this.canvas);
 
       return container;

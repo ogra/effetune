@@ -25,6 +25,8 @@ class AutoLevelerPlugin extends PluginBase {
         this.inputLufsBuffer = new Float32Array(1024).fill(NaN);
         this.outputLufsBuffer = new Float32Array(1024).fill(NaN);
 
+        this.observer = null;
+
         this.registerProcessor(`
             // Audio Processor
             const BLOCK_SIZE = parameters.blockSize;
@@ -468,6 +470,9 @@ class AutoLevelerPlugin extends PluginBase {
     }
 
     createUI() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
@@ -549,7 +554,9 @@ class AutoLevelerPlugin extends PluginBase {
         
         container.appendChild(graphContainer);
         
-        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        if (this.observer == null) {
+            this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        }
         this.observer.observe(this.canvas);
 
         return container;

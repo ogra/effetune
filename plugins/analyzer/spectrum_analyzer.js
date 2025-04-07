@@ -33,6 +33,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
         // Register processor function
         this.registerProcessor(SpectrumAnalyzerPlugin.processorFunction);
+        this.observer = null;
     }
 
     static processorFunction = `
@@ -179,7 +180,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     // Reset parameters
     reset() {
         this.setDBRange(-96);
-        this.setPoints(10);
+        this.setPoints(12);
         this.setChannel('All');
     }
 
@@ -293,6 +294,9 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     createUI() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
@@ -466,7 +470,9 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         // Store canvas reference
         this.canvas = canvas;
 
-        this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        if (this.observer == null) {
+            this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+        }
         this.observer.observe(this.canvas);
 
         return container;
