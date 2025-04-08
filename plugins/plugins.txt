@@ -26,6 +26,7 @@ basics/dc_offset: DC Offset | Basics | DCOffsetPlugin
 basics/polarity_inversion: Polarity Inversion | Basics | PolarityInversionPlugin
 basics/stereo_balance: Stereo Balance | Basics | StereoBalancePlugin
 basics/volume: Volume | Basics | VolumePlugin
+delay/delay: Delay | Delay | DelayPlugin
 delay/time_alignment: Time Alignment | Delay | TimeAlignmentPlugin
 dynamics/auto_leveler: Auto Leveler | Dynamics | AutoLevelerPlugin | css
 dynamics/brickwall_limiter: Brickwall Limiter | Dynamics | BrickwallLimiterPlugin

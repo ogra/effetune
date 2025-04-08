@@ -7,7 +7,6 @@ class PluginProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.plugins = [];
-        this.fadeStates = new Map();
         this.FADE_DURATION = 0.010; // 10ms fade for smoother transitions
         this.currentFrame = 0;
         this.pluginProcessors = new Map();
@@ -79,14 +78,6 @@ class PluginProcessor extends AudioWorkletProcessor {
         const compiledFunction = new Function('context', 'data', 'parameters', 'time',
             `with (context) {
                 try {
-                    if (parameters.channelCount < 1) {
-                        console.error('Invalid channel count');
-                        return data;
-                    }
-                    if (data.length !== parameters.channelCount * parameters.blockSize) {
-                        console.error('Buffer size mismatch');
-                        return data;
-                    }
                     ${processorFunction}
                 } catch (error) {
                     console.error('Error in processor function:', error);
@@ -121,38 +112,6 @@ class PluginProcessor extends AudioWorkletProcessor {
 
     updatePlugins(pluginConfigs) {
         this.plugins = pluginConfigs;
-        for (const plugin of this.plugins) {
-            if (!this.fadeStates.has(plugin.id)) {
-                this.fadeStates.set(plugin.id, {
-                    prevValue: null,
-                    targetValue: null,
-                    startTime: 0
-                });
-            }
-        }
-    }
-
-    getFadeValue(pluginId, currentValue, time) {
-        let fadeState = this.fadeStates.get(pluginId);
-        if (!fadeState) {
-            fadeState = {
-                prevValue: currentValue,
-                targetValue: currentValue,
-                startTime: time
-            };
-            this.fadeStates.set(pluginId, fadeState);
-            return currentValue;
-        }
-        if (fadeState.prevValue === null) {
-            fadeState.prevValue = currentValue;
-            fadeState.targetValue = currentValue;
-        } else if (fadeState.targetValue !== currentValue) {
-            fadeState.prevValue = fadeState.targetValue;
-            fadeState.targetValue = currentValue;
-            fadeState.startTime = time;
-        }
-        const fadeProgress = Math.min(1, (time - fadeState.startTime) / this.FADE_DURATION);
-        return fadeState.prevValue + (fadeState.targetValue - fadeState.prevValue) * fadeProgress;
     }
 
     process(inputs, outputs, parameters) {
@@ -291,9 +250,7 @@ class PluginProcessor extends AudioWorkletProcessor {
             const pluginContext = this.pluginContexts.get(plugin.id);
             const context = {
                 ...pluginContext,
-                fadeStates: this.fadeStates,
-                port: this.port,
-                getFadeValue: (pluginId, value, time) => this.getFadeValue(pluginId, value, time)
+                port: this.port
             };
             this.pluginContexts.set(plugin.id, context);
 

@@ -251,6 +251,7 @@
 | Basics   | Polarity Inversion | عكس قطبية الإشارة                                        | [تفاصيل](plugins/basics.md#polarity-inversion)   |
 | Basics   | Stereo Balance  | تحكم في توازن القنوات الستيريو                              | [تفاصيل](plugins/basics.md#stereo-balance)       |
 | Basics   | Volume          | تحكم أساسي في مستوى الصوت                                  | [تفاصيل](plugins/basics.md#volume)              |
+| Delay    | Delay           | تأثير تأخير قياسي                                          | [تفاصيل](plugins/delay.md#delay)              |
 | Delay    | Time Alignment  | ضبط دقيق لتوقيت القنوات الصوتية                           | [تفاصيل](plugins/delay.md#time-alignment)       |
 | Dynamics | Auto Leveler    | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متناسقة | [تفاصيل](plugins/dynamics.md#auto-leveler)      |
 | Dynamics | Brickwall Limiter | تحكم شفاف في القمم للاستماع الآمن والمريح                | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |

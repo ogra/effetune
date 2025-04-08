@@ -251,6 +251,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Basics   | Polarity Inversion | सिग्नल ध्रुवीकरण उलटना                                    | [विवरण](plugins/basics.md#polarity-inversion) |
 | Basics   | Stereo Balance     | स्टीरियो चैनल संतुलन नियंत्रण                             | [विवरण](plugins/basics.md#stereo-balance) |
 | Basics   | Volume             | बेसिक वॉल्यूम नियंत्रण                                     | [विवरण](plugins/basics.md#volume) |
+| Delay    | Delay              | मानक विलंब प्रभाव                                          | [विवरण](plugins/delay.md#delay) |
 | Delay    | Time Alignment     | ऑडियो चैनलों के लिए सटीक टाइमिंग समायोजन                   | [विवरण](plugins/delay.md#time-alignment) |
 | Dynamics | Auto Leveler       | LUFS मापन पर आधारित स्वचालित वॉल्यूम समायोजन जो एक समान सुनने का अनुभव प्रदान करता है | [विवरण](plugins/dynamics.md#auto-leveler) |
 | Dynamics | Brickwall Limiter  | सुरक्षित और आरामदायक सुनने के लिए पारदर्शी पीक नियंत्रण    | [विवरण](plugins/dynamics.md#brickwall-limiter) |

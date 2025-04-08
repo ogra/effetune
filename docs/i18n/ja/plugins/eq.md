@@ -95,6 +95,8 @@
     - Low/High Pass: 12dB/octave slope
     - Low/High Shelf: 穏やかなスペクトルシェーピング
     - Band Pass: 集中した周波数の分離
+    - Notch: 正確な周波数除去
+    - AllPass: 位相を重視した周波数整列
 
 ### 技術的表示
 - 高解像度の周波数応答ビジュアライゼーション

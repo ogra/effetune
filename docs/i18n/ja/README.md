@@ -257,6 +257,7 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Basics     | Polarity Inversion    | 信号の極性反転                                             | [詳細](plugins/basics.md#polarity-inversion)               |
 | Basics     | Stereo Balance        | ステレオチャンネルのバランス制御                           | [詳細](plugins/basics.md#stereo-balance)                   |
 | Basics     | Volume                | 基本的な音量調整                                           | [詳細](plugins/basics.md#volume)                           |
+| Delay      | Delay                 | 標準的なディレイエフェクト                                 | [詳細](plugins/delay.md#delay)                       |
 | Delay      | Time Alignment        | オーディオチャンネルの精密なタイミング調整                 | [詳細](plugins/delay.md#time-alignment)                    |
 | Dynamics   | Auto Leveler         | LUFS測定に基づく一貫したリスニング体験のための自動音量調整 | [詳細](plugins/dynamics.md#auto-leveler)                  |
 | Dynamics   | Brickwall Limiter    | 安全で快適なリスニングのための透明なピークコントロール     | [詳細](plugins/dynamics.md#brickwall-limiter)             |

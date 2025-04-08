@@ -253,6 +253,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Basics    | Polarity Inversion | Inversión de la polaridad de la señal | [Detalles](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance | Control del balance entre canales estéreo | [Detalles](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Control básico de volumen | [Detalles](plugins/basics.md#volume) |
+| Delay     | Delay          | Efecto de retardo estándar                  | [Detalles](plugins/delay.md#delay) |
 | Delay     | Time Alignment | Ajustes precisos de sincronización para canales de audio | [Detalles](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajuste automático de volumen basado en medición LUFS para una experiencia de escucha consistente | [Detalles](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Control transparente de picos para una escucha segura y cómoda | [Detalles](plugins/dynamics.md#brickwall-limiter) |

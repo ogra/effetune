@@ -15,7 +15,9 @@ class FiveBandPEQPlugin extends PluginBase {
     { id: 'hp', name: 'HighPass' },
     { id: 'ls', name: 'LowShelv' },
     { id: 'hs', name: 'HighShel' },
-    { id: 'bp', name: 'BandPass' }
+    { id: 'bp', name: 'BandPass' },
+    { id: 'no', name: 'Notch' },
+    { id: 'ap', name: 'AllPass' }
   ];
 
   // AudioWorklet processor function (internal processing)
@@ -87,7 +89,8 @@ class FiveBandPEQPlugin extends PluginBase {
           // Determine if this band should be bypassed (computationally skipped)
           const gainAbs = gainDb < 0 ? -gainDb : gainDb; // Optimized Math.abs
           // Bypass if disabled OR if gain is negligible (except for LP/HP/BP which always filter)
-          const isGainBypassed = gainAbs < BYPASS_THRESHOLD && type !== 'lp' && type !== 'hp' && type !== 'bp';
+          // Bypass if disabled OR if gain is negligible (except for LP/HP/BP/Notch/Allpass which always filter)
+          const isGainBypassed = gainAbs < BYPASS_THRESHOLD && type !== 'lp' && type !== 'hp' && type !== 'bp' && type !== 'no' && type !== 'ap';
   
           if (!bandEnabled || isGainBypassed) {
               coeffs[bandIndex] = null; // Mark band for bypass in processing loop
@@ -183,6 +186,26 @@ class FiveBandPEQPlugin extends PluginBase {
                   b0 = alpha; // Using Q-dependent alpha for bandwidth
                   b1 = 0.0;
                   b2 = -alpha;
+                  a0 = 1.0 + alpha;
+                  a1 = neg2CosW0;
+                  a2 = 1.0 - alpha;
+                  break;
+              }
+              case 'no': { // Notch Filter
+                  const neg2CosW0 = -2.0 * cosw0;
+                  b0 = 1.0;
+                  b1 = neg2CosW0;
+                  b2 = 1.0;
+                  a0 = 1.0 + alpha;
+                  a1 = neg2CosW0;
+                  a2 = 1.0 - alpha;
+                  break;
+              }
+              case 'ap': { // Allpass Filter
+                  const neg2CosW0 = -2.0 * cosw0;
+                  b0 = 1.0 - alpha;
+                  b1 = neg2CosW0;
+                  b2 = 1.0 + alpha;
                   a0 = 1.0 + alpha;
                   a1 = neg2CosW0;
                   a2 = 1.0 - alpha;
@@ -740,13 +763,25 @@ class FiveBandPEQPlugin extends PluginBase {
       qText.autocomplete = "off";
 
       const updateQControlsState = (type) => {
-        const isShelvingFilter = type === 'ls' || type === 'hs';
-        qSlider.disabled = isShelvingFilter;
-        qText.disabled = isShelvingFilter;
-        if (isShelvingFilter) {
+        // Q is disabled for LP, HP (N/A) and fixed for LS, HS
+        const isQDisabled = type === 'lp' || type === 'hp';
+        const isQShelving = type === 'ls' || type === 'hs';
+        const isQUserSettable = !isQDisabled && !isQShelving;
+
+        qSlider.disabled = !isQUserSettable;
+        qText.disabled = !isQUserSettable;
+
+        if (isQShelving) {
+          // Set fixed Q for shelving
           qSlider.value = 0.7;
           qText.value = 0.7;
+          // Update the plugin state as well, as this is fixed
+          this.setBand(i, undefined, undefined, 0.7);
+        } else if (isQDisabled) {
+          // Indicate Q is not applicable for LP/HP
+          // No need to change slider/text value, just disable
         }
+        // For user-settable Q, controls are enabled, values remain as they are
       };
 
       updateQControlsState(this['t' + i]);
@@ -842,7 +877,7 @@ class FiveBandPEQPlugin extends PluginBase {
       markerText.className = `five-band-peq-marker-text ${isLeft ? 'left' : 'right'}`;
       const freqText = freq >= 1000 ? `${(freq/1000).toFixed(2)}k` : freq.toFixed(0);
       const type = this['t' + i];
-      markerText.innerHTML = `${freqText}Hz${type === 'lp' || type === 'hp' || type === 'bp' ? '' : `<br>${gain.toFixed(1)}dB`}`;
+      markerText.innerHTML = `${freqText}Hz${type === 'lp' || type === 'hp' || type === 'bp' || type === 'ap' || type === 'no' ? '' : `<br>${gain.toFixed(1)}dB`}`;
     }
   }
 
@@ -857,7 +892,8 @@ class FiveBandPEQPlugin extends PluginBase {
     const A = Math.pow(10, bandGain / 40);
     let b0, b1, b2, a0, a1, a2;
     
-    if ((bandGain >= 0 ? bandGain : -bandGain) < 0.01 && bandType !== 'lp' && bandType !== 'hp' && bandType !== 'bp') {
+    // Bypass check: Gain near zero AND not a filter type that inherently shapes frequency (LP, HP, BP, Notch, Allpass)
+    if ((bandGain >= 0 ? bandGain : -bandGain) < 0.01 && !['lp', 'hp', 'bp', 'no'].includes(bandType)) {
       // Bypass if gain is nearly zero and not a pass filter
       b0 = 1; b1 = 0; b2 = 0; a0 = 1; a1 = 0; a2 = 0;
     } else {
@@ -907,8 +943,36 @@ class FiveBandPEQPlugin extends PluginBase {
           b1 = -2 * A * ((A - 1) + (A + 1) * cosw0);
           b2 = A * ((A + 1) + (A - 1) * cosw0 - shelfAlpha);
           a0 = (A + 1) - (A - 1) * cosw0 + shelfAlpha;
-          a1 = 2 * ((A - 1) - (A + 1) * cosw0);
+          a1 = 2 * ((A - 1) - (A + 1) * cosw0); // Corrected sign from processor
           a2 = (A + 1) - (A - 1) * cosw0 - shelfAlpha;
+          break;
+        }
+        case 'bp': { // Band Pass (Constant 0dB peak gain)
+          b0 = alpha;
+          b1 = 0;
+          b2 = -alpha;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
+          break;
+        }
+        case 'no': { // Notch Filter
+          console.log('notch', bandGain, bandType);
+          b0 = 1;
+          b1 = -2 * cosw0;
+          b2 = 1;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
+          break;
+        }
+        case 'ap': { // Allpass Filter
+          b0 = 1 - alpha;
+          b1 = -2 * cosw0;
+          b2 = 1 + alpha;
+          a0 = 1 + alpha;
+          a1 = -2 * cosw0;
+          a2 = 1 - alpha;
           break;
         }
         case 'bp': {
@@ -971,7 +1035,7 @@ class FiveBandPEQPlugin extends PluginBase {
         const bandQ = this['q' + band];
         const bandType = this['t' + band];
         // Skip bypassed bands (except pass filters)
-        if ((bandGain >= 0 ? bandGain : -bandGain) < 0.01 && bandType !== 'lp' && bandType !== 'hp' && bandType !== 'bp') {
+        if ((bandGain >= 0 ? bandGain : -bandGain) < 0.01 && bandType !== 'lp' && bandType !== 'hp' && bandType !== 'bp'&& bandType !== 'no') {
           continue;
         }
         totalResponse += this.calculateBandResponse(freq, bandFreq, bandGain, bandQ, bandType);

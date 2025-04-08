@@ -253,6 +253,7 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Basics    | Polarity Inversion | 신호 극성 반전                                      | [세부 정보](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance     | 스테레오 채널 밸런스 조절                           | [세부 정보](plugins/basics.md#stereo-balance) |
 | Basics    | Volume             | 기본 볼륨 조절                                      | [세부 정보](plugins/basics.md#volume) |
+| Delay     | Delay              | 표준 딜레이 이펙트                                   | [세부 정보](plugins/delay.md#delay) |
 | Delay     | Time Alignment     | 오디오 채널의 정밀한 타이밍 조정                     | [세부 정보](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler       | LUFS 측정 기반의 일관된 청취 경험을 위한 자동 볼륨 조정 | [세부 정보](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter  | 안전하고 편안한 청취를 위한 투명한 피크 제어          | [세부 정보](plugins/dynamics.md#brickwall-limiter) |

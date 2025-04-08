@@ -95,6 +95,8 @@ Um equalizador paramétrico de nível profissional baseado em princípios cient�
     - Low/High Pass: Inclinação de 12dB/octave
     - Low/High Shelf: Gentle spectral shaping
     - Band Pass: Isolamento focado de frequência
+    - Notch: Remoção precisa de frequência
+    - AllPass: Alinhamento de frequência com foco em fase
 
 ### Exibição Técnica
 - Visualização de resposta de frequência em alta resolução

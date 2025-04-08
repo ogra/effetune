@@ -92,6 +92,8 @@ Un égaliseur paramétrique de qualité professionnelle basé sur des principes 
     - Passe Bas/Haut : Pente de 12dB/octave
     - Étagère Bas/Haut : Modelage spectral doux
     - Passe Bande : Isolation ciblée des fréquences
+    - Notch: Suppression précise de fréquence
+    - AllPass: Alignement fréquentiel focalisé sur la phase
 
 ### Affichage Technique
 - Visualisation de la réponse en fréquence en haute résolution

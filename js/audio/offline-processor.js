@@ -60,32 +60,7 @@ export class OfflineProcessor {
                     pluginContexts.set(pluginId, {
                         sampleRate,
                         currentTime: 0,
-                        initialized: false,
-                        fadeStates: new Map(),
-                        getFadeValue: (id, currentValue, time) => {
-                            const FADE_DURATION = 0.010; // 10ms fade
-                            const context = pluginContexts.get(pluginId);
-                            let fadeState = context.fadeStates.get(id);
-                            if (!fadeState) {
-                                fadeState = {
-                                    prevValue: currentValue,
-                                    targetValue: currentValue,
-                                    startTime: time
-                                };
-                                context.fadeStates.set(id, fadeState);
-                                return currentValue;
-                            }
-                            if (fadeState.prevValue === null) {
-                                fadeState.prevValue = currentValue;
-                                fadeState.targetValue = currentValue;
-                            } else if (fadeState.targetValue !== currentValue) {
-                                fadeState.prevValue = fadeState.targetValue;
-                                fadeState.targetValue = currentValue;
-                                fadeState.startTime = time;
-                            }
-                            const fadeProgress = Math.min(1, (time - fadeState.startTime) / FADE_DURATION);
-                            return fadeState.prevValue + (fadeState.targetValue - fadeState.prevValue) * fadeProgress;
-                        }
+                        initialized: false
                     });
                 }
                 return pluginContexts.get(pluginId);

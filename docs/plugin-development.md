@@ -852,12 +852,6 @@ Use this tool during development to ensure your plugin follows the required impl
    - Provide fallback values for invalid parameters
    - Handle edge cases gracefully (e.g., mono vs stereo)
 
-## Available Utilities
-
-The audio processing function has access to these utility functions:
-
-- `getFadeValue(id, value, time)`: Smooth parameter changes to prevent audio clicks. Uses plugin ID to maintain independent fade states for each plugin instance
-
 ## Plugin Categories
 
 Plugins are organized into categories defined in `plugins/plugins.txt`:

@@ -93,8 +93,10 @@ Un ecualizador paramétrico de grado profesional basado en principios científic
   - Múltiples Tipos de Filtro:
     - Peaking: Ajuste simétrico de frecuencia
     - Low/High Pass: Pendiente de 12dB/octave
-    - Estantería baja/alta: Modelado espectral suave
+    - Low/High Shelf: Modelado espectral suave
     - Band Pass: Aislamiento enfocado de frecuencias
+    - Notch: Eliminación precisa de frecuencia
+    - AllPass: Alineación de frecuencia centrada en fase
 
 ### Visualización Técnica
 - Visualización de la respuesta en frecuencia de alta resolución

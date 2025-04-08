@@ -257,6 +257,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Basics | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
 | Basics | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |
 | Basics | Volume | Basic volume control | [Details](docs/plugins/basics.md#volume) |
+| Delay    | Delay  | Standard delay effect | [Details](docs/plugins/delay.md#delay) |
 | Delay | Time Alignment | Precise timing adjustments for audio channels | [Details](docs/plugins/delay.md#time-alignment) |
 | Dynamics | Auto Leveler | Automatic volume adjustment based on LUFS measurement for consistent listening experience | [Details](docs/plugins/dynamics.md#auto-leveler) |
 | Dynamics | Brickwall Limiter | Transparent peak control for safe and comfortable listening | [Details](docs/plugins/dynamics.md#brickwall-limiter) |

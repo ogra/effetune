@@ -251,6 +251,7 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Basics    | Polarity Inversion| Inversão da polaridade do sinal                                                    | [Detalhes](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance    | Controle do equilíbrio dos canais estéreo                                          | [Detalhes](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | Controle básico de volume                                                          | [Detalhes](plugins/basics.md#volume) |
+| Delay     | Delay             | Efeito de atraso padrão                                                           | [Detalhes](plugins/delay.md#delay) |
 | Delay     | Time Alignment    | Ajustes precisos de temporização para canais de áudio                             | [Detalhes](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | Ajuste automático de volume baseado em medição LUFS para uma experiência de escuta consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Controle transparente de picos para uma escuta segura e confortável              | [Detalhes](plugins/dynamics.md#brickwall-limiter) |

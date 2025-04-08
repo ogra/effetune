@@ -251,6 +251,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Basics    | Polarity Inversion| 信号极性反转                               | [详情](plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance    | 立体声通道平衡控制                          | [详情](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | 基本音量控制                               | [详情](plugins/basics.md#volume) |
+| Delay     | Delay             | 标准延迟效果                               | [详情](plugins/delay.md#delay) |
 | Delay     | Time Alignment    | 音频通道的精确时间调整                      | [详情](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | 基于 LUFS 测量的自动音量调整，确保一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | 透明的峰值控制，实现安全舒适的聆听           | [详情](plugins/dynamics.md#brickwall-limiter) |

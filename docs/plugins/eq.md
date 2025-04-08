@@ -95,6 +95,8 @@ A professional-grade parametric equalizer based on scientific principles, offeri
     - Low/High Pass: 12dB/octave slope
     - Low/High Shelf: Gentle spectral shaping
     - Band Pass: Focused frequency isolation
+    - Notch: Precise frequency removal
+    - AllPass: Phase-focused frequency alignment
 
 ### Technical Display
 - High-resolution frequency response visualization

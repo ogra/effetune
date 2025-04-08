@@ -95,6 +95,8 @@
     - Low/High Pass: 12dB/octave slope
     - Low/High Shelf: 부드러운 스펙트럼 쉐이핑
     - Band Pass: 특정 주파수 격리를 집중적으로 수행
+    - Notch: 정밀한 주파수 제거
+    - AllPass: 위상 중심 주파수 정렬
 
 ### 기술적 디스플레이
 - 고해상도 주파수 응답 시각화

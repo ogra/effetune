@@ -120,40 +120,10 @@ class PluginBase {
         try {
             return new Function('context', 'data', 'parameters', 'time', `
                 with (context) {
-                    try {
-                        if (!parameters || !parameters.channelCount || !parameters.blockSize) {
-                            throw new Error('Invalid parameters');
-                        }
-                        if (parameters.channelCount < 1) {
-                            throw new Error('Invalid channel count');
-                        }
-                        if (!data || !data.length) {
-                            throw new Error('Invalid input data');
-                        }
-                        if (data.length !== parameters.channelCount * parameters.blockSize) {
-                            throw new Error('Buffer size mismatch');
-                        }
-                        const result = (function() {
-                            ${processorStr}
-                        })();
-                        if (!result) {
-                            throw new Error('Processor returned no result');
-                        }
-                        if (!(result instanceof Float32Array)) {
-                            throw new Error('Processor must return Float32Array');
-                        }
-                        if (result.length !== data.length) {
-                            throw new Error('Result length mismatch');
-                        }
-                        return result;
-                    } catch (error) {
-                        console.error('Processor error:', {
-                            type: '${this.constructor.name}',
-                            error: error.message,
-                            parameters: parameters
-                        });
-                        return data;
-                    }
+                    const result = (function() {
+                        ${processorStr}
+                    })();
+                    return result;
                 }
             `);
         } catch (error) {
