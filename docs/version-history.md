@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.43 (Apr 9, 2025)
+- Added Delay effect
+- Various minor improvements
+
 ### Version 1.42 (Apr 5, 2025)
 - Improved screen drawing efficiency
 - Various minor improvements

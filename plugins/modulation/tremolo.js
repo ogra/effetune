@@ -33,7 +33,7 @@ class TremoloPlugin extends PluginBase {
             // Ensure context variables exist (using direct property access for potential minor speedup)
             // Initialize state variables if they don't exist
             if (context.phase === undefined) context.phase = 0;
-            if (context.lpfState === undefined) context.lpfState = 0;
+            if (context.lpfState === undefined) context.lpfState = 0.5;
             if (context.channelLpfStates === undefined) context.channelLpfStates = [];
         
             // Initialize channel-specific LPF states array if needed
@@ -41,7 +41,7 @@ class TremoloPlugin extends PluginBase {
             if (context.channelLpfStates.length !== channelCount) {
                 context.channelLpfStates = new Array(channelCount);
                 for (let ch = 0; ch < channelCount; ++ch) {
-                    context.channelLpfStates[ch] = 0.0;
+                    context.channelLpfStates[ch] = 0.5;
                 }
             }
         

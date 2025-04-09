@@ -43,12 +43,12 @@ class WowFlutterPlugin extends PluginBase {
             // --- Context Initialization (ensures state exists) ---
             // Initialize only if properties are missing
             context.phase = context.phase || 0.0;
-            context.lpfState = context.lpfState || 0.0;
+            context.lpfState = context.lpfState || 0.5;
             context.sampleBufferPos = context.sampleBufferPos || 0;
 
             // Initialize channel-specific LPF states if count mismatch or missing
             if (!context.channelLpfStates || context.channelLpfStates.length !== channelCount) {
-                context.channelLpfStates = new Float32Array(channelCount).fill(0.0); // Use Float32Array for typed performance
+                context.channelLpfStates = new Float32Array(channelCount).fill(0.5); // Use Float32Array for typed performance
             }
 
             // Initialize sample buffers if not done yet
