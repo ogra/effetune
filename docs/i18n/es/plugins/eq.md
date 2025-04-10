@@ -10,6 +10,7 @@ Una colección de plugins que te permiten ajustar diferentes aspectos del sonido
 - [Lo Pass Filter](#lo-pass-filter) - Elimina frecuencias altas no deseadas con precisión
 - [Loudness Equalizer](#loudness-equalizer) - Corrección del balance de frecuencias para escuchar a bajo volumen
 - [Narrow Range](#narrow-range) - Enfoca partes específicas del sonido
+- [Tilt EQ](#tilt-eq) - Ecualizador de inclinación para ajuste tonal simple
 - [Tone Control](#tone-control) - Ajuste sencillo de bajos, mid y treble
 
 ## 15Band GEQ
@@ -259,6 +260,36 @@ Una herramienta que te permite enfocarte en partes específicas de la música fi
 - Gráfico claro que muestra la respuesta en frecuencia
 - Controles de frecuencia fáciles de ajustar
 - Botones de selección de pendiente simples
+
+## Tilt EQ
+
+Un ecualizador simple pero efectivo que inclina suavemente el balance de frecuencia de tu música. Está diseñado para ajustes sutiles, haciendo que tu música suene más cálida o brillante sin controles complejos. Ideal para adaptar rápidamente el tono general a tu preferencia.
+
+### Guía de Mejora Auditiva
+- Haz la Música Más Cálida:
+  - Utiliza valores de ganancia negativos para reducir las frecuencias altas y aumentar las frecuencias bajas.
+  - Perfecto para grabaciones brillantes o auriculares que suenan demasiado nítidos.
+  - Crea una experiencia auditiva acogedora y relajada.
+- Haz la Música Más Brillante:
+  - Utiliza valores de ganancia positivos para aumentar las frecuencias altas y reducir las frecuencias bajas.
+  - Ideal para grabaciones opacas o altavoces que suenan apagados.
+  - Añade claridad y brillo a tu música.
+- Ajustes Sutiles de Tono:
+  - Utiliza pequeños valores de ganancia para dar forma suave al tono general.
+  - Ajusta con precisión el balance para que coincida con tu entorno auditivo o estado de ánimo.
+
+### Parámetros
+- **Pivot Frequency** - Controla la frecuencia central de la inclinación (20Hz a ~20kHz)
+  - Ajusta para establecer el punto de frecuencia alrededor del cual se produce la inclinación.
+- **Slope** - Controla la inclinación de la pendiente alrededor de la Frecuencia Pivote (-12 a +12dB/octava)
+  - Ajusta para controlar cuán inclinadas están las frecuencias alrededor de la Frecuencia Pivote.
+
+### Visualización
+- Deslizador simple para un fácil ajuste de ganancia
+- Curva de respuesta de frecuencia en tiempo real para mostrar el efecto de inclinación
+- Indicación clara del valor de ganancia actual
+
+- Botón de reinicio rápido
 
 ## Tone Control
 

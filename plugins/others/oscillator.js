@@ -21,9 +21,10 @@ class OscillatorPlugin extends PluginBase {
             let currentPhase = context.phase || 0.0; // Use local variable for oscillator phase
 
             // Initialize pink noise state only if needed and waveform is pink
-            if (waveform === 'pink' && (!context.pinkNoiseState || context.pinkNoiseState.length !== 16)) {
-                // Use Float32Array for potential performance benefits
-                context.pinkNoiseState = new Float32Array(16).fill(0.0);
+            // Initialize pink noise state only if needed and waveform is pink
+            if (waveform === 'pink' && (!context.pinkNoiseState || context.pinkNoiseState.length !== 7)) {
+                // Use Float32Array for potential performance benefits - 7 state variables for Paul Kellett method
+                context.pinkNoiseState = new Float32Array(7).fill(0.0);
             }
             // Cache pink noise state locally if waveform is pink
             const pinkNoiseState = (waveform === 'pink') ? context.pinkNoiseState : null;
@@ -60,18 +61,33 @@ class OscillatorPlugin extends PluginBase {
                     samples[i] = Math.random() * 2.0 - 1.0;
                 }
             } else if (waveform === 'pink' && pinkNoiseState) {
-                // Voss-McCartney Pink Noise Generation Loop (Optimized)
-                let pinkSum = 0.0;
-                for (let k = 0; k < 16; ++k) { pinkSum += pinkNoiseState[k]; } // Initial sum
+                // Paul Kellett Pink Noise Generation Loop (Adapted for mono)
+                // Cache state variables locally for the inner loop (read/write)
+                let b0 = pinkNoiseState[0], b1 = pinkNoiseState[1], b2 = pinkNoiseState[2], b3 = pinkNoiseState[3];
+                let b4 = pinkNoiseState[4], b5 = pinkNoiseState[5], b6 = pinkNoiseState[6];
 
                 for (let i = 0; i < blockSize; i++) {
-                    const randomIndex = (Math.random() * 16) | 0;
-                    pinkSum -= pinkNoiseState[randomIndex];
-                    const newValue = Math.random() * 2.0 - 1.0;
-                    pinkNoiseState[randomIndex] = newValue;
-                    pinkSum += newValue;
-                    samples[i] = pinkSum * 0.0625; // Output average (sum / 16)
+                    const white = Math.random() * 2.0 - 1.0;
+
+                    // Apply Paul Kellett's filter coefficients
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980; // Note the sign difference
+
+                    // Calculate pink noise output and scale
+                    const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                    b6 = white * 0.115926; // Update b6 state last
+
+                    // Store the generated pink noise sample
+                    samples[i] = pink;
                 }
+
+                // Update the context state array with the final values for this block
+                pinkNoiseState[0] = b0; pinkNoiseState[1] = b1; pinkNoiseState[2] = b2; pinkNoiseState[3] = b3;
+                pinkNoiseState[4] = b4; pinkNoiseState[5] = b5; pinkNoiseState[6] = b6;
             } else { // Oscillator Waveforms (or fallback)
                 // --- Select Generator Function based on waveform string ---
                 let generateSampleFunction;

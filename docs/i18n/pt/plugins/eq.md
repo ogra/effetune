@@ -10,6 +10,7 @@ Uma coleção de plugins que permite ajustar diferentes aspectos do som da sua m
 - [Lo Pass Filter](#lo-pass-filter) - Remove frequências altas indesejadas com precisão
 - [Loudness Equalizer](#loudness-equalizer) - Correção do balanço de frequência para audição em volumes baixos
 - [Narrow Range](#narrow-range) - Foca em partes específicas do som
+- [Tilt EQ](#tilt-eq) - Equalizador de inclinação para ajuste tonal simples
 - [Tone Control](#tone-control) - Ajuste simples de graves, médios e agudos
 
 ## 15Band GEQ
@@ -259,6 +260,34 @@ Uma ferramenta que permite focar em partes específicas da música, filtrando fr
 - Gráfico claro mostrando a resposta de frequência
 - Controles de frequência fáceis de ajustar
 - Botões simples para seleção de inclinação
+
+## Tilt EQ
+
+Um equalizador simples mas eficaz que inclina suavemente o equilíbrio de frequências da sua música. Projetado para ajustes sutis que podem aquecer ou clarear o som sem controles complexos. Ideal para adaptar rapidamente o tom geral às suas preferências.
+
+### Guia de Melhoria Musical
+- Esquentar a música:
+  - Use valores de ganho negativos para reduzir altas frequências e reforçar baixas
+  - Ideal para gravações brilhantes ou fones de ouvido agudos
+  - Cria uma experiência de audição aconchegante
+- Clarear a música:
+  - Use valores de ganho positivos para destacar altas frequências e reduzir baixas
+  - Perfeito para gravações abafadas ou caixas de som surdas
+  - Adiciona clareza e brilho
+- Ajustes sutis:
+  - Use pequenos valores de ganho para ajustes precisos
+  - Adapte o equilíbrio ao seu ambiente de audição
+
+### Parâmetros
+- **Pivot Frequency** - Controla a frequência central da inclinação (20Hz a ~20kHz)
+  - Define o ponto onde ocorre o efeito tilt
+- **Slope** - Controla a inclinação em torno da frequência pivô (-12 a +12dB/octave)
+  - Determina a intensidade do efeito
+
+### Visualização
+- Controle deslizante intuitivo
+- Curva de resposta em frequência em tempo real
+- Exibição clara do ganho atual
 
 ## Tone Control
 

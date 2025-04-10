@@ -3,7 +3,7 @@ class NoiseBlenderPlugin extends PluginBase {
         super('Noise Blender', 'Add noise to the audio signal');
         
         // Initialize parameters
-        this.nt = 'pink';    // nt: Noise Type (formerly noiseType) - 'white' or 'pink'
+        this.nt = 'pink';    // nt: Noise Type - 'white', 'pink', or 'brown'
         this.lv = -36;       // lv: Level (formerly level) - -96 to 0 dB
         this.pc = true;      // pc: Per Channel (formerly perChannel) - true or false
         
@@ -14,25 +14,31 @@ class NoiseBlenderPlugin extends PluginBase {
 
             // Initialize pink noise state storage if needed
             // Use Float32Array for performance (index access often faster than property access)
-            // Store 7 state variables (b0 to b6) per channel.
-            const needsInitialization = !context.initialized || !context.pinkNoiseState;
-            const channelCountChanged = context.initialized && context.pinkNoiseState?.length !== channelCount;
+            // Store state variables per channel. Pink: 7 (b0-b6), Brown: 2 (lastBrown, dcOffset)
+            const needsPinkInit = !context.pinkNoiseState || context.pinkNoiseState.length !== channelCount;
+            const needsBrownInit = !context.brownNoiseState || context.brownNoiseState.length !== channelCount;
 
-            if (needsInitialization || channelCountChanged) {
+            if (needsPinkInit) {
                 context.pinkNoiseState = new Array(channelCount);
                 for (let ch = 0; ch < channelCount; ch++) {
-                    // Each channel gets a 7-element Float32Array for b0-b6 states
-                    context.pinkNoiseState[ch] = new Float32Array(7).fill(0.0);
+                    context.pinkNoiseState[ch] = new Float32Array(7).fill(0.0); // b0-b6
                 }
-                context.initialized = true;
             }
+            if (needsBrownInit) {
+                context.brownNoiseState = new Array(channelCount);
+                for (let ch = 0; ch < channelCount; ch++) {
+                    context.brownNoiseState[ch] = new Float32Array(2).fill(0.0); // lastBrown, dcOffset
+                }
+            }
+            // Mark context as initialized after first setup
+            if (!context.initialized) context.initialized = true;
 
             // Early exit if disabled
             if (!enabled) return data;
 
             // --- Parameter Destructuring & Pre-calculation ---
             const {
-                nt: noiseType,    // 'white' or 'pink'
+                nt: noiseType,    // 'white', 'pink', or 'brown'
                 lv: levelDb,      // Level in dB
                 pc: perChannel    // Generate noise per channel (boolean)
             } = parameters;
@@ -41,6 +47,8 @@ class NoiseBlenderPlugin extends PluginBase {
             const levelGain = (levelDb <= -96.0) ? 0.0 : Math.pow(10.0, levelDb / 20.0);
 
             // --- Noise Generation ---
+            const brownNoiseNormalizationFactor = 0.04166666666666666666666666666667; // Factor to approximate RMS normalization
+            const brownDecayAlpha = 0.995; // Decay factor for brown noise DC offset removal
 
             // Branch based on per-channel generation *before* main loops
             if (perChannel) {
@@ -48,7 +56,8 @@ class NoiseBlenderPlugin extends PluginBase {
                 for (let ch = 0; ch < channelCount; ch++) {
                     const offset = ch * blockSize; // Output buffer offset for this channel
                     // Cache the state array for the current channel
-                    const pinkState = context.pinkNoiseState[ch]; // Float32Array([b0, b1, ..., b6])
+                    const pinkState = context.pinkNoiseState[ch];
+                    const brownState = context.brownNoiseState[ch]; // Float32Array([lastBrown, dcOffset])
 
                     // Select noise generation function *outside* the inner sample loop
                     if (noiseType === 'white') {
@@ -57,7 +66,7 @@ class NoiseBlenderPlugin extends PluginBase {
                             const white = Math.random() * 2.0 - 1.0;
                             data[offset + i] += white * levelGain; // Add scaled white noise
                         }
-                    } else { // Pink noise generation loop for this channel
+                    } else if (noiseType === 'pink') { // Pink noise generation loop for this channel
                         // Cache state variables locally for the inner loop (read/write)
                         let b0 = pinkState[0], b1 = pinkState[1], b2 = pinkState[2], b3 = pinkState[3];
                         let b4 = pinkState[4], b5 = pinkState[5], b6 = pinkState[6];
@@ -84,6 +93,26 @@ class NoiseBlenderPlugin extends PluginBase {
                         // Update the context state array with the final values for this block
                         pinkState[0] = b0; pinkState[1] = b1; pinkState[2] = b2; pinkState[3] = b3;
                         pinkState[4] = b4; pinkState[5] = b5; pinkState[6] = b6;
+                    } else { // Brown noise generation loop for this channel
+                        let lastBrown = brownState[0];
+                        let dcOffset = brownState[1];
+
+                        for (let i = 0; i < blockSize; i++) {
+                            const white = Math.random() * 2.0 - 1.0;
+                            // Integrate white noise
+                            const brown = lastBrown + white;
+                            // DC offset removal using exponential decay
+                            let output = brown - dcOffset;
+                            dcOffset = dcOffset * brownDecayAlpha + (1.0 - brownDecayAlpha) * brown;
+                            // Normalize and add scaled brown noise
+                            output *= brownNoiseNormalizationFactor; // Apply normalization
+                            data[offset + i] += output * levelGain;
+                            // Store state for next sample
+                            lastBrown = brown; // Store the *un-normalized* value for integration
+                        }
+                        // Update context state
+                        brownState[0] = lastBrown;
+                        brownState[1] = dcOffset;
                     } // End noise type check for this channel
                 } // End channel loop (perChannel === true)
 
@@ -92,7 +121,8 @@ class NoiseBlenderPlugin extends PluginBase {
                 // Allocate a temporary buffer for the shared noise signal
                 const noiseBuffer = new Float32Array(blockSize);
                 // Use state from channel 0 for the shared pink noise generation
-                const pinkState = context.pinkNoiseState[0]; // Float32Array([b0, b1, ..., b6])
+                const pinkState = context.pinkNoiseState[0];
+                const brownState = context.brownNoiseState[0]; // Use channel 0 state for shared brown noise
 
                 // Select noise generation function *outside* the inner sample loop
                 if (noiseType === 'white') {
@@ -101,7 +131,7 @@ class NoiseBlenderPlugin extends PluginBase {
                         const white = Math.random() * 2.0 - 1.0;
                         noiseBuffer[i] = white * levelGain; // Store scaled white noise
                     }
-                } else { // Pink noise generation loop (fill noiseBuffer)
+                } else if (noiseType === 'pink') { // Pink noise generation loop (fill noiseBuffer)
                     // Cache state variables locally for the inner loop (read/write)
                     let b0 = pinkState[0], b1 = pinkState[1], b2 = pinkState[2], b3 = pinkState[3];
                     let b4 = pinkState[4], b5 = pinkState[5], b6 = pinkState[6];
@@ -128,6 +158,22 @@ class NoiseBlenderPlugin extends PluginBase {
                     // Update the context state array (channel 0) with the final values
                     pinkState[0] = b0; pinkState[1] = b1; pinkState[2] = b2; pinkState[3] = b3;
                     pinkState[4] = b4; pinkState[5] = b5; pinkState[6] = b6;
+                } else { // Brown noise generation loop (fill noiseBuffer)
+                    let lastBrown = brownState[0];
+                    let dcOffset = brownState[1];
+
+                    for (let i = 0; i < blockSize; i++) {
+                        const white = Math.random() * 2.0 - 1.0;
+                        const brown = lastBrown + white;
+                        let output = brown - dcOffset;
+                        dcOffset = dcOffset * brownDecayAlpha + (1.0 - brownDecayAlpha) * brown;
+                        output /= brownNoiseNormalizationFactor; // Apply normalization
+                        noiseBuffer[i] = output * levelGain; // Store normalized, scaled brown noise
+                        lastBrown = brown; // Store the *un-normalized* value for integration
+                    }
+                    // Update context state (channel 0)
+                    brownState[0] = lastBrown;
+                    brownState[1] = dcOffset;
                 } // End noise type check (shared noise)
 
                 // --- Apply Shared Noise Buffer to All Channels ---
@@ -189,7 +235,7 @@ class NoiseBlenderPlugin extends PluginBase {
 
         const typeContainer = document.createElement('div');
         typeContainer.className = 'radio-group';
-        const types = ['pink', 'white'];
+        const types = ['white', 'pink', 'brown'];
         types.forEach(type => {
             const radioId = `${this.id}-${this.name}-noise-type-${type}`;
             const label = document.createElement('label');

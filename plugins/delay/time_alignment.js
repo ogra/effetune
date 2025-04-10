@@ -188,7 +188,7 @@ class TimeAlignmentPlugin extends PluginBase {
         const delayRow = document.createElement('div');
         delayRow.className = 'parameter-row';
         const delayLabel = document.createElement('label');
-        delayLabel.textContent = 'Delay:';
+        delayLabel.textContent = 'Delay (s):';
         delayLabel.htmlFor = `${this.id}-${this.name}-delay-slider`;
         delayRow.appendChild(delayLabel);
 

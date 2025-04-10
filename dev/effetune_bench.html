@@ -462,6 +462,9 @@
                             params['g' + i] = i % 2 === 0 ? 1 : -1; // Alternating 1, -1
                         }
                         plugin.setParameters(params);
+                    } else if (name === 'Tilt EQ') {
+                        // Special parameters for Tilt EQ
+                        plugin.setParameters({ sl: 1 });
                     }
                     result = await benchmarkPlugin(plugin, audioBuffer, SAMPLE_RATE, BUFFER_SIZE, CHANNEL_COUNT);
                     results.push(result);

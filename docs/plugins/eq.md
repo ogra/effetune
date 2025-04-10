@@ -10,6 +10,7 @@ A collection of plugins that let you adjust different aspects of your music's so
 - [Lo Pass Filter](#lo-pass-filter) - Remove unwanted high frequencies with precision
 - [Loudness Equalizer](#loudness-equalizer) - Frequency balance correction for low volume listening
 - [Narrow Range](#narrow-range) - Focus on specific parts of the sound
+- [Tilt EQ](#tilt-eq) - Simple EQ that tilts the sound spectrum
 - [Tone Control](#tone-control) - Simple bass, mid, and treble adjustment
 
 ## 15Band GEQ
@@ -299,4 +300,33 @@ A simple three-band sound adjuster for quick and easy sound personalization. Per
 ### Visual Display
 - Easy-to-read graph showing your adjustments
 - Simple sliders for each control
+
+## Tilt EQ
+
+A simple yet effective equalizer that gently tilts the frequency balance of your music. It's designed for subtle adjustments, making your music sound warmer or brighter without complex controls. Ideal for quickly tailoring the overall tone to your preference.
+
+### Listening Enhancement Guide
+- Make Music Warmer:
+  - Use negative gain values to reduce high frequencies and increase low frequencies.
+  - Perfect for bright recordings or headphones that sound too sharp.
+  - Creates a cozy and relaxed listening experience.
+- Make Music Brighter:
+  - Use positive gain values to increase high frequencies and reduce low frequencies.
+  - Ideal for dull recordings or speakers that sound muffled.
+  - Adds clarity and sparkle to your music.
+- Subtle Tone Adjustments:
+  - Use small gain values for gentle overall tone shaping.
+  - Fine-tune the balance to match your listening environment or mood.
+
+### Parameters
+- **Pivot Frequency** - Controls the center frequency of the tilt (20Hz to ~20kHz)
+  - Adjust to set the frequency point around which the tilt occurs.
+- **Slope** - Controls the steepness of the tilt around the Pivot Frequency (-12dB to +12dB)
+  - Adjust to control how steeply frequencies around the Pivot Frequency are tilted.
+
+### Visual Display
+- Simple slider for easy gain adjustment
+- Real-time frequency response curve to show the tilt effect
+- Clear indication of current gain value
+
 - Quick reset button

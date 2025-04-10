@@ -22,9 +22,10 @@ class StereoMeterPlugin extends PluginBase {
     for (let i = 0; i < 256; i++) {
       this._colorLookup[i] = `rgb(0,${i},0)`;
     }
+    this.observer = null;
 
     // Register the Audio Worklet Processor
-  this.registerProcessor(`
+    this.registerProcessor(`
     // --- Optimization: Pre-calculate constant ---
     const RADIANS_TO_DEGREES = 180 / Math.PI;
     // --- Optimization: Pre-calculate constant for decay ---
@@ -151,10 +152,13 @@ class StereoMeterPlugin extends PluginBase {
 
     // Return the copied input data with attached measurements.
     return result;
-  `);
+    `);
   }
 
   createUI() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
     const container = document.createElement('div');
     container.className = 'plugin-parameter-ui stereo-meter';
 
@@ -215,7 +219,9 @@ class StereoMeterPlugin extends PluginBase {
 
     container.appendChild(graphContainer);
 
-    this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+    if (this.observer == null) {
+      this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
+    }
     this.observer.observe(this.canvas);
 
     return container;

@@ -9,6 +9,7 @@ Une collection de plugins qui vous permet d'ajuster différents aspects du son d
 - [Lo Pass Filter](#lo-pass-filter) - Éliminez avec précision les hautes fréquences indésirables
 - [Loudness Equalizer](#loudness-equalizer) - Correction de l'équilibre des fréquences pour une écoute à faible volume
 - [Narrow Range](#narrow-range) - Concentrez-vous sur des parties spécifiques du son
+- [Tilt EQ](#tilt-eq) - Égaliseur d'inclinaison pour un réglage tonal simple
 - [Tone Control](#tone-control) - Réglage simple des basses, médiums et aigus
 
 ## 15Band GEQ
@@ -252,6 +253,34 @@ Un outil qui vous permet de vous concentrer sur des parties spécifiques de la m
 - Graphique clair montrant la réponse en fréquence
 - Contrôles de fréquence faciles à ajuster
 - Boutons de sélection de pente simples
+
+## Tilt EQ
+
+Un égaliseur simple mais efficace qui incline en douceur l'équilibre des fréquences de votre musique. Conçu pour des ajustements subtils permettant de réchauffer ou d'éclaircir le son sans contrôles complexes. Idéal pour adapter rapidement la tonalité générale à vos préférences.
+
+### Guide d'amélioration musicale
+- Réchauffer la musique :
+  - Utilisez des valeurs de gain négatives pour atténuer les hautes fréquences et renforcer les basses
+  - Parfait pour les enregistrements trop brillants ou les écouteurs à son agressif
+  - Crée une expérience d'écoute chaleureuse et relaxante
+- Éclaircir la musique :
+  - Utilisez des valeurs de gain positives pour accentuer les aigus et atténuer les basses
+  - Idéal pour les enregistrements étouffés ou les enceintes au son mat
+  - Ajoute de la clarté et de la brillance
+- Réglages subtils :
+  - Utilisez de faibles valeurs de gain pour des ajustements précis
+  - Ajustez l'équilibre selon votre environnement d'écoute ou votre humeur
+
+### Paramètres
+- **Pivot Frequency** - Contrôle la fréquence centrale d'inclinaison (20Hz à ~20kHz)
+  - Détermine le point autour duquel s'effectue l'inclinaison
+- **Slope** - Contrôle la pente d'inclinaison autour de la fréquence pivot (-12 à +12dB/octave)
+  - Détermine l'intensité de l'effet d'inclinaison
+
+### Affichage
+- Curseur de réglage intuitif
+- Courbe de réponse en fréquence en temps réel
+- Indication claire de la valeur de gain
 
 ## Tone Control
 Un ajusteur de son à trois bandes simple pour une personnalisation rapide et facile du son. Parfait pour une mise en forme basique du son sans trop de technicité.
