@@ -325,6 +325,7 @@ class PluginProcessor extends AudioWorkletProcessor {
                         measurements: result.measurements
                     });
                 }
+                result.measurements = null;
             }
         }
 

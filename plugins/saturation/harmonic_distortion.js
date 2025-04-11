@@ -1,6 +1,6 @@
-class IntermodulatorPlugin extends PluginBase {
+class HarmonicDistortionPlugin extends PluginBase {
     constructor() {
-        super('Intermodulator', 'Harmonic intermodulation distortion effect');
+        super('Harmonic Distortion', 'Harmonic distortion effect with independent harmonic control');
         
         // Initialize parameters with defaults
         this.h2 = 2.0;   // h2: 2nd Harm (%) - 0~30%, default 2%
@@ -153,4 +153,4 @@ class IntermodulatorPlugin extends PluginBase {
 }
 
 // Register the plugin globally
-window.IntermodulatorPlugin = IntermodulatorPlugin;
+window.HarmonicDistortionPlugin = HarmonicDistortionPlugin;
