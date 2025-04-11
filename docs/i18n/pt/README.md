@@ -252,6 +252,7 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Basics    | Stereo Balance    | Controle do equilíbrio dos canais estéreo                                          | [Detalhes](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | Controle básico de volume                                                          | [Detalhes](plugins/basics.md#volume) |
 | Delay     | Delay             | Efeito de atraso padrão                                                           | [Detalhes](plugins/delay.md#delay) |
+| Delay     | Modal Resonator   | Efeito de ressonância de frequência com até 5 ressonadores                              | [Detalhes](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment    | Ajustes precisos de temporização para canais de áudio                             | [Detalhes](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | Ajuste automático de volume baseado em medição LUFS para uma experiência de escuta consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Controle transparente de picos para uma escuta segura e confortável              | [Detalhes](plugins/dynamics.md#brickwall-limiter) |
@@ -264,15 +265,18 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | EQ | Lo Pass Filter | Remove frequências altas indesejadas com precisão | [Detalhes](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer| Correção do equilíbrio de frequência para audição em volume baixo                  | [Detalhes](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | Combinação de filtro passa-alta e passa-baixa                                      | [Detalhes](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ | Equalizador de inclinação para modelagem rápida do tom | [Detalhes](plugins/eq.md#tilt-eq) |
 | EQ        | Tone Control      | Controle de tom de três bandas                                                     | [Detalhes](plugins/eq.md#tone-control) |
 | Lo-Fi     | Bit Crusher       | Redução da profundidade de bits e efeito de retenção de ordem zero                   | [Detalhes](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender     | Geração e mistura de ruído                                                         | [Detalhes](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter     | Simulação de jitter digital                                                        | [Detalhes](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | Simula as mudanças naturais e dinâmicas no som causadas pelos movimentos sutis do cone do alto-falante | [Detalhes](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | Efeito leve de alteração de tom | [Detalhes](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Efeito de modulação baseado em volume | [Detalhes](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | Reverb de dispersão aleatória com difusão natural                                  | [Detalhes](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | Efeito de hard clipping digital                                                    | [Detalhes](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | Adiciona um caráter único através da distorção de intermodulação harmônica | [Detalhes](plugins/saturation.md#intermodulator) |
 | Saturation| Multiband Saturation | Efeito de saturação de 3 bandas para um aquecimento preciso baseado em frequência    | [Detalhes](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation        | Efeito de saturação                                                                | [Detalhes](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth         | Mistura sinais subharmônicos para realce dos graves                                | [Detalhes](plugins/saturation.md#sub-synth) |

@@ -4,9 +4,46 @@ A collection of plugins that add movement and variation to your music through mo
 
 ## Plugin List
 
+- [Doppler Distortion](#doppler-distortion) - Simulates the natural, dynamic shifts in sound from subtle speaker cone movement.
 - [Pitch Shifter](#pitch-shifter) - Changes the pitch of your music without affecting playback speed
 - [Tremolo](#tremolo) - Creates rhythmic volume variations for a pulsing, dynamic sound
 - [Wow Flutter](#wow-flutter) - Recreates the gentle pitch variations of vinyl records and tape players
+
+## Doppler Distortion
+
+Experience a unique audio effect that brings a touch of natural movement to your music. Doppler Distortion simulates the gentle distortions created by the physical movement of a speaker cone. This effect introduces slight changes in the sound's depth and tone, much like the familiar pitch shifts you hear when a sound source moves relative to you. It adds a dynamic, immersive quality to your listening experience by making the audio feel more alive and engaging.
+
+### Parameters
+
+- **Crossover (Hz)**  
+  Defines the frequency threshold above which the effect is applied. Lower frequencies remain clear while higher frequencies receive the modulation.
+
+- **Coil Force (N)**  
+  Controls the strength of the simulated speaker coil movement. Higher values result in a more pronounced distortion.
+
+- **Speaker Mass (kg)**  
+  Simulates the weight of the speaker cone, affecting how naturally the movement is reproduced.  
+  - **Higher values:** Increase the inertia, resulting in a slower response and smoother, subtler distortions.  
+  - **Lower values:** Reduce the inertia, causing a quicker, more pronounced modulation effect.
+
+- **Spring Constant (N/m)**  
+  Determines the stiffness of the speaker's suspension. A higher spring constant produces a crisper, more defined response.
+
+- **Damping Factor (N·s/m)**  
+  Adjusts how quickly the simulated movement settles, balancing lively motion with smooth transitions.  
+  - **Higher values:** Lead to faster stabilization, reducing oscillations and producing a tighter, more controlled effect.  
+  - **Lower values:** Allow the movement to persist longer, resulting in a looser, more extended dynamic fluctuation.
+
+### Recommended Settings
+
+For a balanced and natural enhancement, start with:
+- **Crossover:** 100 Hz  
+- **Coil Force:** 10 N  
+- **Speaker Mass:** 0.05 kg  
+- **Spring Constant:** 10,000 N/m  
+- **Damping Factor:** 1.0 N·s/m  
+
+These settings provide a subtle Doppler Distortion that enriches the listening experience without overpowering the original sound.
 
 ## Pitch Shifter
 
@@ -67,6 +104,10 @@ An effect that adds rhythmic volume variations to your music, similar to the pul
 - **Randomness Cutoff** - How quickly the random changes happen (1 to 1000 Hz)
   - Lower: Slower, more gentle random variations
   - Higher: Quicker, more erratic changes
+- **Randomness Slope** - Controls how aggressive the randomness filtering is (-12 to 0 dB)
+  - -12 dB: Smoother, more gradual random variations (gentler effect)
+  - -6 dB: Balanced response
+  - 0 dB: Sharper, more pronounced random variations (stronger effect)
 - **Ch Sync** - How synchronized the randomness is between channels (0 to 100%)
   - 0%: Each channel has independent randomness
   - 50%: Partial synchronization between channels
@@ -155,6 +196,10 @@ An effect that adds subtle pitch variations to your music, similar to the natura
 - **Randomness Cutoff** - How quickly the random changes happen (0.1 to 20 Hz)
   - Lower: Slower, more gentle changes
   - Higher: Quicker, more erratic changes
+- **Randomness Slope** - Controls how aggressive the randomness filtering is (-12 to 0 dB)
+  - -12 dB: Smoother, more gradual random variations (gentler effect)
+  - -6 dB: Balanced response
+  - 0 dB: Sharper, more pronounced random variations (stronger effect)
 - **Ch Sync** - How synchronized the randomness is between channels (0 to 100%)
   - 0%: Each channel has independent randomness
   - 50%: Partial synchronization between channels

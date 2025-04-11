@@ -4,9 +4,46 @@ Una colección de plugins que añaden movimiento y variación a tu música media
 
 ## Lista de Plugins
 
+- [Doppler Distortion](#doppler-distortion) - Simula los cambios naturales y dinámicos en el sonido producidos por el sutil movimiento del cono del altavoz.
 - [Pitch Shifter](#pitch-shifter) - Cambia el tono de tu música sin afectar la velocidad de reproducción
 - [Tremolo](#tremolo) - Crea variaciones rítmicas de volumen para un sonido pulsante y dinámico
 - [Wow Flutter](#wow-flutter) - Recrea las suaves variaciones de tono de los discos de vinilo y los reproductores de cinta
+
+## Doppler Distortion
+
+Experimenta un efecto de audio único que aporta un toque de movimiento natural a tu música. Doppler Distortion simula las suaves distorsiones creadas por el movimiento físico de un cono de altavoz. Este efecto introduce leves cambios en la profundidad y el tono del sonido, al igual que los cambios de tono habituales que escuchas cuando una fuente de sonido se mueve en relación a ti. Añade una cualidad dinámica e inmersiva a tu experiencia auditiva, haciendo que el audio se sienta más vivo y atractivo.
+
+### Parámetros
+
+- **Crossover (Hz)**  
+  Define el umbral de frecuencia a partir del cual se aplica el efecto. Las frecuencias bajas se mantienen claras, mientras que las frecuencias altas reciben la modulación.
+
+- **Coil Force (N)**  
+  Controla la fuerza del movimiento simulado de la bobina del altavoz. Los valores más altos producen una distorsión más pronunciada.
+
+- **Speaker Mass (kg)**  
+  Simula el peso del cono del altavoz, afectando la naturalidad con la que se reproduce el movimiento.  
+  - **Valores más altos:** Aumentan la inercia, resultando en una respuesta más lenta y en distorsiones más suaves y sutiles.  
+  - **Valores más bajos:** Reducen la inercia, provocando un efecto de modulación más rápido y marcado.
+
+- **Spring Constant (N/m)**  
+  Determina la rigidez de la suspensión del altavoz. Un spring constant mayor produce una respuesta más nítida y definida.
+
+- **Damping Factor (N·s/m)**  
+  Ajusta la rapidez con la que se estabiliza el movimiento simulado, equilibrando un movimiento dinámico con transiciones suaves.  
+  - **Valores más altos:** Conducen a una estabilización más rápida, reduciendo las oscilaciones y produciendo un efecto más ajustado y controlado.  
+  - **Valores más bajos:** Permiten que el movimiento persista por más tiempo, resultando en una fluctuación dinámica más suelta y prolongada.
+
+### Configuración recomendada
+
+Para una mejora equilibrada y natural, comienza con:
+- **Crossover:** 100 Hz  
+- **Coil Force:** 10 N  
+- **Speaker Mass:** 0.05 kg  
+- **Spring Constant:** 10,000 N/m  
+- **Damping Factor:** 1.0 N·s/m  
+
+Estos ajustes proporcionan un sutil Doppler Distortion que enriquece la experiencia auditiva sin opacar el sonido original.
 
 ## Pitch Shifter
 
@@ -64,10 +101,14 @@ Un efecto que añade variaciones rítmicas en el volumen a tu música, similar a
   - Bajo: Pulsaciones más predecibles y regulares
   - Medio: Variación vintage natural
   - Alto: Sonido más inestable y orgánico
-- **Randomness Cutoff** - La rapidez con la que ocurren los cambios aleatorios (1 a 1000 Hz)
-  - Más bajo: Variaciones aleatorias más lentas y suaves
-  - Más alto: Cambios más rápidos y erráticos
-- **Ch Sync** - Cuán sincronizados están los cambios aleatorios entre los canales (0 a 100%)
+- **Randomness Cutoff** - Qué tan rápido ocurren los cambios aleatorios (1 a 1000 Hz)
+  - Lower: Variaciones aleatorias más lentas y suaves
+  - Higher: Cambios más rápidos e impredecibles
+- **Randomness Slope** - Controla la intensidad del filtrado de aleatoriedad (-12 a 0 dB)
+  - -12 dB: Variaciones aleatorias más suaves y graduales (efecto más sutil)
+  - -6 dB: Respuesta equilibrada
+  - 0 dB: Variaciones aleatorias más pronunciadas y acentuadas (efecto más fuerte)
+- **Ch Sync** - Qué tan sincronizada está la aleatoriedad entre canales (0 a 100%)
   - 0%: Cada canal tiene una aleatoriedad independiente
   - 50%: Sincronización parcial entre canales
   - 100%: Ambos canales comparten el mismo patrón de aleatoriedad
@@ -155,7 +196,11 @@ Un efecto que añade sutiles variaciones en el tono a tu música, similar al son
 - **Randomness Cutoff** - La velocidad a la que ocurren los cambios aleatorios (0.1 a 20 Hz)
   - Más bajo: Cambios más lentos y suaves
   - Más alto: Cambios más rápidos y erráticos
-- **Ch Sync** - Cuán sincronizados están los cambios aleatorios entre los canales (0 a 100%)
+- **Randomness Slope** - Controla la intensidad del filtrado de aleatoriedad (-12 a 0 dB)
+  - -12 dB: Variaciones aleatorias más suaves y graduales (efecto más sutil)
+  - -6 dB: Respuesta equilibrada
+  - 0 dB: Variaciones aleatorias más pronunciadas y acentuadas (efecto más fuerte)
+- **Ch Sync** - Qué tan sincronizada está la aleatoriedad entre canales (0 a 100%)
   - 0%: Cada canal tiene una aleatoriedad independiente
   - 50%: Sincronización parcial entre los canales
   - 100%: Ambos canales comparten el mismo patrón de aleatoriedad

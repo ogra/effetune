@@ -258,6 +258,7 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Basics     | Stereo Balance        | ステレオチャンネルのバランス制御                           | [詳細](plugins/basics.md#stereo-balance)                   |
 | Basics     | Volume                | 基本的な音量調整                                           | [詳細](plugins/basics.md#volume)                           |
 | Delay      | Delay                 | 標準的なディレイエフェクト                                 | [詳細](plugins/delay.md#delay)                       |
+| Delay      | Modal Resonator       | 最大5つの共振器を備えた周波数共鳴エフェクト        | [詳細](plugins/delay.md#modal-resonator)                   |
 | Delay      | Time Alignment        | オーディオチャンネルの精密なタイミング調整                 | [詳細](plugins/delay.md#time-alignment)                    |
 | Dynamics   | Auto Leveler         | LUFS測定に基づく一貫したリスニング体験のための自動音量調整 | [詳細](plugins/dynamics.md#auto-leveler)                  |
 | Dynamics   | Brickwall Limiter    | 安全で快適なリスニングのための透明なピークコントロール     | [詳細](plugins/dynamics.md#brickwall-limiter)             |
@@ -270,15 +271,18 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | EQ | Lo Pass Filter | 不要な高域を除去する | [詳細](plugins/eq.md#lo-pass-filter) |
 | EQ         | Loudness Equalizer    | 低音量再生時の周波数バランス補正                           | [詳細](plugins/eq.md#loudness-equalizer)                   |
 | EQ         | Narrow Range          | ハイパスとローパスフィルターの組み合わせ                   | [詳細](plugins/eq.md#narrow-range)                         |
-| EQ         | Tone Control          | 3バンドトーンコントロール                                  | [詳細](plugins/eq.md#tone-control)                         |
+| EQ         | Tilt EQ               | 素早いトーンシェイピングのためのティルトイコライザー            | [詳細](plugins/eq.md#tilt-eq)                              |
+| EQ         | Tone Control          | 3バンドのトーンコントロール                                  | [詳細](plugins/eq.md#tone-control)                         |
 | Lo-Fi      | Bit Crusher           | ビット深度の削減とゼロオーダーホールドエフェクト             | [詳細](plugins/lofi.md#bit-crusher)                         |
 | Lo-Fi      | Noise Blender         | ノイズの生成とミキシング                                   | [詳細](plugins/lofi.md#noise-blender)                       |
 | Lo-Fi      | Simple Jitter         | デジタルジッターのシミュレーション                         | [詳細](plugins/lofi.md#simple-jitter)                       |
+| Modulation | Doppler Distortion | スピーカーコーンの動きによる動的な音の変化のシミュレーション | [詳細](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | 軽量なピッチシフト効果 | [詳細](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 音量ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 時間ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#wow-flutter) |
 | Reverb     | RS Reverb             | 自然な拡散を伴うランダム散乱リバーブ                         | [詳細](plugins/reverb.md#rs-reverb)                         |
 | Saturation | Hard Clipping         | デジタルハードクリッピングエフェクト                       | [詳細](plugins/saturation.md#hard-clipping)                |
+| Saturation | Intermodulator | ハーモニックインターモジュレーション歪みによって独特のキャラクターを加える | [詳細](plugins/saturation.md#intermodulator) |
 | Saturation | Multiband Saturation  | 周波数ごとに正確な温かみを実現する3バンドサチュレーションエフェクト | [詳細](plugins/saturation.md#multiband-saturation)         |
 | Saturation | Saturation            | サチュレーションエフェクト                                 | [詳細](plugins/saturation.md#saturation)                   |
 | Saturation | Sub Synth             | 低音強化のためにサブハーモニック信号をミックスする           | [詳細](plugins/saturation.md#sub-synth)                    |

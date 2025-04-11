@@ -251,6 +251,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Basics    | Stereo Balance | Contrôle de l'équilibre des canaux stéréo | [Détails](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Contrôle de volume basique | [Détails](plugins/basics.md#volume) |
 | Delay     | Delay          | Effet de délai standard                                   | [Détails](plugins/delay.md#delay) |
+| Delay     | Modal Resonator | Effet de résonance fréquentielle avec jusqu'à 5 résonateurs | [Détails](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment | Ajustements précis de la synchronisation des canaux audio | [Détails](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajustement automatique du volume basé sur la mesure LUFS pour une expérience d'écoute cohérente | [Détails](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Contrôle transparent des crêtes pour une écoute sûre et confortable | [Détails](plugins/dynamics.md#brickwall-limiter) |
@@ -263,15 +264,18 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | EQ | Lo Pass Filter | Supprime avec précision les hautes fréquences indésirables | [Détails](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer | Correction de l'équilibre fréquentiel pour une écoute à faible volume | [Détails](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range | Combinaison de filtres passe-haut et passe-bas | [Détails](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ | Égaliseur d'inclinaison pour un modelage rapide de la tonalité | [Détails](plugins/eq.md#tilt-eq) |
 | EQ        | Tone Control | Contrôle de tonalité à trois bandes | [Détails](plugins/eq.md#tone-control) |
-| Lo-Fi     | Bit Crusher | Réduction de la profondeur de bits et effet de maintien zéro | [Détails](plugins/lofi.md#bit-crusher) |
+| Lo-Fi     | Bit Crusher | Réduction de la profondeur de bits et effet de maintien d'ordre zéro | [Détails](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender | Génération et mélange de bruit | [Détails](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter | Simulation de jitter numérique | [Détails](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | Simule les variations naturelles et dynamiques du son dues aux mouvements subtils du cône du haut-parleur | [Détails](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | Effet léger de changement de hauteur tonale | [Détails](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Effet de modulation basé sur le volume | [Détails](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Effet de modulation basé sur le temps | [Détails](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Réverbération à diffusion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Effet de hard clipping numérique | [Détails](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | Ajoute un caractère unique grâce à la distorsion d'intermodulation harmonique | [Détails](plugins/saturation.md#intermodulator) |
 | Saturation| Multiband Saturation | Effet de saturation 3 bandes pour une chaleur précise basée sur les fréquences | [Détails](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation | Effet de saturation | [Détails](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth | Mélange des signaux sous-harmoniques pour améliorer les basses | [Détails](plugins/saturation.md#sub-synth) |

@@ -5,6 +5,7 @@ Une collection d'outils pour ajuster la synchronisation de vos signaux audio ou 
 ## Liste des Plugins
 
 - [Delay](#delay) - Crée des échos avec contrôle sur le timing, la tonalité et la dispersion stéréo.
+- [Modal Resonator](#modal-resonator) - Effet de résonance de fréquence avec jusqu'à 5 résonateurs
 - [Time Alignment](#time-alignment) - Ajustements précis du timing pour les canaux audio.
 
 ## Delay
@@ -108,6 +109,119 @@ Cet effet ajoute des échos distincts à votre audio. Vous pouvez contrôler la 
     - Si vous écoutez en stéréo, expérimentez avec `Ping-Pong` pour contrôler la largeur des échos.
 4.  **Mélanger :**
     - Utilisez `Mix` pour équilibrer le volume de l'écho avec la musique originale. Commencez bas (environ 16%) et augmentez jusqu'à ce que l'effet semble correct.
+
+---
+
+## Modal Resonator
+
+Un effet créatif qui ajoute des fréquences résonnantes à votre audio. Ce plugin crée des résonances accordées à des fréquences spécifiques, de manière similaire à la façon dont les objets physiques vibrent à leurs fréquences de résonance naturelles. Il est parfait pour ajouter des caractéristiques tonales uniques, simuler les propriétés résonnantes de différents matériaux ou créer des effets spéciaux.
+
+### Guide d'Expérience d'Écoute
+
+- **Résonance Métallique :**
+  - Crée des sons de cloche ou métalliques qui suivent la dynamique du matériel source.
+  - Utile pour ajouter du scintillement ou un caractère métallique aux percussions, synthétiseurs ou mixages complets.
+  - Utilisez plusieurs résonateurs à des fréquences soigneusement accordées avec des temps de déclin modérés.
+- **Amélioration Tonale :**
+  - Renforce subtilement des fréquences spécifiques dans la musique.
+  - Peut accentuer les harmoniques ou ajouter de la plénitude à des plages de fréquences spécifiques.
+  - Utilisez avec de faibles valeurs de mix (10-20%) pour une amélioration subtile.
+- **Simulation de Haut-parleur Large Bande :**
+  - Simule le comportement modal des haut-parleurs physiques.
+  - Recrée les résonances distinctives qui se produisent lorsque les haut-parleurs divisent leurs vibrations à différentes fréquences.
+  - Aide à simuler le son caractéristique de types spécifiques de haut-parleurs.
+- **Effets Spéciaux :**
+  - Crée des qualités timbrales inhabituelles et des textures d'un autre monde.
+  - Excellent pour la conception sonore et le traitement expérimental.
+  - Essayez des réglages extrêmes pour une transformation sonore créative.
+
+### Paramètres
+
+- **Resonator Selection (1-5)** - Cinq résonateurs indépendants qui peuvent être activés/désactivés et configurés séparément.
+  - Utilisez plusieurs résonateurs pour des effets de résonance complexes et superposés.
+  - Chaque résonateur peut cibler différentes régions de fréquences.
+  - Essayez des relations harmoniques entre les résonateurs pour des résultats plus musicaux.
+
+Pour chaque résonateur :
+
+- **Enable** - Active/désactive le résonateur individuel.
+  - Permet l'activation sélective de résonances de fréquences spécifiques.
+  - Utile pour les tests A/B de différentes combinaisons de résonateurs.
+
+- **Freq (Hz)** - Définit la fréquence de résonance primaire (20 à 20 000 Hz).
+  - Basses fréquences (20-200 Hz) : Ajoute du corps et des résonances fondamentales.
+  - Moyennes fréquences (200-2000 Hz) : Ajoute de la présence et du caractère tonal.
+  - Hautes fréquences (2000+ Hz) : Crée des qualités de cloche, métalliques.
+  - *Astuce :* Pour les applications musicales, essayez d'accorder les résonateurs sur des notes de la gamme musicale ou sur des harmoniques de la fréquence fondamentale.
+
+- **Decay (ms)** - Contrôle la durée pendant laquelle la résonance continue après le son d'entrée (1 à 500 ms).
+  - Court (1-50ms) : Résonances rapides et percussives.
+  - Moyen (50-200ms) : Résonances au son naturel similaires à de petits objets en métal ou en bois.
+  - Long (200-500ms) : Résonances de type cloche, soutenues.
+  - *Note :* Les fréquences plus élevées décroissent automatiquement plus rapidement que les fréquences plus basses pour un son naturel.
+
+- **LPF Freq (Hz)** - Filtre passe-bas qui façonne la tonalité de la résonance (20 à 20 000 Hz).
+  - Valeurs basses : Résonances plus sombres et plus atténuées.
+  - Valeurs hautes : Résonances plus brillantes et plus présentes.
+  - Ajustez pour contrôler le contenu harmonique de la résonance.
+
+- **Mix (%)** - Équilibre le volume des résonances par rapport au son original (0 à 100%).
+  - 0% : Aucun effet.
+  - 5-25% : Amélioration subtile.
+  - 25-50% : Mélange égal des sons originaux et résonnants.
+  - 50-100% : Les résonances deviennent plus dominantes que le son original.
+
+### Paramètres Recommandés pour l'Amélioration de l'Écoute
+
+1. **Amélioration Subtile du Haut-parleur :**
+   - Activer 2-3 résonateurs
+   - Réglages Freq : 400 Hz, 900 Hz, 1600 Hz
+   - Decay : 60-100ms
+   - LPF Freq : 2000-4000 Hz
+   - Mix : 10-20%
+
+2. **Caractère Métallique :**
+   - Activer 3-5 résonateurs
+   - Réglages Freq : répartis entre 1000-6500 Hz
+   - Decay : 100-200ms
+   - LPF Freq : 4000-8000 Hz
+   - Mix : 15-30%
+
+3. **Amélioration des Basses :**
+   - Activer 1-2 résonateurs
+   - Réglages Freq : 50-150 Hz
+   - Decay : 50-100ms
+   - LPF Freq : 1000-2000 Hz
+   - Mix : 10-25%
+
+4. **Simulation de Haut-parleur Large Bande :**
+   - Activer les 5 résonateurs
+   - Réglages Freq : 100 Hz, 400 Hz, 800 Hz, 1600 Hz, 3000 Hz
+   - Decay : Progressivement plus court du grave à l'aigu (100ms à 30ms)
+   - LPF Freq : Progressivement plus élevé du grave à l'aigu (2000Hz à 4000Hz)
+   - Mix : 20-40%
+
+### Guide de Démarrage Rapide
+
+1. **Choisir les Points de Résonance :**
+   - Commencez par activer un ou deux résonateurs.
+   - Réglez leurs fréquences pour cibler les zones que vous souhaitez améliorer.
+   - Pour des effets plus complexes, ajoutez plus de résonateurs avec des fréquences complémentaires.
+
+2. **Ajuster le Caractère :**
+   - Utilisez le paramètre `Decay` pour contrôler la durée de maintien des résonances.
+   - Façonnez la tonalité avec le contrôle `LPF Freq`.
+   - Des temps de déclin plus longs créent des sons plus évidents, de type cloche.
+
+3. **Mélanger avec l'Original :**
+   - Utilisez `Mix` pour équilibrer l'effet avec votre matériel source.
+   - Commencez avec des valeurs de mix faibles (10-20%) pour une amélioration subtile.
+   - Augmentez pour des effets plus spectaculaires.
+
+4. **Affiner :**
+   - Effectuez de petits ajustements aux fréquences et aux temps de déclin.
+   - Activez/désactivez les résonateurs individuels pour trouver la combinaison parfaite.
+   - N'oubliez pas que des changements subtils peuvent avoir un impact significatif sur le son global.
 
 ---
 

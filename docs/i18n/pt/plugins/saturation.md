@@ -5,6 +5,7 @@ Uma coleção de plugins que adicionam calor e caráter à sua música. Esses ef
 ## Lista de Plugins
 
 - [Hard Clipping](#hard-clipping) - Adiciona intensidade e borda ao som
+- [Intermodulator](#intermodulator) - Adiciona um caráter único por meio de distorção de intermodulação harmônica 
 - [Multiband Saturation](#multiband-saturation) - Molda e aprimora diferentes faixas de frequência independentemente
 - [Saturation](#saturation) - Adiciona calor e riqueza como equipamentos vintage
 - [Sub Synth](#sub-synth) - Gera e mistura sinais sub-harmônicos para aprimoramento dos graves
@@ -51,6 +52,46 @@ Um efeito que pode adicionar desde calor sutil até caráter intenso à sua mús
   1. Diminua o Threshold gradualmente
   2. Experimente diferentes Modes
   3. Combine com outros efeitos para sons únicos
+   
+## Intermodulator
+
+O plugin Intermodulator introduz um efeito de distorção por intermodulação harmônica que vai além da saturação tradicional. Ao injetar propositalmente componentes harmônicos controlados, ele cria interações complexas que enriquecem seu som com novas texturas e um caráter dinâmico.
+
+### Guia de Aperfeiçoamento Auditivo
+- **Efeito Sutil:**
+  - Adiciona uma camada suave de calor harmônico
+  - Realça o tom natural sem sobrecarregar o sinal original
+  - Ideal para adicionar uma profundidade sutil, semelhante ao analógico
+- **Efeito Moderado:**
+  - Enfatiza harmônicos distintos para um caráter mais pronunciado
+  - Traz clareza e brilho para vários elementos musicais
+  - Adequado para gêneros que necessitam de um som equilibrado e enriquecido
+- **Efeito Agressivo:**
+  - Intensifica múltiplos harmônicos para criar uma distorção rica e complexa
+  - Oferece possibilidades criativas de design de som para faixas experimentais
+  - Perfeito para adicionar texturas ousadas e não convencionais
+   
+### Parâmetros
+- **2nd Harm (%):** Controla a quantidade do segundo harmônico adicionado (0–30%, default: 2%)
+  - Valores menores proporcionam um calor sutil, enquanto valores maiores destacam o segundo harmônico de forma mais evidente.
+- **3rd Harm (%):** Ajusta a contribuição do terceiro harmônico (0–30%, default: 3%)
+  - Realça a clareza e aumenta o brilho, conferindo ao som um caráter mais vibrante.
+- **4th Harm (%):** Modifica a intensidade do quarto harmônico (0–30%, default: 0.5%)
+  - Introduz detalhes sutis ao perfil harmônico geral.
+- **5th Harm (%):** Define o nível do quinto harmônico (0–30%, default: 0.3%)
+  - Adiciona uma complexidade sutil, contribuindo para um tom com camadas e texturas.
+- **Sensitivity (x):** Ajusta a sensibilidade geral da entrada (0.1–2.0, default: 0.5)
+  - Uma sensibilidade menor proporciona um efeito mais discreto, enquanto uma sensibilidade maior aumenta a intensidade da distorção.
+   
+### Exibição Visual
+- Visualização em tempo real da interação harmônica e da curva de distorção
+- Controles deslizantes e campos de entrada intuitivos que fornecem feedback imediato
+- Gráfico dinâmico exibindo as mudanças no conteúdo harmônico conforme os parâmetros são ajustados
+   
+### Guia de Início Rápido
+1. **Inicialização:** Inicie com as configurações padrão (2nd: 2%, 3rd: 3%, 4th: 0.5%, 5th: 0.3%, Sensitivity: 0.5)
+2. **Ajuste os Parâmetros:** Utilize o feedback em tempo real para ajustar finamente cada nível harmônico de acordo com o contexto musical
+3. **Misture Seu Som:** Equilibre o efeito utilizando o Sensitivity para alcançar ou um calor sutil ou uma distorção acentuada
 
 ## Multiband Saturation
 

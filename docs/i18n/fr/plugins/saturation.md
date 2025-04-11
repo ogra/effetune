@@ -5,6 +5,7 @@ Une collection de plugins qui ajoutent de la chaleur et du caractère à votre m
 ## Plugin List
 
 - [Hard Clipping](#hard-clipping) - Ajoute de l'intensité et du mordant au son
+- [Intermodulator](#intermodulator) - Apporte un caractère unique via la distorsion par intermodulation harmonique 
 - [Multiband Saturation](#multiband-saturation) - Façonne et améliore différentes plages de fréquences indépendamment
 - [Saturation](#saturation) - Ajoute de la chaleur et de la richesse comme un équipement vintage
 - [Sub Synth](#sub-synth) - Génère et mélange des signaux sous-harmoniques pour l'amélioration des graves
@@ -51,6 +52,50 @@ Un effet qui peut ajouter tout, de la chaleur subtile au caractère intense à v
   1. Baissez progressivement le Threshold
   2. Essayez différents Modes
   3. Combinez avec d'autres effets pour des sons uniques
+
+## Intermodulator
+
+Le plugin Intermodulator introduit un effet de distorsion par intermodulation harmonique qui va au-delà de la saturation traditionnelle. En injectant délibérément des composantes harmoniques contrôlées, il crée des interactions complexes qui enrichissent votre son avec de nouvelles textures et un caractère dynamique.
+
+### Guide d'amélioration de l'écoute
+
+- **Effet subtil :**
+  - Ajoute une légère couche de chaleur harmonique
+  - Améliore la tonalité naturelle sans écraser le signal d'origine
+  - Idéal pour apporter une profondeur subtile, rappelant l'analogique
+- **Effet modéré :**
+  - Met en évidence des harmoniques distinctes pour un caractère plus marqué
+  - Apporte clarté et luminosité à divers éléments musicaux
+  - Idéal pour les genres nécessitant un son équilibré et enrichi
+- **Effet agressif :**
+  - Intensifie plusieurs harmoniques pour créer une distorsion riche et complexe
+  - Offre des possibilités créatives de design sonore pour des pistes expérimentales
+  - Parfait pour ajouter des textures audacieuses et non conventionnelles
+
+### Paramètres
+
+- **2nd Harm (%):** Contrôle la quantité de deuxième harmonique ajoutée (0–30%, default: 2%)
+  - Des valeurs inférieures offrent une chaleur subtile, tandis que des valeurs supérieures accentuent de manière distincte la deuxième harmonique.
+- **3rd Harm (%):** Ajuste la contribution de la troisième harmonique (0–30%, default: 3%)
+  - Améliore la clarté et apporte de la luminosité, conférant au son un caractère plus vibrant.
+- **4th Harm (%):** Modifie l'intensité de la quatrième harmonique (0–30%, default: 0.5%)
+  - Introduit des détails délicats dans le profil harmonique global.
+- **5th Harm (%):** Définit le niveau de la cinquième harmonique (0–30%, default: 0.3%)
+  - Ajoute une complexité nuancée, contribuant à une tonalité stratifiée et texturée.
+- **Sensitivity (x):** Ajuste la sensibilité globale de l'entrée (0.1–2.0, default: 0.5)
+  - Une sensibilité plus faible fournit un effet plus discret, tandis qu'une sensibilité plus élevée augmente l'intensité de la distorsion.
+
+### Affichage Visuel
+
+- Visualisation en temps réel de l'interaction harmonique et de la courbe de distorsion
+- Curseurs intuitifs et champs de saisie offrant un retour immédiat
+- Graphique dynamique affichant les modifications du contenu harmonique lors des ajustements des paramètres
+
+### Guide de démarrage rapide
+
+1. **Initialisation:** Commencez avec les réglages par défaut (2nd: 2%, 3rd: 3%, 4th: 0.5%, 5th: 0.3%, Sensitivity: 0.5)
+2. **Ajustez les paramètres:** Utilisez le retour en temps réel pour ajuster précisément chaque niveau harmonique en fonction de votre contexte musical
+3. **Mélangez votre son:** Équilibrez l'effet à l'aide de Sensitivity pour obtenir soit une chaleur subtile, soit une distorsion prononcée
 
 ## Multiband Saturation
 

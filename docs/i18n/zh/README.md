@@ -184,7 +184,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 
 ### FM Radio Style
 1. Multiband Compressor -> Stereo Blend
-   - Multiband Compressor: 营造出“电台”般的声音
+   - Multiband Compressor: 营造出"电台"般的声音
    - Stereo Blend: 调整立体声宽度以获得舒适感（100-150%）
    - 结果: 专业的广播级音效
 
@@ -252,6 +252,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Basics    | Stereo Balance    | 立体声通道平衡控制                          | [详情](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | 基本音量控制                               | [详情](plugins/basics.md#volume) |
 | Delay     | Delay             | 标准延迟效果                               | [详情](plugins/delay.md#delay) |
+| Delay     | Modal Resonator   | 具有最多5个共振器的频率共振效果 | [详情](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment    | 音频通道的精确时间调整                      | [详情](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | 基于 LUFS 测量的自动音量调整，确保一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | 透明的峰值控制，实现安全舒适的聆听           | [详情](plugins/dynamics.md#brickwall-limiter) |
@@ -264,15 +265,18 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | EQ | Lo Pass Filter | 精确地去除不需要的高频 | [详情](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer| 针对低音量聆听的频率平衡校正                    | [详情](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range      | 高通和低通滤波器组合                         | [详情](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ           | 用于快速音调塑造的倾斜均衡器                   | [详情](plugins/eq.md#tilt-eq)      |
 | EQ        | Tone Control      | 三频段音调控制                              | [详情](plugins/eq.md#tone-control) |
 | Lo-Fi     | Bit Crusher       | 位深度降低及零阶保持效果                       | [详情](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender     | 噪声生成与混合                              | [详情](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter     | 数字抖动模拟                               | [详情](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | 模拟因音箱锥体微妙运动产生的自然、动态的声音变化 | [详情](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | 轻量级音高变换效果 | [详情](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 基于音量的调制效果 | [详情](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | 数字硬削波效果                              | [详情](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | 通过谐波互调失真添加独特的特性 | [详情](plugins/saturation.md#intermodulator) |
 | Saturation| Multiband Saturation | 3 频段饱和效果，实现精确的频率基础暖音             | [详情](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation        | 饱和效果                                  | [详情](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth         | 混合次谐波信号以增强低音                      | [详情](plugins/saturation.md#sub-synth) |

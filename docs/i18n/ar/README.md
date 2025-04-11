@@ -252,6 +252,7 @@
 | Basics   | Stereo Balance  | تحكم في توازن القنوات الستيريو                              | [تفاصيل](plugins/basics.md#stereo-balance)       |
 | Basics   | Volume          | تحكم أساسي في مستوى الصوت                                  | [تفاصيل](plugins/basics.md#volume)              |
 | Delay    | Delay           | تأثير تأخير قياسي                                          | [تفاصيل](plugins/delay.md#delay)              |
+| Delay    | Modal Resonator | تأثير رنين التردد مع ما يصل إلى 5 مرنات        | [تفاصيل](plugins/delay.md#modal-resonator)    |
 | Delay    | Time Alignment  | ضبط دقيق لتوقيت القنوات الصوتية                           | [تفاصيل](plugins/delay.md#time-alignment)       |
 | Dynamics | Auto Leveler    | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متناسقة | [تفاصيل](plugins/dynamics.md#auto-leveler)      |
 | Dynamics | Brickwall Limiter | تحكم شفاف في القمم للاستماع الآمن والمريح                | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |
@@ -264,15 +265,18 @@
 | EQ | Lo Pass Filter | إزالة الترددات العالية غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#lo-pass-filter) |
 | EQ       | Loudness Equalizer | تصحيح توازن الترددات للاستماع بمستوى صوت منخفض              | [تفاصيل](plugins/eq.md#loudness-equalizer)       |
 | EQ       | Narrow Range    | مزيج من مرشحات التردد العالي والمنخفض                       | [تفاصيل](plugins/eq.md#narrow-range)            |
+| EQ       | Tilt EQ         | معادل الإمالة لتشكيل النغمة بسرعة                          | [تفاصيل](plugins/eq.md#tilt-eq)                  |
 | EQ       | Tone Control    | تحكم في النغم بثلاث نطاقات                                  | [تفاصيل](plugins/eq.md#tone-control)             |
-| Lo-Fi    | Bit Crusher     | تقليل عمق البت وتأثير التعليق صفر المرتبة                      | [تفاصيل](plugins/lofi.md#bit-crusher)            |
+| Lo-Fi    | Bit Crusher     | تقليل عمق البت وتأثير الاحتفاظ بالترتيب الصفري                 | [تفاصيل](plugins/lofi.md#bit-crusher)            |
 | Lo-Fi    | Noise Blender   | توليد وخلط الضوضاء                                          | [تفاصيل](plugins/lofi.md#noise-blender)          |
 | Lo-Fi    | Simple Jitter   | محاكاة التذبذب الرقمي                                       | [تفاصيل](plugins/lofi.md#simple-jitter)          |
+| Modulation | Doppler Distortion | يحاكي التحولات الطبيعية والديناميكية في الصوت الناتجة عن حركة مخروط السماعة الدقيقة | [تفاصيل](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | تأثير خفيف لتغيير حدة الصوت | [تفاصيل](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | تأثير تعديل يعتمد على مستوى الصوت | [تفاصيل](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |
 | Saturation | Hard Clipping   | تأثير قص رقمي صارم                                         | [تفاصيل](plugins/saturation.md#hard-clipping)    |
+| Saturation | Intermodulator | يضيف طابعًا فريدًا من خلال تشويه التداخل التوافقي | [تفاصيل](plugins/saturation.md#intermodulator) |
 | Saturation | Multiband Saturation | تأثير تشبع بـ 3 نطاقات لدفء يعتمد على التردد بدقة       | [تفاصيل](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation      | تأثير التشبع                                             | [تفاصيل](plugins/saturation.md#saturation)       |
 | Saturation | Sub Synth      | يخلط الإشارات الفرعية لتعزيز الجهير                         | [تفاصيل](plugins/saturation.md#sub-synth)        |

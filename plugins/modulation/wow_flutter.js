@@ -271,7 +271,7 @@ class WowFlutterPlugin extends PluginBase {
         container.appendChild(createParameterControl('Randomness', 0, 40, 0.1, this.rn, this.setRn.bind(this), 'ms'));
         container.appendChild(createParameterControl('Randomness Cutoff', 0.1, 20, 0.1, this.rc, this.setRc.bind(this), 'Hz'));
         // Add Slope control using rs parameter (-12.0 to 0.0 dB)
-        container.appendChild(createParameterControl('Slope', -12.0, 0.0, 0.1, this.rs, this.setRs.bind(this), 'dB'));
+        container.appendChild(createParameterControl('Randomness Slope', -12.0, 0.0, 0.1, this.rs, this.setRs.bind(this), 'dB'));
         container.appendChild(createParameterControl('Ch Sync', 0, 100, 1, this.cs, this.setCs.bind(this), '%'));
 
         return container;

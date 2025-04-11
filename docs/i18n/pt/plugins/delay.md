@@ -5,6 +5,7 @@ Uma coleção de ferramentas para ajustar o timing dos seus sinais de áudio ou 
 ## Lista de Plugins
 
 - [Delay](#delay) - Cria ecos com controlo sobre timing, tom e dispersão estéreo.
+- [Modal Resonator](#modal-resonator) - Efeito de ressonância de frequência com até 5 ressonadores
 - [Time Alignment](#time-alignment) - Ajustes precisos de timing para canais de áudio.
 
 ## Delay
@@ -108,6 +109,119 @@ Este efeito adiciona ecos distintos ao seu áudio. Pode controlar a rapidez com 
     - Se estiver a ouvir em estéreo, experimente `Ping-Pong` para controlar a largura dos ecos.
 4.  **Misturar:**
     - Use `Mix` para equilibrar o volume do eco com a música original. Comece baixo (por volta de 16%) e aumente até que o efeito pareça correto.
+
+---
+
+## Modal Resonator
+
+Um efeito criativo que adiciona frequências ressonantes ao seu áudio. Este plugin cria ressonâncias afinadas em frequências específicas, semelhante à forma como objetos físicos vibram nas suas frequências ressonantes naturais. É perfeito para adicionar características tonais únicas, simular as propriedades ressonantes de diferentes materiais ou criar efeitos especiais.
+
+### Guia de Experiência Auditiva
+
+- **Ressonância Metálica:**
+  - Cria tons semelhantes a sinos ou metálicos que seguem a dinâmica do material de origem.
+  - Útil para adicionar brilho ou um caráter metálico a percussão, sintetizadores ou misturas completas.
+  - Use múltiplos ressonadores em frequências cuidadosamente afinadas com tempos de decaimento moderados.
+- **Melhoria Tonal:**
+  - Reforça subtilmente frequências específicas na música.
+  - Pode acentuar harmónicos ou adicionar corpo a gamas de frequência específicas.
+  - Use com valores baixos de mix (10-20%) para melhoria subtil.
+- **Simulação de Altifalante de Gama Completa:**
+  - Simula o comportamento modal de altifalantes físicos.
+  - Recria as ressonâncias distintas que ocorrem quando os drivers dividem as suas vibrações em diferentes frequências.
+  - Ajuda a simular o som característico de tipos específicos de altifalantes.
+- **Efeitos Especiais:**
+  - Cria qualidades tímbricas invulgares e texturas de outro mundo.
+  - Excelente para design de som e processamento experimental.
+  - Experimente configurações extremas para transformação sonora criativa.
+
+### Parâmetros
+
+- **Resonator Selection (1-5)** - Cinco ressonadores independentes que podem ser ativados/desativados e configurados separadamente.
+  - Use múltiplos ressonadores para efeitos de ressonância complexos e em camadas.
+  - Cada ressonador pode visar diferentes regiões de frequência.
+  - Experimente relações harmónicas entre ressonadores para resultados mais musicais.
+
+Para cada ressonador:
+
+- **Enable** - Ativa/desativa o ressonador individual.
+  - Permite a ativação seletiva de ressonâncias de frequência específicas.
+  - Útil para testes A/B de diferentes combinações de ressonadores.
+
+- **Freq (Hz)** - Define a frequência ressonante primária (20 a 20.000 Hz).
+  - Frequências baixas (20-200 Hz): Adiciona corpo e ressonâncias fundamentais.
+  - Frequências médias (200-2000 Hz): Adiciona presença e caráter tonal.
+  - Frequências altas (2000+ Hz): Cria qualidades semelhantes a sinos, metálicas.
+  - *Dica:* Para aplicações musicais, tente afinar os ressonadores para notas na escala musical ou para harmónicos da frequência fundamental.
+
+- **Decay (ms)** - Controla por quanto tempo a ressonância continua após o som de entrada (1 a 500 ms).
+  - Curto (1-50ms): Ressonâncias rápidas e percussivas.
+  - Médio (50-200ms): Ressonâncias de som natural semelhantes a pequenos objetos de metal ou madeira.
+  - Longo (200-500ms): Ressonâncias sustentadas, semelhantes a sinos.
+  - *Nota:* Frequências mais altas decaem automaticamente mais rápido do que frequências mais baixas para um som natural.
+
+- **LPF Freq (Hz)** - Filtro passa-baixo que molda o tom da ressonância (20 a 20.000 Hz).
+  - Valores baixos: Ressonâncias mais escuras e abafadas.
+  - Valores altos: Ressonâncias mais brilhantes e presentes.
+  - Ajuste para controlar o conteúdo harmónico da ressonância.
+
+- **Mix (%)** - Equilibra o volume das ressonâncias em relação ao som original (0 a 100%).
+  - 0%: Sem efeito.
+  - 5-25%: Melhoria subtil.
+  - 25-50%: Mistura equilibrada de sons originais e ressonantes.
+  - 50-100%: As ressonâncias tornam-se mais dominantes do que o som original.
+
+### Configurações Recomendadas para Melhoria Auditiva
+
+1. **Melhoria Subtil de Altifalante:**
+   - Ativar 2-3 ressonadores
+   - Configurações de Freq: 400 Hz, 900 Hz, 1600 Hz
+   - Decay: 60-100ms
+   - LPF Freq: 2000-4000 Hz
+   - Mix: 10-20%
+
+2. **Caráter Metálico:**
+   - Ativar 3-5 ressonadores
+   - Configurações de Freq: distribuídas entre 1000-6500 Hz
+   - Decay: 100-200ms
+   - LPF Freq: 4000-8000 Hz
+   - Mix: 15-30%
+
+3. **Melhoria de Graves:**
+   - Ativar 1-2 ressonadores
+   - Configurações de Freq: 50-150 Hz
+   - Decay: 50-100ms
+   - LPF Freq: 1000-2000 Hz
+   - Mix: 10-25%
+
+4. **Simulação de Altifalante de Gama Completa:**
+   - Ativar todos os 5 ressonadores
+   - Configurações de Freq: 100 Hz, 400 Hz, 800 Hz, 1600 Hz, 3000 Hz
+   - Decay: Progressivamente mais curto de baixo para alto (100ms a 30ms)
+   - LPF Freq: Progressivamente mais alto de baixo para alto (2000Hz a 4000Hz)
+   - Mix: 20-40%
+
+### Guia de Início Rápido
+
+1. **Escolher Pontos de Ressonância:**
+   - Comece por ativar um ou dois ressonadores.
+   - Defina as suas frequências para visar as áreas que deseja melhorar.
+   - Para efeitos mais complexos, adicione mais ressonadores com frequências complementares.
+
+2. **Ajustar o Caráter:**
+   - Use o parâmetro `Decay` para controlar por quanto tempo as ressonâncias se sustentam.
+   - Molde o tom com o controlo `LPF Freq`.
+   - Tempos de decaimento mais longos criam tons mais óbvios, semelhantes a sinos.
+
+3. **Misturar com o Original:**
+   - Use `Mix` para equilibrar o efeito com o seu material de origem.
+   - Comece com valores baixos de mix (10-20%) para melhoria subtil.
+   - Aumente para efeitos mais dramáticos.
+
+4. **Afinar:**
+   - Faça pequenos ajustes às frequências e tempos de decaimento.
+   - Ative/desative ressonadores individuais para encontrar a combinação perfeita.
+   - Lembre-se que alterações subtis podem ter um impacto significativo no som geral.
 
 ---
 

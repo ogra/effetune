@@ -252,6 +252,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Basics   | Stereo Balance     | स्टीरियो चैनल संतुलन नियंत्रण                             | [विवरण](plugins/basics.md#stereo-balance) |
 | Basics   | Volume             | बेसिक वॉल्यूम नियंत्रण                                     | [विवरण](plugins/basics.md#volume) |
 | Delay    | Delay              | मानक विलंब प्रभाव                                          | [विवरण](plugins/delay.md#delay) |
+| Delay    | Modal Resonator    | अधिकतम 5 रेज़ोनेटर वाला फ़्रीक्वेंसी रेज़ोनेंस प्रभाव        | [विवरण](plugins/delay.md#modal-resonator) |
 | Delay    | Time Alignment     | ऑडियो चैनलों के लिए सटीक टाइमिंग समायोजन                   | [विवरण](plugins/delay.md#time-alignment) |
 | Dynamics | Auto Leveler       | LUFS मापन पर आधारित स्वचालित वॉल्यूम समायोजन जो एक समान सुनने का अनुभव प्रदान करता है | [विवरण](plugins/dynamics.md#auto-leveler) |
 | Dynamics | Brickwall Limiter  | सुरक्षित और आरामदायक सुनने के लिए पारदर्शी पीक नियंत्रण    | [विवरण](plugins/dynamics.md#brickwall-limiter) |
@@ -264,15 +265,18 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | EQ | Lo Pass Filter | अनावश्यक उच्च आवृत्तियों को सटीकता से हटाएं | [विवरण](plugins/eq.md#lo-pass-filter) |
 | EQ       | Loudness Equalizer | कम वॉल्यूम सुनने के लिए आवृत्ति संतुलन सुधार                | [विवरण](plugins/eq.md#loudness-equalizer) |
 | EQ       | Narrow Range       | हाई-पास और लो-पास फ़िल्टर संयोजन                          | [विवरण](plugins/eq.md#narrow-range) |
+| EQ       | Tilt EQ            | त्वरित टोन आकार देने के लिए टिल्ट इक्वलाइज़र                   | [विवरण](plugins/eq.md#tilt-eq)      |
 | EQ       | Tone Control       | तीन-बैंड टोन नियंत्रण                                      | [विवरण](plugins/eq.md#tone-control) |
-| Lo-Fi    | Bit Crusher        | बिट डेप्थ में कमी और जीरो-ऑर्डर होल्ड इफेक्ट                | [विवरण](plugins/lofi.md#bit-crusher) |
+| Lo-Fi    | Bit Crusher        | बिट डेप्थ में कमी और ज़ीरो-ऑर्डर होल्ड इफ़ेक्ट                | [विवरण](plugins/lofi.md#bit-crusher) |
 | Lo-Fi    | Noise Blender      | नॉइज जनरेशन और मिक्सिंग                                   | [विवरण](plugins/lofi.md#noise-blender) |
 | Lo-Fi    | Simple Jitter      | डिजिटल जिटर सिमुलेशन                                      | [विवरण](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | सूक्ष्म स्पीकर कोन के हिलने से ध्वनि में होने वाले प्राकृतिक, गतिशील परिवर्तनों का अनुकरण करता है | [विवरण](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | हल्का पिच शिफ्टिंग प्रभाव | [विवरण](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | वॉल्यूम आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | समय आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb          | प्राकृतिक विसरण के साथ रैंडम स्कैटरिंग रिवर्ब              | [विवरण](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping    | डिजिटल हार्ड क्लिपिंग इफेक्ट                              | [विवरण](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | हार्मोनिक इंटरमॉड्यूलेशन डिस्टॉर्शन के माध्यम से अनोखा चरित्र जोड़ता है | [विवरण](plugins/saturation.md#intermodulator) |
 | Saturation | Multiband Saturation | सटीक आवृत्ति-आधारित गर्मी के लिए 3-बैंड सैचुरेशन इफेक्ट      | [विवरण](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation        | सैचुरेशन इफेक्ट                                            | [विवरण](plugins/saturation.md#saturation) |
 | Saturation | Sub Synth         | बास सुधार के लिए सबहार्मोनिक सिग्नलों को मिलाता है           | [विवरण](plugins/saturation.md#sub-synth) |

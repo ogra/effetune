@@ -258,6 +258,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Basics | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |
 | Basics | Volume | Basic volume control | [Details](docs/plugins/basics.md#volume) |
 | Delay    | Delay  | Standard delay effect | [Details](docs/plugins/delay.md#delay) |
+| Delay | Modal Resonator | Frequency resonance effect with up to 5 resonators | [Details](docs/plugins/delay.md#modal-resonator) |
 | Delay | Time Alignment | Precise timing adjustments for audio channels | [Details](docs/plugins/delay.md#time-alignment) |
 | Dynamics | Auto Leveler | Automatic volume adjustment based on LUFS measurement for consistent listening experience | [Details](docs/plugins/dynamics.md#auto-leveler) |
 | Dynamics | Brickwall Limiter | Transparent peak control for safe and comfortable listening | [Details](docs/plugins/dynamics.md#brickwall-limiter) |
@@ -270,15 +271,18 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | EQ | Lo Pass Filter | Remove unwanted high frequencies with precision | [Details](docs/plugins/eq.md#lo-pass-filter) |
 | EQ | Loudness Equalizer | Frequency balance correction for low volume listening | [Details](docs/plugins/eq.md#loudness-equalizer) |
 | EQ | Narrow Range | High-pass and low-pass filter combination | [Details](docs/plugins/eq.md#narrow-range) |
+| EQ | Tilt EQ | Tilt equalizer for quick tone shaping | [Details](docs/plugins/eq.md#tilt-eq) |
 | EQ | Tone Control | Three-band tone control | [Details](docs/plugins/eq.md#tone-control) |
 | Lo-Fi | Bit Crusher | Bit depth reduction and zero-order hold effect | [Details](docs/plugins/lofi.md#bit-crusher) |
 | Lo-Fi | Noise Blender | Noise generation and mixing | [Details](docs/plugins/lofi.md#noise-blender) |
 | Lo-Fi | Simple Jitter | Digital jitter simulation | [Details](docs/plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | Simulates the natural, dynamic shifts in sound from subtle speaker cone movement | [Details](docs/plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | Lightweight pitch shifting effect | [Details](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Volume-based modulation effect | [Details](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/modulation.md#wow-flutter) |
 | Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | Adds unique character via harmonic intermodulation distortion | [Details](docs/plugins/saturation.md#intermodulator) |
 | Saturation | Multiband Saturation | 3-band saturation effect for precise frequency-based warmth | [Details](docs/plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
 | Saturation | Sub Synth | Mixes subharmonic signals for bass enhancement | [Details](docs/plugins/saturation.md#sub-synth) |

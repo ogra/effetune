@@ -254,6 +254,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Basics    | Stereo Balance | Control del balance entre canales estéreo | [Detalles](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Control básico de volumen | [Detalles](plugins/basics.md#volume) |
 | Delay     | Delay          | Efecto de retardo estándar                  | [Detalles](plugins/delay.md#delay) |
+| Delay     | Modal Resonator | Efecto de resonancia de frecuencia con hasta 5 resonadores | [Detalles](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment | Ajustes precisos de sincronización para canales de audio | [Detalles](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajuste automático de volumen basado en medición LUFS para una experiencia de escucha consistente | [Detalles](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Control transparente de picos para una escucha segura y cómoda | [Detalles](plugins/dynamics.md#brickwall-limiter) |
@@ -266,15 +267,18 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | EQ | Lo Pass Filter | Elimina frecuencias altas no deseadas con precisión | [Detalles](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer | Corrección del balance de frecuencias para la escucha a bajo volumen | [Detalles](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range | Combinación de filtro pasa altos y pasa bajos | [Detalles](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ      | Ecualizador de inclinación para una rápida modelación del tono | [Detalles](plugins/eq.md#tilt-eq)      |
 | EQ        | Tone Control | Control de tono de tres bandas | [Detalles](plugins/eq.md#tone-control) |
 | Lo-Fi     | Bit Crusher | Reducción de la profundidad de bits y efecto de retención de orden cero | [Detalles](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender | Generación y mezcla de ruido | [Detalles](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter | Simulación digital de jitter | [Detalles](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | Simula los cambios naturales y dinámicos en el sonido debido a los sutiles movimientos del cono del altavoz | [Detalles](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | Efecto ligero de cambio de tono | [Detalles](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Efecto de modulación basado en volumen | [Detalles](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Efecto de modulación basado en tiempo | [Detalles](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Reverb de dispersión aleatoria con difusión natural | [Detalles](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Efecto de hard clipping digital | [Detalles](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | Agrega un carácter único a través de la distorsión de intermodulación armónica | [Detalles](plugins/saturation.md#intermodulator) |
 | Saturation| Multiband Saturation | Efecto de saturación de 3 bandas para una calidez precisa basada en frecuencias | [Detalles](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation | Efecto de saturación | [Detalles](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth | Mezcla señales subarmónicas para realzar los graves | [Detalles](plugins/saturation.md#sub-synth) |

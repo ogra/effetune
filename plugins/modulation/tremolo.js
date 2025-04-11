@@ -133,7 +133,6 @@ class TremoloPlugin extends PluginBase {
                     context.ch_x1[ch] = norm_b1 * channelNoise - norm_a1 * filteredChannelNoise + context.ch_x2[ch];
                     context.ch_x2[ch] = norm_b2 * channelNoise - norm_a2 * filteredChannelNoise;
 
-
                     // Blend common and channel noise based on sync ratio
                     const finalFilteredNoise = syncRatio * filteredCommonNoise + invSyncRatio * filteredChannelNoise;
 

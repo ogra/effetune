@@ -1,0 +1,75 @@
+/* Tilt EQ plugin specific styles */
+.tilt-eq-plugin-ui {
+    position: relative;
+}
+
+.tilt-eq-plugin-ui .tilt-eq-radio-label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.tilt-eq-plugin-ui .tilt-eq-radio-label input {
+    margin-right: 5px;
+}
+
+.tilt-eq-plugin-ui .parameter-row {
+    margin-bottom: 20px;
+}
+
+.tilt-eq-plugin-ui .controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.tilt-eq-plugin-ui .control-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 10px;
+}
+
+.tilt-eq-plugin-ui label {
+    min-width: 120px;
+}
+
+.tilt-eq-plugin-ui .horizontal-slider {
+    flex: 1;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.tilt-eq-plugin-ui .value-display {
+    font-size: 12px;
+    min-width: 80px;
+    text-align: right;
+}
+
+.tilt-eq-plugin-ui canvas {
+    margin: 10px auto;
+    display: block;
+    background: #222;
+}
+
+.tilt-eq-plugin-ui .graph-container {
+    margin-top: 10px;
+    position: relative;
+}
+
+.tilt-eq-plugin-ui .eq-reset-button {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 5px 15px;
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.tilt-eq-plugin-ui .eq-reset-button:hover {
+    background-color: #555;
+}

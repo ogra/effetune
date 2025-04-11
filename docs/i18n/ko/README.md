@@ -254,6 +254,7 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Basics    | Stereo Balance     | 스테레오 채널 밸런스 조절                           | [세부 정보](plugins/basics.md#stereo-balance) |
 | Basics    | Volume             | 기본 볼륨 조절                                      | [세부 정보](plugins/basics.md#volume) |
 | Delay     | Delay              | 표준 딜레이 이펙트                                   | [세부 정보](plugins/delay.md#delay) |
+| Delay     | Modal Resonator    | 최대 5개의 공진기를 사용하는 주파수 공진 효과 | [세부 정보](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment     | 오디오 채널의 정밀한 타이밍 조정                     | [세부 정보](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler       | LUFS 측정 기반의 일관된 청취 경험을 위한 자동 볼륨 조정 | [세부 정보](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter  | 안전하고 편안한 청취를 위한 투명한 피크 제어          | [세부 정보](plugins/dynamics.md#brickwall-limiter) |
@@ -266,15 +267,18 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | EQ | Lo Pass Filter | 정밀하게 원하지 않는 고주파를 제거합니다 | [세부 정보](plugins/eq.md#lo-pass-filter) |
 | EQ        | Loudness Equalizer | 낮은 볼륨 청취를 위한 주파수 밸런스 보정             | [세부 정보](plugins/eq.md#loudness-equalizer) |
 | EQ        | Narrow Range       | 하이패스 및 로우패스 필터 조합                      | [세부 정보](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ            | 빠른 톤 조정을 위한 틸트 이퀄라이저                   | [세부 정보](plugins/eq.md#tilt-eq)      |
 | EQ        | Tone Control       | 3밴드 톤 컨트롤                                    | [세부 정보](plugins/eq.md#tone-control) |
-| Lo-Fi     | Bit Crusher        | 비트 깊이 감소 및 제로 오더 홀드 이펙트              | [세부 정보](plugins/lofi.md#bit-crusher) |
+| Lo-Fi     | Bit Crusher        | 비트 심도 감소 및 제로 오더 홀드 효과                 | [세부 정보](plugins/lofi.md#bit-crusher) |
 | Lo-Fi     | Noise Blender      | 노이즈 생성 및 혼합                                 | [세부 정보](plugins/lofi.md#noise-blender) |
 | Lo-Fi     | Simple Jitter      | 디지털 지터 시뮬레이션                             | [세부 정보](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | 미세한 스피커 콘의 움직임으로 인한 자연스럽고 역동적인 사운드 변화를 시뮬레이션합니다 | [세부 정보](plugins/modulation.md#doppler-distortion) |
 | Modulation | Pitch Shifter | 가벼운 피치 시프팅 효과 | [세부 정보](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 볼륨 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 시간 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb          | 자연스러운 확산을 갖춘 랜덤 스캐터링 리버브          | [세부 정보](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping      | 디지털 하드 클리핑 이펙트                           | [세부 정보](plugins/saturation.md#hard-clipping) |
+| Saturation | Intermodulator | 하모닉 인터모듈레이션 디스토션을 통해 독특한 특성을 더합니다 | [세부 정보](plugins/saturation.md#intermodulator) |
 | Saturation| Multiband Saturation | 정밀한 주파수 기반 온기를 위한 3밴드 서츄레이션 이펙트 | [세부 정보](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation         | 서츄레이션 이펙트                                   | [세부 정보](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth          | 베이스 강화를 위한 서브 하모닉 신호 혼합             | [세부 정보](plugins/saturation.md#sub-synth) |
