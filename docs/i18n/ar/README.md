@@ -276,7 +276,7 @@
 | Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |
 | Saturation | Hard Clipping   | تأثير قص رقمي صارم                                         | [تفاصيل](plugins/saturation.md#hard-clipping)    |
-| Saturation | Intermodulator | يضيف طابعًا فريدًا من خلال تشويه التداخل التوافقي | [تفاصيل](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | يضيف طابعًا فريدًا من خلال التشويه التوافقي مع تحكم مستقل في كل توافقية | [تفاصيل](plugins/saturation.md#harmonic-distortion) |
 | Saturation | Multiband Saturation | تأثير تشبع بـ 3 نطاقات لدفء يعتمد على التردد بدقة       | [تفاصيل](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation      | تأثير التشبع                                             | [تفاصيل](plugins/saturation.md#saturation)       |
 | Saturation | Sub Synth      | يخلط الإشارات الفرعية لتعزيز الجهير                         | [تفاصيل](plugins/saturation.md#sub-synth)        |

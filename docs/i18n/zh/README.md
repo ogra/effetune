@@ -276,7 +276,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | 数字硬削波效果                              | [详情](plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | 通过谐波互调失真添加独特的特性 | [详情](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | 通过独立控制各谐波的谐波失真添加独特的特性 | [详情](plugins/saturation.md#harmonic-distortion) |
 | Saturation| Multiband Saturation | 3 频段饱和效果，实现精确的频率基础暖音             | [详情](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation        | 饱和效果                                  | [详情](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth         | 混合次谐波信号以增强低音                      | [详情](plugins/saturation.md#sub-synth) |

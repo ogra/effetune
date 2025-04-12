@@ -17,102 +17,218 @@ class ModalResonatorPlugin extends PluginBase {
         const LOG_RANGE_RECIP = 1 / (LOG_20000 - LOG_20);
         const TWO_PI = 2 * Math.PI;
 
+        // Register the audio processor
         this.registerProcessor(`
-            if (!parameters.en) return data;
+            // Constants assumed to be available in the processor's scope
+            // These should be calculated or provided when the processor is created/registered
+            // Example values, replace with actuals:
+            const LOG_20 = 2.995732273553991;          // Math.log(20)
+            const LOG_20000 = 9.903487552536127;      // Math.log(20000)
+            const LOG_RANGE_RECIP = 1.0 / (LOG_20000 - LOG_20); // 1.0 / Math.log(20000/20)
+            const LOG_0_001 = -6.907755278982137;      // Math.log(0.001) (-60dB)
+            const TWO_PI = 6.283185307179586;          // 2 * Math.PI
 
+            // Processor entry point
+            if (!parameters.en) return data; // Exit if the entire effect is disabled
+
+            // --- Cache Core Parameters ---
             const sampleRate = parameters.sampleRate;
-            const invSampleRate = 1.0 / sampleRate;
+            const invSampleRate = 1.0 / sampleRate; // Pre-calculate inverse sample rate
             const channelCount = parameters.channelCount;
-            const blockSize = parameters.blockSize;
+            const blockSize = parameters.blockSize; // Typically 128 for AudioWorklet
 
-            const mix = parameters.mx;
-            const wetGain = mix * 0.01;
-            const dryGain = 1.0 - wetGain;
+            // --- Calculate Mix Gains ---
+            const mix = parameters.mx;         // Wet/Dry mix percentage (0-100)
+            const wetGain = mix * 0.01;        // Convert mix percentage to linear gain [0, 1]
+            const dryGain = 1.0 - wetGain;     // Calculate complementary dry gain
 
+            // --- Context Initialization or Re-initialization ---
+            // Check if context needs initialization or if configuration (sampleRate, channelCount) has changed
             if (!context.initialized ||
                 context.channelCount !== channelCount ||
-                context.sampleRate !== sampleRate) {
-                const maxDelaySamples = Math.ceil(sampleRate / Math.exp(3.00));
-                context.delayBuffers = Array(channelCount).fill(null).map(() =>
-                    Array(5).fill(null).map(() => new Float32Array(maxDelaySamples))
-                );
-                context.delayPositions = Array(channelCount).fill(null).map(() => new Uint32Array(5).fill(0));
-                context.lpfStates = Array(channelCount).fill(null).map(() => new Float32Array(5).fill(0.0));
+                context.sampleRate !== sampleRate)
+            {
+                // Calculate max delay buffer size based on the lowest expected frequency (~20Hz)
+                const maxDelaySamples = Math.ceil(sampleRate / 20.0855); // exp(3) ~ 20.0855 Hz
+
+                // Allocate memory using typed arrays for performance and predictable memory layout
+                context.delayBuffers = new Array(channelCount);   // Array of channels
+                context.delayPositions = new Array(channelCount); // Array of channels
+                context.lpfStates = new Array(channelCount);      // Array of channels
+
+                for (let ch = 0; ch < channelCount; ++ch) {
+                    context.delayBuffers[ch] = new Array(5);         // Array for 5 resonators per channel
+                    context.delayPositions[ch] = new Uint32Array(5); // Stores write position for each delay line (integer)
+                    context.lpfStates[ch] = new Float32Array(5);     // Stores LPF state for each resonator
+                    for (let r = 0; r < 5; ++r) {
+                        // Allocate the actual delay line buffer for each resonator
+                        context.delayBuffers[ch][r] = new Float32Array(maxDelaySamples);
+                        // Uint32Array and Float32Array are implicitly initialized to 0
+                    }
+                }
+
+                // Allocate accumulator buffer (once per processor instance, reused across blocks)
+                // Assumes blockSize is constant (like 128). Handle variations if necessary.
+                context.accum = new Float32Array(blockSize); // Accumulates wet signal per block per channel
+
+                // Store current configuration in context
                 context.channelCount = channelCount;
                 context.sampleRate = sampleRate;
                 context.initialized = true;
+                // console.log("Resonator context initialized/reinitialized. Max Delay:", maxDelaySamples); // Optional: Dev log
             }
 
-            let activeCount = 0;
-            const resonatorParams = parameters.rs.map(r => {
-                if (!r.en) return null;
-                activeCount++;
-                const freqHz = Math.exp(r.fr);
-                const lpfHz = Math.exp(r.lp);
-                const delaySamples = Math.max(1, Math.trunc(sampleRate / freqHz));
-                const decayTimeSamples = r.dc * 0.001 * sampleRate;
-                const normalizedFreq = (Math.log(freqHz) - ${LOG_20}) * ${LOG_RANGE_RECIP};
-                const adjustedDecayTime = Math.max(1.0, decayTimeSamples * (1.0 - normalizedFreq * 0.7));
-                const periodsInDecay = Math.max(0.1, adjustedDecayTime / delaySamples);
-                let feedback = Math.exp(${Math.log(0.001)} / periodsInDecay);
-                const safetyLimit = 0.999;
-                feedback = Math.min(feedback, safetyLimit);
-                const lpfCoeff = Math.exp(-${TWO_PI} * lpfHz * invSampleRate);
-                const lpfCoeffInv = 1.0 - lpfCoeff;
-                const feedbackScaling = Math.max(0.1, 1.0 - normalizedFreq * 0.5);
+            // --- Calculate Resonator Parameters ---
+            // Pre-calculate parameters for each of the 5 potential resonators based on current settings
+            let activeCount = 0; // Count active resonators for output scaling
+            const resonatorParams = new Array(5); // Pre-allocate array for parameters
 
-                return {
+            for (let r = 0; r < 5; ++r) {
+                const resParamInput = parameters.rs[r]; // Get input parameters for resonator 'r'
+                if (!resParamInput.en) { // Check if this resonator is enabled
+                    resonatorParams[r] = null; // Mark as inactive
+                    continue; // Skip parameter calculation for disabled resonators
+                }
+                activeCount++; // Increment active resonator count
+
+                // Calculate parameters from input controls (often logarithmic scales)
+                const freqHz = Math.exp(resParamInput.fr); // Convert frequency from log scale
+                const lpfHz = Math.exp(resParamInput.lp);  // Convert LPF cutoff from log scale
+
+                // Calculate delay length in samples based on frequency (integer delay)
+                // Use bitwise OR 0 for fast truncation to integer (only safe for positive numbers)
+                const delaySamples = Math.max(1, (sampleRate / freqHz) | 0);
+
+                // Calculate decay time in samples
+                const decayTimeSamples = resParamInput.dc * 0.001 * sampleRate;
+
+                // Normalize frequency logarithmically within the assumed range [20Hz, 20kHz] for adjustments
+                const normalizedFreq = (Math.log(freqHz) - LOG_20) * LOG_RANGE_RECIP;
+
+                // Adjust decay time based on frequency (heuristic: higher frequencies decay slightly faster)
+                const adjustedDecayTime = Math.max(1.0, decayTimeSamples * (1.0 - normalizedFreq * 0.7));
+
+                // Calculate feedback gain based on the desired decay time and the delay length
+                // Number of times the delay buffer length fits within the adjusted decay time
+                const periodsInDecay = Math.max(0.1, adjustedDecayTime / delaySamples);
+                // Calculate feedback gain needed to decay to -60dB (amplitude 0.001) over 'periodsInDecay'
+                let feedback = Math.exp(LOG_0_001 / periodsInDecay);
+
+                // Clamp feedback slightly below 1.0 for stability guarantees
+                feedback = Math.min(feedback, 0.999);
+
+                // Calculate LPF coefficient (one-pole filter) based on cutoff frequency
+                const lpfCoeff = Math.exp(-TWO_PI * lpfHz * invSampleRate);
+                const lpfCoeffInv = 1.0 - lpfCoeff; // Pre-calculate (1 - coefficient) for the filter calculation
+
+                // Scale feedback based on frequency (heuristic: reduce feedback slightly for higher frequencies)
+                const feedbackScaling = Math.max(0.1, 1.0 - normalizedFreq * 0.5);
+                const feedbackScaled = feedback * feedbackScaling; // Final feedback gain used in the loop
+
+                // Store calculated parameters for efficient access in the main loop
+                resonatorParams[r] = {
                     delaySamples: delaySamples,
-                    feedback: feedback,
+                    // feedback: feedback, // Original feedback might not be needed after scaling
                     lpfCoeff: lpfCoeff,
                     lpfCoeffInv: lpfCoeffInv,
-                    feedbackScaled: feedback * feedbackScaling
+                    feedbackScaled: feedbackScaled
                 };
-            });
-
-            const scaleFactor = activeCount > 0 ? 1.0 / activeCount : 0.0;
-            const outWetGain = scaleFactor * wetGain;
-
-            for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                const channelDelayBuffers = context.delayBuffers[ch];
-                const channelDelayPositions = context.delayPositions[ch];
-                const channelLpfStates = context.lpfStates[ch];
-
-                const accum = new Float32Array(blockSize);
-
-                for (let r = 0; r < 5; r++) {
-                    const params = resonatorParams[r];
-                    if (!params) continue;
-
-                    const delayBuffer = channelDelayBuffers[r];
-                    const delayBufferLength = delayBuffer.length;
-                    let delayPos = channelDelayPositions[r];
-                    let lpfState = channelLpfStates[r];
-                    const delaySamples = params.delaySamples;
-
-                    for (let i = 0; i < blockSize; i++) {
-                        const inputSample = data[offset + i];
-                        const readPos = (delayPos + delayBufferLength - delaySamples) % delayBufferLength;
-                        const delaySample = delayBuffer[readPos];
-
-                        lpfState = delaySample * params.lpfCoeffInv + lpfState * params.lpfCoeff;
-                        accum[i] += lpfState;
-                        delayBuffer[delayPos] = inputSample + lpfState * params.feedbackScaled;
-
-                        delayPos = (delayPos + 1) % delayBufferLength;
-                    }
-
-                    channelDelayPositions[r] = delayPos;
-                    channelLpfStates[r] = lpfState;
-                }
-
-                for (let i = 0; i < blockSize; i++) {
-                    const inputSample = data[offset + i];
-                    data[offset + i] = inputSample * dryGain + accum[i] * outWetGain;
-                }
             }
 
+            // Calculate output scaling factor to normalize based on the number of active resonators
+            const scaleFactor = activeCount > 0 ? 1.0 / activeCount : 0.0;
+            // Calculate the final wet gain to be applied after accumulating resonator outputs
+            const outWetGain = scaleFactor * wetGain;
+
+            // --- Get References to Context Data ---
+            // Get references to context arrays/buffers before the main channel loop for slightly faster access
+            const delayBuffers = context.delayBuffers;
+            const delayPositions = context.delayPositions;
+            const lpfStates = context.lpfStates;
+            const accum = context.accum; // Use the pre-allocated accumulator buffer reference
+
+            // --- Main Processing Loop ---
+            for (let ch = 0; ch < channelCount; ++ch) {
+                const offset = ch * blockSize; // Calculate index offset for the current channel in the input/output data
+
+                // --- Clear Accumulator ---
+                // Reset the accumulator buffer for this channel at the start of each block
+                accum.fill(0.0);
+
+                // --- Get Channel-Specific References ---
+                // Get references to this channel's specific state arrays and delay buffers
+                const channelDelayBuffers = delayBuffers[ch];
+                const channelDelayPositions = delayPositions[ch]; // Uint32Array reference
+                const channelLpfStates = lpfStates[ch];         // Float32Array reference
+
+                // --- Resonator Loop ---
+                // Iterate through each potential resonator
+                for (let r = 0; r < 5; ++r) {
+                    const params = resonatorParams[r]; // Get pre-calculated parameters for resonator 'r'
+                    if (!params) continue; // Skip if this resonator is disabled
+
+                    // --- Cache Resonator State & Params ---
+                    // Cache frequently accessed parameters and state in local variables for the inner sample loop
+                    const delayBuffer = channelDelayBuffers[r];         // Reference to the delay line Float32Array
+                    const delayBufferLength = delayBuffer.length;     // Cache buffer length for modulo/wrap checks
+                    let delayPos = channelDelayPositions[r];           // Current write position (copied to local)
+                    let lpfState = channelLpfStates[r];               // Current LPF state (copied to local)
+                    // Cache calculated parameters locally
+                    const delaySamples = params.delaySamples;         // Delay length in samples
+                    const feedbackScaled = params.feedbackScaled;     // Scaled feedback gain
+                    const lpfCoeff = params.lpfCoeff;               // LPF coefficient
+                    const lpfCoeffInv = params.lpfCoeffInv;           // Pre-calculated (1.0 - lpfCoeff)
+
+                    // --- Sample Loop ---
+                    // Process each sample within the current block for this resonator
+                    for (let i = 0; i < blockSize; ++i) {
+                        const inputSample = data[offset + i]; // Get the input sample for this frame
+
+                        // --- Calculate Read Position & Read Sample ---
+                        // Calculate the read position relative to the current write position, wrapping around the buffer.
+                        // Using 'if' for wrap-around might be slightly faster than modulo '%' in some JS engines.
+                        let readPos = delayPos - delaySamples;
+                        if (readPos < 0) {
+                            readPos += delayBufferLength; // Wrap negative index back into buffer range
+                        }
+                        const delaySample = delayBuffer[readPos]; // Read the delayed sample
+
+                        // --- Apply LPF ---
+                        // Apply the one-pole low-pass filter to the delayed sample
+                        lpfState = delaySample * lpfCoeffInv + lpfState * lpfCoeff;
+
+                        // --- Accumulate Output ---
+                        // Add the filtered output of this resonator to the common accumulator buffer for this channel
+                        accum[i] += lpfState;
+
+                        // --- Write to Delay Buffer ---
+                        // Calculate the value to write back into the delay line: input + filtered feedback
+                        delayBuffer[delayPos] = inputSample + lpfState * feedbackScaled;
+
+                        // --- Update Write Position ---
+                        // Increment the write position for the next sample, wrapping around the buffer.
+                        delayPos++;
+                        if (delayPos >= delayBufferLength) {
+                            delayPos = 0; // Wrap back to the start if end is reached
+                        }
+                    } // End Sample Loop
+
+                    // --- Store Updated State ---
+                    // Store the final write position and LPF state back into the context arrays for this resonator/channel
+                    channelDelayPositions[r] = delayPos;
+                    channelLpfStates[r] = lpfState;
+                } // End Resonator Loop
+
+                // --- Mix Dry and Wet Signals ---
+                // Combine the original dry signal with the accumulated wet signal from all active resonators
+                for (let i = 0; i < blockSize; ++i) {
+                    const inputSample = data[offset + i]; // Get original input sample again
+                    // Overwrite the input/output buffer with the mixed result
+                    data[offset + i] = inputSample * dryGain + accum[i] * outWetGain;
+                }
+            } // End Channel Loop
+
+            // Return the modified data buffer containing the processed audio
             return data;
         `);
     }

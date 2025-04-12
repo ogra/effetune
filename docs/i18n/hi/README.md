@@ -276,7 +276,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Modulation | Wow Flutter | समय आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#wow-flutter) |
 | Reverb   | RS Reverb          | प्राकृतिक विसरण के साथ रैंडम स्कैटरिंग रिवर्ब              | [विवरण](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping    | डिजिटल हार्ड क्लिपिंग इफेक्ट                              | [विवरण](plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | हार्मोनिक इंटरमॉड्यूलेशन डिस्टॉर्शन के माध्यम से अनोखा चरित्र जोड़ता है | [विवरण](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | प्रत्येक हार्मोनिक को स्वतंत्र रूप से नियंत्रित करने वाले हार्मोनिक डिस्टॉर्शन के माध्यम से अनोखा चरित्र जोड़ता है | [विवरण](plugins/saturation.md#harmonic-distortion) |
 | Saturation | Multiband Saturation | सटीक आवृत्ति-आधारित गर्मी के लिए 3-बैंड सैचुरेशन इफेक्ट      | [विवरण](plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation        | सैचुरेशन इफेक्ट                                            | [विवरण](plugins/saturation.md#saturation) |
 | Saturation | Sub Synth         | बास सुधार के लिए सबहार्मोनिक सिग्नलों को मिलाता है           | [विवरण](plugins/saturation.md#sub-synth) |

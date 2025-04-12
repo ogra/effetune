@@ -12,183 +12,209 @@ class WowFlutterPlugin extends PluginBase {
 
         // Register the audio processor
         this.registerProcessor(`
-            // Early exit if processing is disabled
-            if (!parameters.enabled) return data;
+            // Processor entry point
+            if (!parameters.enabled) return data; // Exit if disabled
 
             // --- Parameters ---
+            // Destructure parameters for efficient access within the processor scope
             const {
                 sampleRate, channelCount, blockSize,
-                rt: rate,
-                dp: depth,
-                rn: randomness,
-                rc: randomnessCutoff,
-                rs: randomnessSlope, // -12.0 to 0.0
-                cp: channelPhase,
-                cs: channelSync
+                rt: rate,            // LFO Rate (Hz)
+                dp: depth,           // LFO Depth (ms)
+                rn: randomness,      // Randomness Amount (ms)
+                rc: randomnessCutoff,// Randomness Filter Cutoff (Hz)
+                rs: randomnessSlope, // Randomness Filter Slope (-12.0 to 0.0)
+                cp: channelPhase,    // Phase offset between channels (degrees)
+                cs: channelSync      // Sync between common/channel noise (0-100)
             } = parameters;
 
             // --- Constants & Pre-calculated Coefficients ---
-            const MAX_BUFFER_SIZE = Math.ceil(0.1 * sampleRate); // Max delay buffer size
-            const TWO_PI = Math.PI * 2;
-            const DEG_TO_RAD = Math.PI / 180;
+            // Define constants and pre-calculate values used repeatedly to avoid redundant computations
+            const MAX_BUFFER_SIZE = Math.ceil(0.1 * sampleRate); // Max delay buffer size (100ms worth of samples)
+            const TWO_PI = 6.283185307179586; // Math.PI * 2
+            const DEG_TO_RAD = 0.017453292519943295; // Math.PI / 180
             const SQRT2 = 1.4142135623730951;
-            const MIN_Q = 0.01; // Minimum Q value for stability
+            const MIN_Q = 0.01; // Minimum Q for Biquad filter stability
 
-            // Hoisted calculations
+            // Pre-calculate loop-invariant values derived from parameters
             const phaseIncrement = TWO_PI * rate / sampleRate;
             const channelPhaseRad = channelPhase * DEG_TO_RAD;
-            const syncRatio = channelSync / 100.0;
-            const oneMinusSyncRatio = 1.0 - syncRatio;
-            const delayMsToSamplesMultiplier = sampleRate / 1000.0;
+            const syncRatio = channelSync * 0.01; // Convert sync percentage to a ratio [0, 1]
+            const oneMinusSyncRatio = 1.0 - syncRatio; // Complementary ratio for noise blending
+            const delayMsToSamplesMultiplier = sampleRate * 0.001; // Factor to convert ms to samples
 
             // --- Context Initialization ---
-            context.phase = context.phase === undefined ? 0.0 : context.phase;
-            context.sampleBufferPos = context.sampleBufferPos === undefined ? 0 : context.sampleBufferPos;
-            // Biquad states initialized to 0.0 for WowFlutter
-            context.common_x1 = context.common_x1 === undefined ? 0.0 : context.common_x1;
-            context.common_x2 = context.common_x2 === undefined ? 0.0 : context.common_x2;
-            if (!context.ch_x1 || context.ch_x1.length !== channelCount) {
-                context.ch_x1 = new Float32Array(channelCount).fill(0.0);
+            // Initialize context variables if they are undefined using nullish coalescing operator (??)
+            // Use Float32Array for numeric states where appropriate (matching typical audio data types)
+            context.phase = context.phase ?? 0.0;
+            context.sampleBufferPos = context.sampleBufferPos ?? 0;
+            context.common_x1 = context.common_x1 ?? 0.0; // Biquad state 1 for common noise
+            context.common_x2 = context.common_x2 ?? 0.0; // Biquad state 2 for common noise
+            // Ensure channel-specific Biquad state arrays are Float32Array and correctly sized
+            if (!context.ch_x1 || context.ch_x1.length !== channelCount || !(context.ch_x1 instanceof Float32Array)) {
+                context.ch_x1 = new Float32Array(channelCount); // Default value is 0.0
             }
-            if (!context.ch_x2 || context.ch_x2.length !== channelCount) {
-                context.ch_x2 = new Float32Array(channelCount).fill(0.0);
+            if (!context.ch_x2 || context.ch_x2.length !== channelCount || !(context.ch_x2 instanceof Float32Array)) {
+                context.ch_x2 = new Float32Array(channelCount); // Default value is 0.0
             }
 
-            // Initialize sample buffers if not done yet
-            // (This part remains the same)
+            // Initialize sample delay buffers (once) if they haven't been created yet
             if (!context.initialized) {
                 context.sampleBuffer = new Array(channelCount);
                 for (let ch = 0; ch < channelCount; ++ch) {
-                    context.sampleBuffer[ch] = new Float32Array(MAX_BUFFER_SIZE).fill(0.0);
+                    // Use Float32Array for storing audio samples in the delay line
+                    context.sampleBuffer[ch] = new Float32Array(MAX_BUFFER_SIZE); // Default value is 0.0
                 }
                 context.initialized = true;
             }
 
-             // --- Calculate Biquad LPF Coefficients ---
-             // (Q and coefficient calculation remains the same)
-             const calculatedQ = Math.pow(10.0, (randomnessSlope + 6.0) / 6.0) * (1.0 / SQRT2);
-             const Q = Math.max(MIN_Q, calculatedQ);
+            // --- Calculate Biquad LPF Coefficients ---
+            // Calculate filter Q value based on the randomnessSlope parameter using 10**x operator
+            const calculatedQ = (10**((randomnessSlope + 6.0) / 6.0)) * (1.0 / SQRT2);
+            const Q = Math.max(MIN_Q, calculatedQ); // Clamp Q to ensure minimum stability
 
-             const fc = randomnessCutoff;
-             const fs = sampleRate;
-             let norm_b0 = 1.0, norm_b1 = 0.0, norm_b2 = 0.0, norm_a1 = 0.0, norm_a2 = 0.0;
+            const fc = randomnessCutoff;
+            const fs = sampleRate;
+            // Initialize coefficients to a pass-through state (b0=1, others=0)
+            let norm_b0 = 1.0, norm_b1 = 0.0, norm_b2 = 0.0, norm_a1 = 0.0, norm_a2 = 0.0;
 
-             if (fc > 0 && fc < fs / 2) {
-                 const omega = TWO_PI * fc / fs;
-                 const alpha = Math.sin(omega) / (2.0 * Q);
-                 const cosOmega = Math.cos(omega);
+            // Calculate actual LPF coefficients if the cutoff frequency is within the valid range (0 < fc < fs/2)
+            if (fc > 0.0 && fc < fs * 0.5) {
+                const omega = TWO_PI * fc / fs;
+                const cosOmega = Math.cos(omega); // Pre-calculate cos(omega)
+                const alpha = Math.sin(omega) / (2.0 * Q); // Calculate alpha term
+                const a0 = 1.0 + alpha; // Denominator term
 
-                 if (alpha > 0 && 1.0 + alpha !== 0) {
-                      const b0 = (1.0 - cosOmega) / 2.0;
-                      const b1 = 1.0 - cosOmega;
-                      const b2 = (1.0 - cosOmega) / 2.0;
-                      const a0_inv = 1.0 / (1.0 + alpha);
-                      const a1 = -2.0 * cosOmega;
-                      const a2 = 1.0 - alpha;
-
-                      norm_b0 = b0 * a0_inv;
-                      norm_b1 = b1 * a0_inv;
-                      norm_b2 = b2 * a0_inv;
-                      norm_a1 = a1 * a0_inv;
-                      norm_a2 = a2 * a0_inv;
-                 } else {
-                      norm_b0 = 1.0; norm_b1 = 0.0; norm_b2 = 0.0; norm_a1 = 0.0; norm_a2 = 0.0;
-                 }
-
-             } else if (fc <= 0) {
-                  norm_b0 = 1.0; norm_b1 = 0.0; norm_b2 = 0.0; norm_a1 = 0.0; norm_a2 = 0.0;
-                  // Reset filter states to 0.0 when bypassed
-                  context.common_x1 = 0.0; context.common_x2 = 0.0;
-                  context.ch_x1.fill(0.0); context.ch_x2.fill(0.0);
-             }
+                // Check for stability (avoid division by zero or near-zero) before calculating coefficients
+                if (alpha > 1e-9 && a0 > 1e-9) { // Use a small epsilon for robustness
+                    const a0_inv = 1.0 / a0; // Calculate inverse denominator once
+                    const oneMinusCosOmega = 1.0 - cosOmega; // Calculate difference once
+                    norm_b0 = (oneMinusCosOmega * 0.5) * a0_inv;
+                    norm_b1 = oneMinusCosOmega * a0_inv;
+                    norm_b2 = norm_b0; // For LPF, b2 equals b0
+                    norm_a1 = (-2.0 * cosOmega) * a0_inv;
+                    norm_a2 = (1.0 - alpha) * a0_inv;
+                } // else: Coefficients remain in the initial pass-through state
+            } else if (fc <= 0.0) {
+                // If filter is effectively bypassed (cutoff at 0Hz), reset filter states to zero
+                // This prevents stale state values from affecting the signal if the filter is re-enabled later
+                context.common_x1 = 0.0; context.common_x2 = 0.0;
+                context.ch_x1.fill(0.0); context.ch_x2.fill(0.0);
+            } // else (fc >= fs/2): Coefficients remain pass-through due to potential instability or aliasing
 
 
             // --- Local State Variables ---
-            // (Remains the same)
+            // Load state from context into local variables for faster access within the main loop
             let currentPhase = context.phase;
             let bufferPos = context.sampleBufferPos;
-            const sampleBuffers = context.sampleBuffer;
+            const sampleBuffers = context.sampleBuffer; // Reference to the array of Float32Arrays (delay lines)
+            // Cache Biquad state variables locally
+            let common_x1 = context.common_x1;
+            let common_x2 = context.common_x2;
+            const ch_x1 = context.ch_x1; // Reference to the Float32Array for channel state 1
+            const ch_x2 = context.ch_x2; // Reference to the Float32Array for channel state 2
 
-            // --- Main Processing Loop ---
-            // (Filter application and delay calculation logic remains the same)
+            // --- Main Processing Loop (Iterates over each sample in the block) ---
             for (let i = 0; i < blockSize; ++i) {
 
-                // Update base phase
+                // Update base LFO phase and wrap it within [0, 2*PI)
                 currentPhase += phaseIncrement;
                 if (currentPhase >= TWO_PI) {
                     currentPhase -= TWO_PI;
                 }
 
-                // Generate and filter common noise component using Biquad
-                const noise = Math.random() - 0.5;
-                let filteredCommonNoise = norm_b0 * noise + context.common_x1;
-                context.common_x1 = norm_b1 * noise - norm_a1 * filteredCommonNoise + context.common_x2;
-                context.common_x2 = norm_b2 * noise - norm_a2 * filteredCommonNoise;
+                // Generate and filter the common noise component using the Biquad LPF
+                const commonNoise = Math.random() - 0.5; // Generate white noise [-0.5, 0.5]
+                // Apply filter using Direct Form II Transposed structure (efficient for state updates)
+                const filteredCommonNoise = norm_b0 * commonNoise + common_x1;
+                common_x1 = norm_b1 * commonNoise - norm_a1 * filteredCommonNoise + common_x2; // Update state 1
+                common_x2 = norm_b2 * commonNoise - norm_a2 * filteredCommonNoise; // Update state 2
 
-                // --- Channel Loop ---
+                // --- Channel Loop (Process each audio channel independently) ---
                 for (let ch = 0; ch < channelCount; ++ch) {
-                    const buffer = sampleBuffers[ch];
-                    const offset = ch * blockSize;
+                    const buffer = sampleBuffers[ch]; // Get the delay buffer for the current channel
+                    const offset = ch * blockSize; // Calculate index offset for input/output data buffer
 
-                    // Store current input sample
+                    // Store the current input sample into the circular delay buffer at the write position
                     buffer[bufferPos] = data[offset + i];
 
-                    // Calculate channel-specific phase
-                    const channelPhaseOffset = ch * channelPhaseRad;
-                    const currentChannelPhase = currentPhase + channelPhaseOffset;
+                    // Calculate the channel-specific phase by adding the channel offset
+                    let currentChannelPhase = currentPhase + ch * channelPhaseRad;
+                    // Wrap the channel phase robustly to handle potential large offsets or increments
+                    currentChannelPhase = currentChannelPhase - TWO_PI * Math.floor(currentChannelPhase / TWO_PI);
 
-                    // Generate and filter channel-specific noise component using Biquad
-                    const channelNoise = Math.random() - 0.5;
-                    let filteredChannelNoise = norm_b0 * channelNoise + context.ch_x1[ch];
-                    context.ch_x1[ch] = norm_b1 * channelNoise - norm_a1 * filteredChannelNoise + context.ch_x2[ch];
-                    context.ch_x2[ch] = norm_b2 * channelNoise - norm_a2 * filteredChannelNoise;
+                    // Generate and filter the channel-specific noise component
+                    const channelNoise = Math.random() - 0.5; // Generate white noise [-0.5, 0.5]
+                    // Apply Biquad LPF using Direct Form II Transposed, accessing channel-specific states
+                    const x1_ch = ch_x1[ch]; // Read state 1 for this channel
+                    const x2_ch = ch_x2[ch]; // Read state 2 for this channel
+                    const filteredChannelNoise = norm_b0 * channelNoise + x1_ch;
+                    ch_x1[ch] = norm_b1 * channelNoise - norm_a1 * filteredChannelNoise + x2_ch; // Update state 1
+                    ch_x2[ch] = norm_b2 * channelNoise - norm_a2 * filteredChannelNoise; // Update state 2
 
-                    // Blend common and channel-specific filtered noise
+                    // Blend the common and channel-specific filtered noise based on the syncRatio
+                    // Shift the blended noise range from [-0.5, 0.5] to [0, 1] for delay calculation
                     const filteredNoise = syncRatio * filteredCommonNoise + oneMinusSyncRatio * filteredChannelNoise + 0.5;
 
-                    // Calculate total delay time in ms
-                    const baseDelay = (1.0 - Math.sin(currentChannelPhase)) * 0.5; // 0..1 range
-                    const noiseContribution = filteredNoise * randomness; // Assume noise 0..1 -> delay 0..randomness ms
-                    const totalDelay = baseDelay * depth + noiseContribution; // Total delay in ms
+                    // --- Calculate Delay Time ---
+                    // Base delay modulated by the LFO (sine wave shifted and scaled to [0, 1])
+                    const baseDelay = (1.0 - Math.sin(currentChannelPhase)) * 0.5;
+                    // Noise contribution to the delay, scaled by the randomness parameter
+                    const noiseContribution = filteredNoise * randomness; // Noise [0, 1] -> contribution [0, randomness] ms
+                    // Calculate the total delay in milliseconds, scaled by depth and randomness
+                    const totalDelayMs = baseDelay * depth + noiseContribution;
 
-                    // Convert delay to samples
-                    const delaySamples = totalDelay * delayMsToSamplesMultiplier;
+                    // --- Apply Delay ---
+                    // Convert total delay from milliseconds to fractional samples
+                    const delaySamples = totalDelayMs * delayMsToSamplesMultiplier;
 
-                    // Calculate read position with linear interpolation
-                    const delayPos = (bufferPos - delaySamples + MAX_BUFFER_SIZE);
-                     // Modulo that handles negative results correctly and efficiently for positive MAX_BUFFER_SIZE
-                     const delayPosWrapped = delayPos >= MAX_BUFFER_SIZE ? delayPos % MAX_BUFFER_SIZE : delayPos < 0 ? (delayPos % MAX_BUFFER_SIZE + MAX_BUFFER_SIZE) % MAX_BUFFER_SIZE : delayPos;
+                    // Calculate the read position in the circular buffer by subtracting the delay
+                    const readPos = bufferPos - delaySamples;
 
-                    const delayPosInt = Math.floor(delayPosWrapped); // Use Math.floor for potentially negative fractional parts after modulo edge cases
-                    const delayPosFrac = delayPosWrapped - delayPosInt;
-
-                    let nextPos = delayPosInt + 1;
-                    if (nextPos >= MAX_BUFFER_SIZE) {
-                        nextPos = 0;
+                    // Wrap the read position correctly within the buffer bounds [0, MAX_BUFFER_SIZE)
+                    // This handles both positive and negative wrap-around efficiently.
+                    let wrappedReadPos = readPos % MAX_BUFFER_SIZE;
+                    if (wrappedReadPos < 0) {
+                        wrappedReadPos += MAX_BUFFER_SIZE; // Ensure positive index if modulo result is negative
                     }
 
-                    // Linear interpolation
-                    const sample1 = buffer[delayPosInt];
-                    const sample2 = buffer[nextPos];
-                    const interpolatedSample = sample1 + delayPosFrac * (sample2 - sample1);
+                    // Calculate integer and fractional parts for linear interpolation
+                    const readPosInt = Math.floor(wrappedReadPos); // Integer part gives the index of the first sample
+                    const readPosFrac = wrappedReadPos - readPosInt; // Fractional part gives the interpolation weight
 
-                    // Write output
+                    // Determine the index of the next sample, handling wrap-around at the buffer end
+                    let nextPos = readPosInt + 1;
+                    if (nextPos >= MAX_BUFFER_SIZE) {
+                        nextPos = 0; // Wrap around to the start of the buffer
+                    }
+
+                    // Perform linear interpolation between the two nearest samples in the delay buffer
+                    const sample1 = buffer[readPosInt];    // Sample at the integer index
+                    const sample2 = buffer[nextPos];      // Sample at the next index
+                    const interpolatedSample = sample1 + readPosFrac * (sample2 - sample1); // Interpolated value
+
+                    // Write the interpolated (delayed) sample to the output data buffer
                     data[offset + i] = interpolatedSample;
                 }
 
-                // Update buffer write position
+                // Increment the circular buffer write position for the next sample
                 bufferPos++;
+                // Wrap the write position around if it reaches the end of the buffer
                 if (bufferPos >= MAX_BUFFER_SIZE) {
                     bufferPos = 0;
                 }
             }
 
             // --- Update Context State ---
+            // Store the final state values back into the context object for the next processing block
             context.phase = currentPhase;
             context.sampleBufferPos = bufferPos;
-            // Biquad states updated in-place
+            context.common_x1 = common_x1; // Store updated common Biquad state 1
+            context.common_x2 = common_x2; // Store updated common Biquad state 2
+            // Channel-specific Biquad states (context.ch_x1, context.ch_x2) were updated in-place via array references
 
-            return data; // Return the modified data buffer
+            // Return the modified output data buffer
+            return data;
         `);
     }
 

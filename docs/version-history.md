@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.44 (Apr 12, 2025)
+- Added Modal Resonator, Tilt EQ, Doppler Distortion and Harmonic Distortion effect
+- Various minor improvements
+
 ### Version 1.43 (Apr 9, 2025)
 - Added Delay effect
 - Various minor improvements

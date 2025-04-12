@@ -5,7 +5,7 @@ Una colección de plugins que agregan calidez y carácter a tu música. Estos ef
 ## Lista de Plugins
 
 - [Hard Clipping](#hard-clipping) - Agrega intensidad y borde al sonido
-- [Intermodulator](#intermodulator) - Añade un carácter único a través de la distorsión de intermodulación armónica
+- [Harmonic Distortion](#harmonic-distortion) - Añade un carácter único a través de la distorsión armónica con control independiente de cada armónico
 - [Multiband Saturation](#multiband-saturation) - Moldea y mejora diferentes rangos de frecuencia independientemente
 - [Saturation](#saturation) - Agrega calidez y riqueza como equipo vintage
 - [Sub Synth](#sub-synth) - Genera y mezcla señales subarmónicas para mejorar los graves
@@ -53,9 +53,9 @@ Un efecto que puede agregar desde calidez sutil hasta carácter intenso a tu mú
   2. Prueba diferentes Modos
   3. Combina con otros efectos para sonidos únicos
 
-## Intermodulator
+## Harmonic Distortion
 
-El plugin Intermodulator introduce un efecto de distorsión de intermodulación armónica que va más allá de la saturación tradicional. Al inyectar intencionalmente componentes armónicos controlados, crea interacciones complejas que enriquecen tu sonido con nuevas texturas y un carácter dinámico.
+El plugin Harmonic Distortion introduce un efecto de distorsión armónica que va más allá de la saturación tradicional. A diferencia de la saturación estándar que añade armónicos en un patrón fijo, este efecto permite un control independiente de cada componente armónico. Al inyectar intencionalmente componentes armónicos controlados con ajustes individuales precisos, crea interacciones complejas que enriquecen tu sonido con nuevas texturas y un carácter dinámico.
 
 ### Guía para la Mejora Auditiva
 - **Efecto Sutil:**
@@ -70,18 +70,19 @@ El plugin Intermodulator introduce un efecto de distorsión de intermodulación 
   - Intensifica múltiples armónicos para crear una distorsión rica y compleja
   - Proporciona posibilidades creativas de diseño sonoro para pistas experimentales
   - Perfecto para agregar texturas atrevidas y poco convencionales
+- **Valores Positivos vs. Negativos:**
+  - Valores positivos: Crean un efecto tipo compresión, controlando picos y añadiendo calidez con mayor densidad
+  - Valores negativos: Generan un efecto tipo expansión, enfatizando la dinámica y creando sonidos más abiertos
 
 ### Parámetros
-- **2nd Harm (%):** Controla la cantidad del segundo armónico añadido (0–30%, defecto: 2%)
-  - Valores más bajos generan una calidez sutil, mientras que valores más altos acentúan claramente el segundo armónico.
-- **3rd Harm (%):** Ajusta la contribución del tercer armónico (0–30%, defecto: 3%)
-  - Realza la claridad y añade brillo, dotando al sonido de un carácter más vibrante.
-- **4th Harm (%):** Modifica la intensidad del cuarto armónico (0–30%, defecto: 0.5%)
-  - Introduce un detalle delicado al perfil armónico general.
-- **5th Harm (%):** Establece el nivel del quinto armónico (0–30%, defecto: 0.3%)
-  - Añade una complejidad matizada, contribuyendo a un tono estratificado y texturizado.
-- **Sensitivity (x):** Ajusta la sensibilidad general de entrada (0.1–2.0, defecto: 0.5)
-  - Una sensibilidad más baja proporciona un efecto más sutil, mientras que una sensibilidad más alta aumenta la intensidad de la distorsión.
+- **2nd Harm (%):** Controla la cantidad de segundo armónico añadido (-30 a 30%, predeterminado: 2%)
+- **3rd Harm (%):** Ajusta la contribución del tercer armónico (-30 a 30%, predeterminado: 3%)
+- **4th Harm (%):** Modifica la intensidad del cuarto armónico (-30 a 30%, predeterminado: 0.5%)
+- **5th Harm (%):** Establece el nivel del quinto armónico (-30 a 30%, predeterminado: 0.3%)
+- **Sensitivity (x):** Ajusta la sensibilidad general de entrada (0.1–2.0, predeterminado: 0.5)
+  - Una sensibilidad menor proporciona un efecto más sutil
+  - Una sensibilidad mayor aumenta la intensidad de la distorsión
+  - Funciona como un control global que afecta a la intensidad de todos los armónicos
 
 ### Visualización
 - Visualización en tiempo real de la interacción armónica y la curva de distorsión

@@ -278,7 +278,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Modulation | Wow Flutter | Efecto de modulación basado en tiempo | [Detalles](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Reverb de dispersión aleatoria con difusión natural | [Detalles](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Efecto de hard clipping digital | [Detalles](plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | Agrega un carácter único a través de la distorsión de intermodulación armónica | [Detalles](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | Agrega un carácter único a través de la distorsión armónica con control independiente de cada armónico | [Detalles](plugins/saturation.md#harmonic-distortion) |
 | Saturation| Multiband Saturation | Efecto de saturación de 3 bandas para una calidez precisa basada en frecuencias | [Detalles](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation | Efecto de saturación | [Detalles](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth | Mezcla señales subarmónicas para realzar los graves | [Detalles](plugins/saturation.md#sub-synth) |

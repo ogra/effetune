@@ -52,7 +52,7 @@ modulation/wow_flutter: Wow Flutter | Modulation | WowFlutterPlugin
 others/oscillator: Oscillator | Others | OscillatorPlugin
 reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
-saturation/harmonic_distortion: Harmonic Distortion | Saturation | HarmonicDistortionPlugin
+saturation/harmonic_distortion: Harmonic Distortion | Saturation | HarmonicDistortionPlugin | css
 saturation/multiband_saturation: Multiband Saturation | Saturation | MultibandSaturationPlugin | css
 saturation/saturation: Saturation | Saturation | SaturationPlugin | css
 saturation/sub_synth: Sub Synth | Saturation | SubSynthPlugin | css

@@ -3,164 +3,272 @@ class DopplerDistortionPlugin extends PluginBase {
         super('Doppler Distortion', 'Simulates Doppler distortion caused by speaker cone movement');
 
         this.co = 100;
-        this.cf = 10.0;
-        this.sm = 0.05;
-        this.sc = 10000;
-        this.df = 1.0;
+        this.cf = 8.0;
+        this.sm = 0.03;
+        this.sc = 6000;
+        this.df = 1.5;
+        this.bs = true;
 
+        // Register the audio processor
         this.registerProcessor(`
-            if (!parameters.enabled) return data;
+            // Constants
+            const SOUND_SPEED = 343.0; // Speed of sound in m/s
+            const TWO_PI = 6.283185307179586;
+            const SQRT2_INV = 0.7071067811865475; // 1/sqrt(2) for Linkwitz-Riley Q
+            const HILBERT_LENGTH = 64; // Fixed length for Hilbert FIR filter
 
+            // Processor entry point
+            if (!parameters.enabled) return data; // Exit if effect is disabled
+
+            // --- Cache Core Parameters & Calculate Time Step ---
             const {
                 sampleRate, channelCount, blockSize,
-                co: crossover,
-                cf: coilForce,
-                sm: speakerMass,
-                sc: springConstant,
-                df: dampingFactor
+                co: crossover,   // Crossover frequency (Hz)
+                cf: coilForce,   // Force factor (e.g., N/A or V/A * A/V = unitless scaling?) - Assume scales input to force N
+                sm: speakerMass, // Mass (kg)
+                sc: springConstant,// Spring constant (N/m)
+                df: dampingFactor, // Damping factor (Ns/m)
+                bs: bandSplit     // Band split enabled (boolean)
             } = parameters;
 
-            const SOUND_SPEED = 343000;
-            const TWO_PI = Math.PI * 2;
-            const dt = 1.0 / sampleRate;
-            const halfDt = 0.5 * dt;
-            const naturalFreq = Math.sqrt(springConstant / speakerMass);
-            const dampingRatio = dampingFactor / (2 * Math.sqrt(speakerMass * springConstant));
+            const dt = 1.0 / sampleRate; // Time step duration (s)
+            const halfDt = 0.5 * dt;     // Pre-calculate half time step for Verlet integration
 
-            if (!context.initialized || context.channelCount !== channelCount) {
-                context.lowpassStates1 = new Array(channelCount).fill().map(() => [0, 0, 0, 0]);
-                context.lowpassStates2 = new Array(channelCount).fill().map(() => [0, 0, 0, 0]);
-                context.highpassStates1 = new Array(channelCount).fill().map(() => [0, 0, 0, 0]);
-                context.highpassStates2 = new Array(channelCount).fill().map(() => [0, 0, 0, 0]);
-                context.speakerPositions = new Float32Array(channelCount).fill(0);
-                context.speakerVelocities = new Float32Array(channelCount).fill(0);
+            // --- Context Initialization or Re-initialization ---
+            // Initialize only if needed (first run, channel count change, or sample rate change affecting Hilbert)
+            if (!context.initialized || context.channelCount !== channelCount || context.sampleRate !== sampleRate) {
+                // Allocate state arrays using typed arrays for efficiency
+                context.lpState1 = new Array(channelCount); // LPF stage 1 states [s1, s2] (DF2T)
+                context.lpState2 = new Array(channelCount); // LPF stage 2 states
+                context.hpState1 = new Array(channelCount); // HPF stage 1 states
+                context.hpState2 = new Array(channelCount); // HPF stage 2 states
+                context.speakerPositions = new Float32Array(channelCount); // Speaker cone position (m)
+                context.speakerVelocities = new Float32Array(channelCount); // Speaker cone velocity (m/s)
+                context.hilbertDelayLines = new Array(channelCount); // Delay lines for Hilbert transform FIR
+                context.hilbertIndices = new Int32Array(channelCount);   // Write indices for Hilbert delay lines
 
-                const hilbertLength = 64;
-                context.hilbertDelayLines = new Array(channelCount).fill().map(() => new Float32Array(hilbertLength));
-                context.hilbertIndices = new Int32Array(channelCount);
-
-                context.channelCount = channelCount;
-                context.initialized = true;
-            }
-
-            const omega = TWO_PI * crossover / sampleRate;
-            const cosOmega = Math.cos(omega);
-            const alpha = Math.sin(omega) / Math.SQRT2;
-            const lpB0 = (1 - cosOmega) / 2;
-            const lpB1 = 1 - cosOmega;
-            const lpB2 = (1 - cosOmega) / 2;
-            const lpA0 = 1 + alpha;
-            const lpA1 = -2 * cosOmega;
-            const lpA2 = 1 - alpha;
-            const lpB0n = lpB0 / lpA0;
-            const lpB1n = lpB1 / lpA0;
-            const lpB2n = lpB2 / lpA0;
-            const lpA1n = lpA1 / lpA0;
-            const lpA2n = lpA2 / lpA0;
-            const hpB0 = (1 + cosOmega) / 2;
-            const hpB1 = -(1 + cosOmega);
-            const hpB2 = (1 + cosOmega) / 2;
-            const hpA0 = 1 + alpha;
-            const hpA1 = -2 * cosOmega;
-            const hpA2 = 1 - alpha;
-            const hpB0n = hpB0 / hpA0;
-            const hpB1n = hpB1 / hpA0;
-            const hpB2n = hpB2 / hpA0;
-            const hpA1n = hpA1 / hpA0;
-            const hpA2n = hpA2 / hpA0;
-
-            const hilbertLength = context.hilbertDelayLines[0].length;
-            let hilbertCoeffs = new Float32Array(hilbertLength);
-            for (let i = 0; i < hilbertLength; i++) {
-                if (i === Math.floor(hilbertLength / 2)) {
-                    hilbertCoeffs[i] = 0;
-                } else if (i % 2 === 0) {
-                    hilbertCoeffs[i] = 0;
-                } else {
-                    const n = i - Math.floor(hilbertLength / 2);
-                    hilbertCoeffs[i] = 2 / (Math.PI * n);
-                    const windowPos = i / (hilbertLength - 1);
-                    const blackman = 0.42 - 0.5 * Math.cos(2 * Math.PI * windowPos) + 0.08 * Math.cos(4 * Math.PI * windowPos);
-                    hilbertCoeffs[i] *= blackman;
+                // Initialize per-channel state storage
+                for (let ch = 0; ch < channelCount; ++ch) {
+                    // Biquad states (Direct Form II Transposed uses 2 states per filter stage)
+                    context.lpState1[ch] = new Float32Array(2); // s1, s2 initialized to 0
+                    context.lpState2[ch] = new Float32Array(2);
+                    context.hpState1[ch] = new Float32Array(2);
+                    context.hpState2[ch] = new Float32Array(2);
+                    // Hilbert delay line
+                    context.hilbertDelayLines[ch] = new Float32Array(HILBERT_LENGTH); // Initialized to 0
+                    // speakerPositions, speakerVelocities, hilbertIndices are implicitly initialized to 0
                 }
+
+                // --- Calculate Hilbert FIR Coefficients (once during initialization) ---
+                // Calculate coefficients for a Type III/IV FIR Hilbert transformer with Blackman window
+                context.hilbertCoeffs = new Float32Array(HILBERT_LENGTH);
+                const floorCenter = Math.floor(HILBERT_LENGTH / 2); // Center index for coefficient calculation
+                const m_pi_inv = 1.0 / Math.PI;
+                for (let i = 0; i < HILBERT_LENGTH; i++) {
+                    let coeff = 0.0;
+                    // Calculate ideal Hilbert coefficient (non-zero for odd indices relative to center)
+                    // Using the logic from the original snippet: zero at center, zero for even indices
+                    if (i !== floorCenter && i % 2 !== 0) {
+                        const n = i - floorCenter; // Index relative to center
+                        coeff = 2.0 * m_pi_inv / n; // Ideal coefficient 2/(pi*n) for odd n
+                    }
+                    // Apply Blackman window for better frequency response
+                    const windowPos = i / (HILBERT_LENGTH - 1); // Position in window [0, 1]
+                    const cos2piW = Math.cos(TWO_PI * windowPos);
+                    const cos4piW = Math.cos(TWO_PI * 2 * windowPos);
+                    const blackman = 0.42 - 0.5 * cos2piW + 0.08 * cos4piW;
+                    context.hilbertCoeffs[i] = coeff * blackman; // Apply window to coefficient
+                }
+
+                // Store current configuration in context
+                context.channelCount = channelCount;
+                context.sampleRate = sampleRate; // Store sampleRate if it affects init state (e.g., Hilbert coeffs if length depended on SR)
+                context.initialized = true;
+                // console.log("Speaker sim context initialized/reinitialized."); // Optional dev log
             }
 
-            for (let ch = 0; ch < channelCount; ch++) {
-                const offset = ch * blockSize;
-                const lowpassStates1 = context.lowpassStates1[ch];
-                const lowpassStates2 = context.lowpassStates2[ch];
-                const highpassStates1 = context.highpassStates1[ch];
-                const highpassStates2 = context.highpassStates2[ch];
-                const hilbertDelayLine = context.hilbertDelayLines[ch];
-                let ringIndex = context.hilbertIndices[ch];
-                let speakerPosition = context.speakerPositions[ch];
-                let speakerVelocity = context.speakerVelocities[ch];
+            // --- Calculate Linkwitz-Riley Crossover Coefficients ---
+            // Recalculate per block as the 'crossover' parameter might change
+            const omega = TWO_PI * crossover * dt; // Normalized frequency omega = 2*pi*f/Fs
+            const cosOmega = Math.cos(omega);
+            const sinOmega = Math.sin(omega);
+            const alpha = sinOmega * SQRT2_INV; // alpha = sin(omega)/(2*Q) with Q = 1/sqrt(2)
 
-                for (let i = 0; i < blockSize; i++) {
-                    const input = data[offset + i];
+            // Pre-calculate coefficient terms, checking for stability
+            let lp_b0, lp_b1, lp_b2, lp_a1, lp_a2; // LPF coefs (DF2T: b0,b1,b2, -a1, -a2)
+            let hp_b0, hp_b1, hp_b2, hp_a1, hp_a2; // HPF coefs (DF2T: b0,b1,b2, -a1, -a2)
+            const a0 = 1.0 + alpha;
 
-                    const lowOutput1 = lpB0n * input + lpB1n * lowpassStates1[0] + lpB2n * lowpassStates1[1]
-                                     - lpA1n * lowpassStates1[2] - lpA2n * lowpassStates1[3];
-                    lowpassStates1[1] = lowpassStates1[0];
-                    lowpassStates1[0] = input;
-                    lowpassStates1[3] = lowpassStates1[2];
-                    lowpassStates1[2] = lowOutput1;
+            // Check for stability (avoid division by zero or near-zero)
+            if (alpha > 1e-9 && Math.abs(a0) > 1e-9) {
+                const a0_inv = 1.0 / a0; // Calculate inverse denominator once
+                const oneMinusCosOmega = 1.0 - cosOmega;
+                const onePlusCosOmega = 1.0 + cosOmega;
+                const neg2CosOmega = -2.0 * cosOmega;
+                const oneMinusAlpha = 1.0 - alpha;
 
-                    const lowOutput2 = lpB0n * lowOutput1 + lpB1n * lowpassStates2[0] + lpB2n * lowpassStates2[1]
-                                     - lpA1n * lowpassStates2[2] - lpA2n * lowpassStates2[3];
-                    lowpassStates2[1] = lowpassStates2[0];
-                    lowpassStates2[0] = lowOutput1;
-                    lowpassStates2[3] = lowpassStates2[2];
-                    lowpassStates2[2] = lowOutput2;
+                // LPF Coefficients (normalized for DF2T)
+                lp_b0 = (oneMinusCosOmega * 0.5) * a0_inv;
+                lp_b1 = oneMinusCosOmega * a0_inv;
+                lp_b2 = lp_b0;                     // LPF b2 = b0
+                lp_a1 = neg2CosOmega * a0_inv;     // Note: a1, a2 are from the denominator 1 + a1*z^-1 + a2*z^-2
+                lp_a2 = oneMinusAlpha * a0_inv;
 
-                    const highOutput1 = hpB0n * input + hpB1n * highpassStates1[0] + hpB2n * highpassStates1[1]
-                                      - hpA1n * highpassStates1[2] - hpA2n * highpassStates1[3];
-                    highpassStates1[1] = highpassStates1[0];
-                    highpassStates1[0] = input;
-                    highpassStates1[3] = highpassStates1[2];
-                    highpassStates1[2] = highOutput1;
+                // HPF Coefficients (normalized for DF2T)
+                hp_b0 = (onePlusCosOmega * 0.5) * a0_inv;
+                hp_b1 = -onePlusCosOmega * a0_inv;
+                hp_b2 = hp_b0;                     // HPF b2 = b0
+                hp_a1 = neg2CosOmega * a0_inv;     // Denominator coefficients are the same as LPF
+                hp_a2 = oneMinusAlpha * a0_inv;
+            } else {
+                // Fallback: LPF becomes pass-through, HPF becomes block if crossover is invalid
+                lp_b0 = 1.0; lp_b1 = 0.0; lp_b2 = 0.0; lp_a1 = 0.0; lp_a2 = 0.0;
+                hp_b0 = 0.0; hp_b1 = 0.0; hp_b2 = 0.0; hp_a1 = 0.0; hp_a2 = 0.0;
+                // Optionally reset filter states here if crossover is invalid to prevent artefacts
+            }
 
-                    const highOutput2 = hpB0n * highOutput1 + hpB1n * highpassStates2[0] + hpB2n * highpassStates2[1]
-                                     - hpA1n * highpassStates2[2] - hpA2n * highpassStates2[3];
-                    highpassStates2[1] = highpassStates2[0];
-                    highpassStates2[0] = highOutput1;
-                    highpassStates2[3] = highpassStates2[2];
-                    highpassStates2[2] = highOutput2;
+            // Get Hilbert coefficients reference from context
+            const hilbertCoeffs = context.hilbertCoeffs;
 
-                    const signalForce = lowOutput2 * coilForce;
-                    const springForce = -springConstant * speakerPosition;
-                    const dampingForce = -dampingFactor * speakerVelocity;
-                    const totalForce = signalForce + springForce + dampingForce;
-                    const acceleration = totalForce / speakerMass;
+            // --- Main Processing Loop ---
+            for (let ch = 0; ch < channelCount; ++ch) {
+                const offset = ch * blockSize; // Index offset for the current channel in input/output data
+
+                // --- Get Channel State References ---
+                // Load state into local variables/references for faster access within the sample loop
+                const lpState1 = context.lpState1[ch]; // Ref to Float32Array(2) [s1, s2]
+                const lpState2 = context.lpState2[ch]; // Ref to Float32Array(2)
+                const hpState1 = context.hpState1[ch]; // Ref to Float32Array(2)
+                const hpState2 = context.hpState2[ch]; // Ref to Float32Array(2)
+                const hilbertDelayLine = context.hilbertDelayLines[ch]; // Ref to Float32Array(HILBERT_LENGTH)
+                let ringIndex = context.hilbertIndices[ch];             // Copy Int32 index
+                let speakerPosition = context.speakerPositions[ch];     // Copy Float32 position (m)
+                let speakerVelocity = context.speakerVelocities[ch];   // Copy Float32 velocity (m/s)
+
+                // --- Sample Loop ---
+                // Process each audio sample in the block
+                for (let i = 0; i < blockSize; ++i) {
+                    const input = data[offset + i]; // Get the current input sample
+
+                    // Declare variables for outputs
+                    let lowOutput2, highOutput2;
+
+                    if (bandSplit) {
+                        // --- Crossover Filters (4th order Linkwitz-Riley using cascaded Biquads - DF2T) ---
+                        // LPF Stage 1
+                        let y0_lp1 = lp_b0 * input + lpState1[0];
+                        lpState1[0] = lp_b1 * input - lp_a1 * y0_lp1 + lpState1[1]; // Update state s1
+                        lpState1[1] = lp_b2 * input - lp_a2 * y0_lp1;             // Update state s2
+                        const lowOutput1 = y0_lp1; // Output of the first LPF stage
+
+                        // LPF Stage 2
+                        let y0_lp2 = lp_b0 * lowOutput1 + lpState2[0];
+                        lpState2[0] = lp_b1 * lowOutput1 - lp_a1 * y0_lp2 + lpState2[1];
+                        lpState2[1] = lp_b2 * lowOutput1 - lp_a2 * y0_lp2;
+                        lowOutput2 = y0_lp2; // Final Low-Frequency Output (used for speaker force)
+
+                        // HPF Stage 1
+                        let y0_hp1 = hp_b0 * input + hpState1[0];
+                        hpState1[0] = hp_b1 * input - hp_a1 * y0_hp1 + hpState1[1];
+                        hpState1[1] = hp_b2 * input - hp_a2 * y0_hp1;
+                        const highOutput1 = y0_hp1; // Output of the first HPF stage
+
+                        // HPF Stage 2
+                        let y0_hp2 = hp_b0 * highOutput1 + hpState2[0];
+                        hpState2[0] = hp_b1 * highOutput1 - hp_a1 * y0_hp2 + hpState2[1];
+                        hpState2[1] = hp_b2 * highOutput1 - hp_a2 * y0_hp2;
+                        highOutput2 = y0_hp2; // Final High-Frequency Output (used for modulation)
+                    } else {
+                        // When band split is OFF, skip filtering and use the input signal directly
+                        lowOutput2 = input;
+                        highOutput2 = input;
+                    }
+
+                    // --- Speaker Physics Simulation (Velocity Verlet Integration) ---
+                    // Calculate forces acting on the speaker cone
+                    const signalForce = lowOutput2 * coilForce;           // Force from the (low-passed) signal
+                    const springForce = -springConstant * speakerPosition;// Restoring force from suspension (Hooke's Law)
+                    const dampingForce = -dampingFactor * speakerVelocity;// Damping force opposing motion
+
+                    // Calculate acceleration using Newton's second law (a = F_total / m)
+                    let totalForce = signalForce + springForce + dampingForce;
+                    let acceleration = totalForce / speakerMass;
+
+                    // Update velocity to half-step using current acceleration
                     const halfStepVelocity = speakerVelocity + acceleration * halfDt;
+
+                    // Update position using the half-step velocity over the full time step
                     speakerPosition += halfStepVelocity * dt;
+
+                    // Calculate forces at the new position using the half-step velocity for damping consistency
                     const newSpringForce = -springConstant * speakerPosition;
                     const newDampingForce = -dampingFactor * halfStepVelocity;
-                    const newTotalForce = signalForce + newSpringForce + newDampingForce;
-                    const newAcceleration = newTotalForce / speakerMass;
-                    speakerVelocity = halfStepVelocity + newAcceleration * halfDt;
 
-                    ringIndex = (ringIndex - 1 + hilbertLength) % hilbertLength;
-                    hilbertDelayLine[ringIndex] = highOutput2;
-                    const realPart = hilbertDelayLine[(ringIndex + 32) % hilbertLength];
-                    let imagPart = 0;
-                    for (let j = 0; j < hilbertLength; j++) {
-                        imagPart += hilbertDelayLine[(ringIndex + j) % hilbertLength] * hilbertCoeffs[j];
+                    // Calculate acceleration at the new position (assuming signalForce is constant over the small dt)
+                    totalForce = signalForce + newSpringForce + newDampingForce;
+                    acceleration = totalForce / speakerMass;
+
+                    // Update velocity for the full step using the new acceleration
+                    speakerVelocity = halfStepVelocity + acceleration * halfDt;
+
+                    // --- Hilbert Transform and Phase Modulation (Doppler Effect Approximation) ---
+                    // Update Hilbert delay line (circular buffer) by writing the current HPF output
+                    ringIndex--; // Decrement write index first
+                    if (ringIndex < 0) {
+                        ringIndex = HILBERT_LENGTH - 1; // Wrap around using if (potentially faster than modulo)
                     }
-                    const amplitude = Math.sqrt(realPart * realPart + imagPart * imagPart);
-                    let phase = Math.atan2(imagPart, realPart);
-                    const speakerVelocityMM = speakerVelocity * 1000;
-                    const velocityRatio = speakerVelocityMM / SOUND_SPEED;
-                    const modulationFactor = velocityRatio * TWO_PI * crossover;
-                    phase += modulationFactor;
-                    const modulatedHigh = amplitude * Math.cos(phase) * 1.2;
-                    data[offset + i] = lowOutput2 + modulatedHigh;
-                }
-                context.hilbertIndices[ch] = ringIndex;
-                context.speakerPositions[ch] = speakerPosition;
-                context.speakerVelocities[ch] = speakerVelocity;
-            }
+                    hilbertDelayLine[ringIndex] = highOutput2;
 
+                    // Calculate Real part: delayed HPF output from the center of the Hilbert FIR delay line
+                    let realPartReadIndex = ringIndex + (HILBERT_LENGTH >> 1); // Center tap index (N/2) relative to write pos
+                    if (realPartReadIndex >= HILBERT_LENGTH) {
+                        realPartReadIndex -= HILBERT_LENGTH; // Wrap index if needed
+                    }
+                    const realPart = hilbertDelayLine[realPartReadIndex];
+
+                    // Calculate Imaginary part: perform FIR convolution using Hilbert coefficients
+                    let imagPart = 0.0;
+                    for (let j = 0; j < HILBERT_LENGTH; ++j) {
+                        let delayReadIndex = ringIndex + j; // Index relative to write pos
+                        if (delayReadIndex >= HILBERT_LENGTH) {
+                            delayReadIndex -= HILBERT_LENGTH; // Wrap index if needed
+                        }
+                        imagPart += hilbertDelayLine[delayReadIndex] * hilbertCoeffs[j];
+                    }
+
+                    // Calculate instantaneous amplitude and phase of the analytic signal (HPF component)
+                    // Use hypot for potentially better numerical stability/performance? Math.sqrt(a*a + b*b) is usually fine.
+                    const amplitude = Math.sqrt(realPart * realPart + imagPart * imagPart);
+                    let phase = Math.atan2(imagPart, realPart); // Get phase angle [-pi, pi]
+
+                    // Calculate phase modulation factor based on speaker velocity relative to sound speed
+                    const velocity = speakerVelocity;
+                    const dopplerRatio = SOUND_SPEED / (SOUND_SPEED - velocity); // f' = f x c/(c-v)
+                    const fdop = crossover * dopplerRatio;
+                    const deltaPhase = TWO_PI * fdop * dt;
+                    phase += deltaPhase;
+
+                    // Reconstruct the phase-modulated high-frequency signal using the original amplitude
+                    // Apply arbitrary gain factor (1.2) - possibly for calibration or effect intensity
+                    const modulatedHigh = amplitude * Math.cos(phase) * 1.2;
+
+                    // --- Combine Low and Modulated High Frequencies ---
+                    // The final output is the sum of the direct low frequencies and the phase-modulated high frequencies
+                    // When band split is OFF, output only the modulated high frequencies
+                    data[offset + i] = bandSplit ? (lowOutput2 + modulatedHigh) : modulatedHigh;
+
+                } // End Sample Loop
+
+                // --- Store Updated State ---
+                // Write the final state values back into the context object for the next processing block
+                context.hilbertIndices[ch] = ringIndex;           // Store updated ring buffer index
+                context.speakerPositions[ch] = speakerPosition;   // Store updated speaker position
+                context.speakerVelocities[ch] = speakerVelocity; // Store updated speaker velocity
+                // Biquad states (context.lpState1[ch], etc.) were updated in-place via array references
+
+            } // End Channel Loop
+
+            // Return the modified output data buffer
             return data;
         `);
     }
@@ -168,6 +276,29 @@ class DopplerDistortionPlugin extends PluginBase {
     createUI() {
         const container = document.createElement('div');
         container.className = 'doppler-distortion-plugin-ui plugin-parameter-ui';
+
+        // Add Band Split checkbox
+        const bandSplitRow = document.createElement('div');
+        bandSplitRow.className = 'parameter-row checkbox-row';
+        
+        const bandSplitId = `${this.id}-${this.name}-band-split-checkbox`;
+        
+        const labelEl = document.createElement('label');
+        labelEl.textContent = 'Band Split:';
+        labelEl.htmlFor = bandSplitId;
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = bandSplitId;
+        checkbox.name = bandSplitId;
+        checkbox.checked = this.bs;
+        checkbox.addEventListener('change', (e) => {
+            this.setBs(e.target.checked);
+        });
+        
+        bandSplitRow.appendChild(labelEl);
+        bandSplitRow.appendChild(checkbox);
+        container.appendChild(bandSplitRow);
 
         const createParameterControl = (label, min, max, step, value, setter, unit = '') => {
             const row = document.createElement('div');
@@ -250,7 +381,8 @@ class DopplerDistortionPlugin extends PluginBase {
             cf: this.cf,
             sm: this.sm,
             sc: this.sc,
-            df: this.df
+            df: this.df,
+            bs: this.bs
         };
     }
 
@@ -269,6 +401,9 @@ class DopplerDistortionPlugin extends PluginBase {
         }
         if (params.df !== undefined) {
             this.df = params.df < 0.1 ? 0.1 : (params.df > 10.0 ? 10.0 : params.df);
+        }
+        if (params.bs !== undefined) {
+            this.bs = Boolean(params.bs);
         }
         if (params.enabled !== undefined) {
             this.enabled = params.enabled;
@@ -294,6 +429,11 @@ class DopplerDistortionPlugin extends PluginBase {
 
     setDf(value) {
         this.setParameters({ df: value });
+    }
+
+    setBs(value) {
+        this.bs = value;
+        this.updateParameters();
     }
 }
 

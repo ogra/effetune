@@ -275,7 +275,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Modulation | Wow Flutter | Effet de modulation basé sur le temps | [Détails](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb | Réverbération à diffusion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Effet de hard clipping numérique | [Détails](plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | Ajoute un caractère unique grâce à la distorsion d'intermodulation harmonique | [Détails](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | Ajoute un caractère unique grâce à la distorsion harmonique avec contrôle indépendant de chaque harmonique | [Détails](plugins/saturation.md#harmonic-distortion) |
 | Saturation| Multiband Saturation | Effet de saturation 3 bandes pour une chaleur précise basée sur les fréquences | [Détails](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation | Effet de saturation | [Détails](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth | Mélange des signaux sous-harmoniques pour améliorer les basses | [Détails](plugins/saturation.md#sub-synth) |

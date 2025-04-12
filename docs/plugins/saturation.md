@@ -5,7 +5,7 @@ A collection of plugins that add warmth and character to your music. These effec
 ## Plugin List
 
 - [Hard Clipping](#hard-clipping) - Adds intensity and edge to the sound
-- [Intermodulator](#intermodulator) - Adds unique character via harmonic intermodulation distortion
+- [Harmonic Distortion](#harmonic-distortion) - Adds unique character via harmonic distortion with independent control of each harmonic
 - [Multiband Saturation](#multiband-saturation) - Shape and enhance different frequency ranges independently
 - [Saturation](#saturation) - Adds warmth and richness like vintage equipment
 - [Sub Synth](#sub-synth) - Generates and mixes subharmonic signals for bass enhancement
@@ -53,9 +53,9 @@ An effect that can add anything from subtle warmth to intense character to your 
   2. Try different Modes
   3. Combine with other effects for unique sounds
 
-## Intermodulator
+## Harmonic Distortion
 
-The Intermodulator plugin introduces a harmonic intermodulation distortion effect that goes beyond traditional saturation. By purposefully injecting controlled harmonic components, it creates complex interactions that enrich your sound with new textures and dynamic character.
+The Harmonic Distortion plugin introduces a harmonic distortion effect that goes beyond traditional saturation. Unlike standard saturation which adds harmonics in a fixed pattern, this effect allows independent control of each harmonic component. By purposefully injecting controlled harmonic components with precise individual adjustments, it creates complex interactions that enrich your sound with new textures and dynamic character.
 
 ### Listening Enhancement Guide
 - **Subtle Effect:**
@@ -70,18 +70,19 @@ The Intermodulator plugin introduces a harmonic intermodulation distortion effec
   - Intensifies multiple harmonics to create a rich, complex distortion
   - Provides creative sound design possibilities for experimental tracks
   - Perfect for adding edgy and unconventional textures
+- **Positive vs. Negative Values:**
+  - Positive values: Create compression-like effects, controlling peaks and adding warmth with greater density
+  - Negative values: Generate expansion-like effects, emphasizing dynamics and creating more open, breathing sounds
 
 ### Parameters
-- **2nd Harm (%):** Controls the amount of second harmonic added (0–30%, default: 2%)
-  - Lower values yield subtle warmth, while higher values emphasize the second harmonic distinctly.
-- **3rd Harm (%):** Adjusts the third harmonic contribution (0–30%, default: 3%)
-  - Enhances clarity and adds brightness, giving the sound a more vibrant character.
-- **4th Harm (%):** Modifies the fourth harmonic intensity (0–30%, default: 0.5%)
-  - Introduces delicate detail to the overall harmonic profile.
-- **5th Harm (%):** Sets the fifth harmonic level (0–30%, default: 0.3%)
-  - Adds nuanced complexity, contributing to a layered, textured tone.
+- **2nd Harm (%):** Controls the amount of second harmonic added (-30 to 30%, default: 2%)
+- **3rd Harm (%):** Adjusts the third harmonic contribution (-30 to 30%, default: 3%)
+- **4th Harm (%):** Modifies the fourth harmonic intensity (-30 to 30%, default: 0.5%)
+- **5th Harm (%):** Sets the fifth harmonic level (-30 to 30%, default: 0.3%)
 - **Sensitivity (x):** Adjusts the overall input sensitivity (0.1–2.0, default: 0.5)
-  - Lower sensitivity provides a more understated effect, while higher sensitivity increases the distortion intensity.
+  - Lower sensitivity provides a more understated effect
+  - Higher sensitivity increases the distortion intensity
+  - Works as a global control affecting the intensity of all harmonics
 
 ### Visual Display
 - Real-time visualization of the harmonic interaction and distortion curve

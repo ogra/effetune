@@ -15,6 +15,9 @@ Experimente um efeito de áudio único que confere um toque de movimento natural
 
 ### Parâmetros
 
+- **Band Split**  
+  Ativa ou desativa a divisão de bandas de frequência. Quando ativado, o efeito processa separadamente as frequências baixas e altas. Quando desativado, todo o espectro de frequência é processado como frequências altas, resultando em um efeito mais pronunciado.
+
 - **Crossover (Hz)**  
   Define o limiar de frequência acima do qual o efeito é aplicado. As frequências inferiores permanecem claras, enquanto as frequências superiores recebem a modulação.
 

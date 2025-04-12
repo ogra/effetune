@@ -282,7 +282,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Modulation | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/modulation.md#wow-flutter) |
 | Reverb | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | Adds unique character via harmonic intermodulation distortion | [Details](docs/plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | Adds unique character via harmonic distortion with independent control of each harmonic | [Details](docs/plugins/saturation.md#harmonic-distortion) |
 | Saturation | Multiband Saturation | 3-band saturation effect for precise frequency-based warmth | [Details](docs/plugins/saturation.md#multiband-saturation) |
 | Saturation | Saturation | Saturation effect | [Details](docs/plugins/saturation.md#saturation) |
 | Saturation | Sub Synth | Mixes subharmonic signals for bass enhancement | [Details](docs/plugins/saturation.md#sub-synth) |

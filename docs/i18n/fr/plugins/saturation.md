@@ -5,7 +5,7 @@ Une collection de plugins qui ajoutent de la chaleur et du caractère à votre m
 ## Plugin List
 
 - [Hard Clipping](#hard-clipping) - Ajoute de l'intensité et du mordant au son
-- [Intermodulator](#intermodulator) - Apporte un caractère unique via la distorsion par intermodulation harmonique 
+- [Harmonic Distortion](#harmonic-distortion) - Apporte un caractère unique via la distorsion harmonique avec contrôle indépendant de chaque harmonique
 - [Multiband Saturation](#multiband-saturation) - Façonne et améliore différentes plages de fréquences indépendamment
 - [Saturation](#saturation) - Ajoute de la chaleur et de la richesse comme un équipement vintage
 - [Sub Synth](#sub-synth) - Génère et mélange des signaux sous-harmoniques pour l'amélioration des graves
@@ -53,9 +53,9 @@ Un effet qui peut ajouter tout, de la chaleur subtile au caractère intense à v
   2. Essayez différents Modes
   3. Combinez avec d'autres effets pour des sons uniques
 
-## Intermodulator
+## Harmonic Distortion
 
-Le plugin Intermodulator introduit un effet de distorsion par intermodulation harmonique qui va au-delà de la saturation traditionnelle. En injectant délibérément des composantes harmoniques contrôlées, il crée des interactions complexes qui enrichissent votre son avec de nouvelles textures et un caractère dynamique.
+Le plugin Harmonic Distortion introduit un effet de distorsion harmonique qui va au-delà de la saturation traditionnelle. Contrairement à la saturation standard qui ajoute des harmoniques selon un schéma fixe, cet effet permet un contrôle indépendant de chaque composante harmonique. En injectant délibérément des composantes harmoniques contrôlées avec des ajustements individuels précis, il crée des interactions complexes qui enrichissent votre son avec de nouvelles textures et un caractère dynamique.
 
 ### Guide d'amélioration de l'écoute
 
@@ -71,19 +71,20 @@ Le plugin Intermodulator introduit un effet de distorsion par intermodulation ha
   - Intensifie plusieurs harmoniques pour créer une distorsion riche et complexe
   - Offre des possibilités créatives de design sonore pour des pistes expérimentales
   - Parfait pour ajouter des textures audacieuses et non conventionnelles
+- **Valeurs positives vs. négatives :**
+  - Valeurs positives : Créent un effet de type compression, contrôlant les pics et ajoutant de la chaleur avec une plus grande densité
+  - Valeurs négatives : Génèrent un effet de type expansion, accentuant la dynamique et créant des sons plus ouverts et aérés
 
 ### Paramètres
 
-- **2nd Harm (%):** Contrôle la quantité de deuxième harmonique ajoutée (0–30%, default: 2%)
-  - Des valeurs inférieures offrent une chaleur subtile, tandis que des valeurs supérieures accentuent de manière distincte la deuxième harmonique.
-- **3rd Harm (%):** Ajuste la contribution de la troisième harmonique (0–30%, default: 3%)
-  - Améliore la clarté et apporte de la luminosité, conférant au son un caractère plus vibrant.
-- **4th Harm (%):** Modifie l'intensité de la quatrième harmonique (0–30%, default: 0.5%)
-  - Introduit des détails délicats dans le profil harmonique global.
-- **5th Harm (%):** Définit le niveau de la cinquième harmonique (0–30%, default: 0.3%)
-  - Ajoute une complexité nuancée, contribuant à une tonalité stratifiée et texturée.
-- **Sensitivity (x):** Ajuste la sensibilité globale de l'entrée (0.1–2.0, default: 0.5)
-  - Une sensibilité plus faible fournit un effet plus discret, tandis qu'une sensibilité plus élevée augmente l'intensité de la distorsion.
+- **2nd Harm (%):** Contrôle la quantité de deuxième harmonique ajoutée (-30 à 30%, défaut: 2%)
+- **3rd Harm (%):** Ajuste la contribution de la troisième harmonique (-30 à 30%, défaut: 3%)
+- **4th Harm (%):** Modifie l'intensité de la quatrième harmonique (-30 à 30%, défaut: 0.5%)
+- **5th Harm (%):** Définit le niveau de la cinquième harmonique (-30 à 30%, défaut: 0.3%)
+- **Sensitivity (x):** Ajuste la sensibilité globale de l'entrée (0.1–2.0, défaut: 0.5)
+  - Une sensibilité plus faible fournit un effet plus discret
+  - Une sensibilité plus élevée augmente l'intensité de la distorsion
+  - Fonctionne comme un contrôle global affectant l'intensité de toutes les harmoniques
 
 ### Affichage Visuel
 

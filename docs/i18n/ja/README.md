@@ -282,7 +282,7 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Modulation | Wow Flutter | 時間ベースのモジュレーション効果 | [詳細](docs/plugins/modulation.md#wow-flutter) |
 | Reverb     | RS Reverb             | 自然な拡散を伴うランダム散乱リバーブ                         | [詳細](plugins/reverb.md#rs-reverb)                         |
 | Saturation | Hard Clipping         | デジタルハードクリッピングエフェクト                       | [詳細](plugins/saturation.md#hard-clipping)                |
-| Saturation | Intermodulator | ハーモニックインターモジュレーション歪みによって独特のキャラクターを加える | [詳細](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | 各ハーモニクスを独立して調整できる高調波歪みによって独特のキャラクターを加える | [詳細](plugins/saturation.md#harmonic-distortion) |
 | Saturation | Multiband Saturation  | 周波数ごとに正確な温かみを実現する3バンドサチュレーションエフェクト | [詳細](plugins/saturation.md#multiband-saturation)         |
 | Saturation | Saturation            | サチュレーションエフェクト                                 | [詳細](plugins/saturation.md#saturation)                   |
 | Saturation | Sub Synth             | 低音強化のためにサブハーモニック信号をミックスする           | [詳細](plugins/saturation.md#sub-synth)                    |

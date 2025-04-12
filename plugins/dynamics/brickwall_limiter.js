@@ -6,7 +6,7 @@ class BrickwallLimiterPlugin extends PluginBase {
         this.th = 0;       // Threshold in dB (-24 to 0 dB)
         this.rl = 100;     // Release Time in ms (10 to 500 ms)
         this.la = 3;       // Lookahead Time in ms (0 to 10 ms)
-        this.os = 4;       // Oversampling Factor (1, 2, 4, or 8)
+        this.os = 1;       // Oversampling Factor (1, 2, 4, or 8)
         this.ig = 0;       // Input Gain in dB (-18 to 18 dB), default 0 dB
         this.sm = -1.000;  // Margin in dB (-1.000 to 0.000 dB, default -1.000 dB)
 

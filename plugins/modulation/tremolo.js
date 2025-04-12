@@ -12,17 +12,16 @@ class TremoloPlugin extends PluginBase {
 
         // Register the audio processor
         this.registerProcessor(`
-            // Initial check for processor enablement
-            if (!parameters.enabled) return data;
+            // Processor entry point
+            if (!parameters.enabled) return data; // Exit if disabled
 
-            // --- Constants and Pre-calculations ---
-
+            // Constants
             const TWO_PI = 6.283185307179586;
             const DEG_TO_RAD = 0.017453292519943295;
             const SQRT2 = 1.4142135623730951;
-            const MIN_Q = 0.01; // Minimum Q value for stability
+            const MIN_Q = 0.01;
 
-            // Cache frequently accessed parameters locally
+            // Cache parameters locally for performance
             const sampleRate = parameters.sampleRate;
             const blockSize = parameters.blockSize;
             const channelCount = parameters.channelCount;
@@ -30,128 +29,135 @@ class TremoloPlugin extends PluginBase {
             const depth = parameters.dp;
             const randomness = parameters.rn;
             const randomnessCutoff = parameters.rc;
-            const randomnessSlope = parameters.rs; // -12.0 to 0.0
+            const randomnessSlope = parameters.rs;
             const channelPhase = parameters.cp;
             const channelSync = parameters.cs;
 
-            // Ensure context variables exist for Biquad states
-            if (context.phase === undefined) context.phase = 0;
+            // Initialize or ensure context state variables exist. Use Float64Array for numeric states.
+            if (context.phase === undefined) context.phase = 0.0;
             if (context.common_x1 === undefined) context.common_x1 = 0.0;
             if (context.common_x2 === undefined) context.common_x2 = 0.0;
-            if (context.ch_x1 === undefined) context.ch_x1 = [];
-            if (context.ch_x2 === undefined) context.ch_x2 = [];
-
-
-            // Initialize/Resize channel-specific Biquad states arrays if needed
-            if (context.ch_x1.length !== channelCount) {
-                context.ch_x1 = new Array(channelCount).fill(0.0);
-                context.ch_x2 = new Array(channelCount).fill(0.0);
+            // Ensure channel state arrays are Float64Array and sized correctly. Reinitialize if needed.
+            if (context.ch_x1 === undefined || context.ch_x1.length !== channelCount || !(context.ch_x1 instanceof Float64Array)) {
+                context.ch_x1 = new Float64Array(channelCount);
+            }
+            if (context.ch_x2 === undefined || context.ch_x2.length !== channelCount || !(context.ch_x2 instanceof Float64Array)) {
+                context.ch_x2 = new Float64Array(channelCount);
             }
 
-            // --- Calculate Biquad LPF Coefficients ---
-            // Map slope slider value (-12 to 0) to Q value
-            // rs = 0   => Q = 10^(6/6) * (1/sqrt(2)) = 10 / sqrt(2) ~ 7.07
-            // rs = -6  => Q = 10^(0/6) * (1/sqrt(2)) = 1 / sqrt(2) ~ 0.707 (Butterworth)
-            // rs = -12 => Q = 10^(-6/6)* (1/sqrt(2)) = 0.1 / sqrt(2) ~ 0.07
-            const calculatedQ = Math.pow(10.0, (randomnessSlope + 6.0) / 6.0) * (1.0 / SQRT2);
-            const Q = Math.max(MIN_Q, calculatedQ); // Ensure Q is not too low
+            // --- Biquad LPF Coefficients Calculation ---
+            // Calculate Q based on slope parameter, using 10**x operator for potential speedup.
+            const calculatedQ = (10**((randomnessSlope + 6.0) / 6.0)) * (1.0 / SQRT2);
+            const Q = Math.max(MIN_Q, calculatedQ); // Ensure Q is stable
 
             const fc = randomnessCutoff;
             const fs = sampleRate;
+            // Initialize coefficients to pass-through state (b0=1, others=0)
             let norm_b0 = 1.0, norm_b1 = 0.0, norm_b2 = 0.0, norm_a1 = 0.0, norm_a2 = 0.0;
 
-            // Avoid calculation issues at Nyquist or 0Hz
-            if (fc > 0 && fc < fs / 2) {
+            // Calculate actual filter coefficients if cutoff frequency is valid (0 < fc < fs/2)
+            if (fc > 0.0 && fc < fs * 0.5) {
                 const omega = TWO_PI * fc / fs;
-                const alpha = Math.sin(omega) / (2.0 * Q);
-                const cosOmega = Math.cos(omega);
+                const cosOmega = Math.cos(omega); // Calculate once
+                const alpha = Math.sin(omega) / (2.0 * Q); // Calculate once
 
-                // Check if alpha is valid before calculating coefficients
-                if (alpha > 0 && 1.0 + alpha !== 0) {
-                     const b0 = (1.0 - cosOmega) / 2.0;
-                     const b1 = 1.0 - cosOmega;
-                     const b2 = (1.0 - cosOmega) / 2.0;
-                     const a0_inv = 1.0 / (1.0 + alpha);
-                     const a1 = -2.0 * cosOmega;
-                     const a2 = 1.0 - alpha;
+                const a0 = 1.0 + alpha;
+                // Check for potential division by zero or near-zero for stability
+                if (alpha > 1e-9 && a0 > 1e-9) { // Use small epsilon
+                    const a0_inv = 1.0 / a0; // Calculate inverse denominator once
+                    const oneMinusCosOmega = 1.0 - cosOmega;
 
-                     // Normalized coefficients
-                     norm_b0 = b0 * a0_inv;
-                     norm_b1 = b1 * a0_inv;
-                     norm_b2 = b2 * a0_inv;
-                     norm_a1 = a1 * a0_inv;
-                     norm_a2 = a2 * a0_inv;
-                } else {
-                     // Fallback to pass-through if alpha is invalid (e.g., Q extremely high/low at certain freqs)
-                     norm_b0 = 1.0; norm_b1 = 0.0; norm_b2 = 0.0; norm_a1 = 0.0; norm_a2 = 0.0;
-                }
+                    norm_b0 = (oneMinusCosOmega * 0.5) * a0_inv;
+                    norm_b1 = oneMinusCosOmega * a0_inv;
+                    norm_b2 = norm_b0; // LPF: b2 equals b0
+                    norm_a1 = (-2.0 * cosOmega) * a0_inv;
+                    norm_a2 = (1.0 - alpha) * a0_inv;
+                } // else: Coefficients remain in pass-through state
+            } // else (fc <= 0 or fc >= fs/2): Coefficients remain in pass-through state
 
-            } else if (fc <= 0) {
-                 // Pass-through for 0Hz cutoff
-                 norm_b0 = 1.0; norm_b1 = 0.0; norm_b2 = 0.0; norm_a1 = 0.0; norm_a2 = 0.0;
-            }
-            // Note: fc >= fs/2 case implicitly handled by potential instability, leading to fallback or near pass-through
-
-
-            // Pre-calculate other invariants
+            // --- Pre-calculate Loop Invariants ---
+            // Calculate values that don't change within the main processing loop
             const phaseIncrement = TWO_PI * rate / sampleRate;
             const channelPhaseRad = channelPhase * DEG_TO_RAD;
             const syncRatio = channelSync * 0.01;
-            const invSyncRatio = 1.0 - syncRatio;
+            const invSyncRatio = 1.0 - syncRatio; // Calculate complementary ratio
             const negDepth = -depth;
-            const negRandomnessX2 = -randomness * 2.0;
-            const inv20 = 0.05;
+            const negRandomnessX2 = -randomness * 2.0; // Pre-calculate factor
+            const inv20 = 0.05; // Pre-calculate 1.0 / 20.0 for dB-like to linear conversion
 
-            // Load phase state
+            // Load state variables from context into local variables for faster access in the loop
             let phase = context.phase;
+            let common_x1 = context.common_x1;
+            let common_x2 = context.common_x2;
+            // Get direct references to the Float64Array state buffers
+            const ch_x1 = context.ch_x1;
+            const ch_x2 = context.ch_x2;
 
-            // --- Main Processing Loop ---
+            // --- Main Processing Loop (Iterates over each sample in the block) ---
             for (let i = 0; i < blockSize; ++i) {
+
                 // --- Update Common Phase ---
                 phase += phaseIncrement;
+                // Wrap phase within [0, 2*PI) using a simple check (often faster than modulo)
                 if (phase >= TWO_PI) {
                     phase -= TWO_PI;
                 }
 
                 // --- Generate and Filter Common Noise ---
-                const noise = Math.random() - 0.5;
-                // Apply Biquad LPF (Direct Form II Transposed)
-                let filteredCommonNoise = norm_b0 * noise + context.common_x1;
-                context.common_x1 = norm_b1 * noise - norm_a1 * filteredCommonNoise + context.common_x2;
-                context.common_x2 = norm_b2 * noise - norm_a2 * filteredCommonNoise;
+                const noise = Math.random() - 0.5; // White noise [-0.5, 0.5]
+                // Apply Biquad LPF using Direct Form II Transposed structure for common noise
+                const filteredCommonNoise = norm_b0 * noise + common_x1;
+                common_x1 = norm_b1 * noise - norm_a1 * filteredCommonNoise + common_x2;
+                common_x2 = norm_b2 * noise - norm_a2 * filteredCommonNoise;
 
                 // --- Process Each Channel ---
                 for (let ch = 0; ch < channelCount; ++ch) {
-                    const offset = ch * blockSize;
+                    const offset = ch * blockSize; // Calculate index offset for the current channel in the data buffer
 
-                    const currentChannelPhase = phase + ch * channelPhaseRad;
+                    // Calculate per-channel phase, applying channel offset
+                    let currentChannelPhase = phase + ch * channelPhaseRad;
+                    // Wrap channel phase robustly (handles multiple wraps if necessary)
+                    // Note: Simple if (p >= 2PI) p -= 2PI; might suffice if phase increments are small
+                    currentChannelPhase = currentChannelPhase - TWO_PI * Math.floor(currentChannelPhase / TWO_PI);
 
                     // --- Generate and Filter Channel Noise ---
-                    const channelNoise = Math.random() - 0.5;
-                    // Apply Biquad LPF (Direct Form II Transposed)
-                    let filteredChannelNoise = norm_b0 * channelNoise + context.ch_x1[ch];
-                    context.ch_x1[ch] = norm_b1 * channelNoise - norm_a1 * filteredChannelNoise + context.ch_x2[ch];
-                    context.ch_x2[ch] = norm_b2 * channelNoise - norm_a2 * filteredChannelNoise;
+                    const channelNoise = Math.random() - 0.5; // White noise [-0.5, 0.5]
+                    // Apply Biquad LPF using Direct Form II Transposed for channel-specific noise
+                    const x1_ch = ch_x1[ch]; // Read previous state
+                    const x2_ch = ch_x2[ch]; // Read previous state
+                    const filteredChannelNoise = norm_b0 * channelNoise + x1_ch;
+                    // Update state arrays directly (references context arrays)
+                    ch_x1[ch] = norm_b1 * channelNoise - norm_a1 * filteredChannelNoise + x2_ch;
+                    ch_x2[ch] = norm_b2 * channelNoise - norm_a2 * filteredChannelNoise;
 
-                    // Blend common and channel noise based on sync ratio
+                    // --- Blend Common and Channel Noise ---
+                    // Combine common and channel-specific filtered noise based on sync ratio
                     const finalFilteredNoise = syncRatio * filteredCommonNoise + invSyncRatio * filteredChannelNoise;
 
                     // --- Calculate Gain ---
+                    // Base modulation uses a flipped sine wave shifted to [0, 1] range
                     const baseModulation = (1.0 - Math.sin(currentChannelPhase)) * 0.5;
+                    // Noise contribution affects the modulation depth
                     const noiseContribution = finalFilteredNoise * negRandomnessX2;
+                    // Combine base modulation and noise, scaled by depth/randomness (in a pseudo-dB scale)
                     const totalModulationDB = baseModulation * negDepth + noiseContribution;
-                    const gain = Math.pow(10.0, totalModulationDB * inv20);
+                    // Convert the dB-like value to linear gain using 10**(x/20) equivalent
+                    const gain = 10**(totalModulationDB * inv20);
 
-                    // Apply gain
+                    // --- Apply Gain ---
+                    // Modulate the input audio sample by the calculated gain
                     data[offset + i] *= gain;
                 }
             }
 
             // --- Store Updated State ---
+            // Write the final state values back to the context object for the next processing block
             context.phase = phase;
-            // Biquad states updated in-place
+            context.common_x1 = common_x1;
+            context.common_x2 = common_x2;
+            // context.ch_x1 and context.ch_x2 were modified in-place via references
 
-            // Return the modified data buffer
+            // Return the modified audio data buffer
             return data;
         `);
     }

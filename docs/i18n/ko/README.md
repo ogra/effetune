@@ -278,7 +278,7 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Modulation | Wow Flutter | 시간 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#wow-flutter) |
 | Reverb    | RS Reverb          | 자연스러운 확산을 갖춘 랜덤 스캐터링 리버브          | [세부 정보](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping      | 디지털 하드 클리핑 이펙트                           | [세부 정보](plugins/saturation.md#hard-clipping) |
-| Saturation | Intermodulator | 하모닉 인터모듈레이션 디스토션을 통해 독특한 특성을 더합니다 | [세부 정보](plugins/saturation.md#intermodulator) |
+| Saturation | Harmonic Distortion | 각 하모닉을 독립적으로 제어할 수 있는 하모닉 디스토션을 통해 독특한 특성을 더합니다 | [세부 정보](plugins/saturation.md#harmonic-distortion) |
 | Saturation| Multiband Saturation | 정밀한 주파수 기반 온기를 위한 3밴드 서츄레이션 이펙트 | [세부 정보](plugins/saturation.md#multiband-saturation) |
 | Saturation| Saturation         | 서츄레이션 이펙트                                   | [세부 정보](plugins/saturation.md#saturation) |
 | Saturation| Sub Synth          | 베이스 강화를 위한 서브 하모닉 신호 혼합             | [세부 정보](plugins/saturation.md#sub-synth) |

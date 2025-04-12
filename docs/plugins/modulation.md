@@ -15,6 +15,9 @@ Experience a unique audio effect that brings a touch of natural movement to your
 
 ### Parameters
 
+- **Band Split**  
+  Enables or disables the frequency band splitting. When enabled, the effect separately processes low and high frequencies. When disabled, the entire frequency spectrum is processed as high frequencies, resulting in a more pronounced effect.
+
 - **Crossover (Hz)**  
   Defines the frequency threshold above which the effect is applied. Lower frequencies remain clear while higher frequencies receive the modulation.
 
