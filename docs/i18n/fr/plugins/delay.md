@@ -160,10 +160,22 @@ Pour chaque résonateur :
   - Long (200-500ms) : Résonances de type cloche, soutenues.
   - *Note :* Les fréquences plus élevées décroissent automatiquement plus rapidement que les fréquences plus basses pour un son naturel.
 
-- **LPF Freq (Hz)** - Filtre passe-bas qui façonne la tonalité de la résonance (20 à 20 000 Hz).
-  - Valeurs basses : Résonances plus sombres et plus atténuées.
-  - Valeurs hautes : Résonances plus brillantes et plus présentes.
+- **LPF Freq (Hz)** - Filtre passe-bas qui façonne le timbre de la résonance (20 à 20 000 Hz).
+  - Valeurs basses : Résonances plus sombres et feutrées.
+  - Valeurs hautes : Résonances plus brillantes et présentes.
   - Ajustez pour contrôler le contenu harmonique de la résonance.
+
+- **HPF Freq (Hz)** - Filtre passe-haut qui élimine les basses fréquences indésirables de la résonance (20 à 20 000 Hz).
+  - Valeurs basses : Permet le passage de plus de contenu basse fréquence.
+  - Valeurs hautes : Affine la résonance en supprimant les fréquences graves.
+  - Utilisez en combinaison avec le LPF pour un contrôle précis de la bande de fréquences.
+  - Les valeurs par défaut sont fixées à la moitié de la fréquence de chaque résonateur.
+
+- **Gain (dB)** - Contrôle le niveau de sortie individuel de chaque résonateur (-18 à +18 dB).
+  - Valeurs négatives : Réduit le niveau de sortie du résonateur.
+  - -12 dB : Gain par défaut.
+  - Valeurs positives : Augmente le niveau de sortie du résonateur.
+  - Utile pour affiner l'équilibre entre différents résonateurs.
 
 - **Mix (%)** - Équilibre le volume des résonances par rapport au son original (0 à 100%).
   - 0% : Aucun effet.

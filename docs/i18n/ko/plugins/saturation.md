@@ -4,11 +4,97 @@
 
 ## Plugin List
 
+- [Dynamic Saturation](#dynamic-saturation) - 스피커 콘의 비선형 이동을 시뮬레이션
 - [Hard Clipping](#hard-clipping) - 사운드에 강도와 날카로움을 추가
 - [Harmonic Distortion](#harmonic-distortion) - 각 고조파를 독립적으로 제어할 수 있는 고조파 왜곡을 통해 독특한 개성을 부여합니다
 - [Multiband Saturation](#multiband-saturation) - 서로 다른 주파수 대역을 독립적으로 형성하고 강화
 - [Saturation](#saturation) - 빈티지 장비와 같은 따뜻함과 풍성함을 추가
 - [Sub Synth](#sub-synth) - 저역 향상을 위한 서브 하모닉 신호 생성 및 블렌드
+
+## Dynamic Saturation
+
+물리학 기반 이펙트로 다양한 조건에서 스피커 콘의 비선형 이동을 시뮬레이션합니다. 스피커의 기계적 동작을 모델링한 다음 그 이동에 새츄레이션을 적용하여, 음악에 역동적으로 응답하는 독특한 형태의 디스토션을 만들어냅니다.
+
+### 청취 향상 가이드
+- **미묘한 향상:**
+  - 부드러운 따뜻함과 경미한 압축과 같은 행동 추가
+  - 명확한 디스토션 없이 자연스럽게 "푸시된" 사운드 생성
+  - 사운드에 미묘한 깊이감과 차원감 추가
+- **적당한 이펙트:**
+  - 더 역동적이고 반응성 있는 디스토션 생성
+  - 지속적인 사운드에 독특한 움직임과 생동감 추가
+  - 자연스러운 압축 느낌으로 과도 현상 강조
+- **창의적인 이펙트:**
+  - 입력에 따라 진화하는 복잡한 디스토션 패턴 생성
+  - 공명하는 스피커 같은 동작 생성
+  - 극적인 사운드 디자인 가능성 제공
+
+### 파라미터
+- **Speaker Drive** (0.0-10.0) - 오디오 신호가 콘을 얼마나 강하게 움직이는지 제어
+  - 낮은 값: 미묘한 움직임과 부드러운 효과
+  - 높은 값: 극적인 움직임과 더 강한 특성
+- **Speaker Stiffness** (0.0-10.0) - 콘의 서스펜션 강성을 시뮬레이션
+  - 낮은 값: 느슨하고 자유로운 움직임과 더 긴 감쇠
+  - 높은 값: 단단하고 제어된 움직임과 빠른 응답
+- **Speaker Damping** (0.0-10.0) - 콘의 움직임이 얼마나 빨리 정착하는지 제어
+  - 낮은 값: 연장된 진동과 공명
+  - 높은 값: 제어된 사운드를 위한 빠른 감쇠
+- **Speaker Mass** (0.1-5.0) - 콘의 관성을 시뮬레이션
+  - 낮은 값: 빠르고 반응성 있는 움직임
+  - 높은 값: 더 느리고 두드러진 움직임
+- **Distortion Drive** (0.0-10.0) - 변위 새츄레이션의 강도 제어
+  - 낮은 값: 미묘한 비선형성
+  - 높은 값: 강한 새츄레이션 특성
+- **Distortion Bias** (-1.0-1.0) - 새츄레이션 곡선의 대칭성 조정
+  - 음수: 음의 변위 강조
+  - 영: 대칭적 새츄레이션
+  - 양수: 양의 변위 강조
+- **Distortion Mix** (0-100%) - 선형 및 포화 변위 사이의 블렌드
+  - 낮은 값: 더 선형적인 응답
+  - 높은 값: 더 포화된 특성
+- **Cone Motion Mix** (0-100%) - 콘의 움직임이 원래 사운드에 얼마나 영향을 주는지 제어
+  - 낮은 값: 미묘한 향상
+  - 높은 값: 극적인 효과
+- **Output Gain** (-18.0-18.0dB) - 최종 출력 레벨 조정
+
+### 시각적 디스플레이
+- 변위가 어떻게 포화되는지 보여주는 인터랙티브 전달 곡선 그래프
+- 디스토션 특성의 명확한 시각적 피드백
+- Distortion Drive와 Bias가 사운드에 어떤 영향을 미치는지에 대한 시각적 표현
+
+### 음악 향상 팁
+- 미묘한 따뜻함을 위해:
+  - Speaker Drive: 2.0-3.0
+  - Speaker Stiffness: 1.5-2.5
+  - Speaker Damping: 0.5-1.5
+  - Distortion Drive: 1.0-2.0
+  - Cone Motion Mix: 20-40%
+  - Distortion Mix: 30-50%
+
+- 역동적인 특성을 위해:
+  - Speaker Drive: 3.0-5.0
+  - Speaker Stiffness: 2.0-4.0
+  - Speaker Mass: 0.5-1.5
+  - Distortion Drive: 3.0-6.0
+  - Distortion Bias: 비대칭 특성을 위해 ±0.2 시도
+  - Cone Motion Mix: 40-70%
+
+- 창의적인 사운드 디자인을 위해:
+  - Speaker Drive: 6.0-10.0
+  - Speaker Stiffness: 극단적인 값 시도(매우 낮거나 높은)
+  - Speaker Mass: 과장된 움직임을 위해 2.0-5.0
+  - Distortion Drive: 5.0-10.0
+  - Bias 값으로 실험
+  - Cone Motion Mix: 70-100%
+
+### 빠른 시작 가이드
+1. 적당한 Speaker Drive(3.0)와 Stiffness(2.0)로 시작
+2. 공명을 제어하기 위해 Speaker Damping 설정(균형 잡힌 응답을 위해 1.0)
+3. 취향에 맞게 Distortion Drive 조정(적당한 효과를 위해 3.0)
+4. 처음에는 Distortion Bias를 0.0으로 유지
+5. Distortion Mix를 50%, Cone Motion Mix를 50%로 설정
+6. 이펙트의 특성을 변경하기 위해 Speaker Mass 조정
+7. 레벨 균형을 맞추기 위해 Output Gain으로 미세 조정
 
 ## Hard Clipping
 

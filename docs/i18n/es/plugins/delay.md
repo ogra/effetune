@@ -160,10 +160,22 @@ Para cada resonador:
   - Largo (200-500ms): Resonancias sostenidas, similares a campanas.
   - *Nota:* Las frecuencias más altas decaen automáticamente más rápido que las frecuencias más bajas para un sonido natural.
 
-- **LPF Freq (Hz)** - Filtro paso bajo que da forma al tono de la resonancia (20 a 20,000 Hz).
-  - Valores bajos: Resonancias más oscuras y apagadas.
-  - Valores altos: Resonancias más brillantes y presentes.
-  - Ajusta para controlar el contenido armónico de la resonancia.
+- **LPF Freq (Hz)** - Filtro paso bajo que moldea el tono de la resonancia (20 a 20,000 Hz).
+  - Valores más bajos: Resonancias más oscuras y apagadas.
+  - Valores más altos: Resonancias más brillantes y presentes.
+  - Ajustar para controlar el contenido armónico de la resonancia.
+
+- **HPF Freq (Hz)** - Filtro paso alto que elimina las frecuencias bajas no deseadas de la resonancia (20 a 20,000 Hz).
+  - Valores más bajos: Permite que pase más contenido de baja frecuencia.
+  - Valores más altos: Adelgaza la resonancia eliminando las frecuencias graves.
+  - Usar junto con LPF para un control preciso de la banda de frecuencias.
+  - Los valores predeterminados se establecen en la mitad de la frecuencia de cada resonador.
+
+- **Gain (dB)** - Controla el nivel de salida individual de cada resonador (-18 a +18 dB).
+  - Valores negativos: Reduce el nivel de salida del resonador.
+  - -12 dB: Ganancia predeterminada.
+  - Valores positivos: Aumenta el nivel de salida del resonador.
+  - Útil para ajustar con precisión el balance entre diferentes resonadores.
 
 - **Mix (%)** - Equilibra el volumen de las resonancias con el sonido original (0 a 100%).
   - 0%: Sin efecto.

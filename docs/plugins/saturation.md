@@ -4,11 +4,97 @@ A collection of plugins that add warmth and character to your music. These effec
 
 ## Plugin List
 
+- [Dynamic Saturation](#dynamic-saturation) - Simulates the nonlinear displacement of speaker cones
 - [Hard Clipping](#hard-clipping) - Adds intensity and edge to the sound
 - [Harmonic Distortion](#harmonic-distortion) - Adds unique character via harmonic distortion with independent control of each harmonic
 - [Multiband Saturation](#multiband-saturation) - Shape and enhance different frequency ranges independently
 - [Saturation](#saturation) - Adds warmth and richness like vintage equipment
 - [Sub Synth](#sub-synth) - Generates and mixes subharmonic signals for bass enhancement
+
+## Dynamic Saturation
+
+A physics-based effect that simulates the nonlinear displacement of speaker cones under different conditions. By modeling the mechanical behavior of a speaker and then applying saturation to that displacement, it creates a unique form of distortion that responds dynamically to your music.
+
+### Listening Enhancement Guide
+- **Subtle Enhancement:**
+  - Adds gentle warmth and slight compression-like behavior
+  - Creates a natural "pushed" sound without obvious distortion
+  - Adds subtle depth and dimensionality to the sound
+- **Moderate Effect:**
+  - Creates a more dynamic, responsive distortion
+  - Adds unique movement and liveliness to sustained sounds
+  - Emphasizes transients with natural-feeling compression
+- **Creative Effect:**
+  - Produces complex distortion patterns that evolve with the input
+  - Creates resonant, speaker-like behaviors
+  - Enables dramatic sound design possibilities
+
+### Parameters
+- **Speaker Drive** (0.0-10.0) - Controls how strongly the audio signal moves the cone
+  - Low values: Subtle movement and gentle effect
+  - High values: Dramatic movement and stronger character
+- **Speaker Stiffness** (0.0-10.0) - Simulates the cone's suspension stiffness
+  - Low values: Loose, free movement with longer decay
+  - High values: Tight, controlled movement with quick response
+- **Speaker Damping** (0.0-10.0) - Controls how quickly cone movement settles
+  - Low values: Prolonged vibration and resonance
+  - High values: Quick damping for controlled sound
+- **Speaker Mass** (0.1-5.0) - Simulates cone inertia
+  - Low values: Fast, responsive movement
+  - High values: Slower, more pronounced movement
+- **Distortion Drive** (0.0-10.0) - Controls the intensity of displacement saturation
+  - Low values: Subtle nonlinearity
+  - High values: Strong saturation character
+- **Distortion Bias** (-1.0-1.0) - Adjusts the symmetry of the saturation curve
+  - Negative: Emphasizes negative displacement
+  - Zero: Symmetrical saturation
+  - Positive: Emphasizes positive displacement
+- **Distortion Mix** (0-100%) - Blends between linear and saturated displacement
+  - Low values: More linear response
+  - High values: More saturated character
+- **Cone Motion Mix** (0-100%) - Controls how much cone motion affects the original sound
+  - Low values: Subtle enhancement
+  - High values: Dramatic effect
+- **Output Gain** (-18.0-18.0dB) - Adjusts the final output level
+
+### Visual Display
+- Interactive transfer curve graph showing how displacement is being saturated
+- Clear visual feedback of distortion characteristics
+- Visual representation of how Distortion Drive and Bias affect the sound
+
+### Music Enhancement Tips
+- For Subtle Warmth:
+  - Speaker Drive: 2.0-3.0
+  - Speaker Stiffness: 1.5-2.5
+  - Speaker Damping: 0.5-1.5
+  - Distortion Drive: 1.0-2.0
+  - Cone Motion Mix: 20-40%
+  - Distortion Mix: 30-50%
+
+- For Dynamic Character:
+  - Speaker Drive: 3.0-5.0
+  - Speaker Stiffness: 2.0-4.0
+  - Speaker Mass: 0.5-1.5
+  - Distortion Drive: 3.0-6.0
+  - Distortion Bias: Try ±0.2 for asymmetrical character
+  - Cone Motion Mix: 40-70%
+
+- For Creative Sound Design:
+  - Speaker Drive: 6.0-10.0
+  - Speaker Stiffness: Try extreme values (very low or high)
+  - Speaker Mass: 2.0-5.0 for exaggerated movement
+  - Distortion Drive: 5.0-10.0
+  - Experiment with Bias values
+  - Cone Motion Mix: 70-100%
+
+### Quick Start Guide
+1. Start with moderate Speaker Drive (3.0) and Stiffness (2.0)
+2. Set Speaker Damping to control resonance (1.0 for balanced response)
+3. Adjust Distortion Drive to taste (3.0 for moderate effect)
+4. Keep Distortion Bias at 0.0 initially
+5. Set Distortion Mix to 50% and Cone Motion Mix to 50%
+6. Adjust Speaker Mass to change the character of the effect
+7. Fine-tune with Output Gain to balance levels
 
 ## Hard Clipping
 

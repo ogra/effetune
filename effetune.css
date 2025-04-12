@@ -406,7 +406,7 @@ input[type="checkbox"] {
     position: relative;
     transition: margin-left 0.3s ease, transform 0.3s ease;
     z-index: 10; /* Lower than plugin list */
-    width: 1084px;
+    width: 1064px;
 }
 
 .drag-message {
@@ -554,7 +554,7 @@ input[type="checkbox"] {
     background-color: #3d3d3d;
     border-radius: 4px;
     transition: background-color 0.2s;
-    width: 1064px;
+    width: 1044px;
 }
 
 .pipeline-item.selected {

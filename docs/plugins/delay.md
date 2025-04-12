@@ -163,6 +163,18 @@ For each resonator:
   - Higher values: Brighter, more present resonances.
   - Adjust to control the harmonic content of the resonance.
 
+- **HPF Freq (Hz)** - High-pass filter that removes unwanted low frequencies from the resonance (20 to 20,000 Hz).
+  - Lower values: Allows more low frequency content through.
+  - Higher values: Thins out the resonance by removing bass frequencies.
+  - Use together with LPF for precise frequency band control.
+  - Default values are set to half of each resonator's frequency.
+
+- **Gain (dB)** - Controls the individual output level of each resonator (-18 to +18 dB).
+  - Negative values: Reduce the resonator's output level.
+  - -12 dB: Default gain setting.
+  - Positive values: Boost the resonator's output level.
+  - Useful for fine-tuning the balance between different resonators.
+
 - **Mix (%)** - Balances the volume of the resonances against the original sound (0 to 100%).
   - 0%: No effect.
   - 5-25%: Subtle enhancement.

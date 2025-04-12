@@ -165,6 +165,18 @@ Para cada ressonador:
   - Valores altos: Ressonâncias mais brilhantes e presentes.
   - Ajuste para controlar o conteúdo harmónico da ressonância.
 
+- **HPF Freq (Hz)** - Filtro passa-alto que remove frequências baixas indesejadas da ressonância (20 a 20.000 Hz).
+  - Valores baixos: Permite a passagem de mais conteúdo de baixa frequência.
+  - Valores altos: Torna a ressonância mais fina removendo frequências graves.
+  - Use em conjunto com o LPF para um controlo preciso da banda de frequência.
+  - Os valores padrão são definidos como metade da frequência de cada ressonador.
+
+- **Gain (dB)** - Controla o nível de saída individual de cada ressonador (-18 a +18 dB).
+  - Valores negativos: Reduzem o nível de saída do ressonador.
+  - -12 dB: Configuração de ganho padrão.
+  - Valores positivos: Aumentam o nível de saída do ressonador.
+  - Útil para ajustar com precisão o equilíbrio entre diferentes ressonadores.
+
 - **Mix (%)** - Equilibra o volume das ressonâncias em relação ao som original (0 a 100%).
   - 0%: Sem efeito.
   - 5-25%: Melhoria subtil.

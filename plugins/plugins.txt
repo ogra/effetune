@@ -51,6 +51,7 @@ modulation/tremolo: Tremolo | Modulation | TremoloPlugin
 modulation/wow_flutter: Wow Flutter | Modulation | WowFlutterPlugin
 others/oscillator: Oscillator | Others | OscillatorPlugin
 reverb/rs_reverb: RS Reverb | Reverb | RSReverbPlugin
+saturation/dynamic_saturation: Dynamic Saturation | Saturation | DynamicSaturationPlugin | css
 saturation/hard_clipping: Hard Clipping | Saturation | HardClippingPlugin | css
 saturation/harmonic_distortion: Harmonic Distortion | Saturation | HarmonicDistortionPlugin | css
 saturation/multiband_saturation: Multiband Saturation | Saturation | MultibandSaturationPlugin | css
