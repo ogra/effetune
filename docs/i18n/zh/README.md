@@ -20,6 +20,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 - 实时音频可视化
 - 可实时修改的音频管道
 - 使用当前效果链的离线音频文件处理
+- 分组功能，用于将多个效果组合在一起控制
 
 ## 设置指南
 
@@ -123,7 +124,14 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
    - Delete: 删除选中的效果
    - ESC: 取消选择所有效果
 
-3. 键盘快捷键（使用播放器时）：
+3. 使用分组功能：
+   - 在效果链开始处添加一个分组效果
+   - 在注释字段中输入描述性名称
+   - 切换分组效果的 ON/OFF 将启用/禁用该分组中的所有效果
+   - 使用多个分组效果将效果链组织成逻辑分组
+   - [更多关于控制效果的信息](plugins/control.md)
+
+4. 键盘快捷键（使用播放器时）：
    - Space：播放/暂停
    - Ctrl + → 或 N：下一曲
    - Ctrl + ← 或 P：上一曲
@@ -283,6 +291,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Spatial   | Multiband Balance | 5 频段频率依赖的立体声平衡控制                   | [详情](plugins/spatial.md#multiband-balance) |
 | Spatial   | Stereo Blend      | 立体声宽度控制效果                           | [详情](plugins/spatial.md#stereo-blend) |
 | Others    | Oscillator        | 多波形音频信号生成器                          | [详情](plugins/others.md#oscillator) |
+| Control   | Section           | Group multiple effects for unified control  | [详情](plugins/control.md) |
 
 ## 技术信息
 

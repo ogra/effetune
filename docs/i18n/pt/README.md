@@ -12,6 +12,15 @@ EffeTune foi criado para entusiastas do áudio que desejam melhorar sua experiê
 
 Sem mitos audiófilos, apenas pura ciência.
 
+## Features
+
+- Real-time audio processing
+- Drag-and-drop interface for building effect chains
+- Expandable effect system with categorized effects
+- Live audio visualization
+- Audio pipeline that can be modified in real-time
+- Offline audio file processing with current effect chain
+
 ## Recursos
 
 - Processamento de áudio em tempo real
@@ -123,7 +132,14 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
    - Delete: Excluir os efeitos selecionados
    - ESC: Desmarcar todos os efeitos
 
-3. Atalhos de teclado (ao usar o player):
+3. Usando a Funcionalidade de Seção:
+   - Adicione um efeito de Seção no início de um grupo de efeitos
+   - Digite um nome descritivo no campo Comentário
+   - Alternar a Seção ON/OFF habilitará/desabilitará todos os efeitos dentro dessa seção
+   - Use múltiplos efeitos de Seção para organizar sua cadeia de efeitos em grupos lógicos
+   - [Mais sobre efeitos de controle](plugins/control.md)
+
+4. Atalhos de teclado (ao usar o player):
    - Space: Reproduzir/Pausar
    - Ctrl + → ou N: Próxima faixa
    - Ctrl + ← ou P: Faixa anterior
@@ -226,17 +242,17 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 
 ## FAQ
 
-**Q. Does this app support surround sound?**
-**A.** Atualmente, devido às limitações do navegador, não podemos lidar com mais de 2 canais, e não há um histórico comprovado de operação com som surround. Embora a implementação dos efeitos suporte som surround, teremos que aguardar o suporte futuro dos navegadores.
+**P. Este aplicativo suporta som surround?**
+**R.** Atualmente, devido às limitações do navegador, não podemos lidar com mais de 2 canais, e não há um histórico comprovado de operação com som surround. Embora a implementação dos efeitos suporte som surround, teremos que aguardar o suporte futuro dos navegadores.
 
-**Q. What's the recommended effect chain length?**
-**A.** Embora não haja um limite rígido, recomendamos manter sua cadeia de efeitos entre 8 e 10 efeitos para um desempenho ideal. Cadeias mais complexas podem impactar o desempenho do sistema.
+**P. Qual é o comprimento recomendado da cadeia de efeitos?**
+**R.** Embora não haja um limite rígido, recomendamos manter sua cadeia de efeitos entre 8 e 10 efeitos para um desempenho ideal. Cadeias mais complexas podem impactar o desempenho do sistema.
 
-**Q. How do I achieve the best sound quality?**
-**A.** Use taxas de amostragem de 96kHz ou superiores sempre que possível, comece com configurações sutis de efeitos e construa sua cadeia gradualmente. Monitore os níveis para evitar distorções.
+**P. Como obtenho a melhor qualidade de som?**
+**R.** Use taxas de amostragem de 96kHz ou superiores sempre que possível, comece com configurações sutis de efeitos e construa sua cadeia gradualmente. Monitore os níveis para evitar distorções.
 
-**Q. Will this work with any audio source?**
-**A.** Sim, o EffeTune pode processar qualquer áudio que esteja sendo reproduzido através do dispositivo de entrada selecionado, incluindo serviços de streaming, arquivos locais e mídias físicas.
+**P. Isso funcionará com qualquer fonte de áudio?**
+**R.** Sim, o EffeTune pode processar qualquer áudio que esteja sendo reproduzido através do dispositivo de entrada selecionado, incluindo serviços de streaming, arquivos locais e mídias físicas.
 
 ## Efeitos Disponíveis
 
@@ -283,6 +299,7 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Spatial   | Multiband Balance | Controle de equilíbrio estéreo dependente da frequência com 5 bandas                 | [Detalhes](plugins/spatial.md#multiband-balance) |
 | Spatial   | Stereo Blend      | Efeito de controle de largura estéreo                                              | [Detalhes](plugins/spatial.md#stereo-blend) |
 | Others    | Oscillator        | Gerador de sinal de áudio com múltiplas formas de onda                             | [Detalhes](plugins/others.md#oscillator) |
+| Control   | Section           | Group multiple effects for unified control                                         | [Details](plugins/control.md) |
 
 ## Informações Técnicas
 

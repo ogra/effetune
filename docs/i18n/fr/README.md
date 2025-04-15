@@ -12,6 +12,15 @@ EffeTune a été créé pour les passionnés de musique souhaitant améliorer le
 
 Aucun mythe audiophile, juste de la science pure.
 
+## Features
+
+- Real-time audio processing
+- Drag-and-drop interface for building effect chains
+- Expandable effect system with categorized effects
+- Live audio visualization
+- Audio pipeline that can be modified in real-time
+- Offline audio file processing with current effect chain
+
 ## Fonctionnalités
 
 - Traitement audio en temps réel
@@ -121,7 +130,14 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
    - Delete: Supprimer les effets sélectionnés
    - ESC: Désélectionner tous les effets
 
-3. Raccourcis clavier (lors de l'utilisation du lecteur) :
+3. Utilisation de la fonction Section :
+   - Ajouter un effet Section au début d'un groupe d'effets
+   - Entrer un nom descriptif dans le champ Commentaire
+   - Activer/Désactiver l'effet Section activera/désactivera tous les effets de cette section
+   - Utiliser plusieurs effets Section pour organiser votre chaîne d'effets en groupes logiques
+   - [En savoir plus sur les effets de contrôle](plugins/control.md)
+
+4. Raccourcis clavier (lors de l'utilisation du lecteur) :
    - Space : Lecture/Pause
    - Ctrl + → ou N : Piste suivante
    - Ctrl + ← ou P : Piste précédente
@@ -282,6 +298,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Spatial   | Multiband Balance | Contrôle de l'équilibre stéréo dépendant des fréquences en 5 bandes | [Détails](plugins/spatial.md#multiband-balance) |
 | Spatial   | Stereo Blend | Effet de contrôle de la largeur stéréo | [Détails](plugins/spatial.md#stereo-blend) |
 | Others    | Oscillator | Générateur de signal audio multi-forme d'onde | [Détails](plugins/others.md#oscillator) |
+| Control   | Section | Group multiple effects for unified control | [Details](plugins/control.md) |
 
 ## Informations techniques
 

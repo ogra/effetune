@@ -12,6 +12,7 @@ Others: Other audio tools and generators
 Reverb: Reverberation effects
 Saturation: Saturation and distortion effects
 Spatial: Spatial audio effects
+Control: Control tools
 
 # Plugin definitions
 # format: path: Display Name | Category | Class Name | Has CSS (optional)
@@ -59,3 +60,4 @@ saturation/saturation: Saturation | Saturation | SaturationPlugin | css
 saturation/sub_synth: Sub Synth | Saturation | SubSynthPlugin | css
 spatial/multiband_balance: Multiband Balance | Spatial | MultibandBalancePlugin | css
 spatial/stereo_blend: Stereo Blend | Spatial | StereoBlendPlugin
+control/section: Section | Control | SectionPlugin

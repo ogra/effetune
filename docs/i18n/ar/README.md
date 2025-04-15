@@ -20,6 +20,7 @@
 - تصور صوتي حي
 - خط معالجة صوت يمكن تعديله في الوقت الحقيقي
 - معالجة ملفات صوتية غير متصلة مع سلسلة التأثيرات الحالية
+- ميزة جزء لتجميع وتحكم تأثيرات متعددة
 
 ## دليل الإعداد
 
@@ -283,6 +284,7 @@
 | Spatial  | Multiband Balance | تحكم في توازن الصوت الستيريو يعتمد على التردد عبر 5 نطاقات   | [تفاصيل](plugins/spatial.md#multiband-balance)   |
 | Spatial  | Stereo Blend    | تأثير التحكم في عرض الستيريو                                | [تفاصيل](plugins/spatial.md#stereo-blend)        |
 | Others   | Oscillator      | مولّد إشارات صوتية متعددة الموجات                          | [تفاصيل](plugins/others.md#oscillator)           |
+| Control  | Section         | Group multiple effects for unified control                | [Details](plugins/control.md)                  |
 
 ## المعلومات التقنية
 

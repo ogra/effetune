@@ -559,6 +559,23 @@ input[type="checkbox"] {
 
 .pipeline-item.selected {
     background-color: #4d4d4d;
+    border-style: none;
+    padding: 10px;
+}
+
+.pipeline-item.section{
+    border-color: #387e3a;
+    border-style: solid;
+    border-width: 2px;
+    padding: 8px;
+}
+
+.pipeline-item.section.selected {
+    background-color: #4d4d4d;
+    border-color: #387e3a;
+    border-style: solid;
+    border-width: 2px;
+    padding: 8px;
 }
 
 .pipeline-item.dragging {
@@ -695,8 +712,17 @@ input[type="checkbox"] {
     flex-grow: 1;
 }
 
-.plugin-parameter-ui .parameter-row input[type="number"] {
+.plugin-parameter-ui .parameter-row input[type="number"]{
     width: 80px;
+    padding: 4px;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+.plugin-parameter-ui .parameter-row input[type="text"] {
+    flex-grow: 1;
     padding: 4px;
     background-color: #3d3d3d;
     border: 1px solid #4d4d4d;
@@ -925,7 +951,6 @@ input[type="checkbox"] {
     background: #2d2d2d;
 }
 
-/* Firefox用スクロールバースタイル */
 * {
     scrollbar-width: auto;
     scrollbar-color: #4d4d4d #2d2d2d;
@@ -1089,4 +1114,9 @@ input[type="checkbox"] {
 .routing-dialog-row select:focus {
     outline: none;
     border-color: #4a9eff;
+}
+
+/* Plugin name display state */
+.plugin-name.plugin-disabled {
+    color: #888; /* Grey when OFF */
 }

@@ -176,7 +176,6 @@ for (let ch = startCh; ch < endCh; ch++) {
 return data; // Return the modified buffer
 `;
 
-    // --- ここから下のクラス定義は変更なし ---
     constructor() {
         super('Tilt EQ', 'Frequency tilt equalizer');
 

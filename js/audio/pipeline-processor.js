@@ -96,17 +96,7 @@ export class PipelineProcessor {
         }
 
         // Send plugin data to worklet
-        const pluginData = this.pipeline.map(plugin => {
-            const params = plugin.getParameters();
-            return {
-                id: plugin.id,
-                type: plugin.constructor.name,
-                enabled: plugin.enabled,
-                parameters: params,
-                inputBus: plugin.inputBus,
-                outputBus: plugin.outputBus
-            };
-        });
+        const pluginData = this.prepareSectionAwarePluginData();
         
         // We don't need to add a message handler here as it's already set up in the AudioContextManager
         
@@ -118,6 +108,25 @@ export class PipelineProcessor {
         });
         
         return '';
+    }
+    
+    /**
+     * Prepares plugin data with section effects considered
+     * @returns {Array} Array of plugin data objects
+     */
+    prepareSectionAwarePluginData() {
+        return this.pipeline.map(plugin => {
+            const params = plugin.getParameters();
+            
+            return {
+                id: plugin.id,
+                type: plugin.constructor.name,
+                enabled: plugin.enabled,
+                parameters: params,
+                inputBus: plugin.inputBus,
+                outputBus: plugin.outputBus
+            };
+        });
     }
     
     /**

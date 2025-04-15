@@ -290,16 +290,25 @@ class DelayPlugin extends PluginBase {
         const createRow = (labelText, type, min, max, step, value, onChange) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            // Generate unique ID
+            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+            const inputId = `${this.id}-${this.name}-${paramName}-input`;
             const label = document.createElement('label');
             label.textContent = labelText;
+            label.htmlFor = sliderId;
             const slider = document.createElement('input');
             slider.type = 'range';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
             const input = document.createElement('input');
             input.type = type;
+            input.id = inputId;
+            input.name = inputId;
             input.min = min;
             input.max = max;
             input.step = step;

@@ -10,147 +10,79 @@ class DynamicSaturationPlugin extends PluginBase {
         this.dd = 1.5;   // dd: Distortion Drive (0.0-10.0)
         this.db = 0.1;   // db: Distortion Bias (-1.0-1.0)
         this.dm = 100.0; // dm: Distortion Mix (0-100%)
-        this.cm = 50.0;  // cm: Cone Motion Mix (0-100%)
+        this.cm = 20.0;  // cm: Cone Motion Mix (0-100%)
         this.og = 0.0;   // og: Output Gain (-18.0-18.0 dB)
 
         // Register processor with our speaker cone simulation
         this.registerProcessor(`
-            // Main processing function executed per audio block.
-            // Parameters:
-            //   data: Float32Array containing interleaved audio data for all channels (input/output buffer)
-            //   parameters: Object containing control parameters (e.g., sd, ss, sp, sm, dd, db, dm, cm, og)
-            //   context: Object for maintaining state between blocks (e.g., xpos, vel)
-            //   Returns: The modified data array (or original if disabled).
-
-            // Early exit if processing is disabled
             if (!parameters.enabled) return data;
-
-            // --- Parameter Retrieval ---
-            // Destructure parameters for potentially slightly faster access (?) and readability.
-            // Note: Assuming parameters object structure matches the original code.
+        
             const {
-                sd: spkDrive,   // Speaker Drive
-                ss: spkStiff,   // Speaker Stiffness
-                sp: spkDamp,    // Speaker Damping
-                sm: spkMass,    // Speaker Mass
-                dd: dstDrive,   // Distortion Drive
-                db: dstBias,    // Distortion Bias
-                dm: dstMix,     // Distortion Mix (%)
-                cm: coneMix,    // Cone Mix (%)
-                og: outGain,    // Output Gain (dB)
-                // Assuming these are also passed or available, matching original implicit dependencies
-                channelCount,   // Number of channels
-                blockSize,      // Samples per channel per block
-                // sampleRate is not directly used in the core physics model (dt=1)
+                sd: spkDrive,
+                ss: spkStiff,
+                sp: spkDamp,
+                sm: spkMass,
+                dd: dstDrive,
+                db: dstBias,
+                dm: dstMix,
+                cm: coneMix,
+                og: outGain,
+                channelCount,
+                blockSize,
+                sampleRate
             } = parameters;
-
-            // --- Derived Constants (Pre-calculate values used repeatedly) ---
-            // Original model used dt = 1.0 implicitly for normalization per sample.
-            const dt_half = 0.5; // dt/2 optimization, as dt = 1.0
-
-            // Convert percentages to ratios (division by 100 -> multiplication by 0.01)
+        
+            const dt_half = 0.5 * (48000 / sampleRate);
+        
             const dstMixRatio = dstMix * 0.01;
             const coneMixRatio = coneMix * 0.01;
-
-            // Convert output gain from dB to linear amplitude
-            // Using 10**(x) might be slightly faster than Math.pow(10, x) in some JS engines.
-            const gainLinear = 10**(outGain * 0.05); // Equivalent to Math.pow(10, outGain / 20)
-
-            // Precompute inverse mass to replace division with multiplication inside the loop.
-            // WARNING: If spkMass is 0 or very close to 0, this will result in Infinity or large numbers.
-            // The original code had the same potential issue. No guard added to maintain exact behavior.
+            const gainLinear = 10**(outGain * 0.05);
             const invSpkMass = 1.0 / spkMass;
-
-            // Precompute the constant part of the tanh distortion calculation.
             const dstBiasTerm = Math.tanh(dstDrive * dstBias);
-
-            // --- State Initialization & Management ---
-            // Initialize state within the 'context' object if needed.
-            // This logic matches the structure of the original code.
+        
             if (!context.initialized || context.channelCount !== channelCount) {
-                context.xpos = new Float32Array(channelCount); // Speaker cone position state
-                context.vel = new Float32Array(channelCount);  // Speaker cone velocity state
+                context.xpos = new Float32Array(channelCount);
+                context.vel = new Float32Array(channelCount);
                 context.channelCount = channelCount;
                 context.initialized = true;
-                // Note: Float32Array is initialized with zeros automatically.
             }
-
-            // Get references to state arrays from the 'context' object.
+        
             const xpos = context.xpos;
             const vel = context.vel;
-
-            // --- Main Processing Loop ---
-            // Process each channel independently.
+        
             for (let ch = 0; ch < channelCount; ch++) {
-                // Calculate the starting offset for the current channel in the interleaved 'data' array.
                 const offset = ch * blockSize;
-
-                // --- Per-Channel State ---
-                // Load state variables for the current channel into local variables.
-                let x = xpos[ch]; // Current cone position for this channel
-                let v = vel[ch];  // Current cone velocity for this channel
-
-                // --- Per-Sample Processing ---
-                // Iterate through each sample in the block for the current channel.
+                let x = xpos[ch];
+                let v = vel[ch];
+        
                 for (let i = 0; i < blockSize; i++) {
-                    const dataIndex = offset + i; // Index in the interleaved data array
-                    const inputSample = data[dataIndex]; // Read input from the data array
-
-                    // --- (1) Speaker Vibration Model (Velocity Verlet Integration) ---
-                    // Calculate current acceleration 'a'. Division replaced by multiplication.
+                    const dataIndex = offset + i;
+                    const inputSample = data[dataIndex];
+        
                     const a = (spkDrive * inputSample - spkStiff * x - spkDamp * v) * invSpkMass;
-
-                    // Calculate velocity at half time step 'vHalf'. (dt/2 = 0.5)
                     const vHalf = v + a * dt_half;
-
-                    // Update position 'xNew'. (dt = 1.0, so multiplication is omitted)
-                    const xNew = x + vHalf;
-
-                    // Calculate acceleration at the new position 'aNew'.
+        
+                    const xNew = x + vHalf * (48000 / sampleRate);
+        
                     const aNew = (spkDrive * inputSample - spkStiff * xNew - spkDamp * vHalf) * invSpkMass;
-
-                    // Update velocity 'vNew'. (dt/2 = 0.5)
                     const vNew = vHalf + aNew * dt_half;
-
-                    // Update state for the next sample iteration
+        
                     x = xNew;
                     v = vNew;
-
-                    // --- (2) Saturation of Displacement (Non-linear Distortion) ---
-                    // Calculate the distorted signal based on cone position 'x'.
-                    // Uses the precomputed 'dstBiasTerm'.
+        
                     const wetDist = Math.tanh(dstDrive * (x + dstBias)) - dstBiasTerm;
-
-                    // Mix the linear position 'x' and the distorted position 'wetDist'.
-                    // Calculation: linear + mix * (distorted - linear)
                     const xNl = x + dstMixRatio * (wetDist - x);
-
-                    // --- (3) Differential Mixing ---
-                    // Calculate the change introduced by the non-linear stage.
                     const coneDelta = (xNl - x) * coneMixRatio;
-
-                    // Add the change (representing non-linear cone movement influence)
-                    // back to the original input sample.
+        
                     let outputSample = inputSample + coneDelta;
-
-                    // --- (4) Output Gain ---
-                    // Apply the final linear gain.
                     outputSample *= gainLinear;
-
-                    // Write the processed sample back into the 'data' array (in-place).
+        
                     data[dataIndex] = outputSample;
-
-                } // End of sample loop
-
-                // --- Save State ---
-                // Store the final state of this channel back into the 'context' object
-                // for the next processing block.
+                }
                 xpos[ch] = x;
                 vel[ch] = v;
-
-            } // End of channel loop
-
-            // Return the modified data array (standard practice for processor functions).
+            }
+        
             return data;
         `);
     }

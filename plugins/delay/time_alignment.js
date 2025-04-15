@@ -195,6 +195,7 @@ class TimeAlignmentPlugin extends PluginBase {
         const delaySlider = document.createElement('input');
         delaySlider.type = 'range';
         delaySlider.id = `${this.id}-${this.name}-delay-slider`;
+        delaySlider.name = `${this.id}-${this.name}-delay-slider`;
         delaySlider.min = '0';
         delaySlider.max = this.maxDelayTime;
         delaySlider.step = '0.01';
@@ -204,6 +205,7 @@ class TimeAlignmentPlugin extends PluginBase {
         const delayValue = document.createElement('input');
         delayValue.type = 'number';
         delayValue.id = `${this.id}-${this.name}-delay-value`;
+        delayValue.name = `${this.id}-${this.name}-delay-value`;
         delayValue.min = '0';
         delayValue.max = this.maxDelayTime;
         delayValue.step = '0.01';

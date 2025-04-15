@@ -502,7 +502,7 @@ class NarrowRangePlugin extends PluginBase {
     const width = canvas.width, height = canvas.height;
     ctx.clearRect(0, 0, width, height);
 
-    // Draw grid
+    // Draw grid & labels (unchanged)
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 1;
     const freqs = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
@@ -543,8 +543,7 @@ class NarrowRangePlugin extends PluginBase {
     ctx.fillText("Level (dB)", 0, 0);
     ctx.restore();
 
-    // In the graph, recalc the overall magnitude response using the same
-    // stage computation as in the processor.
+    // Local helper to figure out 1st/2nd order stage counts
     function computeStages(slope) {
       const absSlope = Math.abs(slope);
       if (absSlope === 0) return { order1: 0, order2: 0 };
@@ -555,44 +554,150 @@ class NarrowRangePlugin extends PluginBase {
         return { order1: 0, order2: n / 2 };
       }
     }
-    const hpfStages = computeStages(this.hs);
-    const lpfStages = computeStages(this.ls);
+    const hp = computeStages(this.hs);
+    const lp = computeStages(this.ls);
+
+    // We replicate the RBJ formulas for each filter type, matching processorFunction:
+    const PI = 3.141592653589793;
+    const SQRT2 = 1.4142135623730951;
+    const sampleRate = 96000; // Chosen fixed sample rate for graph
+
+    // 1st-order HPF coefficients from processorFunction (bilinear transform)
+    function getHp1Coeffs(freq) {
+      if (freq <= 0 || freq >= sampleRate / 2) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const c = Math.tan(PI * freq / sampleRate);
+      if (Math.abs(c) < 1e-12 || c > 1e12) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const inv = 1 / (1 + c);
+      return {
+        b0: inv,
+        b1: -inv,
+        b2: 0,
+        a1: -((1 - c) * inv),
+        a2: 0
+      };
+    }
+
+    // 2nd-order HPF coefficients from processorFunction (Butterworth, Q = 1/sqrt(2))
+    function getHp2Coeffs(freq) {
+      if (freq <= 0 || freq >= sampleRate / 2) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const w0 = 2 * PI * freq / sampleRate;
+      const cosw0 = Math.cos(w0);
+      const alpha = Math.sin(w0) * (SQRT2 * 0.5);
+      const inv = 1 / (1 + alpha);
+      const b0 = ((1 + cosw0) * 0.5) * inv;
+      const b1 = -(1 + cosw0) * inv;
+      const b2 = b0;
+      const a1 = -2 * cosw0 * inv;
+      const a2 = (1 - alpha) * inv;
+      return { b0, b1, b2, a1, a2 };
+    }
+
+    // 1st-order LPF coefficients (bilinear transform)
+    function getLp1Coeffs(freq) {
+      if (freq <= 0 || freq >= sampleRate / 2) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const c = Math.tan(PI * freq / sampleRate);
+      if (Math.abs(c) < 1e-12 || c > 1e12) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const inv = 1 / (1 + c);
+      const b0 = c * inv;
+      return {
+        b0,
+        b1: b0,
+        b2: 0,
+        a1: -((1 - c) * inv),
+        a2: 0
+      };
+    }
+
+    // 2nd-order LPF coefficients (Butterworth, Q = 1/sqrt(2))
+    function getLp2Coeffs(freq) {
+      if (freq <= 0 || freq >= sampleRate / 2) {
+        return { b0:1, b1:0, b2:0, a1:0, a2:0 };
+      }
+      const w0 = 2 * PI * freq / sampleRate;
+      const cosw0 = Math.cos(w0);
+      const alpha = Math.sin(w0) * (SQRT2 * 0.5);
+      const inv = 1 / (1 + alpha);
+      const term = (1 - cosw0) * 0.5;
+      const b0 = term * inv;
+      const b1 = (1 - cosw0) * inv;
+      const b2 = b0;
+      const a1 = -2 * cosw0 * inv;
+      const a2 = (1 - alpha) * inv;
+      return { b0, b1, b2, a1, a2 };
+    }
+
+    // Magnitude of H(z) = (b0 + b1 z^-1 + b2 z^-2) / (1 + a1 z^-1 + a2 z^-2)
+    // evaluated at z = e^(jω) => z^-1 = e^(-jω), etc.
+    function biquadMagnitude(b0, b1, b2, a1, a2, omega) {
+      // Numerator
+      const numReal = b0 + b1*Math.cos(omega) + b2*Math.cos(2*omega);
+      const numImag = b1*(-Math.sin(omega)) + b2*(-Math.sin(2*omega));
+      const numMag = Math.sqrt(numReal*numReal + numImag*numImag);
+
+      // Denominator
+      const denReal = 1 + a1*Math.cos(omega) + a2*Math.cos(2*omega);
+      const denImag = a1*(-Math.sin(omega)) + a2*(-Math.sin(2*omega));
+      const denMag = Math.sqrt(denReal*denReal + denImag*denImag);
+
+      return denMag < 1e-12 ? 0 : (numMag / denMag);
+    }
+
+    // Precompute single-stage biquad coefficients
+    const hp1 = getHp1Coeffs(this.hf);
+    const hp2 = getHp2Coeffs(this.hf);
+    const lp1 = getLp1Coeffs(this.lf);
+    const lp2 = getLp2Coeffs(this.lf);
 
     ctx.beginPath();
     ctx.strokeStyle = "#00ff00";
     ctx.lineWidth = 2;
+
     for (let i = 0; i < width; i++) {
       const freq = Math.pow(10, Math.log10(20) + (i / width) * (Math.log10(40000) - Math.log10(20)));
-      
-      // High-pass response
+      const w = 2 * Math.PI * freq / sampleRate;
+
+      // Compute HPF magnitude
       let hpfMag = 1;
-      if (this.hs !== 0) {
-        const wRatio = freq / this.hf;
-        if (hpfStages.order1 > 0) {
-          hpfMag *= (wRatio / Math.sqrt(1 + wRatio * wRatio));
-        }
-        if (hpfStages.order2 > 0) {
-          const secondOrder = (wRatio * wRatio) / Math.sqrt(1 + 2 * wRatio * wRatio + Math.pow(wRatio, 4));
-          hpfMag *= Math.pow(secondOrder, hpfStages.order2);
-        }
+      if (hp.order1 > 0) {
+        const mag1 = biquadMagnitude(hp1.b0, hp1.b1, hp1.b2, hp1.a1, hp1.a2, w);
+        hpfMag *= Math.pow(mag1, hp.order1);
       }
-      
-      // Low-pass response
+      if (hp.order2 > 0) {
+        const mag2 = biquadMagnitude(hp2.b0, hp2.b1, hp2.b2, hp2.a1, hp2.a2, w);
+        hpfMag *= Math.pow(mag2, hp.order2);
+      }
+
+      // Compute LPF magnitude
       let lpfMag = 1;
-      if (this.ls !== 0) {
-        const wRatio = freq / this.lf;
-        if (lpfStages.order1 > 0) {
-          lpfMag *= (1 / Math.sqrt(1 + wRatio * wRatio));
-        }
-        if (lpfStages.order2 > 0) {
-          const secondOrder = 1 / Math.sqrt(1 + 2 * wRatio * wRatio + Math.pow(wRatio, 4));
-          lpfMag *= Math.pow(secondOrder, lpfStages.order2);
-        }
+      if (lp.order1 > 0) {
+        const mag1 = biquadMagnitude(lp1.b0, lp1.b1, lp1.b2, lp1.a1, lp1.a2, w);
+        lpfMag *= Math.pow(mag1, lp.order1);
       }
+      if (lp.order2 > 0) {
+        const mag2 = biquadMagnitude(lp2.b0, lp2.b1, lp2.b2, lp2.a1, lp2.a2, w);
+        lpfMag *= Math.pow(mag2, lp.order2);
+      }
+
+      // Combined response
       const totalMag = hpfMag * lpfMag;
-      const response = 20 * Math.log10(totalMag);
-      const y = height * (1 - (response + 30) / 36);
-      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+      const responseDb = 20 * Math.log10(totalMag);
+      const y = height * (1 - (responseDb + 30) / 36);
+
+      if (i === 0) {
+        ctx.moveTo(i, y);
+      } else {
+        ctx.lineTo(i, y);
+      }
     }
     ctx.stroke();
   }

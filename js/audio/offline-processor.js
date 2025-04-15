@@ -31,9 +31,12 @@ export class OfflineProcessor {
             const arrayBuffer = await file.arrayBuffer();
             const audioBuffer = await this.contextManager.audioContext.decodeAudioData(arrayBuffer);
 
-            // If no active plugins, encode directly to WAV
-            const activePlugins = pipeline.filter(plugin => plugin.enabled);
-            if (activePlugins.length === 0) {
+            // Check if there are any enabled plugins
+            const hasEnabledPlugins = pipeline.some(plugin => 
+                plugin.constructor.name !== 'SectionPlugin' && plugin.enabled
+            );
+            
+            if (!hasEnabledPlugins) {
                 return this.audioEncoder.encodeWAV(audioBuffer);
             }
 
@@ -86,10 +89,24 @@ export class OfflineProcessor {
                 // Initialize bus buffers
                 const busBuffers = new Map();
                 
+                // Track active sections state during processing
+                let activeSectionEnabled = true;
+                let insideSection = false;
+                
                 // First, determine which buses are used
                 const usedBuses = new Set([0]); // Main bus (index 0) is always used
-                for (const plugin of activePlugins) {
-                    if (!plugin.enabled) continue;
+                for (const plugin of pipeline) {
+                    // Track section plugin state
+                    if (plugin.constructor.name === 'SectionPlugin') {
+                        insideSection = true;
+                        activeSectionEnabled = plugin.enabled;
+                        continue; // Section plugins don't process audio
+                    }
+                    
+                    // Skip disabled plugins or plugins disabled by section
+                    if (!plugin.enabled || (insideSection && !activeSectionEnabled)) {
+                        continue;
+                    }
                     
                     const inputBus = plugin.getParameters().inputBus || plugin.inputBus || 0;
                     const outputBus = plugin.getParameters().outputBus || plugin.outputBus || 0;
@@ -112,9 +129,23 @@ export class OfflineProcessor {
                     }
                 }
                 
-                // Process block through each active plugin
-                for (const plugin of activePlugins) {
-                    if (!plugin.enabled) continue;
+                // Reset section tracking variables for processing
+                activeSectionEnabled = true;
+                insideSection = false;
+                
+                // Process block through each plugin
+                for (const plugin of pipeline) {
+                    // Track section plugin state
+                    if (plugin.constructor.name === 'SectionPlugin') {
+                        insideSection = true;
+                        activeSectionEnabled = plugin.enabled;
+                        continue; // Section plugins don't process audio
+                    }
+                    
+                    // Skip disabled plugins or plugins disabled by section
+                    if (!plugin.enabled || (insideSection && !activeSectionEnabled)) {
+                        continue;
+                    }
 
                     const parameters = {
                         ...plugin.getParameters(),
@@ -265,5 +296,35 @@ export class OfflineProcessor {
      */
     isProcessing() {
         return this.isOfflineProcessing;
+    }
+
+    /**
+     * Get plugins that are effectively active considering Section plugin states
+     * @param {Array} pipeline - The plugin pipeline
+     * @returns {Array} Array of plugins that should be processed
+     */
+    getSectionAwareActivePlugins(pipeline) {
+        let activeSectionEnabled = true;
+        let insideSection = false;
+        const result = [];
+
+        for (const plugin of pipeline) {
+            // If this is a section plugin, update section state
+            if (plugin.constructor.name === 'SectionPlugin') {
+                insideSection = true;
+                activeSectionEnabled = plugin.enabled;
+            }
+
+            // Calculate effective enabled state
+            const effectiveEnabled = plugin.enabled && 
+                (!insideSection || (insideSection && activeSectionEnabled));
+
+            // Only add effectively enabled plugins to the result
+            if (effectiveEnabled) {
+                result.push(plugin);
+            }
+        }
+
+        return result;
     }
 }

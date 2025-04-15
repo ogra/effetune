@@ -15,12 +15,6 @@
 
 ### 参数
 
-- **Band Split**  
-  启用或禁用频段分割功能。启用时，效果分别处理低频和高频。禁用时，整个频谱都作为高频处理，产生更加明显的效果。
-
-- **Crossover (Hz)**  
-  定义该效果应用的频率阈值。低频段保持清晰，而高频段则接受调制。
-
 - **Coil Force (N)**  
   控制模拟扬声器线圈运动的力度。数值越高，失真效果越明显。
 
@@ -40,11 +34,10 @@
 ### 推荐设置
 
 为实现均衡且自然的增强效果，请从以下设置开始：
-- **Crossover:** 100 Hz  
-- **Coil Force:** 10 N  
-- **Speaker Mass:** 0.05 kg  
-- **Spring Constant:** 10,000 N/m  
-- **Damping Factor:** 1.0 N·s/m  
+- **Coil Force:** 8.0 N  
+- **Speaker Mass:** 0.03 kg  
+- **Spring Constant:** 6000 N/m  
+- **Damping Factor:** 1.5 N·s/m  
 
 这些设置提供了一种细腻的 Doppler Distortion，使聆听体验更加丰富，而不会压倒原始音效。
 

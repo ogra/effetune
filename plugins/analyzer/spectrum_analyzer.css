@@ -31,7 +31,7 @@
     background-color: #555;
 }
 
-/* レスポンシブ対応 */
+/* Responsive support */
 @media (max-width: 1024px) {
     .plugin-parameter-ui canvas {
         width: 100%;

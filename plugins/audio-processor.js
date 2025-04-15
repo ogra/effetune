@@ -206,11 +206,25 @@ class PluginProcessor extends AudioWorkletProcessor {
         
         // Initialize bus buffers
         this.busBuffers.clear();
+
+        // Track active sections state during processing
+        let activeSectionEnabled = true;
+        let insideSection = false;
         
         // First, determine which buses are used
         const usedBuses = new Set([0]); // Main bus (index 0) is always used
         for (const plugin of this.plugins) {
-            if (!plugin.enabled) continue;
+            // Track section plugin state
+            if (plugin.type === 'SectionPlugin') {
+                insideSection = true;
+                activeSectionEnabled = plugin.enabled;
+                continue; // Section plugins don't process audio
+            }
+
+            // Skip disabled plugins or plugins disabled by section
+            if (!plugin.enabled || (insideSection && !activeSectionEnabled)) {
+                continue;
+            }
             
             const inputBus = plugin.parameters.inputBus || plugin.inputBus || 0;
             const outputBus = plugin.parameters.outputBus || plugin.outputBus || 0;
@@ -236,9 +250,23 @@ class PluginProcessor extends AudioWorkletProcessor {
             }
         }
         
+        // Reset section tracking variables for processing
+        activeSectionEnabled = true;
+        insideSection = false;
+        
         // Process through all plugins in order
         for (const plugin of this.plugins) {
-            if (!plugin.enabled) continue;
+            // Track section plugin state
+            if (plugin.type === 'SectionPlugin') {
+                insideSection = true;
+                activeSectionEnabled = plugin.enabled;
+                continue; // Section plugins don't process audio
+            }
+            
+            // Skip disabled plugins or plugins disabled by section
+            if (!plugin.enabled || (insideSection && !activeSectionEnabled)) {
+                continue;
+            }
             
             const processor = this.pluginProcessors.get(plugin.type);
             if (!processor) continue;
@@ -257,8 +285,6 @@ class PluginProcessor extends AudioWorkletProcessor {
             // Determine input and output buses
             const inputBus = plugin.parameters.inputBus || plugin.inputBus || 0; // Default to Main bus (index 0)
             const outputBus = plugin.parameters.outputBus || plugin.outputBus || 0; // Default to Main bus (index 0)
-            
-            // Determine input and output buses for processing
             
             // Get the input buffer for this plugin
             const inputBuffer = this.busBuffers.get(inputBus);

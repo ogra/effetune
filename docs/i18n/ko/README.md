@@ -15,6 +15,16 @@ EffeTune은 음악 청취 경험을 향상시키고자 하는 오디오 애호�
 
 아무런 오디오 애호가의 미신은 없고, 오직 순수한 과학만 있습니다.
 
+## Features
+
+- Real-time audio processing
+- Drag-and-drop interface for building effect chains
+- Expandable effect system with categorized effects
+- Live audio visualization
+- Audio pipeline that can be modified in real-time
+- Offline audio file processing with current effect chain
+- Section feature for grouping and controlling multiple effects together
+
 ## 기능
 
 - 실시간 오디오 처리
@@ -242,49 +252,50 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 
 ## 사용 가능한 이펙트
 
-| 카테고리  | 이펙트             | 설명                                                | 문서 |
-|-----------|--------------------|-----------------------------------------------------|------|
-| Analyzer  | Level Meter        | 피크 홀드 기능을 포함한 오디오 레벨 표시             | [세부 정보](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope       | 실시간 파형 시각화                                   | [세부 정보](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram        | 시간에 따른 주파수 스펙트럼 변화를 표시              | [세부 정보](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer  | 실시간 스펙트럼 분석                                 | [세부 정보](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter       | 스테레오 밸런스와 사운드 이동을 시각화               | [세부 정보](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset          | DC 오프셋 조정                                      | [세부 정보](plugins/basics.md#dc-offset) |
-| Basics    | Polarity Inversion | 신호 극성 반전                                      | [세부 정보](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance     | 스테레오 채널 밸런스 조절                           | [세부 정보](plugins/basics.md#stereo-balance) |
-| Basics    | Volume             | 기본 볼륨 조절                                      | [세부 정보](plugins/basics.md#volume) |
-| Delay     | Delay              | 표준 딜레이 이펙트                                   | [세부 정보](plugins/delay.md#delay) |
-| Delay     | Modal Resonator    | 최대 5개의 공진기를 사용하는 주파수 공진 효과 | [세부 정보](plugins/delay.md#modal-resonator) |
-| Delay     | Time Alignment     | 오디오 채널의 정밀한 타이밍 조정                     | [세부 정보](plugins/delay.md#time-alignment) |
-| Dynamics  | Auto Leveler       | LUFS 측정 기반의 일관된 청취 경험을 위한 자동 볼륨 조정 | [세부 정보](plugins/dynamics.md#auto-leveler) |
-| Dynamics  | Brickwall Limiter  | 안전하고 편안한 청취를 위한 투명한 피크 제어          | [세부 정보](plugins/dynamics.md#brickwall-limiter) |
-| Dynamics  | Compressor         | 임계값, 비율, 및 knee 제어를 통한 다이내믹 레인지 압축 | [세부 정보](plugins/dynamics.md#compressor) |
-| Dynamics  | Gate               | 노이즈 감소를 위한 임계값, 비율, 및 knee 제어가 포함된 노이즈 게이트 | [세부 정보](plugins/dynamics.md#gate) |
-| Dynamics  | Multiband Compressor | FM 라디오 스타일의 사운드 셰이핑을 위한 전문 5밴드 다이내믹스 프로세서 | [세부 정보](plugins/dynamics.md#multiband-compressor) |
-| EQ        | 15Band GEQ         | 15밴드 그래픽 이퀄라이저                            | [세부 정보](plugins/eq.md#15band-geq) |
-| EQ        | 5Band PEQ          | 5개의 완전히 구성 가능한 밴드를 갖춘 전문 파라메트릭 이퀄라이저 | [세부 정보](plugins/eq.md#5band-peq) |
-| EQ | Hi Pass Filter | 정밀하게 원하지 않는 저주파를 제거합니다 | [세부 정보](plugins/eq.md#hi-pass-filter) |
-| EQ | Lo Pass Filter | 정밀하게 원하지 않는 고주파를 제거합니다 | [세부 정보](plugins/eq.md#lo-pass-filter) |
-| EQ        | Loudness Equalizer | 낮은 볼륨 청취를 위한 주파수 밸런스 보정             | [세부 정보](plugins/eq.md#loudness-equalizer) |
-| EQ        | Narrow Range       | 하이패스 및 로우패스 필터 조합                      | [세부 정보](plugins/eq.md#narrow-range) |
-| EQ        | Tilt EQ            | 빠른 톤 조정을 위한 틸트 이퀄라이저                   | [세부 정보](plugins/eq.md#tilt-eq)      |
-| EQ        | Tone Control       | 3밴드 톤 컨트롤                                    | [세부 정보](plugins/eq.md#tone-control) |
-| Lo-Fi     | Bit Crusher        | 비트 심도 감소 및 제로 오더 홀드 효과                 | [세부 정보](plugins/lofi.md#bit-crusher) |
-| Lo-Fi     | Noise Blender      | 노이즈 생성 및 혼합                                 | [세부 정보](plugins/lofi.md#noise-blender) |
-| Lo-Fi     | Simple Jitter      | 디지털 지터 시뮬레이션                             | [세부 정보](plugins/lofi.md#simple-jitter) |
-| Modulation | Doppler Distortion | 미세한 스피커 콘의 움직임으로 인한 자연스럽고 역동적인 사운드 변화를 시뮬레이션합니다 | [세부 정보](plugins/modulation.md#doppler-distortion) |
-| Modulation | Pitch Shifter | 가벼운 피치 시프팅 효과 | [세부 정보](docs/plugins/modulation.md#pitch-shifter) |
-| Modulation | Tremolo | 볼륨 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#tremolo) |
-| Modulation | Wow Flutter | 시간 기반의 모듈레이션 효과 | [세부 정보](docs/plugins/modulation.md#wow-flutter) |
-| Reverb    | RS Reverb          | 자연스러운 확산을 갖춘 랜덤 스캐터링 리버브          | [세부 정보](plugins/reverb.md#rs-reverb) |
-| Saturation| Hard Clipping      | 디지털 하드 클리핑 이펙트                           | [세부 정보](plugins/saturation.md#hard-clipping) |
-| Saturation | Harmonic Distortion | 각 하모닉을 독립적으로 제어할 수 있는 하모닉 디스토션을 통해 독특한 특성을 더합니다 | [세부 정보](plugins/saturation.md#harmonic-distortion) |
-| Saturation| Multiband Saturation | 정밀한 주파수 기반 온기를 위한 3밴드 서츄레이션 이펙트 | [세부 정보](plugins/saturation.md#multiband-saturation) |
-| Saturation| Saturation         | 서츄레이션 이펙트                                   | [세부 정보](plugins/saturation.md#saturation) |
-| Saturation| Sub Synth          | 베이스 강화를 위한 서브 하모닉 신호 혼합             | [세부 정보](plugins/saturation.md#sub-synth) |
-| Spatial   | Multiband Balance  | 5밴드 주파수 의존 스테레오 밸런스 조절              | [세부 정보](plugins/spatial.md#multiband-balance) |
-| Spatial   | Stereo Blend       | 스테레오 폭 조절 이펙트                             | [세부 정보](plugins/spatial.md#stereo-blend) |
-| Others    | Oscillator         | 다중 파형 오디오 신호 생성기                        | [세부 정보](plugins/others.md#oscillator) |
+| 카테고리    | 이펙트               | 설명                                                     | 문서                                                       |
+|-------------|----------------------|----------------------------------------------------------|------------------------------------------------------------|
+| Analyzer    | Level Meter          | 피크 홀드가 있는 오디오 레벨 표시                        | [상세](plugins/analyzer.md#level-meter)                    |
+| Analyzer    | Oscilloscope         | 실시간 파형 시각화                                        | [상세](plugins/analyzer.md#oscilloscope)                   |
+| Analyzer    | Spectrogram          | 시간에 따른 주파수 스펙트럼 변화 표시                     | [상세](plugins/analyzer.md#spectrogram)                    |
+| Analyzer    | Spectrum Analyzer    | 실시간 스펙트럼 분석                                      | [상세](plugins/analyzer.md#spectrum-analyzer)              |
+| Analyzer    | Stereo Meter         | 스테레오 밸런스 및 소리 이동 시각화                      | [상세](plugins/analyzer.md#stereo-meter)                   |
+| Basics      | DC Offset            | DC 오프셋 조정                                           | [상세](plugins/basics.md#dc-offset)                        |
+| Basics      | Polarity Inversion    | 신호 극성 반전                                           | [상세](plugins/basics.md#polarity-inversion)               |
+| Basics      | Stereo Balance        | 스테레오 채널 밸런스 제어                                | [상세](plugins/basics.md#stereo-balance)                   |
+| Basics      | Volume               | 기본 볼륨 제어                                           | [상세](plugins/basics.md#volume)                           |
+| Delay       | Delay                | 표준 딜레이 효과                                         | [상세](plugins/delay.md#delay)                           |
+| Delay       | Modal Resonator       | 최대 5개의 공진기를 가진 주파수 공진 효과                | [상세](plugins/delay.md#modal-resonator)                   |
+| Delay       | Time Alignment        | 오디오 채널의 정밀 타이밍 조정                           | [상세](plugins/delay.md#time-alignment)                    |
+| Dynamics    | Auto Leveler          | 일관된 청취 경험을 위한 LUFS 측정 기반 자동 볼륨 조정    | [상세](plugins/dynamics.md#auto-leveler)                  |
+| Dynamics    | Brickwall Limiter      | 안전하고 편안한 청취를 위한 투명한 피크 제어             | [상세](plugins/dynamics.md#brickwall-limiter)             |
+| Dynamics    | Compressor            | 임계값, 비율, 니 제어가 있는 다이나믹 레인지 압축        | [상세](plugins/dynamics.md#compressor)                     |
+| Dynamics    | Gate                  | 잡음 감소를 위한 임계값, 비율, 니 제어가 있는 노이즈 게이트 | [상세](plugins/dynamics.md#gate)                           |
+| Dynamics    | Multiband Compressor   | FM 라디오 스타일 사운드 쉐이핑을 갖춘 전문적인 5밴드 다이나믹 프로세서 | [상세](plugins/dynamics.md#multiband-compressor)           |
+| EQ          | 15Band GEQ             | 15밴드 그래픽 이퀄라이저                                  | [상세](plugins/eq.md#15band-geq)                           |
+| EQ          | 5Band PEQ              | 5개의 완전히 구성 가능한 밴드를 갖춘 전문적인 파라메트릭 이퀄라이저 | [상세](plugins/eq.md#5band-peq)                            |
+| EQ | Hi Pass Filter | 불필요한 저주파수를 정밀하게 제거합니다 | [상세](plugins/eq.md#hi-pass-filter) |
+| EQ | Lo Pass Filter | 불필요한 고주파수를 정밀하게 제거합니다 | [상세](plugins/eq.md#lo-pass-filter) |
+| EQ          | Loudness Equalizer      | 낮은 볼륨 청취를 위한 주파수 밸런스 보정                  | [상세](plugins/eq.md#loudness-equalizer)                   |
+| EQ          | Narrow Range            | 하이패스 및 로우패스 필터 조합                            | [상세](plugins/eq.md#narrow-range)                         |
+| EQ          | Tilt EQ                 | 빠른 톤 쉐이핑을 위한 틸트 이퀄라이저                    | [상세](plugins/eq.md#tilt-eq)                              |
+| EQ          | Tone Control            | 3밴드 톤 컨트롤                                          | [상세](plugins/eq.md#tone-control)                         |
+| Lo-Fi       | Bit Crusher             | 비트 심도 감소 및 제로 오더 홀드 효과                    | [상세](plugins/lofi.md#bit-crusher)                         |
+| Lo-Fi       | Noise Blender           | 노이즈 생성 및 믹싱                                      | [상세](plugins/lofi.md#noise-blender)                       |
+| Lo-Fi       | Simple Jitter           | 디지털 지터 시뮬레이션                                    | [상세](plugins/lofi.md#simple-jitter)                       |
+| Modulation  | Doppler Distortion       | 미묘한 스피커 콘 움직임으로 인한 자연스럽고 동적인 소리 변화 시뮬레이션 | [상세](plugins/modulation.md#doppler-distortion) |
+| Modulation  | Pitch Shifter            | 경량 피치 쉬프팅 효과 | [상세](plugins/modulation.md#pitch-shifter) |
+| Modulation  | Tremolo                  | 볼륨 기반 모듈레이션 효과 | [상세](plugins/modulation.md#tremolo) |
+| Modulation  | Wow Flutter              | 시간 기반 모듈레이션 효과 | [상세](plugins/modulation.md#wow-flutter) |
+| Reverb      | RS Reverb                | 자연스러운 확산을 가진 랜덤 스캐터링 리버브               | [상세](plugins/reverb.md#rs-reverb)                         |
+| Saturation  | Hard Clipping            | 디지털 하드 클리핑 효과                                  | [상세](plugins/saturation.md#hard-clipping)                |
+| Saturation  | Harmonic Distortion      | 각 하모닉의 독립적인 제어를 통해 고유한 특성을 추가하는 고조파 왜곡 | [상세](plugins/saturation.md#harmonic-distortion)          |
+| Saturation  | Multiband Saturation      | 정밀한 주파수 기반 따뜻함을 위한 3밴드 새츄레이션 효과      | [상세](plugins/saturation.md#multiband-saturation)         |
+| Saturation  | Saturation               | 새츄레이션 효과                                          | [상세](plugins/saturation.md#saturation)                   |
+| Saturation  | Sub Synth                | 베이스 향상을 위한 서브하모닉 신호 믹싱                  | [상세](plugins/saturation.md#sub-synth)                    |
+| Spatial     | Multiband Balance         | 5밴드 주파수 의존 스테레오 밸런스 제어                   | [상세](plugins/spatial.md#multiband-balance)               |
+| Spatial     | Stereo Blend             | 스테레오 너비 제어 효과                                  | [상세](plugins/spatial.md#stereo-blend)                    |
+| Others      | Oscillator               | 다중 파형 오디오 신호 생성기                              | [상세](plugins/others.md#oscillator)                       |
+| Control     | Section                  | 통합 제어를 위한 다중 효과 그룹화                     | [상세](plugins/control.md)                         |
 
 ## 기술 정보
 

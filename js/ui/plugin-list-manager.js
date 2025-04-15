@@ -29,7 +29,7 @@ export class PluginListManager {
         this.sidebarButton = document.getElementById('sidebarButton');
         
         // Width threshold for auto collapse/expand
-        this.widthThreshold = 1500;
+        this.widthThreshold = 1480;
 
         // Setup event handlers
         this.setupSearchFunctionality();
@@ -253,11 +253,11 @@ export class PluginListManager {
         const windowWidth = window.innerWidth;
         
         // If window width is less than threshold and plugin list is expanded, collapse it
-        if (windowWidth < this.widthThreshold && !this.isCollapsed) {
+        if (windowWidth <= this.widthThreshold && !this.isCollapsed) {
             this.togglePluginListCollapse();
         }
         // If window width is greater than threshold and plugin list is collapsed, expand it
-        else if (windowWidth >= this.widthThreshold && this.isCollapsed) {
+        else if (windowWidth > this.widthThreshold && this.isCollapsed) {
             this.togglePluginListCollapse();
         }
     }

@@ -238,23 +238,33 @@ class HarmonicDistortionPlugin extends PluginBase {
         container.className = 'harmonic-distortion-plugin-ui plugin-parameter-ui';
 
         // Utility function to create a parameter row
-        const createRow = (labelText, type, min, max, step, value, onChange) => {
+        const createRow = (labelText, type, min, max, step, value, onChange, paramKey) => {
             const row = document.createElement('div');
             row.className = 'parameter-row';
+            // 一意なIDを生成
+            const sliderId = `${this.id}-${this.name}-${paramKey}-slider`;
+            const inputId = `${this.id}-${this.name}-${paramKey}-input`;
             const label = document.createElement('label');
             label.textContent = labelText;
+            label.htmlFor = sliderId;
             const slider = document.createElement('input');
             slider.type = 'range';
+            slider.id = sliderId;
+            slider.name = sliderId;
             slider.min = min;
             slider.max = max;
             slider.step = step;
             slider.value = value;
+            slider.autocomplete = "off";
             const input = document.createElement('input');
             input.type = type;
+            input.id = inputId;
+            input.name = inputId;
             input.min = min;
             input.max = max;
             input.step = step;
             input.value = value;
+            input.autocomplete = "off";
             slider.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
                 onChange(val);
@@ -275,30 +285,26 @@ class HarmonicDistortionPlugin extends PluginBase {
         };
 
         // Create parameter rows with updated ranges (-30 to 30)
-        container.appendChild(createRow('2nd Harm (%):', 'number', '-30', '30', '0.1', this.h2, (value) => this.setH2(value)));
-        container.appendChild(createRow('3rd Harm (%):', 'number', '-30', '30', '0.1', this.h3, (value) => this.setH3(value)));
-        container.appendChild(createRow('4th Harm (%):', 'number', '-30', '30', '0.1', this.h4, (value) => this.setH4(value)));
-        container.appendChild(createRow('5th Harm (%):', 'number', '-30', '30', '0.1', this.h5, (value) => this.setH5(value)));
-        container.appendChild(createRow('Sensitivity (x):', 'number', '0.1', '2.0', '0.01', this.sn, (value) => this.setSn(value)));
+        container.appendChild(createRow('2nd Harm (%):', 'number', '-30', '30', '0.1', this.h2, (value) => this.setH2(value), 'h2'));
+        container.appendChild(createRow('3rd Harm (%):', 'number', '-30', '30', '0.1', this.h3, (value) => this.setH3(value), 'h3'));
+        container.appendChild(createRow('4th Harm (%):', 'number', '-30', '30', '0.1', this.h4, (value) => this.setH4(value), 'h4'));
+        container.appendChild(createRow('5th Harm (%):', 'number', '-30', '30', '0.1', this.h5, (value) => this.setH5(value), 'h5'));
+        container.appendChild(createRow('Sensitivity (x):', 'number', '0.1', '2.0', '0.01', this.sn, (value) => this.setSn(value), 'sn'));
 
         // Graph container for canvas and labels - match exactly with saturation.js
         const graphContainer = document.createElement('div');
         graphContainer.style.position = 'relative';
-        
         const canvas = document.createElement('canvas');
         canvas.width = 400;
         canvas.height = 400;
         canvas.style.width = '200px';
         canvas.style.height = '200px';
         canvas.style.backgroundColor = '#222';
-        
         this.canvas = canvas;
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
-        
         // Update the graph
         this.updateTransferGraph();
-
         return container;
     }
 }

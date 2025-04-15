@@ -123,7 +123,14 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
    - Delete: Eliminar los efectos seleccionados
    - ESC: Deseleccionar todos los efectos
 
-3. Atajos de teclado (al usar el reproductor):
+3. Usando Secciones:
+   - Añade un efecto de Sección al principio de un grupo de efectos
+   - Ingresa un nombre descriptivo en el campo de comentario
+   - Alternar el efecto de Sección ON/OFF activará/desactivará todos los efectos dentro de esa sección
+   - Usa múltiples efectos de Sección para organizar tu cadena de efectos en grupos lógicos
+   - [Más sobre efectos de control](plugins/control.md)
+
+4. Atajos de teclado (al usar el reproductor):
    - Espacio: Reproducir/Pausar
    - Ctrl + → o N: Siguiente pista
    - Ctrl + ← o P: Pista anterior
@@ -285,6 +292,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Spatial   | Multiband Balance | Control de balance estéreo dependiente de la frecuencia en 5 bandas | [Detalles](plugins/spatial.md#multiband-balance) |
 | Spatial   | Stereo Blend | Efecto de control de la anchura estéreo | [Detalles](plugins/spatial.md#stereo-blend) |
 | Others    | Oscillator | Generador de señal de audio con múltiples formas de onda | [Detalles](plugins/others.md#oscillator) |
+| Control   | Section    | Agrupar múltiples efectos para un control unificado | [Detalles](plugins/control.md) |
 
 ## Información Técnica
 

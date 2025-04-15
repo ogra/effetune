@@ -15,12 +15,6 @@ Experimenta un efecto de audio único que aporta un toque de movimiento natural 
 
 ### Parámetros
 
-- **Band Split**  
-  Activa o desactiva la división de bandas de frecuencia. Cuando está activado, el efecto procesa por separado las frecuencias bajas y altas. Cuando está desactivado, todo el espectro de frecuencia se procesa como frecuencias altas, lo que resulta en un efecto más pronunciado.
-
-- **Crossover (Hz)**  
-  Define el umbral de frecuencia a partir del cual se aplica el efecto. Las frecuencias bajas se mantienen claras, mientras que las frecuencias altas reciben la modulación.
-
 - **Coil Force (N)**  
   Controla la fuerza del movimiento simulado de la bobina del altavoz. Los valores más altos producen una distorsión más pronunciada.
 
@@ -40,11 +34,10 @@ Experimenta un efecto de audio único que aporta un toque de movimiento natural 
 ### Configuración recomendada
 
 Para una mejora equilibrada y natural, comienza con:
-- **Crossover:** 100 Hz  
-- **Coil Force:** 10 N  
-- **Speaker Mass:** 0.05 kg  
-- **Spring Constant:** 10,000 N/m  
-- **Damping Factor:** 1.0 N·s/m  
+- **Coil Force:** 8.0 N  
+- **Speaker Mass:** 0.03 kg  
+- **Spring Constant:** 6000 N/m  
+- **Damping Factor:** 1.5 N·s/m  
 
 Estos ajustes proporcionan un sutil Doppler Distortion que enriquece la experiencia auditiva sin opacar el sonido original.
 

@@ -34,7 +34,9 @@ export class PipelineCore {
      */
     createPipelineItem(plugin) {
         const item = document.createElement('div');
-        item.className = 'pipeline-item';
+        const isSectionPlugin = plugin.name == 'Section';
+        item.className = isSectionPlugin ? 'pipeline-item section' : 'pipeline-item';
+        item.dataset.pluginId = plugin.id; // Set plugin ID as data attribute for later reference
         
         // Create header container
         const header = document.createElement('div');
@@ -94,6 +96,9 @@ export class PipelineCore {
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugin(plugin);
             
+            // Update UI display state for all plugins that might be affected by this change
+            this.updateAllPluginDisplayState();
+            
             // Save state for undo/redo
             if (this.pipelineManager && this.pipelineManager.historyManager) {
                 this.pipelineManager.historyManager.saveState();
@@ -105,6 +110,10 @@ export class PipelineCore {
         const name = document.createElement('div');
         name.className = 'plugin-name';
         name.textContent = plugin.name;
+        
+        // Update the plugin name display state based on section status
+        this.updatePluginNameDisplayState(plugin, name);
+        
         header.appendChild(name);
 
         // Display bus routing info if set
@@ -132,27 +141,29 @@ export class PipelineCore {
             header.appendChild(busInfo);
         }
         
-        // Routing button
-        const routingBtn = document.createElement('button');
-        routingBtn.className = 'routing-button';
-        routingBtn.title = 'Configure bus routing';
-        
-        // Use the routing button image
-        const routingImg = document.createElement('img');
-        routingImg.src = 'images/routing_button.png';
-        routingImg.alt = 'Routing';
-        routingBtn.appendChild(routingImg);
-        
-        routingBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevent event bubbling
+        if (!isSectionPlugin) {
+            // Routing button
+            const routingBtn = document.createElement('button');
+            routingBtn.className = 'routing-button';
+            routingBtn.title = 'Configure bus routing';
             
-            // Use the common selection function
-            this.handlePluginSelection(plugin, e);
+            // Use the routing button image
+            const routingImg = document.createElement('img');
+            routingImg.src = 'images/routing_button.png';
+            routingImg.alt = 'Routing';
+            routingBtn.appendChild(routingImg);
             
-            // Show routing dialog
-            this.showRoutingDialog(plugin, routingBtn);
-        };
-        header.appendChild(routingBtn);
+            routingBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                
+                // Use the common selection function
+                this.handlePluginSelection(plugin, e);
+                
+                // Show routing dialog
+                this.showRoutingDialog(plugin, routingBtn);
+            };
+            header.appendChild(routingBtn);
+        }
         
         // Move up button
         const moveUpBtn = document.createElement('button');
@@ -176,6 +187,9 @@ export class PipelineCore {
             
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugins();
+            
+            // Update UI display state for all plugins
+            this.updateAllPluginDisplayState();
             
             // Save state for undo/redo
             if (this.pipelineManager && this.pipelineManager.historyManager) {
@@ -209,6 +223,9 @@ export class PipelineCore {
             
             // Update worklet directly without rebuilding pipeline
             this.updateWorkletPlugins();
+            
+            // Update UI display state for all plugins
+            this.updateAllPluginDisplayState();
             
             // Save state for undo/redo
             if (this.pipelineManager && this.pipelineManager.historyManager) {
@@ -286,6 +303,23 @@ export class PipelineCore {
             
             plugin.updateParameters = function(...args) {
                 originalUpdateParameters.apply(this, args);
+                
+                // Send an immediate update to the audio worklet with the new parameters
+                if (window.workletNode) {
+                    const parameters = this.getParameters();
+                    window.workletNode.port.postMessage({
+                        type: 'updatePlugin',
+                        plugin: {
+                            id: this.id,
+                            type: this.constructor.name,
+                            enabled: this.enabled,
+                            parameters: parameters,
+                            inputBus: this.inputBus,
+                            outputBus: this.outputBus
+                        }
+                    });
+                }
+                
                 // Only update URL without rebuilding pipeline
                 if (window.uiManager) {
                     window.uiManager.updateURL();
@@ -530,38 +564,45 @@ export class PipelineCore {
     }
 
     /**
-     * Create the master toggle button
+     * Create master toggle button for the pipeline
      */
     createMasterToggle() {
-        const toggle = document.querySelector('.toggle-button.master-toggle');
-        if (!toggle) return;
+        this.masterToggle = document.querySelector('.toggle-button.master-toggle');
+        if (!this.masterToggle) return;
 
-        toggle.onclick = () => {
+        this.masterToggle.onclick = () => {
             this.enabled = !this.enabled;
-            toggle.classList.toggle('off', !this.enabled);
+            this.masterToggle.classList.toggle('off', !this.enabled);
             
             // Update master bypass state directly without rebuilding pipeline
             this.audioManager.masterBypass = !this.enabled;
             
-            // Use helper method but override masterBypass value
+            // Update worklet with the new master bypass state
             if (window.workletNode) {
+                // Prepare plugin data
+                const plugins = this.audioManager.pipeline.map(plugin => {
+                    const parameters = plugin.getParameters();
+                    
+                    return {
+                        id: plugin.id,
+                        type: plugin.constructor.name,
+                        enabled: plugin.enabled,
+                        parameters: parameters,
+                        inputBus: plugin.inputBus,
+                        outputBus: plugin.outputBus
+                    };
+                });
+                
                 window.workletNode.port.postMessage({
                     type: 'updatePlugins',
-                    plugins: this.audioManager.pipeline.map(plugin => {
-                        const parameters = plugin.getParameters();
-                        return {
-                            id: plugin.id,
-                            type: plugin.constructor.name,
-                            enabled: plugin.enabled,
-                            parameters: parameters,
-                            inputBus: plugin.inputBus,
-                            outputBus: plugin.outputBus
-                        };
-                    }),
+                    plugins: plugins,
                     masterBypass: !this.enabled
                 });
             }
             this.updateURL();
+            
+            // Immediately update display state for all plugins
+            this.updateAllPluginDisplayState();
         };
     }
 
@@ -579,19 +620,23 @@ export class PipelineCore {
      */
     updateWorkletPlugins() {
         if (window.workletNode) {
+            // Prepare plugin data
+            const plugins = this.audioManager.pipeline.map(plugin => {
+                const parameters = plugin.getParameters();
+                
+                return {
+                    id: plugin.id,
+                    type: plugin.constructor.name,
+                    enabled: plugin.enabled,
+                    parameters: parameters,
+                    inputBus: plugin.inputBus,
+                    outputBus: plugin.outputBus
+                };
+            });
+            
             window.workletNode.port.postMessage({
                 type: 'updatePlugins',
-                plugins: this.audioManager.pipeline.map(plugin => {
-                    const parameters = plugin.getParameters();
-                    return {
-                        id: plugin.id,
-                        type: plugin.constructor.name,
-                        enabled: plugin.enabled,
-                        parameters: parameters,
-                        inputBus: plugin.inputBus,
-                        outputBus: plugin.outputBus
-                    };
-                }),
+                plugins: plugins,
                 masterBypass: this.audioManager.masterBypass
             });
         }
@@ -605,6 +650,7 @@ export class PipelineCore {
     updateWorkletPlugin(plugin) {
         if (window.workletNode) {
             const parameters = plugin.getParameters();
+            
             window.workletNode.port.postMessage({
                 type: 'updatePlugin',
                 plugin: {
@@ -728,9 +774,6 @@ export class PipelineCore {
         // Add dialog to the document
         document.body.appendChild(dialog);
         
-        // Add dialog to the document
-        document.body.appendChild(dialog);
-        
         // Prevent immediate closing by delaying the click handler
         setTimeout(() => {
             // Close dialog when clicking outside
@@ -822,5 +865,76 @@ export class PipelineCore {
             // Long format (name/enabled/parameters/inputBus/outputBus)
             return getSerializablePluginStateLong(plugin, useDeepCopy);
         }
+    }
+
+    /**
+     * Update plugin name display state based on section status and master toggle
+     * @param {Object} plugin - The plugin to update display for
+     * @param {HTMLElement} nameElement - The name element to update
+     */
+    updatePluginNameDisplayState(plugin, nameElement) {
+        // Get master toggle state
+        const masterToggleEnabled = !this.audioManager.masterBypass;
+        
+        // Calculate effective enabled state considering section status
+        let effectiveEnabled = plugin.enabled;
+        
+        // Consider section effect ON/OFF state
+        const sectionState = this.getPluginSectionState(plugin);
+        if (sectionState.insideSection && !sectionState.sectionEnabled) {
+            effectiveEnabled = false;
+        }
+        
+        // Final enabled state considering both master and section states
+        const finalEnabled = masterToggleEnabled && effectiveEnabled;
+        
+        // Update class
+        nameElement.classList.toggle('plugin-disabled', !finalEnabled);
+    }
+
+    /**
+     * Get the section state for a plugin
+     * @param {Object} plugin - The plugin to check
+     * @returns {Object} Object with insideSection and sectionEnabled properties
+     */
+    getPluginSectionState(plugin) {
+        const pipeline = this.audioManager.pipeline;
+        const pluginIndex = pipeline.findIndex(p => p.id === plugin.id);
+        
+        // If plugin is not in the pipeline
+        if (pluginIndex === -1) {
+            return { insideSection: false, sectionEnabled: true };
+        }
+        
+        // Look for section plugins before this plugin
+        let currentSectionEnabled = true;
+        let insideSection = false;
+        
+        for (let i = 0; i <= pluginIndex; i++) {
+            const p = pipeline[i];
+            if (p.constructor.name === 'SectionPlugin') {
+                insideSection = true;
+                currentSectionEnabled = p.enabled;
+            }
+        }
+        
+        return { insideSection, sectionEnabled: currentSectionEnabled };
+    }
+
+    /**
+     * Update display state for all plugins in the pipeline
+     */
+    updateAllPluginDisplayState() {
+        const pipelineItems = document.querySelectorAll('.pipeline-item');
+        pipelineItems.forEach(item => {
+            const pluginId = parseInt(item.dataset.pluginId);
+            const plugin = this.audioManager.pipeline.find(p => p.id === pluginId);
+            if (plugin) {
+                const nameElement = item.querySelector('.plugin-name');
+                if (nameElement) {
+                    this.updatePluginNameDisplayState(plugin, nameElement);
+                }
+            }
+        });
     }
 }
