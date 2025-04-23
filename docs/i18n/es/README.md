@@ -261,7 +261,6 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Basics    | Stereo Balance | Control del balance entre canales estéreo | [Detalles](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Control básico de volumen | [Detalles](plugins/basics.md#volume) |
 | Delay     | Delay          | Efecto de retardo estándar                  | [Detalles](plugins/delay.md#delay) |
-| Delay     | Modal Resonator | Efecto de resonancia de frecuencia con hasta 5 resonadores | [Detalles](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment | Ajustes precisos de sincronización para canales de audio | [Detalles](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajuste automático de volumen basado en medición LUFS para una experiencia de escucha consistente | [Detalles](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Control transparente de picos para una escucha segura y cómoda | [Detalles](plugins/dynamics.md#brickwall-limiter) |
@@ -283,6 +282,8 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Modulation | Pitch Shifter | Efecto ligero de cambio de tono | [Detalles](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Efecto de modulación basado en volumen | [Detalles](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Efecto de modulación basado en tiempo | [Detalles](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | Simulación de resonancia de bocina con dimensiones personalizables | [Detalles](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | Efecto de resonancia de frecuencia con hasta 5 resonadores | [Detalles](plugins/resonator.md#modal-resonator) |
 | Reverb    | RS Reverb | Reverb de dispersión aleatoria con difusión natural | [Detalles](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Efecto de hard clipping digital | [Detalles](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | Agrega un carácter único a través de la distorsión armónica con control independiente de cada armónico | [Detalles](plugins/saturation.md#harmonic-distortion) |

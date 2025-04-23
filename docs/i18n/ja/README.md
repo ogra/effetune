@@ -194,7 +194,7 @@ CDプレーヤー、ネットワークプレーヤー、またはその他の物
 ### FM Radio Style
 
 1. Multiband Compressor -> Stereo Blend  
-   - **Multiband Compressor:** 「radio」サウンドを作り出す  
+   - **Multiband Compressor:** "radio"サウンドを作り出す  
    - **Stereo Blend:** 快適な音場のためにステレオ幅を調整する (100-150%)  
    - **結果:** プロフェッショナルな放送のようなサウンド
 
@@ -265,7 +265,6 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Basics     | Stereo Balance     | ステレオチャンネルのバランスを制御します                   | [詳細](plugins/basics.md#stereo-balance) |
 | Basics     | Volume             | 基本的な音量制御                                         | [詳細](plugins/basics.md#volume) |
 | Delay      | Delay              | 標準的なディレイエフェクト                                | [詳細](plugins/delay.md#delay) |
-| Delay      | Modal Resonator    | 最大5つのレゾネータを持つ周波数共振エフェクト            | [詳細](plugins/delay.md#modal-resonator) |
 | Delay      | Time Alignment     | オーディオチャンネルの精密なタイミング調整                | [詳細](plugins/delay.md#time-alignment) |
 | Dynamics   | Auto Leveler       | 一貫したリスニング体験のためのLUFS測定に基づく自動音量調整 | [詳細](plugins/dynamics.md#auto-leveler) |
 | Dynamics   | Brickwall Limiter  | 安全で快適なリスニングのための透明なピーク制御             | [詳細](plugins/dynamics.md#brickwall-limiter) |
@@ -287,6 +286,8 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Modulation | Pitch Shifter | 軽量なピッチシフトエフェクト | [詳細](plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | ボリュームベースのモジュレーションエフェクト | [詳細](plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 時間ベースのモジュレーションエフェクト | [詳細](plugins/modulation.md#wow-flutter) |
+| Resonator  | Horn Resonator     | カスタマイズ可能な寸法を持つホーン共鳴シミュレーション    | [詳細](plugins/resonator.md#horn-resonator) |
+| Resonator  | Modal Resonator    | 最大5つのレゾネータを持つ周波数共振エフェクト            | [詳細](plugins/resonator.md#modal-resonator) |
 | Reverb     | RS Reverb          | 自然な拡散を持つランダムスキャッタリングリバーブ          | [詳細](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping    | デジタルハードクリッピングエフェクト                      | [詳細](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | 各ハーモニクスの独立した制御を備えたハーモニックディストーションを通じてユニークなキャラクターを追加します | [詳細](plugins/saturation.md#harmonic-distortion) |

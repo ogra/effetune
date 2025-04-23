@@ -253,7 +253,6 @@
 | Basics   | Stereo Balance  | تحكم في توازن القنوات الستيريو                              | [تفاصيل](plugins/basics.md#stereo-balance)       |
 | Basics   | Volume          | تحكم أساسي في مستوى الصوت                                  | [تفاصيل](plugins/basics.md#volume)              |
 | Delay    | Delay           | تأثير تأخير قياسي                                          | [تفاصيل](plugins/delay.md#delay)              |
-| Delay    | Modal Resonator | تأثير رنين التردد مع ما يصل إلى 5 مرنات        | [تفاصيل](plugins/delay.md#modal-resonator)    |
 | Delay    | Time Alignment  | ضبط دقيق لتوقيت القنوات الصوتية                           | [تفاصيل](plugins/delay.md#time-alignment)       |
 | Dynamics | Auto Leveler    | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متناسقة | [تفاصيل](plugins/dynamics.md#auto-leveler)      |
 | Dynamics | Brickwall Limiter | تحكم شفاف في القمم للاستماع الآمن والمريح                | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |
@@ -275,6 +274,8 @@
 | Modulation | Pitch Shifter | تأثير خفيف لتغيير حدة الصوت | [تفاصيل](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | تأثير تعديل يعتمد على مستوى الصوت | [تفاصيل](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | محاكاة رنين البوق مع أبعاد قابلة للتخصيص | [تفاصيل](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | تأثير رنين التردد مع ما يصل إلى 5 مرنات | [تفاصيل](plugins/resonator.md#modal-resonator) |
 | Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |
 | Saturation | Hard Clipping   | تأثير قص رقمي صارم                                         | [تفاصيل](plugins/saturation.md#hard-clipping)    |
 | Saturation | Harmonic Distortion | يضيف طابعًا فريدًا من خلال التشويه التوافقي مع تحكم مستقل في كل توافقية | [تفاصيل](plugins/saturation.md#harmonic-distortion) |

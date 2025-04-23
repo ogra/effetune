@@ -252,7 +252,6 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Basics   | Stereo Balance     | स्टीरियो चैनल संतुलन नियंत्रण                             | [विवरण](plugins/basics.md#stereo-balance) |
 | Basics   | Volume             | बेसिक वॉल्यूम नियंत्रण                                     | [विवरण](plugins/basics.md#volume) |
 | Delay    | Delay              | मानक विलंब प्रभाव                                          | [विवरण](plugins/delay.md#delay) |
-| Delay    | Modal Resonator    | अधिकतम 5 रेज़ोनेटर वाला फ़्रीक्वेंसी रेज़ोनेंस प्रभाव        | [विवरण](plugins/delay.md#modal-resonator) |
 | Delay    | Time Alignment     | ऑडियो चैनलों के लिए सटीक टाइमिंग समायोजन                   | [विवरण](plugins/delay.md#time-alignment) |
 | Dynamics | Auto Leveler       | LUFS मापन पर आधारित स्वचालित वॉल्यूम समायोजन जो एक समान सुनने का अनुभव प्रदान करता है | [विवरण](plugins/dynamics.md#auto-leveler) |
 | Dynamics | Brickwall Limiter  | सुरक्षित और आरामदायक सुनने के लिए पारदर्शी पीक नियंत्रण    | [विवरण](plugins/dynamics.md#brickwall-limiter) |
@@ -274,6 +273,8 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Modulation | Pitch Shifter | हल्का पिच शिफ्टिंग प्रभाव | [विवरण](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | वॉल्यूम आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | समय आधारित मॉड्युलेशन प्रभाव | [विवरण](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | अनुकूलन योग्य आयामों के साथ हॉर्न अनुनाद सिमुलेशन | [विवरण](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | अधिकतम 5 रेज़ोनेटर वाला फ़्रीक्वेंसी रेज़ोनेंस प्रभाव | [विवरण](plugins/resonator.md#modal-resonator) |
 | Reverb   | RS Reverb          | प्राकृतिक विसरण के साथ रैंडम स्कैटरिंग रिवर्ब              | [विवरण](plugins/reverb.md#rs-reverb) |
 | Saturation | Hard Clipping    | डिजिटल हार्ड क्लिपिंग इफेक्ट                              | [विवरण](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | प्रत्येक हार्मोनिक को स्वतंत्र रूप से नियंत्रित करने वाले हार्मोनिक डिस्टॉर्शन के माध्यम से अनोखा चरित्र जोड़ता है | [विवरण](plugins/saturation.md#harmonic-distortion) |

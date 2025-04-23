@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.46 (Apr xx, 2025)
+- Added Horn Resonator effect
+- Various minor improvements
+
 ### Version 1.45 (Apr 15, 2025)
 - Added Section feature
 - Various minor improvements

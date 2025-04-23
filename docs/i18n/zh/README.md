@@ -260,7 +260,6 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Basics    | Stereo Balance    | 立体声通道平衡控制                          | [详情](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | 基本音量控制                               | [详情](plugins/basics.md#volume) |
 | Delay     | Delay             | 标准延迟效果                               | [详情](plugins/delay.md#delay) |
-| Delay     | Modal Resonator   | 具有最多5个共振器的频率共振效果 | [详情](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment    | 音频通道的精确时间调整                      | [详情](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | 基于 LUFS 测量的自动音量调整，确保一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | 透明的峰值控制，实现安全舒适的聆听           | [详情](plugins/dynamics.md#brickwall-limiter) |
@@ -282,6 +281,8 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Modulation | Pitch Shifter | 轻量级音高变换效果 | [详情](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | 基于音量的调制效果 | [详情](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | 具有可定制尺寸的喇叭共振模拟 | [详情](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | 具有最多5个共振器的频率共振效果 | [详情](plugins/resonator.md#modal-resonator) |
 | Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | 数字硬削波效果                              | [详情](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | 通过独立控制各谐波的谐波失真添加独特的特性 | [详情](plugins/saturation.md#harmonic-distortion) |

@@ -267,7 +267,6 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Basics    | Stereo Balance | Contrôle de l'équilibre des canaux stéréo | [Détails](plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Contrôle de volume basique | [Détails](plugins/basics.md#volume) |
 | Delay     | Delay          | Effet de délai standard                                   | [Détails](plugins/delay.md#delay) |
-| Delay     | Modal Resonator | Effet de résonance fréquentielle avec jusqu'à 5 résonateurs | [Détails](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment | Ajustements précis de la synchronisation des canaux audio | [Détails](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajustement automatique du volume basé sur la mesure LUFS pour une expérience d'écoute cohérente | [Détails](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Contrôle transparent des crêtes pour une écoute sûre et confortable | [Détails](plugins/dynamics.md#brickwall-limiter) |
@@ -289,6 +288,8 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Modulation | Pitch Shifter | Effet léger de changement de hauteur tonale | [Détails](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Effet de modulation basé sur le volume | [Détails](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Effet de modulation basé sur le temps | [Détails](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | Simulation de resonance de pavillon avec dimensions personnalisables | [Details](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | Effet de resonance frequentielle avec jusqu a 5 resonateurs | [Details](plugins/resonator.md#modal-resonator) |
 | Reverb    | RS Reverb | Réverbération à diffusion aléatoire avec diffusion naturelle | [Détails](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Effet de hard clipping numérique | [Détails](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | Ajoute un caractère unique grâce à la distorsion harmonique avec contrôle indépendant de chaque harmonique | [Détails](plugins/saturation.md#harmonic-distortion) |

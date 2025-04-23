@@ -268,7 +268,6 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Basics    | Stereo Balance    | Controle do equilíbrio dos canais estéreo                                          | [Detalhes](plugins/basics.md#stereo-balance) |
 | Basics    | Volume            | Controle básico de volume                                                          | [Detalhes](plugins/basics.md#volume) |
 | Delay     | Delay             | Efeito de atraso padrão                                                           | [Detalhes](plugins/delay.md#delay) |
-| Delay     | Modal Resonator   | Efeito de ressonância de frequência com até 5 ressonadores                              | [Detalhes](plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment    | Ajustes precisos de temporização para canais de áudio                             | [Detalhes](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler      | Ajuste automático de volume baseado em medição LUFS para uma experiência de escuta consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Controle transparente de picos para uma escuta segura e confortável              | [Detalhes](plugins/dynamics.md#brickwall-limiter) |
@@ -290,6 +289,8 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Modulation | Pitch Shifter | Efeito leve de alteração de tom | [Detalhes](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Efeito de modulação baseado em volume | [Detalhes](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | Simulacao de ressonancia de corneta com dimensoes personalizaveis | [Detalhes](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | Efeito de ressonancia de frequencia com ate 5 ressonadores | [Detalhes](plugins/resonator.md#modal-resonator) |
 | Reverb    | RS Reverb         | Reverb de dispersão aleatória com difusão natural                                  | [Detalhes](plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping     | Efeito de hard clipping digital                                                    | [Detalhes](plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | Adiciona um caráter único através da distorção harmônica com controle independente de cada harmônico | [Detalhes](plugins/saturation.md#harmonic-distortion) |

@@ -265,7 +265,6 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Basics    | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |
 | Basics    | Volume | Basic volume control | [Details](docs/plugins/basics.md#volume) |
 | Delay     | Delay          | Standard delay effect                                   | [Details](docs/plugins/delay.md#delay) |
-| Delay     | Modal Resonator | Frequency resonance effect with up to 5 resonators | [Details](docs/plugins/delay.md#modal-resonator) |
 | Delay     | Time Alignment | Fine-tuning timing adjustments for audio channels | [Details](docs/plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Automatic volume adjustment based on LUFS measurement for consistent listening experience | [Details](docs/plugins/dynamics.md#auto-leveler) |
 | Dynamics  | Brickwall Limiter | Transparent peak control for safe and comfortable listening | [Details](docs/plugins/dynamics.md#brickwall-limiter) |
@@ -287,6 +286,8 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Modulation | Pitch Shifter | Lightweight pitch shifting effect | [Details](docs/plugins/modulation.md#pitch-shifter) |
 | Modulation | Tremolo | Volume-based modulation effect | [Details](docs/plugins/modulation.md#tremolo) |
 | Modulation | Wow Flutter | Time-based modulation effect | [Details](docs/plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | Horn resonance simulation with customizable dimensions | [Details](docs/plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | Frequency resonance effect with up to 5 resonators | [Details](docs/plugins/resonator.md#modal-resonator) |
 | Reverb    | RS Reverb | Random scattering reverb with natural diffusion | [Details](docs/plugins/reverb.md#rs-reverb) |
 | Saturation| Hard Clipping | Digital hard clipping effect | [Details](docs/plugins/saturation.md#hard-clipping) |
 | Saturation | Harmonic Distortion | Adds unique character through harmonic distortion with independent control of each harmonic | [Details](docs/plugins/saturation.md#harmonic-distortion) |

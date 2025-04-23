@@ -264,7 +264,6 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Basics      | Stereo Balance        | 스테레오 채널 밸런스 제어                                | [상세](plugins/basics.md#stereo-balance)                   |
 | Basics      | Volume               | 기본 볼륨 제어                                           | [상세](plugins/basics.md#volume)                           |
 | Delay       | Delay                | 표준 딜레이 효과                                         | [상세](plugins/delay.md#delay)                           |
-| Delay       | Modal Resonator       | 최대 5개의 공진기를 가진 주파수 공진 효과                | [상세](plugins/delay.md#modal-resonator)                   |
 | Delay       | Time Alignment        | 오디오 채널의 정밀 타이밍 조정                           | [상세](plugins/delay.md#time-alignment)                    |
 | Dynamics    | Auto Leveler          | 일관된 청취 경험을 위한 LUFS 측정 기반 자동 볼륨 조정    | [상세](plugins/dynamics.md#auto-leveler)                  |
 | Dynamics    | Brickwall Limiter      | 안전하고 편안한 청취를 위한 투명한 피크 제어             | [상세](plugins/dynamics.md#brickwall-limiter)             |
@@ -286,6 +285,8 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Modulation  | Pitch Shifter            | 경량 피치 쉬프팅 효과 | [상세](plugins/modulation.md#pitch-shifter) |
 | Modulation  | Tremolo                  | 볼륨 기반 모듈레이션 효과 | [상세](plugins/modulation.md#tremolo) |
 | Modulation  | Wow Flutter              | 시간 기반 모듈레이션 효과 | [상세](plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | 맞춤형 크기를 가진 혼 공명 시뮬레이션 | [상세](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | 최대 5개의 공진기를 가진 주파수 공진 효과 | [상세](plugins/resonator.md#modal-resonator) |
 | Reverb      | RS Reverb                | 자연스러운 확산을 가진 랜덤 스캐터링 리버브               | [상세](plugins/reverb.md#rs-reverb)                         |
 | Saturation  | Hard Clipping            | 디지털 하드 클리핑 효과                                  | [상세](plugins/saturation.md#hard-clipping)                |
 | Saturation  | Harmonic Distortion      | 각 하모닉의 독립적인 제어를 통해 고유한 특성을 추가하는 고조파 왜곡 | [상세](plugins/saturation.md#harmonic-distortion)          |
