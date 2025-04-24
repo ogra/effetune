@@ -1,4 +1,4 @@
-// plugins/reverb/horn_resonator.js
+// plugins/resonator/horn_resonator.js
 
 /**
  * HornResonatorPlugin simulates the acoustic resonance of a horn
@@ -12,7 +12,6 @@ class HornResonatorPlugin extends PluginBase {
     constructor() {
         super('Horn Resonator', 'Horn resonance emulator');
 
-        /* --- Default parameters (Fullrange horn speaker for audio)--- */
         this.co = 600;  // Crossover frequency (Hz)
         this.ln = 70;   // Horn length (cm)
         this.th = 3.0;  // Throat diameter (cm)

@@ -35,7 +35,7 @@ export class PipelineManager {
         this.presetManager = new PresetManager(this);
         this.fileProcessor = new FileProcessor(this);
         this.clipboardManager = new ClipboardManager(this);
-        this.uiEventHandler = new UIEventHandler(this);
+        this.uiEventHandler = new UIEventHandler(this, this.historyManager, this.core);
         
         // Expose key properties for backward compatibility
         this.selectedPlugins = this.core.selectedPlugins;

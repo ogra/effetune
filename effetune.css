@@ -164,7 +164,8 @@ input[type="checkbox"] {
 
 /* When plugin list is collapsed, adjust the main container */
 .main-container.plugin-list-collapsed {
-    gap: 0;
+    padding-left: 0;
+    margin-left: 0;
 }
 
 /* Plugin list */
@@ -177,13 +178,13 @@ input[type="checkbox"] {
     min-width: 200px;
     min-height: 200px; /* Ensure minimum height for spinner positioning */
     transition: transform 0.3s ease, margin-left 0.3s ease;
-    z-index: 20; /* Higher than pipeline but lower than pull tab */
+    z-index: 20;
 }
 
 /* Pull tab for plugin list */
 .plugin-list-pull-tab {
     position: fixed; /* Keep fixed positioning */
-    right: auto; /* Reset right positioning */
+    right: auto;
     left: 300px; /* Initial position - will be updated by JS */
     top: 50vh; /* Center vertically in viewport */
     transform: translateY(-50%);
@@ -197,8 +198,6 @@ input[type="checkbox"] {
     align-items: center;
     color: #888;
     font-size: 8px;
-    z-index: 0;
-    transition: left 0.3s ease;
 }
 
 .plugin-list-pull-tab:hover {
@@ -212,26 +211,14 @@ input[type="checkbox"] {
 }
 
 .plugin-list-pull-tab.collapsed {
-    left: 0; /* Position at the very left edge of the screen */
+    left: 0px; /* Target state for collapsed pull tab */
 }
 
 .main-container.plugin-list-collapsed .pipeline {
-    margin-left: 20px; /* Maintain body padding */
-    flex-grow: 1; /* Expand to take up available space */
-    /* width: calc(100% - 15px);*/ /* Ensure it takes the full width minus the pull tab */
+    margin-left: calc(-1 * var(--plugin-list-total-width, 300px)); /* Use CSS variable */
+    flex-grow: 1;
     position: relative;
-    /* Transform will be set dynamically by JS based on actual plugin list width */
 }
-
-/* When plugin list is collapsed, adjust the main container */
-.main-container.plugin-list-collapsed {
-    padding-left: 0;
-    margin-left: 0;
-    width: calc(100% - 300px); /* Reduce width by the plugin list width */
-    transition: width 0.3s ease;
-}
-
-/* Don't modify body padding */
 
 .plugin-list-header {
     display: flex;
@@ -401,12 +388,63 @@ input[type="checkbox"] {
     background-color: #2d2d2d;
     border-radius: 4px;
     padding: 20px;
+    position: relative;
+    transition: transform 0.3s ease, width 0.3s ease; /* Keep only transform and width */
+    z-index: 10;
+    /* Width will be set dynamically via JavaScript */
+}
+
+/* Pipeline columns container */
+#pipelineList {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Pipeline column */
+.pipeline-column {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    position: relative;
-    transition: margin-left 0.3s ease, transform 0.3s ease;
-    z-index: 10; /* Lower than plugin list */
-    width: 1064px;
+    gap: 10px;
+    min-width: 0; /* Allow columns to shrink if needed */
+}
+
+/* Pipeline Item Styles */
+.pipeline-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    margin: 0;
+    background-color: #3d3d3d;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    width: auto; /* Changed from fixed width to auto */
+}
+
+/* Column control buttons */
+.column-control-button {
+    padding: 4px;
+    background-color: #2d2d2d;
+    border: 1px solid #3d3d3d;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 5px;
+}
+
+.column-control-button:hover {
+    background-color: #3d3d3d;
+}
+
+.column-control-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .drag-message {
@@ -520,6 +558,7 @@ input[type="checkbox"] {
     display: flex;
     align-items: center;
     margin-left: auto;
+    gap: 10px;
 }
 
 .sample-rate {
@@ -543,18 +582,6 @@ input[type="checkbox"] {
     text-align: center;
     color: #666;
     padding: 40px;
-}
-
-/* Pipeline Item Styles */
-.pipeline-item {
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    margin: 10px 0;
-    background-color: #3d3d3d;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-    width: 1044px;
 }
 
 .pipeline-item.selected {
@@ -1119,4 +1146,22 @@ input[type="checkbox"] {
 /* Plugin name display state */
 .plugin-name.plugin-disabled {
     color: #888; /* Grey when OFF */
+}
+
+/* --- Styles for Empty Pipeline --- */
+#pipelineList.is-empty {
+  min-height: 150px; /* Minimum height to accept drops */
+  display: flex;     /* Enable flexbox for alignment */
+  align-items: center; /* Vertically center content (the empty message) */
+  justify-content: center; /* Horizontally center content */
+  box-sizing: border-box; /* Ensure padding/border are included in size */
+}
+
+/* Style #pipelineEmpty to look like the drop target when inside #pipelineList.is-empty */
+#pipelineList.is-empty #pipelineEmpty {
+  pointer-events: none;
+  display: block;
+  text-align: center;
+  color: #666;
+  padding: 40px;
 }

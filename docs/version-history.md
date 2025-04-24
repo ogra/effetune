@@ -1,6 +1,7 @@
 # Version History
 
-### Version 1.46 (Apr xx, 2025)
+### Version 1.46 (Apr 24, 2025)
+- Supports multi-column display of effect pipeline
 - Added Horn Resonator effect
 - Various minor improvements
 

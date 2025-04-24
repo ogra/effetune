@@ -13,10 +13,11 @@ export class PipelineCore {
      * @param {Object} pluginManager - The plugin manager instance
      * @param {Set} expandedPlugins - Set of expanded plugins
      */
-    constructor(audioManager, pluginManager, expandedPlugins) {
+    constructor(audioManager, pluginManager, expandedPlugins, pipelineManager) {
         this.audioManager = audioManager;
         this.pluginManager = pluginManager;
         this.expandedPlugins = expandedPlugins;
+        this.pipelineManager = pipelineManager;
         this.selectedPlugins = new Set();
         this.enabled = true;
         
@@ -25,6 +26,12 @@ export class PipelineCore {
         
         // Create master toggle button
         this.createMasterToggle();
+        
+        // Setup column control
+        this.setupColumnControl();
+        
+        // Setup responsive column adjustment
+        this.setupResponsiveColumnAdjustment();
     }
     
     /**
@@ -467,22 +474,155 @@ export class PipelineCore {
 
     /**
      * Update the pipeline UI
-     * @param {boolean} forceRebuild - Whether to force a complete rebuild of the UI
+     * @param {boolean} forceRedraw - Whether to force a complete rebuild of the UI
      */
-    updatePipelineUI(forceRebuild = false) {
-        // Show/hide empty message based on pipeline length
-        this.pipelineEmpty.style.display = this.audioManager.pipeline.length ? 'none' : 'block';
+    updatePipelineUI(forceRedraw = false) {
+        if (!this.pipelineList) {
+            console.error("pipelineList element not found in PipelineCore");
+            return;
+        }
 
-        // Always rebuild the entire UI to ensure proper updates
-        // Note: We've removed the differential update approach for now to fix UI update issues
-        this.pipelineList.innerHTML = '';
-        this.audioManager.pipeline.forEach(plugin => {
-            const item = this.createPipelineItem(plugin);
-            if (this.selectedPlugins.has(plugin)) {
-                item.classList.add('selected');
+        const pipeline = this.audioManager.pipeline;
+
+        // --- Handle Empty Pipeline State --- 
+        const pipelineEmptyElement = this.pipelineList.querySelector('#pipelineEmpty'); 
+        if (pipeline.length === 0) {
+            // Pipeline is empty. Ensure is-empty class is present and #pipelineEmpty is visible.
+            
+            // Remove any existing plugin columns first
+            const existingColumns = this.pipelineList.querySelectorAll('.pipeline-column');
+            existingColumns.forEach(col => col.remove());
+            
+            this.pipelineList.classList.add('is-empty');
+            if (pipelineEmptyElement) { 
+                 pipelineEmptyElement.style.display = 'block';
             }
-            this.pipelineList.appendChild(item);
+            // console.log("Pipeline is empty, adding is-empty class.");
+            // Ensure pull tab position is updated even when empty
+            requestAnimationFrame(() => {
+                 this.updatePluginListPullTab();
+            });
+            return; // Exit early
+        } else {
+            // Pipeline is NOT empty. Ensure is-empty class is removed and #pipelineEmpty is hidden.
+            this.pipelineList.classList.remove('is-empty');
+            if (pipelineEmptyElement) { 
+                 pipelineEmptyElement.style.display = 'none';
+            }
+        }
+
+        // --- Handle Non-Empty Pipeline --- 
+        // Get the desired column count from storage or default
+        const columnCount = parseInt(localStorage.getItem('pipelineColumns') || '1');
+        const currentColumns = this.pipelineList.querySelectorAll('.pipeline-column');
+
+        // Rebuild columns if the count differs or forceRedraw is true
+        if (currentColumns.length !== columnCount || forceRedraw) {
+            // console.log(`Rebuilding columns. Current: ${currentColumns.length}, Target: ${columnCount}, Force: ${forceRedraw}`);
+            this.rebuildPipelineColumns(columnCount); // This will also call distributePluginsToColumns
+        } else {
+            // console.log(`Column count matches (${columnCount}). Redistributing plugins.`);
+            // Only redistribute plugins if columns don't need rebuilding
+            // Make sure elements exist, otherwise rebuild
+            if (this.pipelineList.childElementCount === 0 && pipeline.length > 0) {
+                 this.rebuildPipelineColumns(columnCount);
+            } else {
+                 this.distributePluginsToColumns();
+            }
+        }
+
+        this.updateSelectionClasses(); // Update selection visuals after distribution
+        this.updateURL(); // Update URL based on the new state
+        // console.log("updatePipelineUI finished.");
+         // Ensure pull tab position is updated after potential column changes
+        requestAnimationFrame(() => {
+             this.updatePluginListPullTab();
         });
+    }
+
+    /**
+     * Rebuild the pipeline columns structure based on column count
+     * @param {number} columns - Number of columns to create
+     */
+    rebuildPipelineColumns(columns) {
+        if (!this.pipelineList) {
+            console.error("rebuildPipelineColumns: pipelineList element not found.");
+            return;
+        }
+        
+        // Remove only existing column elements, preserving #pipelineEmpty
+        const existingColumns = this.pipelineList.querySelectorAll('.pipeline-column');
+        existingColumns.forEach(col => col.remove());
+
+        // Create columns
+        for (let i = 0; i < columns; i++) {
+            const column = document.createElement('div');
+            column.className = 'pipeline-column';
+            column.dataset.columnIndex = i;
+            this.pipelineList.appendChild(column);
+        }
+        // console.log(`Rebuilt ${columns} columns.`);
+
+        // Distribute plugins into the newly created columns
+        this.distributePluginsToColumns();
+    }
+
+    /**
+     * Distribute plugins to columns in a column-first manner
+     * This ensures plugins are placed in vertical columns (fill column 1, then column 2, etc.)
+     */
+    distributePluginsToColumns() {
+        const columns = this.pipelineList.querySelectorAll('.pipeline-column');
+        if (!columns.length) {
+            // console.warn("distributePluginsToColumns called but no columns found.");
+            // If no columns, ensure empty state is handled correctly by updatePipelineUI
+            // This might happen if pipeline becomes empty, trigger update
+            if (this.audioManager.pipeline.length === 0) {
+                this.updatePipelineUI(true); 
+            }
+            return;
+        }
+
+        const columnCount = columns.length;
+        const pipeline = this.audioManager.pipeline;
+        const totalPlugins = pipeline.length;
+
+        // Calculate items per column for column-first distribution
+        const pluginsPerColumn = Math.ceil(totalPlugins / columnCount);
+
+        // Clear all columns first to ensure clean distribution
+        columns.forEach(column => {
+            column.innerHTML = '';
+        });
+
+        // Distribute plugins
+        pipeline.forEach((plugin, index) => {
+            const item = this.createPipelineItem(plugin); // Returns the main item element
+
+            // --- Correctly get handle AFTER creating item ---
+            const handle = item.querySelector('.handle');
+
+            // Determine target column index
+            const columnIndex = Math.floor(index / pluginsPerColumn);
+            const targetColumn = columns[Math.min(columnIndex, columnCount - 1)];
+
+            if (targetColumn) {
+                targetColumn.appendChild(item);
+                // --- Setup drag events AFTER appending and having the handle ---
+                if (this.pipelineManager && this.pipelineManager.uiEventHandler && handle) {
+                    this.pipelineManager.uiEventHandler.setupDragEvents(handle, item, plugin);
+                } else if (!handle) {
+                     console.warn(`No handle found for plugin item ${index} to set up drag events.`);
+                } else if (!this.pipelineManager?.uiEventHandler) {
+                    console.warn("uiEventHandler not available in PipelineCore to set up drag events.");
+                }
+            } else {
+                 console.warn(`Could not find target column ${columnIndex} for plugin ${index}.`);
+            }
+        });
+
+        // Update selection classes after distributing
+        this.updateSelectionClasses();
     }
 
     /**
@@ -935,6 +1075,160 @@ export class PipelineCore {
                     this.updatePluginNameDisplayState(plugin, nameElement);
                 }
             }
+        });
+    }
+
+    /**
+     * Set up column control for the pipeline
+     * This method initializes the column control buttons and their event handlers
+     */
+    setupColumnControl() {
+        const decreaseBtn = document.getElementById('decreaseColumnsButton');
+        const increaseBtn = document.getElementById('increaseColumnsButton');
+        if (!decreaseBtn || !increaseBtn) return;
+        
+        // Current column count (default is 1)
+        let currentColumns = 1;
+        
+        // Get saved column count from localStorage
+        const savedColumns = localStorage.getItem('pipelineColumns');
+        if (savedColumns) {
+            currentColumns = parseInt(savedColumns);
+        }
+        
+        // Set initial column count
+        this.updatePipelineColumns(currentColumns);
+        
+        // Update button states
+        this.updateColumnButtonStates(currentColumns);
+        
+        // Decrease button event listener
+        decreaseBtn.addEventListener('click', () => {
+            if (currentColumns > 1) {
+                currentColumns--;
+                this.updatePipelineColumns(currentColumns);
+                this.updateColumnButtonStates(currentColumns);
+            }
+        });
+        
+        // Increase button event listener
+        increaseBtn.addEventListener('click', () => {
+            if (currentColumns < 8) {
+                currentColumns++;
+                this.updatePipelineColumns(currentColumns);
+                this.updateColumnButtonStates(currentColumns);
+            }
+        });
+        
+        // Update plugin-list-pull-tab position after initial setup
+        this.updatePluginListPullTab();
+    }
+
+    /**
+     * Update the enabled/disabled state of column control buttons
+     * @param {number} columns - Current number of columns
+     */
+    updateColumnButtonStates(columns) {
+        const decreaseBtn = document.getElementById('decreaseColumnsButton');
+        const increaseBtn = document.getElementById('increaseColumnsButton');
+        
+        if (decreaseBtn) {
+            decreaseBtn.disabled = columns <= 1;
+        }
+        
+        if (increaseBtn) {
+            increaseBtn.disabled = columns >= 8;
+        }
+    }
+
+    /**
+     * Update pipeline column count and adjust layout
+     * @param {number} columns - Number of columns to set (1-8)
+     */
+    updatePipelineColumns(columns) {
+        if (columns < 1 || columns > 8) return; // Check valid range (1-8)
+        
+        // Update CSS variable for tracking number of columns
+        document.documentElement.style.setProperty('--pipeline-columns', columns);
+        
+        // Calculate and set pipeline width
+        const baseWidth = 1064; // Base width per column
+        const gap = 10; // Gap between columns (must match CSS gap value)
+        const pipelineWidth = (baseWidth * columns) + (gap * (columns - 1));
+        
+        const pipeline = document.getElementById('pipeline');
+        if (pipeline) {
+            pipeline.style.width = `${pipelineWidth}px`;
+        }
+        
+        // Rather than using updatePipelineUI, we'll explicitly rebuild the columns
+        this.rebuildPipelineColumns(columns);
+        
+        // Defer updating the pull tab position to the next animation frame.
+        // This ensures layout changes (pipeline width, column rebuild) are processed
+        // before reading element dimensions/positions in updatePositions.
+        requestAnimationFrame(() => {
+            this.updatePluginListPullTab();
+        });
+        
+        // Save column count to localStorage for persistence
+        localStorage.setItem('pipelineColumns', columns);
+    }
+
+    /**
+     * Update the position of plugin-list-pull-tab to maintain UI consistency
+     * This ensures the pull tab stays in the correct position when columns change
+     */
+    updatePluginListPullTab() {
+        // Get plugin-list-manager instance
+        const pluginListManager = window.uiManager ? window.uiManager.pluginListManager : null;
+        if (!pluginListManager) return;
+        
+        // Update positions
+        pluginListManager.updatePositions();
+    }
+
+    /**
+     * Set up responsive column adjustment based on window size
+     * NOTE: This functionality is currently disabled to maintain user-set column count regardless of window size.
+     * The pipeline will horizontally overflow if it exceeds viewport width.
+     */
+    setupResponsiveColumnAdjustment() {
+        // Use debounce technique to limit resize event frequency
+        let resizeTimeout;
+        
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // --- Automatic column adjustment logic is disabled ---            
+                /*
+                // Get window width
+                const windowWidth = window.innerWidth;
+                
+                // Minimum width per column (base width + padding)
+                // Consider adjusting this if baseWidth or padding changes
+                const minColumnWidth = 1064 + 40; 
+                
+                // Calculate maximum possible columns based on window size
+                // Avoid division by zero or negative width
+                const maxPossibleColumns = minColumnWidth > 0 ? Math.max(1, Math.floor(windowWidth / minColumnWidth)) : 1;
+                
+                // Get current column setting
+                const currentSetting = parseInt(localStorage.getItem('pipelineColumns') || '1');
+                
+                // Adjust column count to fit within screen, up to the max of 8
+                const newColumns = Math.min(currentSetting, maxPossibleColumns, 8);
+                
+                // Only update if column count changes and is valid
+                if (newColumns > 0 && newColumns !== currentSetting) {
+                    console.log(`Window resized. Adjusting columns from ${currentSetting} to ${newColumns} based on available width.`);
+                    this.updatePipelineColumns(newColumns);
+                    this.updateColumnButtonStates(newColumns);
+                }
+                */
+               // Re-enable if automatic adjustment is desired in the future.
+               // Currently, we prioritize keeping the user's column setting.
+            }, 200); // 200ms delay to prevent excessive updates
         });
     }
 }

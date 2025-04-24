@@ -50,12 +50,16 @@
                     <button class="header-button save-button" id="savePresetButton"><img src="images/save_button.png" width="16" height="16"></button>
                     <button class="header-button delete-preset-button" id="deletePresetButton">✖</button>
                     <button class="header-button share-button" id="shareButton">Share</button>
+                    <button class="column-control-button" id="decreaseColumnsButton">-</button>
+                    <button class="column-control-button" id="increaseColumnsButton">+</button>
                 </div>
             </div>
-            <div class="pipeline-empty" id="pipelineEmpty">
-                Drag plugins here to build your effect pipeline
+            <div id="pipelineList">
+                <div class="pipeline-empty" id="pipelineEmpty">
+                    Drag plugins here to build your effect pipeline
+                </div>
+                <!-- Columns and plugin items will be added here by JS -->
             </div>
-            <div id="pipelineList"></div>
         </div>
     </div>
 

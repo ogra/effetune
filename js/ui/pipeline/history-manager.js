@@ -23,6 +23,7 @@ export class HistoryManager {
      * Save current pipeline state to history
      */
     saveState() {
+        // console.trace("HistoryManager.saveState() called from:");
         // Skip if this is an undo/redo operation
         if (this.isUndoRedoOperation) {
             return;

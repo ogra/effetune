@@ -84,81 +84,171 @@ export class PluginListManager {
         this.lastDragOverTime = 0;
         this.dragOverThrottleDelay = 100;
         this.rafId = null;
+        this.animationFrameId = null; 
+        this.handleTransitionEnd = null; // Ensure it's initialized
     }
     
     // Toggle the collapsed state of the plugin list
     togglePluginListCollapse() {
         this.isCollapsed = !this.isCollapsed;
         
+        const pipeline = document.getElementById('pipeline');
+        if (!this.pluginList || !this.pullTab || !this.mainContainer || !pipeline) return;
+
+        // --- Cleanup previous state --- 
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        if (this.handleTransitionEnd) {
+            this.pluginList.removeEventListener('transitionend', this.handleTransitionEnd);
+        }
+
+        // --- Define transitionend handler --- 
+        this.handleTransitionEnd = (event) => {
+            // Check if the transition that ended was for the transform property
+            if (event.propertyName === 'transform' && event.target === this.pluginList) {
+                // Stop the rAF loop
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
+                }
+                // Set the final static positions explicitly
+                this.updatePositions(); 
+                // Clean up the listener itself
+                this.pluginList.removeEventListener('transitionend', this.handleTransitionEnd);
+                this.handleTransitionEnd = null; // Reset handler reference
+            }
+        };
+        
+        // Add the listener before triggering the transition
+        this.pluginList.addEventListener('transitionend', this.handleTransitionEnd);
+
+        // --- Trigger CSS transition and JS animation --- 
         if (this.isCollapsed) {
-            // Collapse the plugin list
+            // Add classes to trigger pluginList transform
             this.pluginList.classList.add('collapsed');
             this.pullTab.classList.add('collapsed');
-            this.pullTab.textContent = '▶'; // Show right arrow when collapsed
             this.mainContainer.classList.add('plugin-list-collapsed');
-            
-            // Position at the very left edge of the screen, ignoring body padding
-            this.pullTab.style.left = '0';
-            
-            // Update pipeline transform
-            this.updatePositions();
+            this.pullTab.textContent = '▶'; 
+            // Start JS animation loop to make followers track the list
+            this.animateFollowers(); 
         } else {
-            // Expand the plugin list
+            // Remove classes to trigger pluginList transform
             this.pluginList.classList.remove('collapsed');
             this.pullTab.classList.remove('collapsed');
-            this.pullTab.textContent = '◀'; // Show left arrow when expanded
             this.mainContainer.classList.remove('plugin-list-collapsed');
-            
-            // Reset pipeline transform
-            const pipeline = document.getElementById('pipeline');
-            if (pipeline) {
-                pipeline.style.transform = 'none';
-            }
-            
-            // Important: Delay updating the pull tab position to ensure correct calculation
-            // after the plugin list has fully expanded
-            setTimeout(() => {
-                this.updatePositions();
-            }, 50);
+            this.pullTab.textContent = '◀'; 
+            // Start JS animation loop
+            this.animateFollowers();
         }
     }
-    
-    // Update positions for the pull tab and pipeline
-    updatePositions() {
-        // Get the actual width of the plugin list including padding
-        const pluginListRect = this.pluginList.getBoundingClientRect();
-        const pluginListWidth = pluginListRect.width;
-        const bodyPadding = 20; // Body padding value
-        
-        // Calculate positions
-        const expandedLeftPosition = pluginListWidth + bodyPadding;
-        
-        // Store the original position if not already stored
-        if (this.originalExpandedPosition === null) {
-            this.originalExpandedPosition = expandedLeftPosition;
-        }
-        
-        // Set pull tab position when expanded - use the original position for consistency
-        if (!this.isCollapsed) {
-            this.pullTab.style.left = this.originalExpandedPosition + 'px';
-        }
-        
-        // Set transform for pipeline when collapsed
+
+    // Renamed and refined animation loop
+    animateFollowers() {
         const pipeline = document.getElementById('pipeline');
-        if (this.isCollapsed && pipeline) {
-            pipeline.style.transform = `translateX(-${pluginListWidth}px)`;
+        if (!pipeline || !this.pluginList || !this.pullTab) return; 
+
+        // Get initial values needed for progress calculation
+        const pluginListWidth = this.pluginList.offsetWidth;
+        // Calculate the fully expanded left position (typically body padding)
+        // We use offsetLeft relative to its parent, assuming parent starts after body padding
+        const expandedListLeftCssPixel = parseFloat(window.getComputedStyle(document.body).paddingLeft) || 20;
+        const collapsedListLeftCssPixel = expandedListLeftCssPixel - pluginListWidth;
+        
+        const step = () => {
+            // Get current position of the list
+            const pluginListRect = this.pluginList.getBoundingClientRect();
+            const currentListLeftViewport = pluginListRect.left;
+            const currentListRightViewport = pluginListRect.right;
+            const currentListWidthViewport = pluginListRect.width;
+
+            // Calculate zoom ratio to correct coordinates
+            let zoomRatio = 1;
+            if (pluginListWidth > 0 && currentListWidthViewport > 0) {
+                zoomRatio = currentListWidthViewport / pluginListWidth;
+            }
+            // Calculate corrected positions in CSS pixels
+            const currentListLeftCssPixel = currentListLeftViewport / zoomRatio;
+            const targetPullTabLeftCssPixel = currentListRightViewport / zoomRatio;
             
-            // Update main container width to exactly match the pipeline width
-            const pipelineWidth = pipeline.offsetWidth;
-            this.mainContainer.style.width = `${pipelineWidth}px`;
-            this.mainContainer.style.maxWidth = '100%';
-        } else if (pipeline) {
-            pipeline.style.transform = 'none';
+            // Calculate pipeline margin based on transition progress (using CSS pixel values)
+            let progress = 0;
+            // Avoid division by zero if width is somehow 0
+            if (pluginListWidth > 0) { 
+                 // Clamp progress between 0 and 1
+                 progress = Math.max(0, Math.min(1, 
+                    (currentListLeftCssPixel - expandedListLeftCssPixel) / (collapsedListLeftCssPixel - expandedListLeftCssPixel)
+                 ));
+            }
+            // Interpolate marginLeft from 0 to -pluginListWidth
+            const targetPipelineMarginLeft = progress * (-pluginListWidth);
             
-            // Reset main container width
-            this.mainContainer.style.width = '';
-            this.mainContainer.style.maxWidth = '';
+            // Apply styles directly (no CSS transition)
+            this.pullTab.style.left = `${Math.round(targetPullTabLeftCssPixel)}px`;
+            pipeline.style.marginLeft = `${Math.round(targetPipelineMarginLeft)}px`; 
+            pipeline.style.transform = 'none'; // Ensure no competing transform
+            
+            // Schedule next frame if animation should continue
+            if (this.handleTransitionEnd) { 
+                 this.animationFrameId = requestAnimationFrame(step);
+            } else {
+                 this.animationFrameId = null;
+            }
+        };
+        
+        // Cancel any previous frame and start the new animation loop
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
         }
+        this.animationFrameId = requestAnimationFrame(step);
+    }
+
+    /**
+     * Update positions for static states (init, resize) 
+     * Also sets the final state after animations via transitionend handler.
+     */
+    updatePositions() {
+        if (!this.pluginList || !this.pullTab) return; 
+        
+        // Stop animation if running (e.g., resize during animation)
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        // Remove listener if it exists (e.g., resize interrupted transition)
+         if (this.handleTransitionEnd) {
+            this.pluginList.removeEventListener('transitionend', this.handleTransitionEnd);
+            this.handleTransitionEnd = null;
+        }
+
+        // Calculate necessary values for static state
+        const pluginListWidth = this.pluginList.offsetWidth; 
+        const pluginListRect = this.pluginList.getBoundingClientRect();
+        // Calculate zoom ratio to correct coordinates obtained from getBoundingClientRect
+        let zoomRatio = 1;
+        if (pluginListWidth > 0 && pluginListRect.width > 0) {
+            zoomRatio = pluginListRect.width / pluginListWidth;
+        }
+        // Correct the right position based on the zoom ratio
+        const correctedRightPosition = pluginListRect.right / zoomRatio;
+
+        // Set CSS variable (might be useful elsewhere, keep it)
+        document.documentElement.style.setProperty('--plugin-list-total-width', `${pluginListWidth}px`);
+
+        // Get the pipeline element
+        const pipeline = document.getElementById('pipeline');
+        if (!pipeline) return; 
+
+        // Apply static positions based on the current state
+        if (!this.isCollapsed) {
+             this.pullTab.style.left = `${Math.round(correctedRightPosition)}px`;
+             pipeline.style.marginLeft = '0';
+        } else {
+             this.pullTab.style.left = '0px';
+             pipeline.style.marginLeft = `-${pluginListWidth}px`; 
+        }
+        pipeline.style.transform = 'none'; 
     }
     
     setupPullTabFunctionality() {
@@ -307,28 +397,247 @@ export class PluginListManager {
         }
     }
     
-    // Update insertion indicator position
-    updateInsertionIndicator(clientY) {
-        const pipelineList = document.getElementById('pipelineList');
-        const items = Array.from(pipelineList.children);
-        const pipelineRect = pipelineList.getBoundingClientRect();
-        const targetItem = items.find(item => {
-            const rect = item.getBoundingClientRect();
-            return clientY < rect.top + (rect.height / 2);
-        });
-
-        if (targetItem) {
-            // Position above the target item
-            this.insertionIndicator.style.top = `${targetItem.offsetTop}px`;
-        } else if (items.length > 0) {
-            // Position after the last item
-            const lastItem = items[items.length - 1];
-            this.insertionIndicator.style.top = `${lastItem.offsetTop + lastItem.offsetHeight}px`;
-        } else {
-            // Position at the top of the empty pipeline list
-            this.insertionIndicator.style.top = `${pipelineRect.top - pipelineList.offsetTop}px`;
+    /**
+     * Finds the potential insertion target (column and item indices) based on coordinates using elementFromPoint.
+     * @param {number} clientX - Raw viewport X coordinate.
+     * @param {number} clientY - Raw viewport Y coordinate.
+     * @returns {{columnIndex: number|null, itemIndex: number|null}} 
+     *          The index of the target column, and the index within that column (null if no valid target).
+     */
+    findPotentialInsertionTarget(clientX, clientY) {
+        // Use elementFromPoint to find the element directly under the cursor
+        const hoveredElement = document.elementFromPoint(clientX, clientY);
+        if (!hoveredElement) {
+            return { columnIndex: null, itemIndex: null };
         }
-        this.insertionIndicator.style.display = 'block';
+
+        // Find the pipeline list and potential parent column/item
+        const targetColumn = hoveredElement.closest('.pipeline-column');
+        const targetItemElement = hoveredElement.closest('.pipeline-item');
+        const pipelineList = document.getElementById('pipelineList'); // Need the container
+        
+        if (!targetColumn || !pipelineList) {
+            // If not hovering over a column, check if hovering over the pipeline list itself
+            if (pipelineList && pipelineList.contains(hoveredElement)) {
+                // Hovering over the empty list background or between columns
+                // Try to determine the nearest column based on X coordinate
+                const columns = Array.from(pipelineList.querySelectorAll('.pipeline-column'));
+                if (columns.length === 0) {
+                    // No columns exist yet (empty pipeline), target the conceptual first column
+                    return { columnIndex: 0, itemIndex: 0 };
+                }
+                // Find the column whose horizontal range contains clientX
+                let bestColumnIndex = 0; // Default to first column
+                for (let i = 0; i < columns.length; i++) {
+                    const colRect = columns[i].getBoundingClientRect();
+                    if (clientX >= colRect.left && clientX <= colRect.right) {
+                        bestColumnIndex = i;
+                        break;
+                    }
+                    // If beyond the last column's right edge, target the last column
+                    if (i === columns.length - 1 && clientX > colRect.right) {
+                         bestColumnIndex = i;
+                    }
+                }
+                // Determine item index within the chosen column (likely the end if hovering in gap)
+                const chosenColumn = columns[bestColumnIndex];
+                const itemsInChosenColumn = Array.from(chosenColumn.children);
+                let itemIndexInChosen = itemsInChosenColumn.length; // Default to end
+                for (let i = 0; i < itemsInChosenColumn.length; i++) {
+                     const itemRect = itemsInChosenColumn[i].getBoundingClientRect();
+                     const midpointY = itemRect.top + itemRect.height / 2;
+                     if (clientY < midpointY) {
+                         itemIndexInChosen = i;
+                         break;
+                     }
+                 }
+                 return { columnIndex: bestColumnIndex, itemIndex: itemIndexInChosen };
+            }
+            // Otherwise, not a valid target within the pipeline
+            return { columnIndex: null, itemIndex: null };
+        }
+
+        const columns = Array.from(pipelineList.querySelectorAll('.pipeline-column'));
+        const columnIndex = columns.indexOf(targetColumn);
+        // If somehow the column exists but is not in the list query, treat as invalid
+        // Example: Drag starts, UI updates, then drag event fires with stale targetColumn reference.
+        if (columnIndex === -1) {
+             // console.warn("Target column found but not in current list query results.");
+             return { columnIndex: null, itemIndex: null };
+        }
+
+        const items = Array.from(targetColumn.children);
+        let itemIndex = null;
+
+        if (targetItemElement && targetColumn.contains(targetItemElement)) {
+            // Hovering directly over an item or its child
+            const itemRect = targetItemElement.getBoundingClientRect();
+            const midpointY = itemRect.top + itemRect.height / 2;
+            
+            // Determine if cursor is above or below the midpoint
+            if (clientY < midpointY) {
+                itemIndex = items.indexOf(targetItemElement); // Insert before this item
+            } else {
+                itemIndex = items.indexOf(targetItemElement) + 1; // Insert after this item
+            }
+        } else {
+            // Hovering over the column itself or the gap between items
+            // Iterate through items to find where clientY falls relative to item midpoints
+            itemIndex = items.length; // Default to end of column
+            for (let i = 0; i < items.length; i++) {
+                const itemRect = items[i].getBoundingClientRect();
+                // If the column is empty, midpoint calculation might be off,
+                // but the loop won't run anyway. If there are items, proceed.
+                let midpointY = itemRect.top + itemRect.height / 2;
+                // Handle potential zero-height items if necessary
+                if (itemRect.height === 0) {
+                    midpointY = itemRect.top;
+                }
+                if (clientY < midpointY) {
+                    itemIndex = i;
+                    break;
+                }
+            }
+        }
+
+        return { columnIndex, itemIndex };
+    }
+
+    // Update insertion indicator using the calculated target and corrected coordinates for rendering
+    updateInsertionIndicator(clientX, clientY) {
+        // Find the logical target using the elementFromPoint method (uses raw coordinates)
+        const targetInfo = this.findPotentialInsertionTarget(clientX, clientY);
+        const targetColumnIndex = targetInfo.columnIndex;
+        const targetItemIndex = targetInfo.itemIndex;
+
+        const indicator = this.getInsertionIndicator();
+        const columns = document.querySelectorAll('.pipeline-column');
+        const pipelineListElement = document.getElementById('pipelineList'); // Needed for scroll context and offsetTop
+        const pipelineContainer = document.getElementById('pipeline'); // Indicator's expected offsetParent
+
+        if (targetColumnIndex === null || !indicator || !pipelineListElement || !pipelineContainer) {
+            if (indicator) indicator.style.display = 'none';
+            return;
+        }
+
+        const listOffsetTopInPipeline = pipelineListElement.offsetTop;
+        const listOffsetLeftInPipeline = pipelineListElement.offsetLeft; // Moved declaration here
+
+        // Handle empty pipeline case (no columns rendered)
+        if (columns.length === 0 && targetColumnIndex === 0) {
+            // Get list padding (CSS Pixels)
+            const listStyle = window.getComputedStyle(pipelineListElement);
+            const listPaddingTop = parseFloat(listStyle.paddingTop) || 0;
+            const listPaddingLeft = parseFloat(listStyle.paddingLeft) || 0;
+
+            // Top: Position relative to pipeline = list's offsetTop + list's paddingTop
+            const finalIndicatorTop = listOffsetTopInPipeline + listPaddingTop; 
+
+            // Left: Position relative to pipeline = list's offsetLeft + list's paddingLeft
+            const indicatorLeft = listOffsetLeftInPipeline + listPaddingLeft;
+
+            // Width: Approximate using list's clientWidth
+            const indicatorWidth = pipelineListElement.clientWidth;
+
+            indicator.style.top = `${Math.round(finalIndicatorTop)}px`;
+            indicator.style.left = `${Math.round(indicatorLeft)}px`;
+            indicator.style.width = `${Math.round(indicatorWidth)}px`;
+            indicator.style.display = 'block';
+            indicator.style.opacity = '1';
+            return;
+        }
+
+        // --- Normal case: Calculate indicator position --- 
+        const targetColumn = columns[targetColumnIndex];
+        // Guard if target column somehow doesn't exist at the retrieved index (Style unified)
+        if (!targetColumn) {
+            if (indicator) indicator.style.display = 'none';
+            return;
+        }
+        const items = Array.from(targetColumn.children);
+        const listScrollTop = pipelineListElement.scrollTop; 
+
+        // Calculate base top position relative to list content top (includes scroll)
+        let baseTopRelativeToListContent = 0;
+        let finalIndicatorTop; // Declare finalIndicatorTop here
+
+        if (targetItemIndex !== null && targetItemIndex < items.length && items[targetItemIndex]) {
+            const targetItemElement = items[targetItemIndex];
+            baseTopRelativeToListContent = targetItemElement.offsetTop + targetColumn.offsetTop + listScrollTop;
+            // Keep the original calculation for this case, assuming it's correct
+            finalIndicatorTop = baseTopRelativeToListContent - listOffsetTopInPipeline; 
+        } else {
+            if (items.length > 0) {
+                 const lastItemElement = items[items.length - 1];
+                 baseTopRelativeToListContent = lastItemElement.offsetTop + lastItemElement.offsetHeight + targetColumn.offsetTop + listScrollTop;
+                 // Keep the original calculation for this case, assuming it's correct
+                 finalIndicatorTop = baseTopRelativeToListContent - listOffsetTopInPipeline; 
+            } else { 
+                 // Empty column: Calculate position directly relative to pipelineList top + padding
+                 const listStyle = window.getComputedStyle(pipelineListElement);
+                 const listPaddingTop = parseFloat(listStyle.paddingTop) || 0;
+                 // Set finalIndicatorTop directly to the desired value relative to #pipeline
+                 finalIndicatorTop = listOffsetTopInPipeline + listPaddingTop;
+                 // baseTopRelativeToListContent is not used for this specific override
+            }
+        }
+        
+        // Calculate left position: Assume targetColumn.offsetLeft is relative to pipelineList's offset parent (#pipeline)
+        const indicatorLeft = targetColumn.offsetLeft;
+        const indicatorWidth = targetColumn.offsetWidth;
+
+        // Set styles
+        indicator.style.top = `${Math.round(finalIndicatorTop)}px`;
+        indicator.style.left = `${Math.round(indicatorLeft)}px`;
+        indicator.style.width = `${Math.round(indicatorWidth)}px`;
+        indicator.style.display = 'block';
+        indicator.style.opacity = '1';
+    }
+
+    /**
+     * Find insertion index based on the logical target found by findPotentialInsertionTarget.
+     * @param {number} clientX - Raw viewport X coordinate.
+     * @param {number} clientY - Raw viewport Y coordinate.
+     * @param {Array} pipeline - The current pipeline array.
+     * @returns {number} The insertion index.
+     */
+    findInsertionIndex(clientX, clientY, pipeline) {
+        // Calculate the logical target using the raw coordinates.
+        const targetInfo = this.findPotentialInsertionTarget(clientX, clientY);
+        const columnIndex = targetInfo.columnIndex;
+        const positionInColumn = targetInfo.itemIndex;
+
+        // If target is invalid, append to the end.
+        if (columnIndex === null || positionInColumn === null) {
+            return pipeline.length;
+        }
+
+        // Get the number of columns.
+        const columns = document.querySelectorAll('.pipeline-column');
+        const columnCount = columns.length;
+        const totalPlugins = pipeline.length;
+        
+        // Guard against division by zero if there are no columns.
+        if (columnCount === 0) {
+            return totalPlugins; // If pipeline is empty, this will be 0
+        }
+
+        // Calculate plugins per column based on the current pipeline length.
+        // This logic assumes column-first filling.
+        const pluginsPerColumn = Math.ceil(totalPlugins / columnCount);
+
+        // Calculate the actual insertion index in the pipeline array.
+        // Ensure index doesn't exceed the total number of plugins.
+        // Calculate the base index based on column-first filling.
+        let calculatedIndex = columnIndex * pluginsPerColumn + positionInColumn;
+
+        // Adjust index if dropping into a column that isn't the last *full* column
+        // Example: 3 columns, 7 plugins (3, 3, 1). Dropping at col 0, pos 1 = index 1.
+        // Dropping at col 1, pos 0 = index 3. Dropping at col 2, pos 0 = index 6.
+        // The formula columnIndex * pluginsPerColumn + positionInColumn works correctly for column-first filling.
+        
+        const finalIndex = Math.min(calculatedIndex, totalPlugins);
+        return finalIndex;
     }
 
     setupSearchFunctionality() {
@@ -556,15 +865,26 @@ export class PluginListManager {
 
         item.addEventListener('dragend', () => {
             this.dragMessage.style.display = 'none';
-            this.insertionIndicator.style.display = 'none';
             item.classList.remove('dragging');
+            
+            // --- Clear pending timeouts/rAF and hide indicator immediately --- 
+            if (this.rafId) { // Cancel any pending frame for indicator update
+                cancelAnimationFrame(this.rafId);
+                this.rafId = null;
+            }
+            // Assuming UIEventHandler holds the timeout ID, access might be tricky.
+            // If flicker persists specifically from PluginList drag, 
+            // PluginListManager might need its own timeout management for dragleave.
+            // For now, just hide directly.
+            this.insertionIndicator.style.display = 'none'; 
         });
 
         // Touch events
-        let isDragging = false;
-        let clone = null;
+        let isDragging = false; // Flag for touch dragging state
+        let clone = null; // Reference to the cloned element during drag
         let touchOffsetX = 0;
         let touchOffsetY = 0;
+        const sourceIndex = this.pipelineManager?.audioManager?.pipeline.indexOf(plugin) ?? -1;
 
         item.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
@@ -585,7 +905,7 @@ export class PluginListManager {
             clone.style.zIndex = '1000';
             clone.style.width = item.offsetWidth + 'px';
             clone.style.opacity = '0.9';
-            clone.style.backgroundColor = '#ffffff';
+            clone.style.backgroundColor = '#ffffff'; // Ensure this contrasts well
             clone.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
             clone.style.pointerEvents = 'none';
             clone.style.left = (touch.clientX - touchOffsetX) + 'px';
@@ -603,7 +923,7 @@ export class PluginListManager {
                 
                 // Throttle dragover events
                 this.throttle(() => {
-                    this.updateInsertionIndicator(touch.clientY);
+                    this.updateInsertionIndicator(touch.clientX, touch.clientY);
                 }, this.dragOverThrottleDelay);
             }
         });
@@ -625,6 +945,7 @@ export class PluginListManager {
                     
                     // Create and dispatch drop event
                     const dropEvent = new Event('drop', { bubbles: true });
+                    dropEvent.clientX = touch.clientX;
                     dropEvent.clientY = touch.clientY;
                     dropEvent.preventDefault = () => {};
                     dropEvent.dataTransfer = {
