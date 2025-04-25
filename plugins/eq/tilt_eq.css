@@ -4,60 +4,30 @@
 }
 
 .tilt-eq-plugin-ui .tilt-eq-radio-label {
+    /* Keep specific radio label style if needed */
     margin-right: 15px;
     cursor: pointer;
 }
 
 .tilt-eq-plugin-ui .tilt-eq-radio-label input {
+    /* Keep specific radio label style if needed */
     margin-right: 5px;
 }
 
-.tilt-eq-plugin-ui .parameter-row {
-    margin-bottom: 20px;
-}
-
-.tilt-eq-plugin-ui .controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.tilt-eq-plugin-ui .control-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0 10px;
-}
-
-.tilt-eq-plugin-ui label {
-    min-width: 120px;
-}
-
-.tilt-eq-plugin-ui .horizontal-slider {
-    flex: 1;
-    height: 20px;
-    margin: 0;
-    padding: 0;
-}
-
-.tilt-eq-plugin-ui .value-display {
-    font-size: 12px;
-    min-width: 80px;
-    text-align: right;
-}
-
+/* Keep graph specific styles */
 .tilt-eq-plugin-ui canvas {
     margin: 10px auto;
     display: block;
     background: #222;
 }
 
+/* Keep graph specific styles */
 .tilt-eq-plugin-ui .graph-container {
     margin-top: 10px;
     position: relative;
 }
 
+/* Keep reset button specific styles */
 .tilt-eq-plugin-ui .eq-reset-button {
     position: absolute;
     right: 10px;

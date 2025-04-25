@@ -184,52 +184,12 @@ class TimeAlignmentPlugin extends PluginBase {
         channelRow.appendChild(channelContainer);
         container.appendChild(channelRow);
 
-        // Delay parameter
-        const delayRow = document.createElement('div');
-        delayRow.className = 'parameter-row';
-        const delayLabel = document.createElement('label');
-        delayLabel.textContent = 'Delay (s):';
-        delayLabel.htmlFor = `${this.id}-${this.name}-delay-slider`;
-        delayRow.appendChild(delayLabel);
-
-        const delaySlider = document.createElement('input');
-        delaySlider.type = 'range';
-        delaySlider.id = `${this.id}-${this.name}-delay-slider`;
-        delaySlider.name = `${this.id}-${this.name}-delay-slider`;
-        delaySlider.min = '0';
-        delaySlider.max = this.maxDelayTime;
-        delaySlider.step = '0.01';
-        delaySlider.value = this.dl;
-        delaySlider.autocomplete = "off";
-
-        const delayValue = document.createElement('input');
-        delayValue.type = 'number';
-        delayValue.id = `${this.id}-${this.name}-delay-value`;
-        delayValue.name = `${this.id}-${this.name}-delay-value`;
-        delayValue.min = '0';
-        delayValue.max = this.maxDelayTime;
-        delayValue.step = '0.01';
-        delayValue.value = this.dl;
-        delayValue.autocomplete = "off";
-
-        delaySlider.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            this.setDelay(val);
-            delayValue.value = val;
-        });
-
-        delayValue.addEventListener('input', (e) => {
-            let val = parseFloat(e.target.value) || 0;
-            if (val < 0) val = 0;
-            if (val > this.maxDelayTime) val = this.maxDelayTime;
-            this.setDelay(val);
-            delaySlider.value = val;
-            e.target.value = val;
-        });
-
-        delayRow.appendChild(delaySlider);
-        delayRow.appendChild(delayValue);
-        container.appendChild(delayRow);
+        // Use helper to create delay control
+        const delayControl = this.createParameterControl(
+            'Delay', 0, this.maxDelayTime, 0.01, this.dl,
+            (value) => this.setDelay(value), 'ms'
+        );
+        container.appendChild(delayControl);
 
         return container;
     }

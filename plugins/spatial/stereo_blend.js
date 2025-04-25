@@ -83,48 +83,11 @@ class StereoBlendPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // Stereo width parameter row
-        const stereoLabel = document.createElement('label');
-        stereoLabel.textContent = 'Stereo (%):';
-        stereoLabel.htmlFor = `${this.id}-${this.name}-stereo-slider`;
-        
-        const stereoSlider = document.createElement('input');
-        stereoSlider.type = 'range';
-        stereoSlider.min = -200;
-        stereoSlider.max = 200;
-        stereoSlider.step = 1;
-        stereoSlider.value = this.stereo;
-        stereoSlider.id = `${this.id}-${this.name}-stereo-slider`;
-        stereoSlider.name = `${this.id}-${this.name}-stereo-slider`;
-        stereoSlider.autocomplete = "off";
-        stereoSlider.addEventListener('input', (e) => {
-            this.setStereo(parseFloat(e.target.value));
-            stereoValue.value = e.target.value;
-        });
-        
-        const stereoValue = document.createElement('input');
-        stereoValue.type = 'number';
-        stereoValue.min = 0;
-        stereoValue.max = 200;
-        stereoValue.step = 1;
-        stereoValue.value = this.stereo;
-        stereoValue.id = `${this.id}-${this.name}-stereo-value`;
-        stereoValue.name = `${this.id}-${this.name}-stereo-value`;
-        stereoValue.autocomplete = "off";
-        stereoValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -200 ? -200 : (parsedValue > 200 ? 200 : parsedValue);
-            this.setStereo(value);
-            stereoSlider.value = value;
-            e.target.value = value;
-        });
-
-        const stereoRow = document.createElement('div');
-        stereoRow.className = 'parameter-row';
-        stereoRow.appendChild(stereoLabel);
-        stereoRow.appendChild(stereoSlider);
-        stereoRow.appendChild(stereoValue);
-        container.appendChild(stereoRow);
+        // Use base helper for Stereo width control
+        container.appendChild(this.createParameterControl(
+            'Stereo', -200, 200, 1, this.stereo,
+            this.setStereo.bind(this), '%'
+        ));
 
         return container;
     }

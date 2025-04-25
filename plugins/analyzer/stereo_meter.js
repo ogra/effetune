@@ -162,50 +162,13 @@ class StereoMeterPlugin extends PluginBase {
     const container = document.createElement('div');
     container.className = 'plugin-parameter-ui stereo-meter';
 
-    // Create window time controls.
-    const windowRow = document.createElement('div');
-    windowRow.className = 'parameter-row';
-
-    const windowLabel = document.createElement('label');
-    windowLabel.textContent = 'Window (ms):';
-    windowLabel.htmlFor = `${this.id}-${this.name}-window-slider`;
-
-    const windowSlider = document.createElement('input');
-    windowSlider.type = 'range';
-    windowSlider.id = `${this.id}-${this.name}-window-slider`;
-    windowSlider.name = `${this.id}-${this.name}-window-slider`;
-    windowSlider.min = 10;
-    windowSlider.max = 1000;
-    windowSlider.step = 1;
-    windowSlider.value = (this.windowTime * 1000).toFixed(0);
-    windowSlider.autocomplete = "off";
-
-    const windowValue = document.createElement('input');
-    windowValue.type = 'number';
-    windowValue.id = `${this.id}-${this.name}-window-value`;
-    windowValue.name = `${this.id}-${this.name}-window-value`;
-    windowValue.value = (this.windowTime * 1000).toFixed(0);
-    windowValue.step = 1;
-    windowValue.min = 10;
-    windowValue.max = 1000;
-    windowValue.autocomplete = "off";
-
-    const windowHandler = (e) => {
-      const value = parseFloat(e.target.value) / 1000; // Convert ms to seconds.
-      windowValue.value = (value * 1000).toFixed(0);
-      windowSlider.value = (value * 1000).toFixed(0);
-      this.setWindowTime(value);
-    };
-
-    windowSlider.addEventListener('input', windowHandler);
-    windowValue.addEventListener('change', windowHandler);
-    this.boundEventListeners.set(windowSlider, windowHandler);
-    this.boundEventListeners.set(windowValue, windowHandler);
-
-    windowRow.appendChild(windowLabel);
-    windowRow.appendChild(windowSlider);
-    windowRow.appendChild(windowValue);
-    container.appendChild(windowRow);
+    // Use createParameterControl for Window time
+    container.appendChild(this.createParameterControl(
+      'Window', 10, 1000, 1,
+      (this.windowTime * 1000).toFixed(0),
+      (value) => this.setWindowTime(value / 1000),
+      'ms'
+    ));
 
     // Create the graph container and canvas.
     const graphContainer = document.createElement('div');

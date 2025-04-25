@@ -287,43 +287,14 @@ class HardClippingPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'hard-clipping-plugin-ui plugin-parameter-ui';
 
-        // Threshold control
-        const thresholdLabel = document.createElement('label');
-        thresholdLabel.textContent = 'Threshold (dB):';
-        thresholdLabel.htmlFor = `${this.id}-${this.name}-threshold-slider`;
-        
-        const thresholdSlider = document.createElement('input');
-        thresholdSlider.type = 'range';
-        thresholdSlider.min = -60;
-        thresholdSlider.max = 0;
-        thresholdSlider.step = 0.1;
-        thresholdSlider.value = this.th;
-        thresholdSlider.id = `${this.id}-${this.name}-threshold-slider`;
-        thresholdSlider.name = `${this.id}-${this.name}-threshold-slider`;
-        thresholdSlider.autocomplete = "off";
-        thresholdSlider.addEventListener('input', (e) => {
-            this.setTh(parseFloat(e.target.value));
-            thresholdValue.value = e.target.value;
-        });
-        
-        const thresholdValue = document.createElement('input');
-        thresholdValue.type = 'number';
-        thresholdValue.min = -60;
-        thresholdValue.max = 0;
-        thresholdValue.step = 0.1;
-        thresholdValue.value = this.th;
-        thresholdValue.id = `${this.id}-${this.name}-threshold-value`;
-        thresholdValue.name = `${this.id}-${this.name}-threshold-value`;
-        thresholdValue.autocomplete = "off";
-        thresholdValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -60 ? -60 : (parsedValue > 0 ? 0 : parsedValue);
-            this.setTh(value);
-            thresholdSlider.value = value;
-            e.target.value = value;
-        });
+        // Use base helper for Threshold control
+        const thresholdRow = this.createParameterControl(
+            'Threshold', -60, 0, 0.1, this.th,
+            this.setTh.bind(this), 'dB'
+        );
+        container.appendChild(thresholdRow);
 
-        // Mode radio buttons
+        // Mode radio buttons (keep original implementation)
         const modeLabel = document.createElement('label');
         modeLabel.textContent = 'Mode:';
         const modeGroup = document.createElement('div');
@@ -356,25 +327,6 @@ class HardClippingPlugin extends PluginBase {
             label.appendChild(document.createTextNode(mode.label));
             modeGroup.appendChild(label);
         });
-
-        // Transfer function graph
-        const canvas = document.createElement('canvas');
-        canvas.width = 400;
-        canvas.height = 400;
-        canvas.style.width = '200px';
-        canvas.style.height = '200px';
-        canvas.style.backgroundColor = '#222';
-        this.canvas = canvas;
-        this.updateTransferGraph();
-
-        // Add all elements to container
-        // Threshold parameter row
-        const thresholdRow = document.createElement('div');
-        thresholdRow.className = 'parameter-row';
-        thresholdRow.appendChild(thresholdLabel);
-        thresholdRow.appendChild(thresholdSlider);
-        thresholdRow.appendChild(thresholdValue);
-        container.appendChild(thresholdRow);
         
         // Mode parameter row
         const modeRow = document.createElement('div');
@@ -383,10 +335,17 @@ class HardClippingPlugin extends PluginBase {
         modeRow.appendChild(modeGroup);
         container.appendChild(modeRow);
         
-        // Graph container
+        // Transfer function graph (keep original implementation)
         const graphContainer = document.createElement('div');
         graphContainer.style.position = 'relative';
-        
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 400;
+        canvas.style.width = '200px';
+        canvas.style.height = '200px';
+        canvas.style.backgroundColor = '#222';
+        this.canvas = canvas;
+        this.updateTransferGraph(); // Initial draw
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
 

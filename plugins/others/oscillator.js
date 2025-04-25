@@ -259,48 +259,11 @@ class OscillatorPlugin extends PluginBase {
         freqRow.appendChild(freqSlider);
         freqRow.appendChild(freqValue);
 
-        // Volume Control
-        const volRow = document.createElement('div');
-        volRow.className = 'parameter-row';
-        
-        const volLabel = document.createElement('label');
-        volLabel.textContent = 'Volume (dB):';
-        volLabel.htmlFor = `${this.id}-${this.name}-volume-slider`;
-        
-        const volSlider = document.createElement('input');
-        volSlider.type = 'range';
-        volSlider.min = '-96';
-        volSlider.max = '0';
-        volSlider.value = this.vl;
-        volSlider.id = `${this.id}-${this.name}-volume-slider`;
-        volSlider.name = `${this.id}-${this.name}-volume-slider`;
-        volSlider.autocomplete = "off";
-        
-        const volValue = document.createElement('input');
-        volValue.type = 'number';
-        volValue.min = '-96';
-        volValue.max = '0';
-        volValue.step = '0.1';
-        volValue.value = this.vl;
-        volValue.id = `${this.id}-${this.name}-volume-value`;
-        volValue.name = `${this.id}-${this.name}-volume-value`;
-        volValue.autocomplete = "off";
-
-        volSlider.addEventListener('input', (e) => {
-            const vol = parseFloat(e.target.value);
-            volValue.value = vol;
-            this.setVolume(vol);
-        });
-
-        volValue.addEventListener('input', (e) => {
-            const vol = parseFloat(e.target.value);
-            volSlider.value = vol;
-            this.setVolume(vol);
-        });
-
-        volRow.appendChild(volLabel);
-        volRow.appendChild(volSlider);
-        volRow.appendChild(volValue);
+        // Use helper for Volume Control
+        const volRow = this.createParameterControl(
+            'Volume', -96, 0, 0.1, this.vl,
+            (value) => this.setVolume(value), 'dB'
+        );
 
         // Panning Control
         const panRow = document.createElement('div');

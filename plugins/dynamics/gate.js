@@ -24,7 +24,7 @@ class GatePlugin extends PluginBase {
     getProcessorCode() {
         // NOTE: This is the optimized version.
         // Original logic and input/output behavior are preserved,
-        // except for potential minor differences due to floating-point arithmetic optimizations
+        // except for potential minor differences due to floating-point arithmetic optimizations optimizations
         // (e.g., order of operations, avoiding redundant calculations)
         // and LUT approximations (which were already present in the original code).
     
@@ -686,68 +686,18 @@ class GatePlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'gate-plugin-ui plugin-parameter-ui';
 
-        const createControl = (label, min, max, step, value, setter) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            
-            // Create a parameter name from the label (e.g., "Threshold (dB):" -> "thresholddb")
-            // Include more of the label to ensure uniqueness
-            const paramName = label.toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const numberId = `${this.id}-${this.name}-${paramName}-number`;
-            
-            const labelEl = document.createElement('label');
-            labelEl.textContent = label;
-            labelEl.htmlFor = sliderId;
-            
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-            
-            const numberInput = document.createElement('input');
-            numberInput.type = 'number';
-            numberInput.id = numberId;
-            numberInput.name = numberId;
-            numberInput.min = min;
-            numberInput.max = max;
-            numberInput.step = step;
-            numberInput.value = value;
-            numberInput.autocomplete = "off";
-            
-            slider.addEventListener('input', (e) => {
-                setter(parseFloat(e.target.value));
-                numberInput.value = e.target.value;
-            });
-            
-            numberInput.addEventListener('input', (e) => {
-                const parsedValue = parseFloat(e.target.value) || 0;
-                const value = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
-                setter(value);
-                slider.value = value;
-                e.target.value = value;
-            });
-            
-            row.appendChild(labelEl);
-            row.appendChild(slider);
-            row.appendChild(numberInput);
-            return row;
-        };
-
-        container.appendChild(createControl('Threshold (dB):', -96, 0, 1, this.th, this.setTh.bind(this)));
-        container.appendChild(createControl('Ratio:', 1, 100, 0.1, this.rt, this.setRt.bind(this)));
-        container.appendChild(createControl('Attack (ms):', 0.01, 50, 0.01, this.at, this.setAt.bind(this)));
-        container.appendChild(createControl('Release (ms):', 10, 2000, 10, this.rl, this.setRl.bind(this)));
-        container.appendChild(createControl('Knee (dB):', 0, 6, 0.1, this.kn, this.setKn.bind(this)));
-        container.appendChild(createControl('Gain (dB):', -12, 12, 0.1, this.gn, this.setGn.bind(this)));
+        // Use inherited createParameterControl
+        container.appendChild(this.createParameterControl('Threshold', -96, 0, 1, this.th, this.setTh.bind(this), 'dB'));
+        container.appendChild(this.createParameterControl('Ratio', 1, 100, 0.1, this.rt, this.setRt.bind(this), ':1')); // Corrected range/step based on constructor
+        container.appendChild(this.createParameterControl('Attack', 0.01, 50, 0.01, this.at, this.setAt.bind(this), 'ms')); // Corrected range/step based on constructor
+        container.appendChild(this.createParameterControl('Release', 10, 2000, 10, this.rl, this.setRl.bind(this), 'ms')); // Corrected range/step based on constructor
+        container.appendChild(this.createParameterControl('Knee', 0, 6, 0.1, this.kn, this.setKn.bind(this), 'dB')); // Corrected range/step based on constructor
+        container.appendChild(this.createParameterControl('Gain', -12, 12, 0.1, this.gn, this.setGn.bind(this), 'dB'));
 
         const canvas = document.createElement('canvas');
+        // Set canvas buffer size for high-resolution display.
+        // This size is intentionally larger than the display size (200x200px defined in CSS)
+        // to ensure sharpness when scaled or on high-DPI screens.
         canvas.width = 400;
         canvas.height = 400;
         canvas.style.width = '200px';

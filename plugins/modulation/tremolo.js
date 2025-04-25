@@ -166,85 +166,14 @@ class TremoloPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'tremolo-plugin-ui plugin-parameter-ui';
 
-        // Helper function to create slider/number input parameter controls
-        const createParameterControl = (label, min, max, step, value, setter, unit = '') => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-
-            const paramName = label.toLowerCase().replace(/\s+/g, '-');
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const valueId = `${this.id}-${this.name}-${paramName}-value`;
-
-            const labelEl = document.createElement('label');
-            labelEl.textContent = `${label}${unit ? ' (' + unit + ')' : ''}:`;
-            labelEl.htmlFor = sliderId;
-
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-
-            const valueInput = document.createElement('input');
-            valueInput.type = 'number';
-            valueInput.id = valueId;
-            valueInput.name = valueId;
-            valueInput.min = min;
-            valueInput.max = max;
-            valueInput.step = step;
-            valueInput.value = value;
-            valueInput.autocomplete = "off";
-
-            slider.addEventListener('input', (e) => {
-                setter(parseFloat(e.target.value));
-                valueInput.value = e.target.value;
-            });
-
-            valueInput.addEventListener('input', (e) => {
-                // Allow typing slightly outside bounds temporarily before clamping on blur/enter
-                const val = parseFloat(e.target.value) || 0;
-                setter(val); // Update internal value immediately
-                slider.value = Math.max(min, Math.min(max, val)); // Clamp slider thumb
-            });
-
-            // Clamp value on blur or Enter key press for the number input
-             const clampAndUpdate = (e) => {
-                const val = parseFloat(e.target.value) || 0;
-                const clampedVal = Math.max(min, Math.min(max, val));
-                if (clampedVal !== val) {
-                    setter(clampedVal); // Ensure internal state matches clamped value
-                    e.target.value = clampedVal; // Update display
-                    slider.value = clampedVal;
-                }
-             };
-             valueInput.addEventListener('blur', clampAndUpdate);
-             valueInput.addEventListener('keydown', (e) => {
-                 if (e.key === 'Enter') {
-                     clampAndUpdate(e);
-                 }
-             });
-
-
-            row.appendChild(labelEl);
-            row.appendChild(slider);
-            row.appendChild(valueInput);
-
-            return row;
-        };
-
-        // Add parameter controls
-        container.appendChild(createParameterControl('Rate', 0.1, 20, 0.1, this.rt, this.setRt.bind(this), 'Hz'));
-        container.appendChild(createParameterControl('Depth', 0, 12, 0.1, this.dp, this.setDp.bind(this), 'dB'));
-        container.appendChild(createParameterControl('Ch Phase', -180, 180, 1, this.cp, this.setCp.bind(this), 'Deg.'));
-        container.appendChild(createParameterControl('Randomness', 0, 96, 0.1, this.rn, this.setRn.bind(this), 'dB'));
-        container.appendChild(createParameterControl('Randomness Cutoff', 1, 1000, 1, this.rc, this.setRc.bind(this), 'Hz'));
-        // Use slider for Randomness Slope (rs parameter, -12.0 to 0.0 dB)
-        container.appendChild(createParameterControl('Randomness Slope', -12.0, 0.0, 0.1, this.rs, this.setRs.bind(this), 'dB'));
-        container.appendChild(createParameterControl('Ch Sync', 0, 100, 1, this.cs, this.setCs.bind(this), '%'));
+        // Add parameter controls using the base class method
+        container.appendChild(this.createParameterControl('Rate', 0.1, 20, 0.1, this.rt, this.setRt.bind(this), 'Hz'));
+        container.appendChild(this.createParameterControl('Depth', 0, 12, 0.1, this.dp, this.setDp.bind(this), 'dB'));
+        container.appendChild(this.createParameterControl('Ch Phase', -180, 180, 1, this.cp, this.setCp.bind(this), 'Deg.'));
+        container.appendChild(this.createParameterControl('Randomness', 0, 96, 0.1, this.rn, this.setRn.bind(this), 'dB'));
+        container.appendChild(this.createParameterControl('Randomness Cutoff', 1, 1000, 1, this.rc, this.setRc.bind(this), 'Hz'));
+        container.appendChild(this.createParameterControl('Randomness Slope', -12.0, 0.0, 0.1, this.rs, this.setRs.bind(this), 'dB'));
+        container.appendChild(this.createParameterControl('Ch Sync', 0, 100, 1, this.cs, this.setCs.bind(this), '%'));
 
 
         return container;

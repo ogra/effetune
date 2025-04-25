@@ -196,59 +196,8 @@ class HiPassFilterPlugin extends PluginBase {
     const container = document.createElement("div");
     container.className = "hi-pass-filter-plugin-ui plugin-parameter-ui";
 
-    // Helper to create a parameter row with slider and number input
-    const createRow = (labelText, min, max, step, value, onInput) => {
-      // Create a parameter name from the label (e.g., "Frequency (Hz):" -> "frequency")
-      const paramName = labelText.toLowerCase().split(' ')[0].replace(/[^a-z0-9]/g, '');
-      
-      const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-      const numberId = `${this.id}-${this.name}-${paramName}-number`;
-      
-      const row = document.createElement("div");
-      row.className = "parameter-row";
-      
-      const label = document.createElement("label");
-      label.textContent = labelText;
-      label.htmlFor = sliderId;
-      
-      const slider = document.createElement("input");
-      slider.type = "range";
-      slider.id = sliderId;
-      slider.name = sliderId;
-      slider.min = min;
-      slider.max = max;
-      slider.step = step;
-      slider.value = value;
-      slider.autocomplete = "off";
-      
-      const numberInput = document.createElement("input");
-      numberInput.type = "number";
-      numberInput.id = numberId;
-      numberInput.name = numberId;
-      numberInput.min = min;
-      numberInput.max = max;
-      numberInput.step = step;
-      numberInput.value = value;
-      numberInput.autocomplete = "off";
-      slider.addEventListener("input", e => {
-        onInput(parseFloat(e.target.value));
-        numberInput.value = this.fr;
-        this.drawGraph(canvas);
-      });
-      numberInput.addEventListener("input", e => {
-        onInput(parseFloat(e.target.value) || 0);
-        slider.value = this.fr;
-        this.drawGraph(canvas);
-        e.target.value = this.fr;
-      });
-      row.appendChild(label);
-      row.appendChild(slider);
-      row.appendChild(numberInput);
-      return row;
-    };
-
     // Helper to create a slope select box
-    const createSlopeSelect = (current, onChange, filterType) => {
+    const createSlopeSelect = (current, onChange, filterType, canvasRef) => {
       const selectId = `${this.id}-${this.name}-${filterType.toLowerCase()}-slope`;
       
       const select = document.createElement("select");
@@ -267,16 +216,13 @@ class HiPassFilterPlugin extends PluginBase {
       });
       select.addEventListener("change", e => {
         onChange(parseInt(e.target.value));
-        this.drawGraph(canvas);
+        // Draw graph using the passed canvas reference
+        if (canvasRef) this.drawGraph(canvasRef);
       });
       return select;
     };
 
-    // Create frequency parameter row
-    const freqRow = createRow("Frequency (Hz):", 1, 40000, 1, this.fr, v => this.setFreq(v));
-    freqRow.appendChild(createSlopeSelect(this.sl, v => this.setSlope(v), "HPF"));
-
-    // Create graph container and canvas
+    // Create graph container and canvas *before* creating controls that need it
     const graphContainer = document.createElement("div");
     graphContainer.style.position = "relative";
     const canvas = document.createElement("canvas");
@@ -286,9 +232,22 @@ class HiPassFilterPlugin extends PluginBase {
     canvas.style.height = "240px";
     graphContainer.appendChild(canvas);
 
+    // Create frequency parameter row using the base helper
+    // Pass the canvas reference to the event handler
+    const freqRow = this.createParameterControl("Frequency", 1, 40000, 1, this.fr,
+      (value) => {
+        this.setFreq(value);
+        this.drawGraph(canvas); // Use the canvas created above
+      },
+      'Hz'
+    );
+    // Append the slope selector to the row created by the helper
+    // Pass the canvas reference to the slope selector helper
+    freqRow.appendChild(createSlopeSelect(this.sl, v => this.setSlope(v), "HPF", canvas));
+
     container.appendChild(freqRow);
     container.appendChild(graphContainer);
-    this.drawGraph(canvas);
+    this.drawGraph(canvas); // Initial draw
     return container;
   }
 

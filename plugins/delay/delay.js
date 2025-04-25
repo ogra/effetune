@@ -284,62 +284,55 @@ class DelayPlugin extends PluginBase {
 
     createUI() {
         const container = document.createElement('div');
-        container.className = 'plugin-parameter-ui';
+        container.className = 'delay-plugin-ui plugin-parameter-ui';
 
-        // Utility function to create a parameter row
-        const createRow = (labelText, type, min, max, step, value, onChange) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            // Generate unique ID
-            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const inputId = `${this.id}-${this.name}-${paramName}-input`;
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.htmlFor = sliderId;
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            const input = document.createElement('input');
-            input.type = type;
-            input.id = inputId;
-            input.name = inputId;
-            input.min = min;
-            input.max = max;
-            input.step = step;
-            input.value = value;
-            slider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                onChange(val);
-                input.value = val;
-            });
-            input.addEventListener('input', (e) => {
-                let val = parseFloat(e.target.value) || 0;
-                if (val < min) val = min;
-                if (val > max) val = max;
-                onChange(val);
-                slider.value = val;
-                e.target.value = val; // Correct the input value if it was out of bounds
-            });
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(input);
-            return row;
-        };
+        // Pre-Delay Control
+        container.appendChild(this.createParameterControl(
+            'Pre-Delay', 0, 100, 0.1, this.pd,
+            (value) => this.setParameters({ pd: value }), 'ms'
+        ));
 
-        container.appendChild(createRow('Pre-Delay (ms):', 'number', '0', '100', '0.1', this.pd, (value) => this.setParameters({ pd: value })));
-        container.appendChild(createRow('Delay Size (ms):', 'number', '1', '5000', '1', this.ds, (value) => this.setParameters({ ds: value })));
-        container.appendChild(createRow('Damping (%):', 'number', '0', '100', '1', this.dp, (value) => this.setParameters({ dp: value })));
-        container.appendChild(createRow('High Damp (Hz):', 'number', '1000', '20000', '100', this.hd, (value) => this.setParameters({ hd: value })));
-        container.appendChild(createRow('Low Damp (Hz):', 'number', '20', '1000', '1', this.ld, (value) => this.setParameters({ ld: value })));
-        container.appendChild(createRow('Feedback (%):', 'number', '0', '99', '1', this.fb, (value) => this.setParameters({ fb: value })));
-        container.appendChild(createRow('Ping-Pong (%):', 'number', '0', '100', '1', this.pp, (value) => this.setParameters({ pp: value })));
-        container.appendChild(createRow('Mix (%):', 'number', '0', '100', '1', this.mx, (value) => this.setParameters({ mx: value })));
+        // Delay Size Control
+        container.appendChild(this.createParameterControl(
+            'Delay Size', 1, 5000, 1, this.ds,
+            (value) => this.setParameters({ ds: value }), 'ms'
+        ));
+
+        // Damping Control
+        container.appendChild(this.createParameterControl(
+            'Damping', 0, 100, 1, this.dp,
+            (value) => this.setParameters({ dp: value }), '%'
+        ));
+
+        // High Damp Control
+        container.appendChild(this.createParameterControl(
+            'High Damp', 20, 20000, 1, this.hd,
+            (value) => this.setParameters({ hd: value }), 'Hz'
+        ));
+
+        // Low Damp Control
+        container.appendChild(this.createParameterControl(
+            'Low Damp', 20, 20000, 1, this.ld,
+            (value) => this.setParameters({ ld: value }), 'Hz'
+        ));
+
+        // Wet/Dry Mix Control
+        container.appendChild(this.createParameterControl(
+            'Mix', 0, 100, 1, this.mx,
+            (value) => this.setParameters({ mx: value }), '%'
+        ));
+
+        // Feedback Control
+        container.appendChild(this.createParameterControl(
+            'Feedback', 0, 100, 1, this.fb,
+            (value) => this.setParameters({ fb: value }), '%'
+        ));
+
+        // Ping-Pong Control
+        container.appendChild(this.createParameterControl(
+            'Ping-Pong', 0, 100, 1, this.pp,
+            (value) => this.setParameters({ pp: value }), '%'
+        ));
 
         return container;
     }

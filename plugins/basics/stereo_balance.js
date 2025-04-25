@@ -62,53 +62,13 @@ class StereoBalancePlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // Balance slider
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = -100;
-        slider.max = 100;
-        slider.step = 1;
-        slider.value = this.bl * 100;
-        slider.id = `${this.id}-${this.name}-slider`;
-        slider.name = `${this.id}-${this.name}-slider`;
-        slider.autocomplete = "off";
-        slider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value) / 100;
-            this.setBl(value);
-            valueInput.value = e.target.value;
-        });
-
-        // Balance text input
-        const valueInput = document.createElement('input');
-        valueInput.type = 'number';
-        valueInput.min = -100;
-        valueInput.max = 100;
-        valueInput.step = 1;
-        valueInput.value = this.bl * 100;
-        valueInput.id = `${this.id}-${this.name}-input`;
-        valueInput.name = `${this.id}-${this.name}-input`;
-        valueInput.autocomplete = "off";
-        valueInput.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const clampedValue = parsedValue < -100 ? -100 : (parsedValue > 100 ? 100 : parsedValue);
-            const value = clampedValue / 100;
-            this.setBl(value);
-            slider.value = value * 100;
-            e.target.value = Math.round(value * 100);
-        });
-
-        // Label
-        const label = document.createElement('label');
-        label.textContent = 'Balance (%):';
-        label.htmlFor = `${this.id}-${this.name}-slider`;
-
-        // Balance parameter row
-        const balanceRow = document.createElement('div');
-        balanceRow.className = 'parameter-row';
-        balanceRow.appendChild(label);
-        balanceRow.appendChild(slider);
-        balanceRow.appendChild(valueInput);
-        container.appendChild(balanceRow);
+        // Use helper to create balance control
+        const balanceControl = this.createParameterControl(
+            'Balance', -100, 100, 1, this.bl * 100, 
+            (value) => this.setBl(value / 100), '%' // Divide by 100 in setter
+        );
+        container.appendChild(balanceControl);
+        
         return container;
     }
 }

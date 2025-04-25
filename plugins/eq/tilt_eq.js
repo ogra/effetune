@@ -253,19 +253,15 @@ return data; // Return the modified buffer
         const container = document.createElement('div');
         container.className = 'tilt-eq-plugin-ui plugin-parameter-ui';
 
-        // Channel selector row
+        // Channel selector row - Unchanged
         const channelRow = document.createElement('div');
         channelRow.className = 'parameter-row';
-
         const channelLabel = document.createElement('label');
         channelLabel.textContent = 'Channel:';
         channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`;
-
         const channels = ['All', 'Left', 'Right'];
         const channelRadios = channels.map(ch => {
             const label = document.createElement('label');
-            label.className = 'tilt-eq-radio-label';
-
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.id = `${this.id}-${this.name}-channel-${ch}`;
@@ -273,117 +269,135 @@ return data; // Return the modified buffer
             radio.value = ch;
             radio.checked = ch === this.ch;
             radio.autocomplete = "off";
-
             radio.addEventListener('change', (e) => {
                 if (e.target.checked) {
                     this.setChannel(e.target.value);
                 }
             });
-
             label.htmlFor = radio.id;
             label.appendChild(radio);
             label.appendChild(document.createTextNode(ch));
             return label;
         });
-
         channelRow.appendChild(channelLabel);
         channelRadios.forEach(radio => channelRow.appendChild(radio));
+        container.appendChild(channelRow);
 
-        // Parameter controls
+        // Parameter controls container - Keep original structure
         const controlsContainer = document.createElement('div');
         controlsContainer.className = 'controls-container';
 
-        // Pivot frequency
-        const pivotFreqContainer = document.createElement('div');
-        pivotFreqContainer.className = 'control-container';
+        // -- Manual Pivot Frequency Control with Hz Input --
+        const pivotRow = document.createElement('div');
+        pivotRow.className = 'parameter-row';
 
-        const pivotFreqLabel = document.createElement('label');
-        pivotFreqLabel.textContent = 'Pivot Frequency:';
-        pivotFreqLabel.htmlFor = `${this.id}-${this.name}-pivot-freq`;
+        const pivotLogSliderId = `${this.id}-${this.name}-pivot-log-slider`;
+        const pivotHzValueId = `${this.id}-${this.name}-pivot-hz-value`;
 
-        const pivotFreqSlider = document.createElement('input');
-        pivotFreqSlider.type = 'range';
-        pivotFreqSlider.className = 'horizontal-slider';
-        pivotFreqSlider.id = `${this.id}-${this.name}-pivot-freq`;
-        pivotFreqSlider.min = 3.00;
-        pivotFreqSlider.max = 9.90;
-        pivotFreqSlider.step = 0.01;
-        pivotFreqSlider.value = this.f0;
-        pivotFreqSlider.autocomplete = "off";
+        const pivotLabel = document.createElement('label');
+        pivotLabel.textContent = 'Pivot Freq (Hz):'; // Label updated
+        pivotLabel.htmlFor = pivotLogSliderId; // Associate with slider for clicking
 
-        const pivotFreqDisplay = document.createElement('div');
-        pivotFreqDisplay.className = 'value-display';
-        pivotFreqDisplay.textContent = `${Math.round(Math.exp(this.f0))} Hz`;
+        const pivotLogSlider = document.createElement('input');
+        pivotLogSlider.type = 'range';
+        pivotLogSlider.id = pivotLogSliderId;
+        pivotLogSlider.name = pivotLogSliderId;
+        pivotLogSlider.min = 3.0;
+        pivotLogSlider.max = 9.9;
+        pivotLogSlider.step = 0.01;
+        pivotLogSlider.value = this.f0; // Slider uses log value
+        pivotLogSlider.autocomplete = "off";
 
-        pivotFreqSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            this.setPivotFreq(value);
-            pivotFreqDisplay.textContent = `${Math.round(Math.exp(value))} Hz`;
-            this.drawGraph(canvas);
+        const pivotHzInput = document.createElement('input');
+        pivotHzInput.type = 'number';
+        pivotHzInput.id = pivotHzValueId;
+        pivotHzInput.name = pivotHzValueId;
+        pivotHzInput.min = 20; // Hz range approx exp(3.0)
+        pivotHzInput.max = 20000; // Hz range approx exp(9.9)
+        pivotHzInput.step = 1;
+        pivotHzInput.value = Math.round(Math.exp(this.f0)); // Input shows Hz value
+        pivotHzInput.autocomplete = "off";
+
+        const canvas = document.createElement('canvas'); // Need canvas ref
+
+        // Slider changes log value, updates Hz input
+        pivotLogSlider.addEventListener('input', (e) => {
+            const logValue = parseFloat(e.target.value);
+            this.setPivotFreq(logValue); // Update internal log value
+            pivotHzInput.value = Math.round(Math.exp(logValue)); // Update Hz display
+            this.drawGraph(canvas); // Update graph
         });
 
-        pivotFreqContainer.appendChild(pivotFreqLabel);
-        pivotFreqContainer.appendChild(pivotFreqSlider);
-        pivotFreqContainer.appendChild(pivotFreqDisplay);
+        // Number input accepts Hz, updates log value and slider
+        const updatePivotFromHz = (target) => {
+            const hzValue = parseFloat(target.value) || 20; // Default to min Hz if invalid
+            const minHz = 20;
+            const maxHz = 20000;
+            const clampedHz = Math.max(minHz, Math.min(maxHz, hzValue));
 
-        // Slope
-        const slopeContainer = document.createElement('div');
-        slopeContainer.className = 'control-container';
+            const logValue = Math.log(clampedHz);
+            const clampedLog = Math.max(3.0, Math.min(9.9, logValue)); // Clamp log value as well
 
-        const slopeLabel = document.createElement('label');
-        slopeLabel.textContent = 'Slope:';
-        slopeLabel.htmlFor = `${this.id}-${this.name}-slope`;
+            this.setPivotFreq(clampedLog); // Update internal log value
+            pivotLogSlider.value = clampedLog; // Update slider position
+            target.value = Math.round(Math.exp(clampedLog)); // Update Hz display to potentially clamped value
+            this.drawGraph(canvas); // Update graph
+        };
 
-        const slopeSlider = document.createElement('input');
-        slopeSlider.type = 'range';
-        slopeSlider.className = 'horizontal-slider';
-        slopeSlider.id = `${this.id}-${this.name}-slope`;
-        slopeSlider.min = -12.0;
-        slopeSlider.max = 12.0;
-        slopeSlider.step = 0.1;
-        slopeSlider.value = this.sl;
-        slopeSlider.autocomplete = "off";
+        pivotHzInput.addEventListener('change', (e) => { // Use change or blur to finalize
+            updatePivotFromHz(e.target);
+        });
+         pivotHzInput.addEventListener('keydown', (e) => {
+             if (e.key === 'Enter') {
+                 updatePivotFromHz(e.target);
+                 e.preventDefault();
+             }
+         });
 
-        const slopeDisplay = document.createElement('div');
-        slopeDisplay.className = 'value-display';
-        slopeDisplay.textContent = `${this.sl.toFixed(1)} dB/oct`;
+        pivotRow.appendChild(pivotLabel);
+        pivotRow.appendChild(pivotLogSlider);
+        pivotRow.appendChild(pivotHzInput);
+        controlsContainer.appendChild(pivotRow);
+        // -- End Manual Pivot Frequency Control --
 
-        slopeSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
+        // Slope control using createParameterControl
+        const slopeSetter = (value) => {
             this.setSlope(value);
-            slopeDisplay.textContent = `${value.toFixed(1)} dB/oct`;
-            this.drawGraph(canvas);
-        });
+            this.drawGraph(canvas); // Update graph
+        };
+        controlsContainer.appendChild(this.createParameterControl('Slope', -12.0, 12.0, 0.1, this.sl, slopeSetter, 'dB/oct'));
 
-        slopeContainer.appendChild(slopeLabel);
-        slopeContainer.appendChild(slopeSlider);
-        slopeContainer.appendChild(slopeDisplay);
-
-        controlsContainer.appendChild(pivotFreqContainer);
-        controlsContainer.appendChild(slopeContainer);
-
-        // Graph container
+        // Graph container - Keep original structure and class
         const graphContainer = document.createElement('div');
         graphContainer.className = 'graph-container';
 
-        const canvas = document.createElement('canvas');
+        // Configure canvas (created earlier)
         canvas.width = 1200;
         canvas.height = 480;
         canvas.style.width = '600px';
         canvas.style.height = '240px';
-
         graphContainer.appendChild(canvas);
 
-        // Reset button
+        // Reset button - Keep original structure and class, append to graphContainer
         const resetButton = document.createElement('button');
         resetButton.className = 'eq-reset-button';
         resetButton.textContent = 'Reset';
         resetButton.addEventListener('click', () => {
-            this.reset();
-            pivotFreqSlider.value = this.f0;
-            pivotFreqDisplay.textContent = `${Math.round(Math.exp(this.f0))} Hz`;
-            slopeSlider.value = this.sl;
-            slopeDisplay.textContent = `${this.sl.toFixed(1)} dB/oct`;
+            this.reset(); // Resets internal values (this.f0, this.sl)
+
+            // Update Pivot controls (manual)
+            pivotLogSlider.value = this.f0;
+            pivotHzInput.value = Math.round(Math.exp(this.f0));
+
+            // Update Slope controls (from createParameterControl)
+            const slopeRow = controlsContainer.querySelectorAll('.parameter-row')[1]; // Second control
+            if (slopeRow) {
+                const slopeElements = slopeRow.querySelectorAll('input');
+                slopeElements[0].value = this.sl; // Slider
+                slopeElements[1].value = this.sl; // Number input
+            }
+
+            // Update Channel selector (unchanged)
             channelRadios.forEach(label => {
                 const radio = label.querySelector('input');
                 radio.checked = radio.value === 'All';
@@ -392,8 +406,7 @@ return data; // Return the modified buffer
         });
         graphContainer.appendChild(resetButton);
 
-        // Add elements to container
-        container.appendChild(channelRow);
+        // Add elements to container IN ORIGINAL ORDER
         container.appendChild(controlsContainer);
         container.appendChild(graphContainer);
 

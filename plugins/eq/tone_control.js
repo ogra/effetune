@@ -270,184 +270,67 @@ class ToneControlPlugin extends PluginBase {
 
     createUI() {
         const container = document.createElement('div');
+        // Keep original class structure unless standardizing is desired
         container.className = 'tone-control-plugin-ui plugin-parameter-ui';
 
-        // Bass parameter row
-        const bassRow = document.createElement('div');
-        bassRow.className = 'parameter-row';
-        
-        const bassSliderId = `${this.id}-${this.name}-bass-slider`;
-        const bassValueId = `${this.id}-${this.name}-bass-value`;
-        
-        const bassLabel = document.createElement('label');
-        bassLabel.textContent = 'Bass (dB):';
-        bassLabel.htmlFor = bassSliderId;
-        
-        const bassSlider = document.createElement('input');
-        bassSlider.type = 'range';
-        bassSlider.id = bassSliderId;
-        bassSlider.name = bassSliderId;
-        bassSlider.min = -24;
-        bassSlider.max = 24;
-        bassSlider.step = 0.1;
-        bassSlider.value = this.bs;
-        bassSlider.autocomplete = "off";
-        
-        const bassValue = document.createElement('input');
-        bassValue.type = 'number';
-        bassValue.id = bassValueId;
-        bassValue.name = bassValueId;
-        bassValue.min = -24;
-        bassValue.max = 24;
-        bassValue.step = 0.1;
-        bassValue.value = this.bs;
-        bassValue.autocomplete = "off";
-
-        bassSlider.addEventListener('input', (e) => {
-            this.setBass(parseFloat(e.target.value));
-            bassValue.value = this.bs;
-            this.drawGraph(canvas);
-        });
-
-        bassValue.addEventListener('input', (e) => {
-            this.setBass(parseFloat(e.target.value));
-            bassSlider.value = this.bs;
-            this.drawGraph(canvas);
-            e.target.value = this.bs;
-        });
-
-        bassRow.appendChild(bassLabel);
-        bassRow.appendChild(bassSlider);
-        bassRow.appendChild(bassValue);
-
-        // Mid parameter row
-        const midRow = document.createElement('div');
-        midRow.className = 'parameter-row';
-        
-        const midSliderId = `${this.id}-${this.name}-mid-slider`;
-        const midValueId = `${this.id}-${this.name}-mid-value`;
-        
-        const midLabel = document.createElement('label');
-        midLabel.textContent = 'Mid (dB):';
-        midLabel.htmlFor = midSliderId;
-        
-        const midSlider = document.createElement('input');
-        midSlider.type = 'range';
-        midSlider.id = midSliderId;
-        midSlider.name = midSliderId;
-        midSlider.min = -24;
-        midSlider.max = 24;
-        midSlider.step = 0.1;
-        midSlider.value = this.md;
-        midSlider.autocomplete = "off";
-        
-        const midValue = document.createElement('input');
-        midValue.type = 'number';
-        midValue.id = midValueId;
-        midValue.name = midValueId;
-        midValue.min = -24;
-        midValue.max = 24;
-        midValue.step = 0.1;
-        midValue.value = this.md;
-        midValue.autocomplete = "off";
-
-        midSlider.addEventListener('input', (e) => {
-            this.setMid(parseFloat(e.target.value));
-            midValue.value = this.md;
-            this.drawGraph(canvas);
-        });
-
-        midValue.addEventListener('input', (e) => {
-            this.setMid(parseFloat(e.target.value));
-            midSlider.value = this.md;
-            this.drawGraph(canvas);
-            e.target.value = this.md;
-        });
-
-        midRow.appendChild(midLabel);
-        midRow.appendChild(midSlider);
-        midRow.appendChild(midValue);
-
-        // Treble parameter row
-        const trebleRow = document.createElement('div');
-        trebleRow.className = 'parameter-row';
-        
-        const trebleSliderId = `${this.id}-${this.name}-treble-slider`;
-        const trebleValueId = `${this.id}-${this.name}-treble-value`;
-        
-        const trebleLabel = document.createElement('label');
-        trebleLabel.textContent = 'Treble (dB):';
-        trebleLabel.htmlFor = trebleSliderId;
-        
-        const trebleSlider = document.createElement('input');
-        trebleSlider.type = 'range';
-        trebleSlider.id = trebleSliderId;
-        trebleSlider.name = trebleSliderId;
-        trebleSlider.min = -24;
-        trebleSlider.max = 24;
-        trebleSlider.step = 0.1;
-        trebleSlider.value = this.tr;
-        trebleSlider.autocomplete = "off";
-        
-        const trebleValue = document.createElement('input');
-        trebleValue.type = 'number';
-        trebleValue.id = trebleValueId;
-        trebleValue.name = trebleValueId;
-        trebleValue.min = -24;
-        trebleValue.max = 24;
-        trebleValue.step = 0.1;
-        trebleValue.value = this.tr;
-        trebleValue.autocomplete = "off";
-
-        trebleSlider.addEventListener('input', (e) => {
-            this.setTreble(parseFloat(e.target.value));
-            trebleValue.value = this.tr;
-            this.drawGraph(canvas);
-        });
-
-        trebleValue.addEventListener('input', (e) => {
-            this.setTreble(parseFloat(e.target.value));
-            trebleSlider.value = this.tr;
-            this.drawGraph(canvas);
-            e.target.value = this.tr;
-        });
-
-        trebleRow.appendChild(trebleLabel);
-        trebleRow.appendChild(trebleSlider);
-        trebleRow.appendChild(trebleValue);
-
-        // Graph container
-        const graphContainer = document.createElement('div');
-        graphContainer.style.position = 'relative';
-        
+        // Create canvas reference needed for setters
         const canvas = document.createElement('canvas');
+
+        // Create parameter controls using createParameterControl
+        const bassSetter = (value) => {
+            this.setBass(value);
+            this.drawGraph(canvas); // Update graph
+        };
+        container.appendChild(this.createParameterControl('Bass', -24, 24, 0.1, this.bs, bassSetter, 'dB'));
+
+        const midSetter = (value) => {
+            this.setMid(value);
+            this.drawGraph(canvas); // Update graph
+        };
+        container.appendChild(this.createParameterControl('Mid', -24, 24, 0.1, this.md, midSetter, 'dB'));
+
+        const trebleSetter = (value) => {
+            this.setTreble(value);
+            this.drawGraph(canvas); // Update graph
+        };
+        container.appendChild(this.createParameterControl('Treble', -24, 24, 0.1, this.tr, trebleSetter, 'dB'));
+
+        // Graph container - Keep original structure and class
+        const graphContainer = document.createElement('div');
+        graphContainer.className = 'tone-control-graph-container';
+
+        // Configure canvas (created earlier)
         canvas.width = 1200;
         canvas.height = 480;
         canvas.style.width = '600px';
         canvas.style.height = '240px';
-        
         graphContainer.appendChild(canvas);
 
-        // Reset button
+        // Reset button - Keep original structure and class, append to graphContainer
         const resetButton = document.createElement('button');
         resetButton.className = 'eq-reset-button';
         resetButton.textContent = 'Reset';
         resetButton.addEventListener('click', () => {
             this.reset();
-            bassSlider.value = this.bs;
-            bassValue.value = this.bs;
-            midSlider.value = this.md;
-            midValue.value = this.md;
-            trebleSlider.value = this.tr;
-            trebleValue.value = this.tr;
+            // Update controls created by createParameterControl
+            const paramRows = container.querySelectorAll('.parameter-row');
+            if (paramRows.length >= 3) { // Check based on Bass, Mid, Treble order
+                 const bassRowElements = paramRows[0].querySelectorAll('input');
+                 bassRowElements[0].value = this.bs; // Slider
+                 bassRowElements[1].value = this.bs; // Number input
+                 const midRowElements = paramRows[1].querySelectorAll('input');
+                 midRowElements[0].value = this.md; // Slider
+                 midRowElements[1].value = this.md; // Number input
+                 const trebleRowElements = paramRows[2].querySelectorAll('input');
+                 trebleRowElements[0].value = this.tr; // Slider
+                 trebleRowElements[1].value = this.tr; // Number input
+            }
             this.drawGraph(canvas);
         });
         graphContainer.appendChild(resetButton);
 
-        // Append all elements to container
-        container.appendChild(bassRow);
-        container.appendChild(midRow);
-        container.appendChild(trebleRow);
+        // Add graph container (which includes reset button) to the main container
+        // This follows the original order where graph/reset were appended last
         container.appendChild(graphContainer);
 
         // Initial graph draw

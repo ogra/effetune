@@ -339,44 +339,12 @@ class SpectrogramPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // DB Range parameter row
-        const dbRangeRow = document.createElement('div');
-        dbRangeRow.className = 'parameter-row';
-        const dbRangeLabel = document.createElement('label');
-        dbRangeLabel.textContent = 'DB Range (dB):';
-        dbRangeLabel.htmlFor = `${this.id}-${this.name}-db-range-slider`;
-        
-        const dbRangeSlider = document.createElement('input');
-        dbRangeSlider.type = 'range';
-        dbRangeSlider.id = `${this.id}-${this.name}-db-range-slider`;
-        dbRangeSlider.name = `${this.id}-${this.name}-db-range-slider`;
-        dbRangeSlider.min = -144;
-        dbRangeSlider.max = -48;
-        dbRangeSlider.step = 6;
-        dbRangeSlider.value = this.dr;
-        dbRangeSlider.autocomplete = "off";
-        
-        const dbRangeValue = document.createElement('input');
-        dbRangeValue.type = 'number';
-        dbRangeValue.id = `${this.id}-${this.name}-db-range-value`;
-        dbRangeValue.name = `${this.id}-${this.name}-db-range-value`;
-        dbRangeValue.value = this.dr;
-        dbRangeValue.step = 6;
-        dbRangeValue.min = -144;
-        dbRangeValue.max = -48;
-        dbRangeValue.autocomplete = "off";
-        const dbRangeHandler = (e) => {
-            const value = parseInt(e.target.value, 10);
-            dbRangeValue.value = value;
-            this.setDBRange(value);
-        };
-        dbRangeSlider.addEventListener('input', dbRangeHandler);
-        this.boundEventListeners.set(dbRangeSlider, dbRangeHandler);
-        dbRangeRow.appendChild(dbRangeLabel);
-        dbRangeRow.appendChild(dbRangeSlider);
-        dbRangeRow.appendChild(dbRangeValue);
+        // Use helper function for DB Range
+        container.appendChild(this.createParameterControl(
+            'DB Range', -144, -48, 1, this.dr, (v) => this.setDBRange(v), 'dB'
+        ));
 
-        // Points parameter row
+        // Points parameter row (Cannot use helper due to 2^pt display)
         const pointsRow = document.createElement('div');
         pointsRow.className = 'parameter-row';
         const pointsLabel = document.createElement('label');
@@ -455,6 +423,9 @@ class SpectrogramPlugin extends PluginBase {
         graphContainer.style.width = '1024px';
         graphContainer.style.height = '480px';
         const canvas = document.createElement('canvas');
+        // Set canvas buffer size for high-resolution display.
+        // This size is intentionally larger than the display size (1024x480px defined in CSS)
+        // to ensure sharpness when scaled or on high-DPI screens.
         canvas.width = 2048;
         canvas.height = 960;
         canvas.style.width = '1024px';
@@ -476,7 +447,6 @@ class SpectrogramPlugin extends PluginBase {
             data[i + 3] = 255; // A
         }
 
-        container.appendChild(dbRangeRow);
         container.appendChild(pointsRow);
         container.appendChild(channelRow);
         container.appendChild(graphContainer);

@@ -484,62 +484,28 @@ class MultibandBalancePlugin extends PluginBase {
         bandBalances.className = 'multiband-balance-band-balances';
         bandContainer.appendChild(bandBalances);
 
-        const createBalanceSlider = (label, bandIndex) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            
-            // Create unique IDs for the inputs
-            const sliderId = `${this.id}-${this.name}-band${bandIndex}-slider`;
-            const inputId = `${this.id}-${this.name}-band${bandIndex}-input`;
-            
-            const labelEl = document.createElement('label');
-            labelEl.textContent = label;
-            labelEl.htmlFor = sliderId;
-            
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.min = -100;
-            slider.max = 100;
-            slider.step = 1;
-            slider.value = this.bands[bandIndex].balance;
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.autocomplete = "off";
-            
-            const numberInput = document.createElement('input');
-            numberInput.type = 'number';
-            numberInput.min = -100;
-            numberInput.max = 100;
-            numberInput.step = 1;
-            numberInput.value = this.bands[bandIndex].balance;
-            numberInput.id = inputId;
-            numberInput.name = inputId;
-            numberInput.autocomplete = "off";
-            
-            slider.addEventListener('input', (e) => {
-                this.setParameters({ band: bandIndex, balance: parseFloat(e.target.value) });
-                numberInput.value = e.target.value;
-            });
-            
-            numberInput.addEventListener('input', (e) => {
-                const parsedValue = parseFloat(e.target.value) || 0;
-                const val = parsedValue < -100 ? -100 : (parsedValue > 100 ? 100 : parsedValue);
-                this.setParameters({ band: bandIndex, balance: val });
-                slider.value = val;
-                e.target.value = val;
-            });
-            
-            row.appendChild(labelEl);
-            row.appendChild(slider);
-            row.appendChild(numberInput);
-            return row;
-        };
-
-        bandBalances.appendChild(createBalanceSlider('Band 5 Bal. (%):', 4));
-        bandBalances.appendChild(createBalanceSlider('Band 4 Bal. (%):', 3));
-        bandBalances.appendChild(createBalanceSlider('Band 3 Bal. (%):', 2));
-        bandBalances.appendChild(createBalanceSlider('Band 2 Bal. (%):', 1));
-        bandBalances.appendChild(createBalanceSlider('Band 1 Bal. (%):', 0));
+        // Use base helper to create balance sliders
+        // Note: Labels reflect band number (1-5)
+        bandBalances.appendChild(this.createParameterControl(
+            'Band 5 Bal.', -100, 100, 1, this.bands[4].balance,
+            (value) => this.setParameters({ band: 4, balance: value }), '%'
+        ));
+        bandBalances.appendChild(this.createParameterControl(
+            'Band 4 Bal.', -100, 100, 1, this.bands[3].balance,
+            (value) => this.setParameters({ band: 3, balance: value }), '%'
+        ));
+        bandBalances.appendChild(this.createParameterControl(
+            'Band 3 Bal.', -100, 100, 1, this.bands[2].balance,
+            (value) => this.setParameters({ band: 2, balance: value }), '%'
+        ));
+        bandBalances.appendChild(this.createParameterControl(
+            'Band 2 Bal.', -100, 100, 1, this.bands[1].balance,
+            (value) => this.setParameters({ band: 1, balance: value }), '%'
+        ));
+        bandBalances.appendChild(this.createParameterControl(
+            'Band 1 Bal.', -100, 100, 1, this.bands[0].balance,
+            (value) => this.setParameters({ band: 0, balance: value }), '%'
+        ));
         container.appendChild(bandContainer);
 
         return container;

@@ -160,8 +160,9 @@ window.MyPlugin = MyPlugin;
 
 ### 3. Parameter Management
 - Parameter Naming Convention
-  * Use shortened parameter names to optimize storage and transmission
-  * Shorten using the following patterns:
+  * Use shortened parameter names **for parameters exposed externally** (via `getParameters`, `setParameters`, and passed to the audio processor) to optimize storage (e.g., in save files or URLs) and transmission.
+  * **Internal state variables** used only within the plugin class do not need to follow this shortening convention and can use more descriptive names.
+  * Shorten external parameter names using the following patterns:
     - For single words: Use the first letters (e.g., volume → vl, bass → bs)
     - For compound words: Use the first letter of each word (e.g., tpdfDither → td, zohFreq → zf)
   * Document the original parameter name in comments for clarity
@@ -200,9 +201,6 @@ window.MyPlugin = MyPlugin;
   }
 
   setParameters(params) {
-      if (params.enabled !== undefined) {
-          this.enabled = params.enabled;
-      }
       if (params.gain !== undefined) {
           this.setGain(params.gain); // Use dedicated setter for validation
       }
@@ -265,27 +263,104 @@ class MyPlugin extends PluginBase {
 - Store UI element references if needed for updates
 - Initialize animation frames for visualization plugins
 - Clean up event listeners and animation frames in cleanup()
-- Example:
+
+- **Helper Function for Parameter Controls:** `PluginBase` provides a convenient helper function `createParameterControl` to easily create common UI elements for controlling parameters. This function generates a row containing a label, a range slider, and a number input field, all linked together.
+
+  ```javascript
+  createParameterControl(label, min, max, step, value, callback)
+  ```
+  - `label`: The text label for the parameter.
+  - `min`: The minimum value for the slider and input.
+  - `max`: The maximum value for the slider and input.
+  - `step`: The step increment for the slider and input.
+  - `value`: The initial value for the parameter.
+  - `callback`: A function that will be called when the parameter value changes. It receives the new value as an argument.
+
+- Example using `createParameterControl`:
   ```javascript
   createUI() {
       const container = document.createElement('div');
       container.className = 'my-plugin-ui';
 
-      // Create parameter controls
+      // Use the helper function to create a gain control
+      const gainControl = this.createParameterControl(
+          'Gain', 0, 2, 0.01, this.gain, (newValue) => {
+              this.setGain(newValue);
+          }
+      );
+      container.appendChild(gainControl);
+
+      // Add other UI elements as needed...
+      // For visualization plugins, add canvas and start animation
+      const canvas = document.createElement('canvas');
+      this.canvas = canvas; // Store reference if needed for updates
+      this.startAnimation(); // Start animation if needed
+
+      container.appendChild(canvas);
+      return container;
+  }
+  ```
+
+- Example (Manual UI creation):
+  ```javascript
+  createUI() {
+      const container = document.createElement('div');
+      container.className = 'my-plugin-ui';
+
+      // Create parameter controls manually, following accessibility guidelines
+      const paramLabel = 'Gain';
+      const paramIdBase = `${this.id}-${this.name}-gain`; // Base ID for related elements
+
+      // Label
+      const label = document.createElement('label');
+      label.textContent = `${paramLabel}:`;
+      label.htmlFor = `${paramIdBase}-slider`; // Associate with the slider
+      
+      // Slider Input
       const slider = document.createElement('input');
       slider.type = 'range';
+      slider.id = `${paramIdBase}-slider`;
+      slider.name = `${paramIdBase}-slider`; // Use consistent name
+      slider.min = 0;
+      slider.max = 2;
+      slider.step = 0.01;
+      slider.value = this.gn; // Use internal (possibly shortened) state variable
+      slider.autocomplete = "off"; // Disable browser autocomplete
       slider.addEventListener('input', e => {
+          this.setGain(parseFloat(e.target.value)); // Call the setter
+      });
+      
+      // (Optional) Text Input for precise value - also following guidelines
+      const valueInput = document.createElement('input');
+      valueInput.type = 'number';
+      valueInput.id = `${paramIdBase}-input`;
+      valueInput.name = `${paramIdBase}-input`;
+      valueInput.min = 0;
+      valueInput.max = 2;
+      valueInput.step = 0.01;
+      valueInput.value = this.gn;
+      valueInput.autocomplete = "off";
+      valueInput.addEventListener('input', e => {
+          this.setGain(parseFloat(e.target.value));
+          slider.value = e.target.value; // Sync slider if text input changes
+      });
+      slider.addEventListener('input', e => { // Sync text input if slider changes
+          valueInput.value = e.target.value;
           this.setGain(parseFloat(e.target.value));
       });
+      
+      // Append elements to the container
+      container.appendChild(label);
+      container.appendChild(slider);
+      container.appendChild(valueInput); // Append the text input too
 
       // For visualization plugins
       const canvas = document.createElement('canvas');
       this.canvas = canvas; // Store reference if needed for updates
-      
+
       // Start animation if needed
       this.startAnimation();
 
-      container.appendChild(slider);
       container.appendChild(canvas);
       return container;
   }
@@ -293,7 +368,7 @@ class MyPlugin extends PluginBase {
   // Animation control for visualization plugins
   startAnimation() {
       const animate = () => {
-          this.updateDisplay();
+          this.updateDisplay(); // Assuming updateDisplay exists for visualization
           this.animationFrameId = requestAnimationFrame(animate);
       };
       this.animationFrameId = requestAnimationFrame(animate);
@@ -305,6 +380,7 @@ class MyPlugin extends PluginBase {
           cancelAnimationFrame(this.animationFrameId);
           this.animationFrameId = null;
       }
+      // Remove other event listeners if added manually
   }
   ```
 
@@ -318,11 +394,11 @@ A simple example showing parameter control:
 class GainPlugin extends PluginBase {
     constructor() {
         super('Gain', 'Simple gain adjustment');
-        this.gain = 1.0;
+        this.gn = 1.0; // gn: Gain (formerly gain) - Range: 0 to 2
 
         this.registerProcessor(`
             if (!parameters.enabled) return data;
-            const gain = parameters.gain;
+            const gain = parameters.gn; // Use shortened parameter name
             
             // Process all channels
             for (let ch = 0; ch < parameters.channelCount; ch++) {
@@ -339,45 +415,41 @@ class GainPlugin extends PluginBase {
     getParameters() {
         return {
             type: this.constructor.name,
-            gain: this.gain,
+            gn: this.gn, // Use shortened parameter name
             enabled: this.enabled
         };
     }
 
-    // Set parameters
+    // Set parameters (only handles 'gn' parameter)
     setParameters(params) {
-        if (params.gain !== undefined) {
-            this.gain = Math.max(0, Math.min(2, params.gain));
+        if (params.gn !== undefined) {
+            const value = typeof params.gn === 'number' 
+                ? params.gn 
+                : parseFloat(params.gn);
+            if (!isNaN(value)) {
+                this.gn = Math.max(0, Math.min(2, value)); // Clamp value
+            }
         }
-        if (params.enabled !== undefined) {
-            this.enabled = params.enabled;
-        }
-        this.updateParameters();
+        // Note: 'enabled' is handled by PluginBase.setEnabled()
+        this.updateParameters(); // Notify host about changes
     }
 
-    // Individual parameter setter
+    // Individual parameter setter for convenience
     setGain(value) {
-        this.setParameters({ gain: value });
+        this.setParameters({ gn: value }); // Use shortened parameter name
     }
 
     createUI() {
         const container = document.createElement('div');
         
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = 0;
-        slider.max = 2;
-        slider.step = 0.01;
-        slider.value = this.gain;
-        slider.addEventListener('input', (e) => {
-            this.setGain(parseFloat(e.target.value));
-        });
-
-        const label = document.createElement('label');
-        label.textContent = 'Gain:';
-
-        container.appendChild(label);
-        container.appendChild(slider);
+        // Use the helper function to create the gain control
+        // Label remains 'Gain', state variable is 'this.gn'
+        const gainControl = this.createParameterControl(
+            'Gain', 0, 2, 0.01, this.gn, (newValue) => {
+                this.setGain(newValue); // Calls setParameters({ gn: ... })
+            }
+        );
+        container.appendChild(gainControl);
         
         return container;
     }
@@ -391,95 +463,72 @@ An advanced example showing visualization and message passing:
 ```javascript
 class LevelMeterPlugin extends PluginBase {
     constructor() {
-        super('Level Meter', 'Displays audio level with peak hold');
+        super('Level Meter', 'Displays audio level');
         
-        // Initialize state with fixed size for stereo
-        this.levels = new Array(2).fill(-96);
-        this.peakLevels = new Array(2).fill(-96);
-        this.peakHoldTimes = new Array(2).fill(0);
-        this.lastProcessTime = performance.now() / 1000;
+        // Initialize state (e.g., for stereo)
+        this.levels = new Array(2).fill(-96); // Current dB levels
+        this.animationFrameId = null;
         
-        // Register processor function
+        // Register processor function to calculate peak levels
         this.registerProcessor(`
-            // Create result buffer with measurements
-            const result = new Float32Array(data.length);
-            result.set(data);
+            const numChannels = parameters.channelCount;
+            const blockSize = parameters.blockSize;
+            const peaks = new Float32Array(numChannels);
             
-            // Calculate peaks for all channels
-            const peaks = new Float32Array(parameters.channelCount);
-            
-            for (let ch = 0; ch < parameters.channelCount; ch++) {
-                const offset = ch * parameters.blockSize;
-                let peak = 0;
-                for (let i = 0; i < parameters.blockSize; i++) {
-                    peak = Math.max(peak, Math.abs(data[offset + i]));
+            // Calculate peak absolute value for each channel
+            for (let ch = 0; ch < numChannels; ch++) {
+                const offset = ch * blockSize;
+                const end = offset + blockSize;
+                let peak = 0.0;
+                for (let i = offset; i < end; i++) {
+                    const sample = data[i];
+                    const absSample = sample < 0 ? -sample : sample; // Fast abs()
+                    if (absSample > peak) {
+                        peak = absSample;
+                    }
                 }
                 peaks[ch] = peak;
             }
-
+        
             // Create measurements object
-            result.measurements = {
-                channels: Array.from(peaks).map(peak => ({ peak })),
-                time: time
+            const channelMeasurements = new Array(numChannels);
+            for (let ch = 0; ch < numChannels; ch++) {
+                channelMeasurements[ch] = { peak: peaks[ch] }; // Send peak linear amplitude
+            }
+        
+            // Attach measurements to the data buffer for the main thread
+            data.measurements = {
+                channels: channelMeasurements,
+                time: time // Current audio context time
             };
-
-            return result;
+            return data; // Return original audio data unmodified
         `);
     }
 
     // Handle messages from audio processor
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            this.process(message.buffer, message);
+        // Check if the message is for this plugin and contains measurements
+        if (message.type === 'processBuffer' && message.buffer?.measurements && message.pluginId === this.id) {
+            this.processMeasurements(message.buffer.measurements);
         }
     }
 
-    // Convert linear amplitude to dB
+    // Convert linear amplitude to dBFS
     amplitudeToDB(amplitude) {
-        return 20 * Math.log10(Math.max(amplitude, 1e-6));
+        // Prevent log(0) issues
+        return 20 * Math.log10(amplitude < 1e-5 ? 1e-5 : amplitude);
     }
 
-    process(audioBuffer, message) {
-        if (!audioBuffer || !message?.measurements?.channels) {
-            return audioBuffer;
-        }
-
-        const time = performance.now() / 1000;
-        const deltaTime = time - this.lastProcessTime;
-        this.lastProcessTime = time;
-
-        // Process each channel
-        for (let ch = 0; ch < message.measurements.channels.length; ch++) {
-            const channelPeak = message.measurements.channels[ch].peak;
-            const dbLevel = this.amplitudeToDB(channelPeak);
-            
-            // Update level with fall rate
-            this.levels[ch] = Math.max(
-                Math.max(-96, this.levels[ch] - this.FALL_RATE * deltaTime),
-                dbLevel
-            );
-
-            // Update peak hold
-            if (time > this.peakHoldTimes[ch] + this.PEAK_HOLD_TIME) {
-                this.peakLevels[ch] = -96;
-            }
-            if (dbLevel > this.peakLevels[ch]) {
-                this.peakLevels[ch] = dbLevel;
-                this.peakHoldTimes[ch] = time;
+    // Process measurements received from the audio thread
+    processMeasurements(measurements) {
+        // Update internal levels based on received peak values
+        for (let ch = 0; ch < measurements.channels.length; ch++) {
+            if (ch < this.levels.length) { // Ensure we don't exceed array bounds
+                const peakAmplitude = measurements.channels[ch].peak;
+                this.levels[ch] = this.amplitudeToDB(peakAmplitude);
             }
         }
-
-        // Update overload state
-        const maxPeak = Math.max(...message.measurements.channels.map(ch => ch.peak));
-        if (maxPeak > 1.0) {
-            this.overload = true;
-            this.overloadTime = time;
-        } else if (time > this.overloadTime + this.OVERLOAD_DISPLAY_TIME) {
-            this.overload = false;
-        }
-
-        this.updateParameters();
-        return audioBuffer;
+        // Note: UI update happens in the animation frame loop
     }
 
     createUI() {
@@ -488,40 +537,67 @@ class LevelMeterPlugin extends PluginBase {
 
         // Create canvas for meter display
         const canvas = document.createElement('canvas');
-        canvas.width = 500;
-        canvas.height = 100;
+        canvas.width = 200; // Simple width
+        canvas.height = 40; // Simple height for stereo
         container.appendChild(canvas);
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
         
-        // Animation function
-        const draw = () => {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw each channel
-            for (let ch = 0; ch < this.levels.length; ch++) {
-                const y = ch * (canvas.height / 2);
-                const height = (canvas.height / 2) - 2;
-                
-                // Draw level meter
-                const levelWidth = canvas.width * 
-                    (this.levels[ch] + 96) / 96; // -96dB to 0dB range
-                ctx.fillStyle = this.levels[ch] > -6 ? 'red' : 'green';
-                ctx.fillRect(0, y, levelWidth, height);
-                
-                // Draw peak hold
-                const peakX = canvas.width * 
-                    (this.peakLevels[ch] + 96) / 96;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(peakX - 1, y, 2, height);
-            }
-            
-            requestAnimationFrame(draw);
-        };
-        
-        // Start animation
-        draw();
-        
+        // Start the animation loop when UI is created
+        this.startAnimation();
+
         return container;
+    }
+
+    // Start drawing loop
+    startAnimation() {
+        if (this.animationFrameId) return; // Prevent multiple loops
+        const animate = () => {
+            this.updateMeterDisplay();
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        this.animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // Stop drawing loop
+    stopAnimation() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
+
+    // Update meter display (called in animation loop)
+    updateMeterDisplay() {
+        if (!this.ctx) return;
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const numChannels = this.levels.length;
+        const channelHeight = height / numChannels;
+        const dbRange = 96; // Display range (-96dB to 0dB)
+        const dbStart = -96;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#333'; // Background
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw simple meter bar for each channel
+        for (let ch = 0; ch < numChannels; ch++) {
+            const y = ch * channelHeight;
+            const levelWidth = width * Math.max(0, (this.levels[ch] - dbStart)) / dbRange;
+            
+            // Simple green bar, red if above -6dB
+            ctx.fillStyle = this.levels[ch] > -6 ? '#ff0000' : '#00ff00'; 
+            ctx.fillRect(0, y + channelHeight * 0.1, levelWidth, channelHeight * 0.8);
+        }
+    }
+
+    // Cleanup resources
+    cleanup() {
+        this.stopAnimation();
+        // No IntersectionObserver in this simple example
     }
 }
 ```

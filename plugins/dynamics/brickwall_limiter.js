@@ -797,76 +797,62 @@ class BrickwallLimiterPlugin extends PluginBase {
     setSm(value) { this.setParameters({ sm: value }); }
     
     createUI() {
-        const container = document.createElement("div");
-        container.className = "plugin-parameter-ui";
-        const createControl = (label, min, max, step, value, setter) => {
-            const row = document.createElement("div");
-            row.className = "parameter-row";
-            
-            // Create a parameter name from the label (e.g., "Threshold (dB):" -> "thresholddb")
-            // Include more of the label to ensure uniqueness
-            const paramName = label.toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const numberId = `${this.id}-${this.name}-${paramName}-number`;
-            
-            const labelEl = document.createElement("label");
-            labelEl.textContent = label;
-            labelEl.htmlFor = sliderId;
-            
-            const slider = document.createElement("input");
-            slider.type = "range";
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min; slider.max = max; slider.step = step; slider.value = value;
-            slider.autocomplete = "off";
-            
-            const numberInput = document.createElement("input");
-            numberInput.type = "number";
-            numberInput.id = numberId;
-            numberInput.name = numberId;
-            numberInput.min = min; numberInput.max = max; numberInput.step = step; numberInput.value = value;
-            numberInput.autocomplete = "off";
-            slider.addEventListener("input", (e) => { setter(parseFloat(e.target.value)); numberInput.value = e.target.value; });
-            numberInput.addEventListener("input", (e) => {
-                const val = parseFloat(e.target.value) || 0;
-                const clamped = val < min ? min : (val > max ? max : val);
-                setter(clamped);
-                slider.value = clamped;
-                e.target.value = clamped;
-            });
-            row.appendChild(labelEl);
-            row.appendChild(slider);
-            row.appendChild(numberInput);
-            return row;
-        };
-        container.appendChild(createControl("Input Gain (dB):", -18, 18, 0.1, this.ig, this.setIg.bind(this)));
-        container.appendChild(createControl("Threshold (dB):", -24, 0, 0.1, this.th, this.setTh.bind(this)));
-        container.appendChild(createControl("Release (ms):", 10, 500, 1, this.rl, this.setRl.bind(this)));
-        container.appendChild(createControl("Lookahead (ms):", 0, 10, 0.1, this.la, this.setLa.bind(this)));
-        container.appendChild(createControl("Margin (dB):", -1.000, 0.000, 0.001, this.sm, this.setSm.bind(this)));
-        const osRow = document.createElement("div");
-        osRow.className = "parameter-row";
-        const osLabel = document.createElement("label");
-        osLabel.textContent = "Oversampling:";
-        osLabel.htmlFor = `${this.id}-${this.name}-oversampling-select`;
-        osRow.appendChild(osLabel);
-        const osSelect = document.createElement("select");
-        osSelect.id = `${this.id}-${this.name}-oversampling-select`;
-        osSelect.name = `${this.id}-${this.name}-oversampling-select`;
-        osSelect.autocomplete = "off";
-        [1,2,4,8].forEach(factor => {
-            const option = document.createElement("option");
+        const container = document.createElement('div');
+        container.className = 'brickwall-limiter-plugin-ui plugin-parameter-ui';
+
+        // Input Gain
+        container.appendChild(this.createParameterControl(
+            'Input Gain', -18, 18, 0.1, this.ig,
+            (value) => this.setIg(value), 'dB'
+        ));
+
+        // Threshold
+        container.appendChild(this.createParameterControl(
+            'Threshold', -24, 0, 0.1, this.th,
+            (value) => this.setTh(value), 'dB'
+        ));
+        
+        // Margin
+        container.appendChild(this.createParameterControl(
+            'Margin', -1.0, 0.0, 0.01, this.sm,
+            (value) => this.setSm(value), 'dB'
+        ));
+
+        // Release Time
+        container.appendChild(this.createParameterControl(
+            'Release', 10, 500, 1, this.rl,
+            (value) => this.setRl(value), 'ms'
+        ));
+
+        // Lookahead Time
+        container.appendChild(this.createParameterControl(
+            'Lookahead', 0, 10, 0.1, this.la,
+            (value) => this.setLa(value), 'ms'
+        ));
+        
+        // Oversampling (Keep existing control for now)
+        const osRow = document.createElement('div');
+        osRow.className = 'parameter-row';
+        const osLabel = document.createElement('label');
+        osLabel.textContent = 'Oversampling:';
+        osLabel.htmlFor = `${this.id}-${this.name}-os-select`;
+        const osSelect = document.createElement('select');
+        osSelect.id = `${this.id}-${this.name}-os-select`;
+        osSelect.name = `${this.id}-${this.name}-os-select`;
+        [1, 2, 4, 8].forEach(factor => {
+            const option = document.createElement('option');
             option.value = factor;
-            option.textContent = factor + "x";
-            if (factor === this.os) { option.selected = true; }
+            option.textContent = factor + 'x';
+            option.selected = this.os === factor;
             osSelect.appendChild(option);
         });
-        osSelect.addEventListener("change", () => {
-            this.setParameters({ os: parseInt(osSelect.value) });
+        osSelect.addEventListener('change', (e) => {
+            this.setOs(parseInt(e.target.value, 10));
         });
+        osRow.appendChild(osLabel);
         osRow.appendChild(osSelect);
         container.appendChild(osRow);
+
         return container;
     }
 }

@@ -1,4 +1,3 @@
-
 class FifteenBandGEQPlugin extends PluginBase {
     static BANDS = [
         { freq: 25, name: '25 Hz' },
@@ -352,6 +351,9 @@ return data; // Return the modified buffer
         graphContainer.className = 'graph-container';
         
         const canvas = document.createElement('canvas');
+        // Set canvas buffer size for high-resolution display.
+        // This size is intentionally larger than the display size (600x240px defined in CSS)
+        // to ensure sharpness when scaled or on high-DPI screens.
         canvas.width = 1200;
         canvas.height = 480;
         canvas.style.width = '600px';

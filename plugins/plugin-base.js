@@ -306,8 +306,88 @@ class PluginBase {
         }
     }
 
-    // Create UI elements (should be overridden by subclasses).
+    // Helper function to create slider/number input parameter controls
+    createParameterControl(label, min, max, step, value, setter, unit = '') {
+        const row = document.createElement('div');
+        row.className = 'parameter-row';
+
+        const paramName = label.toLowerCase().replace(/\s+/g, '-');
+        const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
+        const valueId = `${this.id}-${this.name}-${paramName}-value`;
+
+        const labelEl = document.createElement('label');
+        labelEl.textContent = `${label}${unit ? ' (' + unit + ')' : ''}:`;
+        labelEl.htmlFor = sliderId;
+
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.id = sliderId;
+        slider.name = sliderId;
+        slider.min = min;
+        slider.max = max;
+        slider.step = step;
+        slider.value = value;
+        slider.autocomplete = "off";
+
+        const valueInput = document.createElement('input');
+        valueInput.type = 'number';
+        valueInput.id = valueId;
+        valueInput.name = valueId;
+        valueInput.min = min;
+        valueInput.max = max;
+        valueInput.step = step;
+        valueInput.value = value;
+        valueInput.autocomplete = "off";
+
+        slider.addEventListener('input', (e) => {
+            // Use setter directly, assuming it handles parseFloat if needed
+            setter(parseFloat(e.target.value));
+            valueInput.value = e.target.value; // Keep number input synced
+        });
+
+        valueInput.addEventListener('input', (e) => {
+            // Allow typing slightly outside bounds temporarily before clamping on blur/enter
+            // Use setter immediately, assuming it handles parseFloat if needed
+            const val = parseFloat(e.target.value) || 0; // Use 0 as fallback for invalid input
+            setter(val); // Update internal value immediately
+            // Update slider thumb, clamping it within bounds
+            slider.value = Math.max(min, Math.min(max, val));
+        });
+
+        // Clamp value on blur or Enter key press for the number input
+         const clampAndUpdate = (e) => {
+            const val = parseFloat(e.target.value) || 0; // Use 0 as fallback
+            const clampedVal = Math.max(min, Math.min(max, val));
+            // Only update if the value was actually clamped
+            if (clampedVal !== val) {
+                setter(clampedVal); // Ensure internal state matches clamped value
+                e.target.value = clampedVal; // Update display
+                slider.value = clampedVal;   // Update slider thumb
+            } else if (isNaN(val)) { // Handle NaN case explicitly
+                 setter(min); // Or some default fallback like min
+                 e.target.value = min;
+                 slider.value = min;
+            }
+         };
+         valueInput.addEventListener('blur', clampAndUpdate);
+         valueInput.addEventListener('keydown', (e) => {
+             if (e.key === 'Enter') {
+                 clampAndUpdate(e);
+                 e.preventDefault(); // Prevent form submission if inside a form
+             }
+         });
+
+
+        row.appendChild(labelEl);
+        row.appendChild(slider);
+        row.appendChild(valueInput);
+
+        return row;
+    }
+
+    // Create UI elements for the plugin (must be implemented by subclasses).
     createUI() {
+        // Default implementation returns an empty container
         return document.createElement('div');
     }
 

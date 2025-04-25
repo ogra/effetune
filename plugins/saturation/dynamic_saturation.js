@@ -223,306 +223,35 @@ class DynamicSaturationPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'dynamic-saturation-plugin-ui plugin-parameter-ui';
 
-        // Speaker Drive control
-        const sdLabel = document.createElement('label');
-        sdLabel.textContent = 'Speaker Drive:';
-        sdLabel.htmlFor = `${this.id}-speaker-drive-slider`;
-        
-        const sdSlider = document.createElement('input');
-        sdSlider.type = 'range';
-        sdSlider.min = 0;
-        sdSlider.max = 10;
-        sdSlider.step = 0.1;
-        sdSlider.value = this.sd;
-        sdSlider.id = `${this.id}-speaker-drive-slider`;
-        sdSlider.name = `${this.id}-speaker-drive-slider`;
-        sdSlider.autocomplete = "off";
-        sdSlider.addEventListener('input', (e) => {
-            this.setSd(parseFloat(e.target.value));
-            sdValue.value = e.target.value;
-        });
-        
-        const sdValue = document.createElement('input');
-        sdValue.type = 'number';
-        sdValue.min = 0;
-        sdValue.max = 10;
-        sdValue.step = 0.1;
-        sdValue.value = this.sd;
-        sdValue.id = `${this.id}-speaker-drive-value`;
-        sdValue.name = `${this.id}-speaker-drive-value`;
-        sdValue.autocomplete = "off";
-        sdValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setSd(value);
-            sdSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const sdRow = document.createElement('div');
-        sdRow.className = 'parameter-row';
-        sdRow.appendChild(sdLabel);
-        sdRow.appendChild(sdSlider);
-        sdRow.appendChild(sdValue);
-        container.appendChild(sdRow);
-
-        // Speaker Stiffness control
-        const ssLabel = document.createElement('label');
-        ssLabel.textContent = 'Speaker Stiffness:';
-        ssLabel.htmlFor = `${this.id}-speaker-stiffness-slider`;
-        
-        const ssSlider = document.createElement('input');
-        ssSlider.type = 'range';
-        ssSlider.min = 0;
-        ssSlider.max = 10;
-        ssSlider.step = 0.1;
-        ssSlider.value = this.ss;
-        ssSlider.id = `${this.id}-speaker-stiffness-slider`;
-        ssSlider.name = `${this.id}-speaker-stiffness-slider`;
-        ssSlider.autocomplete = "off";
-        ssSlider.addEventListener('input', (e) => {
-            this.setSs(parseFloat(e.target.value));
-            ssValue.value = e.target.value;
-        });
-        
-        const ssValue = document.createElement('input');
-        ssValue.type = 'number';
-        ssValue.min = 0;
-        ssValue.max = 10;
-        ssValue.step = 0.1;
-        ssValue.value = this.ss;
-        ssValue.id = `${this.id}-speaker-stiffness-value`;
-        ssValue.name = `${this.id}-speaker-stiffness-value`;
-        ssValue.autocomplete = "off";
-        ssValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setSs(value);
-            ssSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const ssRow = document.createElement('div');
-        ssRow.className = 'parameter-row';
-        ssRow.appendChild(ssLabel);
-        ssRow.appendChild(ssSlider);
-        ssRow.appendChild(ssValue);
-        container.appendChild(ssRow);
-
-        // Speaker Damping control
-        const spLabel = document.createElement('label');
-        spLabel.textContent = 'Speaker Damping:';
-        spLabel.htmlFor = `${this.id}-speaker-damping-slider`;
-        
-        const spSlider = document.createElement('input');
-        spSlider.type = 'range';
-        spSlider.min = 0;
-        spSlider.max = 10;
-        spSlider.step = 0.1;
-        spSlider.value = this.sp;
-        spSlider.id = `${this.id}-speaker-damping-slider`;
-        spSlider.name = `${this.id}-speaker-damping-slider`;
-        spSlider.autocomplete = "off";
-        spSlider.addEventListener('input', (e) => {
-            this.setSp(parseFloat(e.target.value));
-            spValue.value = e.target.value;
-        });
-        
-        const spValue = document.createElement('input');
-        spValue.type = 'number';
-        spValue.min = 0;
-        spValue.max = 10;
-        spValue.step = 0.1;
-        spValue.value = this.sp;
-        spValue.id = `${this.id}-speaker-damping-value`;
-        spValue.name = `${this.id}-speaker-damping-value`;
-        spValue.autocomplete = "off";
-        spValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setSp(value);
-            spSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const spRow = document.createElement('div');
-        spRow.className = 'parameter-row';
-        spRow.appendChild(spLabel);
-        spRow.appendChild(spSlider);
-        spRow.appendChild(spValue);
-        container.appendChild(spRow);
-
-        // Speaker Mass control
-        const smLabel = document.createElement('label');
-        smLabel.textContent = 'Speaker Mass:';
-        smLabel.htmlFor = `${this.id}-speaker-mass-slider`;
-        
-        const smSlider = document.createElement('input');
-        smSlider.type = 'range';
-        smSlider.min = 0.1;
-        smSlider.max = 5;
-        smSlider.step = 0.05;
-        smSlider.value = this.sm;
-        smSlider.id = `${this.id}-speaker-mass-slider`;
-        smSlider.name = `${this.id}-speaker-mass-slider`;
-        smSlider.autocomplete = "off";
-        smSlider.addEventListener('input', (e) => {
-            this.setSm(parseFloat(e.target.value));
-            smValue.value = e.target.value;
-        });
-        
-        const smValue = document.createElement('input');
-        smValue.type = 'number';
-        smValue.min = 0.1;
-        smValue.max = 5;
-        smValue.step = 0.05;
-        smValue.value = this.sm;
-        smValue.id = `${this.id}-speaker-mass-value`;
-        smValue.name = `${this.id}-speaker-mass-value`;
-        smValue.autocomplete = "off";
-        smValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0.1;
-            const value = parsedValue < 0.1 ? 0.1 : (parsedValue > 5 ? 5 : parsedValue);
-            this.setSm(value);
-            smSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const smRow = document.createElement('div');
-        smRow.className = 'parameter-row';
-        smRow.appendChild(smLabel);
-        smRow.appendChild(smSlider);
-        smRow.appendChild(smValue);
-        container.appendChild(smRow);
-
-        // Distortion Drive control
-        const ddLabel = document.createElement('label');
-        ddLabel.textContent = 'Distortion Drive:';
-        ddLabel.htmlFor = `${this.id}-distortion-drive-slider`;
-        
-        const ddSlider = document.createElement('input');
-        ddSlider.type = 'range';
-        ddSlider.min = 0;
-        ddSlider.max = 10;
-        ddSlider.step = 0.1;
-        ddSlider.value = this.dd;
-        ddSlider.id = `${this.id}-distortion-drive-slider`;
-        ddSlider.name = `${this.id}-distortion-drive-slider`;
-        ddSlider.autocomplete = "off";
-        ddSlider.addEventListener('input', (e) => {
-            this.setDd(parseFloat(e.target.value));
-            ddValue.value = e.target.value;
-        });
-        
-        const ddValue = document.createElement('input');
-        ddValue.type = 'number';
-        ddValue.min = 0;
-        ddValue.max = 10;
-        ddValue.step = 0.1;
-        ddValue.value = this.dd;
-        ddValue.id = `${this.id}-distortion-drive-value`;
-        ddValue.name = `${this.id}-distortion-drive-value`;
-        ddValue.autocomplete = "off";
-        ddValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setDd(value);
-            ddSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const ddRow = document.createElement('div');
-        ddRow.className = 'parameter-row';
-        ddRow.appendChild(ddLabel);
-        ddRow.appendChild(ddSlider);
-        ddRow.appendChild(ddValue);
-        container.appendChild(ddRow);
-
-        // Distortion Bias control
-        const dbLabel = document.createElement('label');
-        dbLabel.textContent = 'Distortion Bias:';
-        dbLabel.htmlFor = `${this.id}-distortion-bias-slider`;
-        
-        const dbSlider = document.createElement('input');
-        dbSlider.type = 'range';
-        dbSlider.min = -1;
-        dbSlider.max = 1;
-        dbSlider.step = 0.02;
-        dbSlider.value = this.db;
-        dbSlider.id = `${this.id}-distortion-bias-slider`;
-        dbSlider.name = `${this.id}-distortion-bias-slider`;
-        dbSlider.autocomplete = "off";
-        dbSlider.addEventListener('input', (e) => {
-            this.setDb(parseFloat(e.target.value));
-            dbValue.value = e.target.value;
-        });
-        
-        const dbValue = document.createElement('input');
-        dbValue.type = 'number';
-        dbValue.min = -1;
-        dbValue.max = 1;
-        dbValue.step = 0.02;
-        dbValue.value = this.db;
-        dbValue.id = `${this.id}-distortion-bias-value`;
-        dbValue.name = `${this.id}-distortion-bias-value`;
-        dbValue.autocomplete = "off";
-        dbValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -1 ? -1 : (parsedValue > 1 ? 1 : parsedValue);
-            this.setDb(value);
-            dbSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const dbRow = document.createElement('div');
-        dbRow.className = 'parameter-row';
-        dbRow.appendChild(dbLabel);
-        dbRow.appendChild(dbSlider);
-        dbRow.appendChild(dbValue);
-        container.appendChild(dbRow);
-
-        // Distortion Mix control
-        const dmLabel = document.createElement('label');
-        dmLabel.textContent = 'Distortion Mix (%):';
-        dmLabel.htmlFor = `${this.id}-distortion-mix-slider`;
-        
-        const dmSlider = document.createElement('input');
-        dmSlider.type = 'range';
-        dmSlider.min = 0;
-        dmSlider.max = 100;
-        dmSlider.step = 1;
-        dmSlider.value = this.dm;
-        dmSlider.id = `${this.id}-distortion-mix-slider`;
-        dmSlider.name = `${this.id}-distortion-mix-slider`;
-        dmSlider.autocomplete = "off";
-        dmSlider.addEventListener('input', (e) => {
-            this.setDm(parseFloat(e.target.value));
-            dmValue.value = e.target.value;
-        });
-        
-        const dmValue = document.createElement('input');
-        dmValue.type = 'number';
-        dmValue.min = 0;
-        dmValue.max = 100;
-        dmValue.step = 1;
-        dmValue.value = this.dm;
-        dmValue.id = `${this.id}-distortion-mix-value`;
-        dmValue.name = `${this.id}-distortion-mix-value`;
-        dmValue.autocomplete = "off";
-        dmValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 100 ? 100 : parsedValue);
-            this.setDm(value);
-            dmSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const dmRow = document.createElement('div');
-        dmRow.className = 'parameter-row';
-        dmRow.appendChild(dmLabel);
-        dmRow.appendChild(dmSlider);
-        dmRow.appendChild(dmValue);
-        container.appendChild(dmRow);
+        // Use base helper to create controls
+        container.appendChild(this.createParameterControl(
+            'Speaker Damping', 0.1, 2.0, 0.01, this.sd,
+            this.setSd.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Speaker Stiffness', 1, 10000, 1, this.ss,
+            this.setSs.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Speaker Position', -1, 1, 0.02, this.sp,
+            this.setSp.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Speaker Mass', 0.001, 0.1, 0.001, this.sm,
+            this.setSm.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Distortion Drive', 0, 1, 0.01, this.dd,
+            this.setDd.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Distortion Bias', -1, 1, 0.02, this.db,
+            this.setDb.bind(this)
+        ));
+        container.appendChild(this.createParameterControl(
+            'Distortion Mix', 0, 100, 1, this.dm,
+            this.setDm.bind(this), '%'
+        ));
 
         // Graph container for canvas and labels
         const graphContainer = document.createElement('div');
@@ -533,95 +262,21 @@ class DynamicSaturationPlugin extends PluginBase {
         canvas.style.height = '200px';
         canvas.style.backgroundColor = '#222';
         this.canvas = canvas;
-        this.updateTransferGraph();
+        this.updateTransferGraph(); // Initial graph draw
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
 
         // Cone Motion Mix control
-        const cmLabel = document.createElement('label');
-        cmLabel.textContent = 'Cone Motion Mix (%):';
-        cmLabel.htmlFor = `${this.id}-cone-motion-mix-slider`;
-        
-        const cmSlider = document.createElement('input');
-        cmSlider.type = 'range';
-        cmSlider.min = 0;
-        cmSlider.max = 100;
-        cmSlider.step = 1;
-        cmSlider.value = this.cm;
-        cmSlider.id = `${this.id}-cone-motion-mix-slider`;
-        cmSlider.name = `${this.id}-cone-motion-mix-slider`;
-        cmSlider.autocomplete = "off";
-        cmSlider.addEventListener('input', (e) => {
-            this.setCm(parseFloat(e.target.value));
-            cmValue.value = e.target.value;
-        });
-        
-        const cmValue = document.createElement('input');
-        cmValue.type = 'number';
-        cmValue.min = 0;
-        cmValue.max = 100;
-        cmValue.step = 1;
-        cmValue.value = this.cm;
-        cmValue.id = `${this.id}-cone-motion-mix-value`;
-        cmValue.name = `${this.id}-cone-motion-mix-value`;
-        cmValue.autocomplete = "off";
-        cmValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 100 ? 100 : parsedValue);
-            this.setCm(value);
-            cmSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const cmRow = document.createElement('div');
-        cmRow.className = 'parameter-row';
-        cmRow.appendChild(cmLabel);
-        cmRow.appendChild(cmSlider);
-        cmRow.appendChild(cmValue);
-        container.appendChild(cmRow);
+        container.appendChild(this.createParameterControl(
+            'Cone Motion Mix', 0, 100, 1, this.cm,
+            this.setCm.bind(this), '%'
+        ));
 
         // Output Gain control
-        const ogLabel = document.createElement('label');
-        ogLabel.textContent = 'Output Gain (dB):';
-        ogLabel.htmlFor = `${this.id}-output-gain-slider`;
-        
-        const ogSlider = document.createElement('input');
-        ogSlider.type = 'range';
-        ogSlider.min = -18;
-        ogSlider.max = 18;
-        ogSlider.step = 0.1;
-        ogSlider.value = this.og;
-        ogSlider.id = `${this.id}-output-gain-slider`;
-        ogSlider.name = `${this.id}-output-gain-slider`;
-        ogSlider.autocomplete = "off";
-        ogSlider.addEventListener('input', (e) => {
-            this.setOg(parseFloat(e.target.value));
-            ogValue.value = e.target.value;
-        });
-        
-        const ogValue = document.createElement('input');
-        ogValue.type = 'number';
-        ogValue.min = -18;
-        ogValue.max = 18;
-        ogValue.step = 0.1;
-        ogValue.value = this.og;
-        ogValue.id = `${this.id}-output-gain-value`;
-        ogValue.name = `${this.id}-output-gain-value`;
-        ogValue.autocomplete = "off";
-        ogValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -18 ? -18 : (parsedValue > 18 ? 18 : parsedValue);
-            this.setOg(value);
-            ogSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const ogRow = document.createElement('div');
-        ogRow.className = 'parameter-row';
-        ogRow.appendChild(ogLabel);
-        ogRow.appendChild(ogSlider);
-        ogRow.appendChild(ogValue);
-        container.appendChild(ogRow);
+        container.appendChild(this.createParameterControl(
+            'Output Gain', -18, 18, 0.1, this.og,
+            this.setOg.bind(this), 'dB'
+        ));
 
         return container;
     }

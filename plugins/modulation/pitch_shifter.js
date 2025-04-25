@@ -335,195 +335,26 @@ class PitchShifterPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'pitch-shift-plugin-ui plugin-parameter-ui';
 
-        // Pitch Shift slider
-        const PitchShifterRow = document.createElement('div');
-        PitchShifterRow.className = 'parameter-row';
-        const pitchShifterId = `${this.id}-${this.name}-pitch-shift-slider`;
-        const PitchShifterLabel = document.createElement('label');
-        PitchShifterLabel.textContent = 'Pitch Shift (semitones):';
-        PitchShifterLabel.htmlFor = pitchShifterId;
-        PitchShifterRow.appendChild(PitchShifterLabel);
+        // Use base helper to create controls
+        container.appendChild(this.createParameterControl(
+            'Pitch Shift', -6, 6, 1, this.ps,
+            this.setPitchShifter.bind(this), 'semitones'
+        ));
 
-        const PitchShifterSlider = document.createElement('input');
-        PitchShifterSlider.type = 'range';
-        PitchShifterSlider.id = pitchShifterId;
-        PitchShifterSlider.name = pitchShifterId;
-        PitchShifterSlider.min = -6;
-        PitchShifterSlider.max = 6;
-        PitchShifterSlider.step = 1;
-        PitchShifterSlider.value = this.ps;
-        PitchShifterSlider.autocomplete = "off";
+        container.appendChild(this.createParameterControl(
+            'Fine Tune', -50, 50, 1, this.ft,
+            this.setFineTune.bind(this), 'cents'
+        ));
 
-        const pitchShifterValueId = `${this.id}-${this.name}-pitch-shift-value`;
-        const PitchShifterValue = document.createElement('input');
-        PitchShifterValue.type = 'number';
-        PitchShifterValue.id = pitchShifterValueId;
-        PitchShifterValue.name = pitchShifterValueId;
-        PitchShifterValue.min = -6;
-        PitchShifterValue.max = 6;
-        PitchShifterValue.step = 1;
-        PitchShifterValue.value = this.ps;
-        PitchShifterValue.autocomplete = "off";
+        container.appendChild(this.createParameterControl(
+            'Window Size', 80, 500, 1, this.ws,
+            this.setWindowSize.bind(this), 'ms'
+        ));
 
-        PitchShifterSlider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.setPitchShifter(value);
-            PitchShifterValue.value = value;
-        });
-        PitchShifterValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 0;
-            const value = parsedValue < -6 ? -6 : (parsedValue > 6 ? 6 : parsedValue);
-            this.setPitchShifter(value);
-            PitchShifterSlider.value = value;
-            e.target.value = value;
-        });
-
-        PitchShifterRow.appendChild(PitchShifterSlider);
-        PitchShifterRow.appendChild(PitchShifterValue);
-        container.appendChild(PitchShifterRow);
-
-        // Fine Tune slider
-        const fineTuneRow = document.createElement('div');
-        fineTuneRow.className = 'parameter-row';
-        const fineTuneSliderId = `${this.id}-${this.name}-fine-tune-slider`;
-        const fineTuneLabel = document.createElement('label');
-        fineTuneLabel.textContent = 'Fine Tune (cents):';
-        fineTuneLabel.htmlFor = fineTuneSliderId;
-        fineTuneRow.appendChild(fineTuneLabel);
-
-        const fineTuneSlider = document.createElement('input');
-        fineTuneSlider.type = 'range';
-        fineTuneSlider.id = fineTuneSliderId;
-        fineTuneSlider.name = fineTuneSliderId;
-        fineTuneSlider.min = -50;
-        fineTuneSlider.max = 50;
-        fineTuneSlider.step = 1;
-        fineTuneSlider.value = this.ft;
-        fineTuneSlider.autocomplete = "off";
-
-        const fineTuneValueId = `${this.id}-${this.name}-fine-tune-value`;
-        const fineTuneValue = document.createElement('input');
-        fineTuneValue.type = 'number';
-        fineTuneValue.id = fineTuneValueId;
-        fineTuneValue.name = fineTuneValueId;
-        fineTuneValue.min = -50;
-        fineTuneValue.max = 50;
-        fineTuneValue.step = 1;
-        fineTuneValue.value = this.ft;
-        fineTuneValue.autocomplete = "off";
-
-        fineTuneSlider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.setFineTune(value);
-            fineTuneValue.value = value;
-        });
-        fineTuneValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 0;
-            const value = parsedValue < -50 ? -50 : (parsedValue > 50 ? 50 : parsedValue);
-            this.setFineTune(value);
-            fineTuneSlider.value = value;
-            e.target.value = value;
-        });
-
-        fineTuneRow.appendChild(fineTuneSlider);
-        fineTuneRow.appendChild(fineTuneValue);
-        container.appendChild(fineTuneRow);
-
-        // Window Size slider (ms)
-        const windowSizeRow = document.createElement('div');
-        windowSizeRow.className = 'parameter-row';
-        const windowSizeSliderId = `${this.id}-${this.name}-window-size-slider`;
-        const windowSizeLabel = document.createElement('label');
-        windowSizeLabel.textContent = 'Window Size (ms):';
-        windowSizeLabel.htmlFor = windowSizeSliderId;
-        windowSizeRow.appendChild(windowSizeLabel);
-
-        const windowSizeSlider = document.createElement('input');
-        windowSizeSlider.type = 'range';
-        windowSizeSlider.id = windowSizeSliderId;
-        windowSizeSlider.name = windowSizeSliderId;
-        windowSizeSlider.min = 80;
-        windowSizeSlider.max = 500;
-        windowSizeSlider.step = 1;
-        windowSizeSlider.value = this.ws;
-        windowSizeSlider.autocomplete = "off";
-
-        const windowSizeValueId = `${this.id}-${this.name}-window-size-value`;
-        const windowSizeValue = document.createElement('input');
-        windowSizeValue.type = 'number';
-        windowSizeValue.id = windowSizeValueId;
-        windowSizeValue.name = windowSizeValueId;
-        windowSizeValue.min = 80;
-        windowSizeValue.max = 500;
-        windowSizeValue.step = 1;
-        windowSizeValue.value = this.ws;
-        windowSizeValue.autocomplete = "off";
-
-        windowSizeSlider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.setWindowSize(value);
-            windowSizeValue.value = value;
-        });
-
-        windowSizeValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 80;
-            const value = parsedValue < 80 ? 80 : (parsedValue > 500 ? 500 : parsedValue);
-            this.setWindowSize(value);
-            windowSizeSlider.value = value;
-            e.target.value = value;
-        });
-
-        windowSizeRow.appendChild(windowSizeSlider);
-        windowSizeRow.appendChild(windowSizeValue);
-        container.appendChild(windowSizeRow);
-
-        // XFade Time slider (ms)
-        const xfadeTimeRow = document.createElement('div');
-        xfadeTimeRow.className = 'parameter-row';
-        const xfadeTimeSliderId = `${this.id}-${this.name}-xfade-time-slider`;
-        const xfadeTimeLabel = document.createElement('label');
-        xfadeTimeLabel.textContent = 'XFade Time (ms):';
-        xfadeTimeLabel.htmlFor = xfadeTimeSliderId;
-        xfadeTimeRow.appendChild(xfadeTimeLabel);
-
-        const xfadeTimeSlider = document.createElement('input');
-        xfadeTimeSlider.type = 'range';
-        xfadeTimeSlider.id = xfadeTimeSliderId;
-        xfadeTimeSlider.name = xfadeTimeSliderId;
-        xfadeTimeSlider.min = 20;
-        xfadeTimeSlider.max = 40;
-        xfadeTimeSlider.step = 0.1;
-        xfadeTimeSlider.value = this.xf;
-        xfadeTimeSlider.autocomplete = "off";
-
-        const xfadeTimeValueId = `${this.id}-${this.name}-xfade-time-value`;
-        const xfadeTimeValue = document.createElement('input');
-        xfadeTimeValue.type = 'number';
-        xfadeTimeValue.id = xfadeTimeValueId;
-        xfadeTimeValue.name = xfadeTimeValueId;
-        xfadeTimeValue.min = 20;
-        xfadeTimeValue.max = 40;
-        xfadeTimeValue.step = 0.1;
-        xfadeTimeValue.value = this.xf;
-        xfadeTimeValue.autocomplete = "off";
-
-        xfadeTimeSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            this.setXFadeTime(value);
-            xfadeTimeValue.value = value;
-        });
-
-        xfadeTimeValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 5;
-            const value = parsedValue < 5 ? 5 : (parsedValue > 40 ? 40 : parsedValue);
-            this.setXFadeTime(value);
-            xfadeTimeSlider.value = value;
-            e.target.value = value;
-        });
-
-        xfadeTimeRow.appendChild(xfadeTimeSlider);
-        xfadeTimeRow.appendChild(xfadeTimeValue);
-        container.appendChild(xfadeTimeRow);
+        container.appendChild(this.createParameterControl(
+            'XFade Time', 5, 40, 0.1, this.xf,
+            this.setXFadeTime.bind(this), 'ms'
+        ));
 
         return container;
     }

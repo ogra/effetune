@@ -259,53 +259,11 @@ class NoiseBlenderPlugin extends PluginBase {
         typeRow.appendChild(typeContainer);
         container.appendChild(typeRow);
 
-        // Level slider
-        const levelRow = document.createElement('div');
-        levelRow.className = 'parameter-row';
-        const levelSliderId = `${this.id}-${this.name}-level-slider`;
-        const levelLabel = document.createElement('label');
-        levelLabel.textContent = 'Level:';
-        levelLabel.htmlFor = levelSliderId;
-        levelRow.appendChild(levelLabel);
-
-        const levelSlider = document.createElement('input');
-        levelSlider.type = 'range';
-        levelSlider.id = levelSliderId;
-        levelSlider.name = levelSliderId;
-        levelSlider.min = -96;
-        levelSlider.max = 0;
-        levelSlider.step = 0.1;
-        levelSlider.value = this.lv;
-        levelSlider.autocomplete = "off";
-
-        const levelValueId = `${this.id}-${this.name}-level-value`;
-        const levelValue = document.createElement('input');
-        levelValue.type = 'number';
-        levelValue.id = levelValueId;
-        levelValue.name = levelValueId;
-        levelValue.min = -96;
-        levelValue.max = 0;
-        levelValue.step = 0.1;
-        levelValue.value = this.lv;
-        levelValue.autocomplete = "off";
-
-        levelSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            this.setParameters({ lv: value });
-            levelValue.value = value;
-        });
-
-        levelValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || -96;
-            const value = parsedValue < -96 ? -96 : (parsedValue > 0 ? 0 : parsedValue);
-            this.setParameters({ lv: value });
-            levelSlider.value = value;
-            e.target.value = value;
-        });
-
-        levelRow.appendChild(levelSlider);
-        levelRow.appendChild(levelValue);
-        container.appendChild(levelRow);
+        // Use helper for Level control
+        container.appendChild(this.createParameterControl(
+            'Level', -96, 0, 0.1, this.lv, 
+            (value) => this.setParameters({ lv: value }), 'dB'
+        ));
 
         // Per Channel checkbox
         const perChannelRow = document.createElement('div');

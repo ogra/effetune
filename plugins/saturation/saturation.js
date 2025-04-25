@@ -148,134 +148,21 @@ class SaturationPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'saturation-plugin-ui plugin-parameter-ui';
 
-        // Drive control
-        const driveLabel = document.createElement('label');
-        driveLabel.textContent = 'Drive:';
-        driveLabel.htmlFor = `${this.id}-${this.name}-drive-slider`;
-        
-        const driveSlider = document.createElement('input');
-        driveSlider.type = 'range';
-        driveSlider.min = 0;
-        driveSlider.max = 10;
-        driveSlider.step = 0.1;
-        driveSlider.value = this.dr;
-        driveSlider.id = `${this.id}-${this.name}-drive-slider`;
-        driveSlider.name = `${this.id}-${this.name}-drive-slider`;
-        driveSlider.autocomplete = "off";
-        driveSlider.addEventListener('input', (e) => {
-            this.setDr(parseFloat(e.target.value));
-            driveValue.value = e.target.value;
-        });
-        
-        const driveValue = document.createElement('input');
-        driveValue.type = 'number';
-        driveValue.min = 0;
-        driveValue.max = 10;
-        driveValue.step = 0.1;
-        driveValue.value = this.dr;
-        driveValue.id = `${this.id}-${this.name}-drive-value`;
-        driveValue.name = `${this.id}-${this.name}-drive-value`;
-        driveValue.autocomplete = "off";
-        driveValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setDr(value);
-            driveSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const driveRow = document.createElement('div');
-        driveRow.className = 'parameter-row';
-        driveRow.appendChild(driveLabel);
-        driveRow.appendChild(driveSlider);
-        driveRow.appendChild(driveValue);
-        container.appendChild(driveRow);
+        // Use base helper to create controls
+        container.appendChild(this.createParameterControl(
+            'Drive', 0, 10, 0.1, this.dr,
+            this.setDr.bind(this)
+        ));
 
-        // Bias control
-        const biasLabel = document.createElement('label');
-        biasLabel.textContent = 'Bias:';
-        biasLabel.htmlFor = `${this.id}-${this.name}-bias-slider`;
-        
-        const biasSlider = document.createElement('input');
-        biasSlider.type = 'range';
-        biasSlider.min = -0.3;
-        biasSlider.max = 0.3;
-        biasSlider.step = 0.01;
-        biasSlider.value = this.bs;
-        biasSlider.id = `${this.id}-${this.name}-bias-slider`;
-        biasSlider.name = `${this.id}-${this.name}-bias-slider`;
-        biasSlider.autocomplete = "off";
-        biasSlider.addEventListener('input', (e) => {
-            this.setBs(parseFloat(e.target.value));
-            biasValue.value = e.target.value;
-        });
-        
-        const biasValue = document.createElement('input');
-        biasValue.type = 'number';
-        biasValue.min = -0.3;
-        biasValue.max = 0.3;
-        biasValue.step = 0.01;
-        biasValue.value = this.bs;
-        biasValue.id = `${this.id}-${this.name}-bias-value`;
-        biasValue.name = `${this.id}-${this.name}-bias-value`;
-        biasValue.autocomplete = "off";
-        biasValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -0.3 ? -0.3 : (parsedValue > 0.3 ? 0.3 : parsedValue);
-            this.setBs(value);
-            biasSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const biasRow = document.createElement('div');
-        biasRow.className = 'parameter-row';
-        biasRow.appendChild(biasLabel);
-        biasRow.appendChild(biasSlider);
-        biasRow.appendChild(biasValue);
-        container.appendChild(biasRow);
+        container.appendChild(this.createParameterControl(
+            'Bias', -0.3, 0.3, 0.01, this.bs,
+            this.setBs.bind(this)
+        ));
 
-        // Mix control
-        const mixLabel = document.createElement('label');
-        mixLabel.textContent = 'Mix (%):';
-        mixLabel.htmlFor = `${this.id}-${this.name}-mix-slider`;
-        
-        const mixSlider = document.createElement('input');
-        mixSlider.type = 'range';
-        mixSlider.min = 0;
-        mixSlider.max = 100;
-        mixSlider.step = 1;
-        mixSlider.value = this.mx;
-        mixSlider.id = `${this.id}-${this.name}-mix-slider`;
-        mixSlider.name = `${this.id}-${this.name}-mix-slider`;
-        mixSlider.autocomplete = "off";
-        mixSlider.addEventListener('input', (e) => {
-            this.setMx(parseFloat(e.target.value));
-            mixValue.value = e.target.value;
-        });
-        
-        const mixValue = document.createElement('input');
-        mixValue.type = 'number';
-        mixValue.min = 0;
-        mixValue.max = 100;
-        mixValue.step = 1;
-        mixValue.value = this.mx;
-        mixValue.id = `${this.id}-${this.name}-mix-value`;
-        mixValue.name = `${this.id}-${this.name}-mix-value`;
-        mixValue.autocomplete = "off";
-        mixValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 100 ? 100 : parsedValue);
-            this.setMx(value);
-            mixSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const mixRow = document.createElement('div');
-        mixRow.className = 'parameter-row';
-        mixRow.appendChild(mixLabel);
-        mixRow.appendChild(mixSlider);
-        mixRow.appendChild(mixValue);
-        container.appendChild(mixRow);
+        container.appendChild(this.createParameterControl(
+            'Mix', 0, 100, 1, this.mx,
+            this.setMx.bind(this), '%'
+        ));
 
         // Graph container for canvas and labels
         const graphContainer = document.createElement('div');
@@ -287,52 +174,15 @@ class SaturationPlugin extends PluginBase {
         canvas.style.height = '200px';
         canvas.style.backgroundColor = '#222';
         this.canvas = canvas;
-        this.updateTransferGraph();
+        this.updateTransferGraph(); // Initial graph draw
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
 
         // Gain control
-        const gainLabel = document.createElement('label');
-        gainLabel.textContent = 'Gain (dB):';
-        gainLabel.htmlFor = `${this.id}-${this.name}-gain-slider`;
-        
-        const gainSlider = document.createElement('input');
-        gainSlider.type = 'range';
-        gainSlider.min = -18;
-        gainSlider.max = 18;
-        gainSlider.step = 0.1;
-        gainSlider.value = this.gn;
-        gainSlider.id = `${this.id}-${this.name}-gain-slider`;
-        gainSlider.name = `${this.id}-${this.name}-gain-slider`;
-        gainSlider.autocomplete = "off";
-        gainSlider.addEventListener('input', (e) => {
-            this.setGn(parseFloat(e.target.value));
-            gainValue.value = e.target.value;
-        });
-        
-        const gainValue = document.createElement('input');
-        gainValue.type = 'number';
-        gainValue.min = -18;
-        gainValue.max = 18;
-        gainValue.step = 0.1;
-        gainValue.value = this.gn;
-        gainValue.id = `${this.id}-${this.name}-gain-value`;
-        gainValue.name = `${this.id}-${this.name}-gain-value`;
-        gainValue.autocomplete = "off";
-        gainValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -18 ? -18 : (parsedValue > 18 ? 18 : parsedValue);
-            this.setGn(value);
-            gainSlider.value = value;
-            e.target.value = value;
-        });
-        
-        const gainRow = document.createElement('div');
-        gainRow.className = 'parameter-row';
-        gainRow.appendChild(gainLabel);
-        gainRow.appendChild(gainSlider);
-        gainRow.appendChild(gainValue);
-        container.appendChild(gainRow);
+        container.appendChild(this.createParameterControl(
+            'Gain', -18, 18, 0.1, this.gn,
+            this.setGn.bind(this), 'dB'
+        ));
 
         return container;
     }

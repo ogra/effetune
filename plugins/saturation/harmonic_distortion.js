@@ -237,61 +237,29 @@ class HarmonicDistortionPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'harmonic-distortion-plugin-ui plugin-parameter-ui';
 
-        // Utility function to create a parameter row
-        const createRow = (labelText, type, min, max, step, value, onChange, paramKey) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            // 一意なIDを生成
-            const sliderId = `${this.id}-${this.name}-${paramKey}-slider`;
-            const inputId = `${this.id}-${this.name}-${paramKey}-input`;
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.htmlFor = sliderId;
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-            const input = document.createElement('input');
-            input.type = type;
-            input.id = inputId;
-            input.name = inputId;
-            input.min = min;
-            input.max = max;
-            input.step = step;
-            input.value = value;
-            input.autocomplete = "off";
-            slider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                onChange(val);
-                input.value = val;
-            });
-            input.addEventListener('input', (e) => {
-                let val = parseFloat(e.target.value) || 0;
-                if (val < min) val = min;
-                if (val > max) val = max;
-                onChange(val);
-                slider.value = val;
-                e.target.value = val; // Correct the input value if it was out of bounds
-            });
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(input);
-            return row;
-        };
+        // Use base helper to create parameter rows
+        container.appendChild(this.createParameterControl(
+            '2nd Harm', -30, 30, 0.1, this.h2,
+            this.setH2.bind(this), '%'
+        ));
+        container.appendChild(this.createParameterControl(
+            '3rd Harm', -30, 30, 0.1, this.h3,
+            this.setH3.bind(this), '%'
+        ));
+        container.appendChild(this.createParameterControl(
+            '4th Harm', -30, 30, 0.1, this.h4,
+            this.setH4.bind(this), '%'
+        ));
+        container.appendChild(this.createParameterControl(
+            '5th Harm', -30, 30, 0.1, this.h5,
+            this.setH5.bind(this), '%'
+        ));
+        container.appendChild(this.createParameterControl(
+            'Sensitivity', 0.1, 2.0, 0.01, this.sn,
+            this.setSn.bind(this), 'x'
+        ));
 
-        // Create parameter rows with updated ranges (-30 to 30)
-        container.appendChild(createRow('2nd Harm (%):', 'number', '-30', '30', '0.1', this.h2, (value) => this.setH2(value), 'h2'));
-        container.appendChild(createRow('3rd Harm (%):', 'number', '-30', '30', '0.1', this.h3, (value) => this.setH3(value), 'h3'));
-        container.appendChild(createRow('4th Harm (%):', 'number', '-30', '30', '0.1', this.h4, (value) => this.setH4(value), 'h4'));
-        container.appendChild(createRow('5th Harm (%):', 'number', '-30', '30', '0.1', this.h5, (value) => this.setH5(value), 'h5'));
-        container.appendChild(createRow('Sensitivity (x):', 'number', '0.1', '2.0', '0.01', this.sn, (value) => this.setSn(value), 'sn'));
-
-        // Graph container for canvas and labels - match exactly with saturation.js
+        // Graph container for canvas and labels - keep original
         const graphContainer = document.createElement('div');
         graphContainer.style.position = 'relative';
         const canvas = document.createElement('canvas');
@@ -303,7 +271,8 @@ class HarmonicDistortionPlugin extends PluginBase {
         this.canvas = canvas;
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
-        // Update the graph
+
+        // Update the graph initially
         this.updateTransferGraph();
         return container;
     }

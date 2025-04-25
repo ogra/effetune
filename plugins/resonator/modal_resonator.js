@@ -499,58 +499,40 @@ class ModalResonatorPlugin extends PluginBase {
         resonatorContainer.appendChild(settingsContainer);
         container.appendChild(resonatorContainer);
 
-        const createMixRow = (labelText, type, min, max, step, value, onChange) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            const sliderId = `${this.id}-${this.name}-mix-slider`;
-            const inputId = `${this.id}-${this.name}-mix-input`;
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.htmlFor = sliderId;
-
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-
-            const input = document.createElement('input');
-            input.type = type;
-            input.id = inputId;
-            input.name = inputId;
-            input.min = min;
-            input.max = max;
-            input.step = step;
-            input.value = value;
-
-            slider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                onChange(val);
-                input.value = val;
-            });
-
-            input.addEventListener('input', (e) => {
-                let val = parseFloat(e.target.value);
-                if (isNaN(val)) {
-                    val = this.mx;
-                }
-                val = Math.max(min, Math.min(max, val));
-                onChange(val);
-                slider.value = val;
-                e.target.value = val;
-            });
-
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(input);
-            return row;
+        // Mix Control
+        const mixRow = document.createElement('div');
+        mixRow.className = 'parameter-row';
+        const mixLabel = document.createElement('label');
+        mixLabel.textContent = 'Mix (%):';
+        mixLabel.htmlFor = `${this.id}-${this.name}-mix-slider`;
+        const mixSlider = document.createElement('input');
+        mixSlider.type = 'range';
+        mixSlider.id = `${this.id}-${this.name}-mix-slider`;
+        mixSlider.name = `${this.id}-${this.name}-mix-slider`;
+        mixSlider.min = 0;
+        mixSlider.max = 100;
+        mixSlider.step = 1;
+        mixSlider.value = this.mx;
+        const mixValue = document.createElement('input');
+        mixValue.type = 'number';
+        mixValue.id = `${this.id}-${this.name}-mix-value`;
+        mixValue.name = `${this.id}-${this.name}-mix-value`;
+        mixValue.min = 0;
+        mixValue.max = 100;
+        mixValue.step = 1;
+        mixValue.value = this.mx;
+        const mixHandler = (e) => {
+            const value = parseFloat(e.target.value);
+            mixSlider.value = value;
+            mixValue.value = value;
+            this.setParameters({ mx: value });
         };
-
-        container.appendChild(createMixRow('Mix (%):', 'number', 0, 100, 1, this.mx,
-            (value) => this.setParameters({ mx: value })));
+        mixSlider.addEventListener('input', mixHandler);
+        mixValue.addEventListener('input', mixHandler);
+        mixRow.appendChild(mixLabel);
+        mixRow.appendChild(mixSlider);
+        mixRow.appendChild(mixValue);
+        container.appendChild(mixRow);
 
         return container;
     }

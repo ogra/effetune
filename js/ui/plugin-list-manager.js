@@ -28,9 +28,6 @@ export class PluginListManager {
         // Sidebar button functionality
         this.sidebarButton = document.getElementById('sidebarButton');
         
-        // Width threshold for auto collapse/expand
-        this.widthThreshold = 1480;
-
         // Setup event handlers
         this.setupSearchFunctionality();
         this.setupPullTabFunctionality();
@@ -334,21 +331,38 @@ export class PluginListManager {
         }
     }
     
-    // Check and adjust the collapse state based on window width
+    // Check and adjust the collapse state based on pipeline position relative to window edge
     checkWindowWidthAndAdjust() {
         // Only proceed if the app is fully initialized
         if (!window.app || !window.app.initialized) {
             return;
         }
+
+        const pipeline = document.getElementById('pipeline');
+        if (!pipeline) return;
+
         const windowWidth = window.innerWidth;
-        
-        // If window width is less than threshold and plugin list is expanded, collapse it
-        if (windowWidth <= this.widthThreshold && !this.isCollapsed) {
+        const pipelineRect = pipeline.getBoundingClientRect();
+        const pipelineRightEdge = pipelineRect.right;
+        const threshold = windowWidth - 20; // 20px margin from the right edge
+
+        // If plugin list is expanded and pipeline is too close to the edge, collapse it
+        if (!this.isCollapsed && pipelineRightEdge > threshold) {
             this.togglePluginListCollapse();
         }
-        // If window width is greater than threshold and plugin list is collapsed, expand it
-        else if (windowWidth > this.widthThreshold && this.isCollapsed) {
-            this.togglePluginListCollapse();
+        // If plugin list is collapsed and pipeline has enough space *after* expanding, expand it
+        else if (this.isCollapsed) {
+             // Estimate the pipeline's right edge position *if* the plugin list were expanded
+             const pluginListWidth = this.pluginList.offsetWidth;
+             // Note: When collapsed, pipeline's margin-left is negative pluginListWidth.
+             // Expanding it shifts it right by pluginListWidth.
+             // So the estimated right edge is roughly current right + pluginListWidth.
+             const estimatedPipelineRightEdge = pipelineRightEdge + pluginListWidth + 20;
+
+             // Expand only if the *estimated* right edge fits within the threshold
+             if (estimatedPipelineRightEdge <= threshold) {
+                 this.togglePluginListCollapse();
+             }
         }
     }
     

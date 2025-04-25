@@ -345,8 +345,6 @@ class HornResonatorPlugin extends PluginBase {
         let up = false;
         const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
 
-        if (p.en !== undefined) { this.setEnabled(p.en); }
-
         // Geometry & Damping Parameters
         if (p.ln !== undefined && !isNaN(p.ln))
             { this.ln = clamp(+p.ln, 20, 120); up = true; }
@@ -377,48 +375,15 @@ class HornResonatorPlugin extends PluginBase {
         const c = document.createElement('div');
         c.className = 'plugin-parameter-ui horn-resonator-ui';
 
-        const addSlider = (lbl,u,p,min,max,step,val) => {
-            const r = document.createElement('div'); r.className='parameter-row';
-            const baseId = `${this.id}-${p}`;
-            const slidId = baseId + '-s';
-            const inpId = baseId + '-n';
-            const l = document.createElement('label');
-            l.htmlFor = slidId;
-            l.textContent = u ? `${lbl} (${u}):` : `${lbl}:`;
-            const s = Object.assign(document.createElement('input'),{
-                type:'range', id:slidId, name: p,
-                min, max, step, value:val, autocomplete:'off'
-            });
-            const i = Object.assign(document.createElement('input'),{
-                type:'number', id:inpId, name: p + '-num',
-                min, max, step, value:val, autocomplete:'off'
-            });
-            const clampUI=(v,mn,mx)=>Math.max(mn,Math.min(mx,isNaN(v)?mn:+v));
-            const upd = v_str => {
-                 try {
-                     const v = parseFloat(v_str);
-                     if (isNaN(v)) return;
-                     this[p] = v; // Update internal state
-                     this.setParameters({[p]: v}); // Trigger parameter update in processor
-                 } catch (e) { console.error("Error updating parameter:", p, v_str, e); }
-            };
-            s.oninput=e=>{const v=e.target.value; i.value=v; upd(v);};
-            i.oninput=e=>{const v_raw=e.target.value;const v_clamped=clampUI(v_raw,min,max);e.target.value=v_clamped;s.value=v_clamped;upd(v_clamped);};
-            // Ensure initial values are set correctly using the instance property 'p'
-            s.value = this[p];
-            i.value = this[p];
-            r.append(l,s,i); c.append(r);
-        };
-
-        // Add sliders using the current instance properties
-        addSlider('Crossover',      'Hz',   'co', 20,   5000,  10,    this.co);
-        addSlider('Horn Length',    'cm',   'ln', 20,   120,   1,     this.ln);
-        addSlider('Throat Dia.',    'cm',   'th', 0.5,  50,    0.1,   this.th);
-        addSlider('Mouth Dia.',     'cm',   'mo', 5,    200,   0.5,   this.mo);
-        addSlider('Curve',          '%',    'cv', -100, 100,   1,     this.cv);
-        addSlider('Damping',        'dB/m', 'dp', 0,    10,    0.01,  this.dp);
-        addSlider('Throat Refl.',   '',     'tr', 0,    0.99,  0.01,  this.tr);
-        addSlider('Output Gain',    'dB',   'wg', -36,  36,    0.1,   this.wg);
+        // Add sliders using the base class createParameterControl helper
+        c.appendChild(this.createParameterControl('Crossover', 20, 5000, 10, this.co, (v) => this.setParameters({ co: v }), 'Hz'));
+        c.appendChild(this.createParameterControl('Horn Length', 20, 120, 1, this.ln, (v) => this.setParameters({ ln: v }), 'cm'));
+        c.appendChild(this.createParameterControl('Throat Dia.', 0.5, 50, 0.1, this.th, (v) => this.setParameters({ th: v }), 'cm'));
+        c.appendChild(this.createParameterControl('Mouth Dia.', 5, 200, 0.5, this.mo, (v) => this.setParameters({ mo: v }), 'cm'));
+        c.appendChild(this.createParameterControl('Curve', -100, 100, 1, this.cv, (v) => this.setParameters({ cv: v }), '%'));
+        c.appendChild(this.createParameterControl('Damping', 0, 10, 0.01, this.dp, (v) => this.setParameters({ dp: v }), 'dB/m'));
+        c.appendChild(this.createParameterControl('Throat Refl.', 0, 0.99, 0.01, this.tr, (v) => this.setParameters({ tr: v })));
+        c.appendChild(this.createParameterControl('Output Gain', -36, 36, 0.1, this.wg, (v) => this.setParameters({ wg: v }), 'dB'));
 
         return c;
     }

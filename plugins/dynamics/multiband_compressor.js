@@ -1063,6 +1063,9 @@ class MultibandCompressorPlugin extends PluginBase {
       graphDiv.className = `multiband-compressor-band-graph ${i === 0 ? 'active' : ''}`;
       graphDiv.setAttribute('data-instance-id', this.instanceId);
       const canvas = document.createElement('canvas');
+      // Set canvas buffer size for high-resolution display.
+      // This size is intentionally larger than the display size (160x160px defined in CSS)
+      // to ensure sharpness when scaled or on high-DPI screens.
       canvas.width = 320;
       canvas.height = 320;
       canvas.style.width = '160px';

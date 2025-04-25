@@ -272,81 +272,58 @@ class LoudnessEqualizerPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'loudness-equalizer-plugin-ui plugin-parameter-ui';
 
-        // Helper to create a parameter row with slider and number input
-        const createRow = (labelText, min, max, step, value, onChange) => {
-            // Create a parameter name from the label (e.g., "Average SPL (dB):" -> "averagespldb")
-            // Include more of the label to ensure uniqueness
-            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const numberId = `${this.id}-${this.name}-${paramName}-number`;
-            
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.htmlFor = sliderId;
-            
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-            
-            const numberInput = document.createElement('input');
-            numberInput.type = 'number';
-            numberInput.id = numberId;
-            numberInput.name = numberId;
-            numberInput.min = min;
-            numberInput.max = max;
-            numberInput.step = step;
-            numberInput.value = value;
-            numberInput.autocomplete = "off";
-            slider.addEventListener('input', e => {
-                onChange(parseFloat(e.target.value));
-                numberInput.value = e.target.value;
-                this.drawGraph(canvas);
-            });
-            numberInput.addEventListener('input', e => {
-                const parsedValue = parseFloat(e.target.value) || 0;
-                const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
-                onChange(val);
-                slider.value = val;
-                e.target.value = val;
-                this.drawGraph(canvas);
-            });
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(numberInput);
-            return row;
-        };
-
-        // Create parameter rows
-        container.appendChild(createRow('Average SPL (dB):', 60.0, 85.0, 0.1, this.sp, v => this.setParameters({ sp: v })));
-        container.appendChild(createRow('Low Freq (Hz):', 100, 300, 1, this.lf, v => this.setParameters({ lf: v })));
-        container.appendChild(createRow('Low Gain (dB):', 0.0, 15.0, 0.1, this.lg, v => this.setParameters({ lg: v }))); // max slider changed to 15dB
-        container.appendChild(createRow('Low Q:', 0.5, 1.0, 0.01, this.lq, v => this.setParameters({ lq: v })));
-        container.appendChild(createRow('High Freq (Hz):', 3000, 6000, 10, this.hf, v => this.setParameters({ hf: v })));
-        container.appendChild(createRow('High Gain (dB):', 0.0, 15.0, 0.1, this.hg, v => this.setParameters({ hg: v }))); // max slider changed to 15dB
-        container.appendChild(createRow('High Q:', 0.5, 1.0, 0.01, this.hq, v => this.setParameters({ hq: v })));
-
-        // Create graph container and canvas
-        const graphContainer = document.createElement('div');
-        graphContainer.style.position = 'relative';
+        // Define canvas here so it's available for event handlers
         const canvas = document.createElement('canvas');
         canvas.width = 1200;
         canvas.height = 480;
         canvas.style.width = '600px';
         canvas.style.height = '240px';
+
+        // Helper function to create the onChange handler for controls
+        const createOnChangeHandler = (setter) => {
+            return (value) => {
+                setter(value); // Call the original parameter setter
+                this.drawGraph(canvas); // Redraw graph on change
+            };
+        };
+
+        // Create parameter rows using createParameterControl
+        container.appendChild(this.createParameterControl(
+            'Average SPL', 60.0, 85.0, 0.1, this.sp,
+            createOnChangeHandler(v => this.setParameters({ sp: v })), 'dB'
+        ));
+        container.appendChild(this.createParameterControl(
+            'Low Freq', 100, 300, 1, this.lf,
+            createOnChangeHandler(v => this.setParameters({ lf: v })), 'Hz'
+        ));
+        container.appendChild(this.createParameterControl(
+            'Low Gain', 0.0, 15.0, 0.1, this.lg,
+            createOnChangeHandler(v => this.setParameters({ lg: v })), 'dB'
+        ));
+        container.appendChild(this.createParameterControl(
+            'Low Q', 0.5, 1.0, 0.01, this.lq,
+            createOnChangeHandler(v => this.setParameters({ lq: v }))
+        ));
+        container.appendChild(this.createParameterControl(
+            'High Freq', 3000, 6000, 10, this.hf,
+            createOnChangeHandler(v => this.setParameters({ hf: v })), 'Hz'
+        ));
+        container.appendChild(this.createParameterControl(
+            'High Gain', 0.0, 15.0, 0.1, this.hg,
+            createOnChangeHandler(v => this.setParameters({ hg: v })), 'dB'
+        ));
+        container.appendChild(this.createParameterControl(
+            'High Q', 0.5, 1.0, 0.01, this.hq,
+            createOnChangeHandler(v => this.setParameters({ hq: v }))
+        ));
+
+        // Create graph container and add canvas
+        const graphContainer = document.createElement('div');
+        graphContainer.style.position = 'relative';
         graphContainer.appendChild(canvas);
         container.appendChild(graphContainer);
 
-        this.drawGraph(canvas);
+        this.drawGraph(canvas); // Initial draw
         return container;
     }
 

@@ -203,43 +203,15 @@ class BitCrusherPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'bit-crusher-plugin-ui plugin-parameter-ui';
 
-        // Bit Depth control
-        const bitDepthLabel = document.createElement('label');
-        bitDepthLabel.textContent = 'Bit Depth:';
-        const bitDepthSliderId = `${this.id}-${this.name}-bit-depth-slider`;
-        bitDepthLabel.htmlFor = bitDepthSliderId;
-        const bitDepthSlider = document.createElement('input');
-        bitDepthSlider.type = 'range';
-        bitDepthSlider.id = bitDepthSliderId;
-        bitDepthSlider.name = bitDepthSliderId;
-        bitDepthSlider.min = 4;
-        bitDepthSlider.max = 24;
-        bitDepthSlider.step = 1;
-        bitDepthSlider.value = this.bd;
-        bitDepthSlider.autocomplete = "off";
-        bitDepthSlider.addEventListener('input', (e) => {
-            this.setBd(parseInt(e.target.value));
-            bitDepthValue.value = e.target.value;
-        });
-        const bitDepthValueId = `${this.id}-${this.name}-bit-depth-value`;
-        const bitDepthValue = document.createElement('input');
-        bitDepthValue.type = 'number';
-        bitDepthValue.id = bitDepthValueId;
-        bitDepthValue.name = bitDepthValueId;
-        bitDepthValue.min = 4;
-        bitDepthValue.max = 24;
-        bitDepthValue.step = 1;
-        bitDepthValue.value = this.bd;
-        bitDepthValue.autocomplete = "off";
-        bitDepthValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 4;
-            const value = parsedValue < 4 ? 4 : (parsedValue > 24 ? 24 : parsedValue);
-            this.setBd(value);
-            bitDepthSlider.value = value;
-            e.target.value = value;
-        });
+        // Use helper for Bit Depth control
+        container.appendChild(this.createParameterControl(
+            'Bit Depth', 4, 24, 1, this.bd, 
+            (value) => this.setBd(value), ''
+        ));
 
-        // TPDF Dither control
+        // TPDF Dither control (keep checkbox)
+        const tpdfRow = document.createElement('div');
+        tpdfRow.className = 'parameter-row';
         const tpdfLabel = document.createElement('label');
         tpdfLabel.textContent = 'TPDF Dither:';
         const tpdfCheckboxId = `${this.id}-${this.name}-tpdf-dither`;
@@ -253,149 +225,27 @@ class BitCrusherPlugin extends PluginBase {
         tpdfCheckbox.addEventListener('change', (e) => {
             this.setTd(e.target.checked);
         });
-
-        // ZOH Frequency control
-        const zohFreqLabel = document.createElement('label');
-        zohFreqLabel.textContent = 'ZOH Frequency (Hz):';
-        const zohFreqSliderId = `${this.id}-${this.name}-zoh-freq-slider`;
-        zohFreqLabel.htmlFor = zohFreqSliderId;
-        const zohFreqSlider = document.createElement('input');
-        zohFreqSlider.type = 'range';
-        zohFreqSlider.id = zohFreqSliderId;
-        zohFreqSlider.name = zohFreqSliderId;
-        zohFreqSlider.min = 4000;
-        zohFreqSlider.max = 96000;
-        zohFreqSlider.step = 100;
-        zohFreqSlider.value = this.zf;
-        zohFreqSlider.autocomplete = "off";
-        zohFreqSlider.addEventListener('input', (e) => {
-            this.setZf(parseInt(e.target.value));
-            zohFreqValue.value = e.target.value;
-        });
-        const zohFreqValueId = `${this.id}-${this.name}-zoh-freq-value`;
-        const zohFreqValue = document.createElement('input');
-        zohFreqValue.type = 'number';
-        zohFreqValue.id = zohFreqValueId;
-        zohFreqValue.name = zohFreqValueId;
-        zohFreqValue.min = 4000;
-        zohFreqValue.max = 96000;
-        zohFreqValue.step = 100;
-        zohFreqValue.value = this.zf;
-        zohFreqValue.autocomplete = "off";
-        zohFreqValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 4000;
-            const value = parsedValue < 4000 ? 4000 : (parsedValue > 96000 ? 96000 : parsedValue);
-            this.setZf(value);
-            zohFreqSlider.value = value;
-            e.target.value = value;
-        });
-
-        // Bit Error control
-        const beLabel = document.createElement('label');
-        beLabel.textContent = 'Bit Error (%):';
-        const beSliderId = `${this.id}-${this.name}-bit-error-slider`;
-        beLabel.htmlFor = beSliderId;
-        const beSlider = document.createElement('input');
-        beSlider.type = 'range';
-        beSlider.id = beSliderId;
-        beSlider.name = beSliderId;
-        beSlider.min = 0;
-        beSlider.max = 10;
-        beSlider.step = 0.01;
-        beSlider.value = this.be;
-        beSlider.autocomplete = "off";
-        beSlider.addEventListener('input', (e) => {
-            this.setBe(parseFloat(e.target.value));
-            beValue.value = e.target.value;
-        });
-        const beValueId = `${this.id}-${this.name}-bit-error-value`;
-        const beValue = document.createElement('input');
-        beValue.type = 'number';
-        beValue.id = beValueId;
-        beValue.name = beValueId;
-        beValue.min = 0;
-        beValue.max = 10;
-        beValue.step = 0.01;
-        beValue.value = this.be;
-        beValue.autocomplete = "off";
-        beValue.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 10 ? 10 : parsedValue);
-            this.setBe(value);
-            beSlider.value = value;
-            e.target.value = value;
-        });
-
-        // Seed control
-        const seedLabel = document.createElement('label');
-        seedLabel.textContent = 'Random Seed:';
-        const seedSliderId = `${this.id}-${this.name}-seed-slider`;
-        seedLabel.htmlFor = seedSliderId;
-        const seedSlider = document.createElement('input');
-        seedSlider.type = 'range';
-        seedSlider.id = seedSliderId;
-        seedSlider.name = seedSliderId;
-        seedSlider.min = 0;
-        seedSlider.max = 1000;
-        seedSlider.step = 1;
-        seedSlider.value = this.sd;
-        seedSlider.autocomplete = "off";
-        seedSlider.addEventListener('input', (e) => {
-            this.setSeed(parseInt(e.target.value));
-            seedValue.value = e.target.value;
-        });
-        const seedValueId = `${this.id}-${this.name}-seed-value`;
-        const seedValue = document.createElement('input');
-        seedValue.type = 'number';
-        seedValue.id = seedValueId;
-        seedValue.name = seedValueId;
-        seedValue.min = 0;
-        seedValue.max = 1000;
-        seedValue.step = 1;
-        seedValue.value = this.sd;
-        seedValue.autocomplete = "off";
-        seedValue.addEventListener('input', (e) => {
-            const parsedValue = parseInt(e.target.value) || 0;
-            const value = parsedValue < 0 ? 0 : (parsedValue > 1000 ? 1000 : parsedValue);
-            this.setSeed(value);
-            seedSlider.value = value;
-            e.target.value = value;
-        });
-
-        // Assemble UI rows
-        const bitDepthRow = document.createElement('div');
-        bitDepthRow.className = 'parameter-row';
-        bitDepthRow.appendChild(bitDepthLabel);
-        bitDepthRow.appendChild(bitDepthSlider);
-        bitDepthRow.appendChild(bitDepthValue);
-        container.appendChild(bitDepthRow);
-
-        const tpdfRow = document.createElement('div');
-        tpdfRow.className = 'parameter-row';
         tpdfRow.appendChild(tpdfLabel);
         tpdfRow.appendChild(tpdfCheckbox);
         container.appendChild(tpdfRow);
 
-        const zohFreqRow = document.createElement('div');
-        zohFreqRow.className = 'parameter-row';
-        zohFreqRow.appendChild(zohFreqLabel);
-        zohFreqRow.appendChild(zohFreqSlider);
-        zohFreqRow.appendChild(zohFreqValue);
-        container.appendChild(zohFreqRow);
+        // Use helper for ZOH Frequency control
+        container.appendChild(this.createParameterControl(
+            'ZOH Frequency', 4000, 96000, 100, this.zf, 
+            (value) => this.setZf(value), 'Hz'
+        ));
         
-        const beRow = document.createElement('div');
-        beRow.className = 'parameter-row';
-        beRow.appendChild(beLabel);
-        beRow.appendChild(beSlider);
-        beRow.appendChild(beValue);
-        container.appendChild(beRow);
+        // Use helper for Bit Error control
+        container.appendChild(this.createParameterControl(
+            'Bit Error', 0, 10, 0.01, this.be, 
+            (value) => this.setBe(value), '%'
+        ));
 
-        const seedRow = document.createElement('div');
-        seedRow.className = 'parameter-row';
-        seedRow.appendChild(seedLabel);
-        seedRow.appendChild(seedSlider);
-        seedRow.appendChild(seedValue);
-        container.appendChild(seedRow);
+        // Use helper for Seed control
+        container.appendChild(this.createParameterControl(
+            'Random Seed', 0, 1000, 1, this.sd, 
+            (value) => this.setSeed(value), ''
+        ));
 
         return container;
     }

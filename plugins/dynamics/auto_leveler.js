@@ -476,68 +476,14 @@ class AutoLevelerPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // Utility function to create a parameter row with a slider and number input
-        const createRow = (labelText, type, min, max, step, value, onChange) => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-            
-            // Create a parameter name from the label (e.g., "Target (dB LUFS):" -> "targetdblufs")
-            // Include more of the label to ensure uniqueness
-            const paramName = labelText.toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const inputId = `${this.id}-${this.name}-${paramName}-input`;
-            
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.htmlFor = sliderId;
-            
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-            
-            const input = document.createElement('input');
-            input.type = type;
-            input.id = inputId;
-            input.name = inputId;
-            input.min = min;
-            input.max = max;
-            input.step = step;
-            input.value = value;
-            input.autocomplete = "off";
-            slider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                onChange(val);
-                input.value = val;
-            });
-            input.addEventListener('input', (e) => {
-                let val = parseFloat(e.target.value) || 0;
-                if (val < min) val = min;
-                if (val > max) val = max;
-                onChange(val);
-                slider.value = val;
-                e.target.value = val;
-            });
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(input);
-            return row;
-        };
-
         // Create parameter rows
-        container.appendChild(createRow('Target (dB LUFS):', 'number', '-36.0', '0.0', '0.1', this.tg, (value) => this.setParameters({ tg: value })));
-        container.appendChild(createRow('Time Window (ms):', 'number', '1000', '10000', '10', this.tw, (value) => this.setParameters({ tw: value })));
-        container.appendChild(createRow('Max Gain (dB):', 'number', '0.0', '12.0', '0.1', this.mg, (value) => this.setParameters({ mg: value })));
-        container.appendChild(createRow('Min Gain (dB):', 'number', '-36.0', '0.0', '0.1', this.ng, (value) => this.setParameters({ ng: value })));
-        container.appendChild(createRow('Attack Time (ms):', 'number', '1', '1000', '1', this.at, (value) => this.setParameters({ at: value })));
-        container.appendChild(createRow('Release Time (ms):', 'number', '10', '10000', '10', this.rt, (value) => this.setParameters({ rt: value })));
-        container.appendChild(createRow('Noise Gate (dB):', 'number', '-96', '-24', '1', this.gt, (value) => this.setParameters({ gt: value })));
+        container.appendChild(this.createParameterControl('Target LUFS', -36, 0, 0.1, this.tg, (value) => this.setParameters({ tg: value }), 'dB'));
+        container.appendChild(this.createParameterControl('Time Window', 1000, 10000, 10, this.tw, (value) => this.setParameters({ tw: value }), 'ms'));
+        container.appendChild(this.createParameterControl('Max Gain', 0, 12, 0.1, this.mg, (value) => this.setParameters({ mg: value }), 'dB'));
+        container.appendChild(this.createParameterControl('Min Gain', -36, 0, 0.1, this.ng, (value) => this.setParameters({ ng: value }), 'dB'));
+        container.appendChild(this.createParameterControl('Attack Time', 1, 1000, 1, this.at, (value) => this.setParameters({ at: value }), 'ms'));
+        container.appendChild(this.createParameterControl('Release Time', 10, 10000, 10, this.rt, (value) => this.setParameters({ rt: value }), 'ms'));
+        container.appendChild(this.createParameterControl('Noise Gate', -96, -24, 1, this.gt, (value) => this.setParameters({ gt: value }), 'dB'));
 
         // Create graph container
         const graphContainer = document.createElement('div');

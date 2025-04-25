@@ -123,84 +123,11 @@ class DopplerDistortionPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'doppler-distortion-plugin-ui plugin-parameter-ui';
 
-        const createParameterControl = (label, min, max, step, value, setter, unit = '') => {
-            const row = document.createElement('div');
-            row.className = 'parameter-row';
-
-            const paramName = label.toLowerCase().replace(/\s+/g, '-');
-            const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-            const valueId = `${this.id}-${this.name}-${paramName}-value`;
-
-            const labelEl = document.createElement('label');
-            labelEl.textContent = `${label}${unit ? ' (' + unit + ')' : ''}:`;
-            labelEl.htmlFor = sliderId;
-
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.id = sliderId;
-            slider.name = sliderId;
-            slider.min = min;
-            slider.max = max;
-            slider.step = step;
-            slider.value = value;
-            slider.autocomplete = "off";
-
-            const valueInput = document.createElement('input');
-            valueInput.type = 'number';
-            valueInput.id = valueId;
-            valueInput.name = valueId;
-            valueInput.min = min;
-            valueInput.max = max;
-            valueInput.step = step;
-            // Initialize with potentially cleaned value
-            valueInput.value = Number(Number(value).toFixed(10)); // Initial format cleanup
-            valueInput.autocomplete = "off";
-            valueInput.style.width = '7em'; // Slightly wider for potentially long numbers
-
-            slider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                setter(val);
-                // Update text box: Convert to Number to remove trailing zeros automatically
-                valueInput.value = Number(val);
-            });
-
-            valueInput.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value) || 0;
-                const clampedVal = Math.max(min, Math.min(max, val));
-                setter(clampedVal);
-                // Sync slider while typing, clamping value if necessary
-                // slider.value = clampedVal; // Optional: update slider continuously
-            });
-
-            // Function to clamp, format, and update on blur or Enter
-            const clampAndUpdate = (e) => {
-                 const val = parseFloat(e.target.value) || 0;
-                 const clampedVal = Math.max(min, Math.min(max, val));
-                 setter(clampedVal); // Ensure parameter is set to the clamped value
-                 // Update text box: Convert to Number to format and remove trailing zeros
-                 e.target.value = Number(clampedVal);
-                 slider.value = clampedVal; // Sync slider to the final clamped value
-            };
-
-            valueInput.addEventListener('blur', clampAndUpdate);
-            valueInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    clampAndUpdate(e);
-                    e.target.blur(); // Lose focus to prevent double event on some browsers
-                }
-            });
-
-            row.appendChild(labelEl);
-            row.appendChild(slider);
-            row.appendChild(valueInput);
-            return row;
-        };
-
-        // Create UI controls with the updated formatting logic
-        container.appendChild(createParameterControl('Coil Force', 0.0, 100.0, 0.1, this.cf, this.setCf.bind(this), 'N / V'));
-        container.appendChild(createParameterControl('Speaker Mass', 0.001, 0.5, 0.001, this.sm, this.setSm.bind(this), 'kg'));
-        container.appendChild(createParameterControl('Spring Constant', 1, 100000, 10, this.sc, this.setSc.bind(this), 'N/m'));
-        container.appendChild(createParameterControl('Damping Factor', 0.0, 50.0, 0.1, this.df, this.setDf.bind(this), 'N·s/m'));
+        // Create UI controls using the base class helper
+        container.appendChild(this.createParameterControl('Coil Force', 0.0, 100.0, 0.1, this.cf, this.setCf.bind(this), 'N / V'));
+        container.appendChild(this.createParameterControl('Speaker Mass', 0.001, 0.5, 0.001, this.sm, this.setSm.bind(this), 'kg'));
+        container.appendChild(this.createParameterControl('Spring Constant', 1, 100000, 10, this.sc, this.setSc.bind(this), 'N/m'));
+        container.appendChild(this.createParameterControl('Damping Factor', 0.0, 50.0, 0.1, this.df, this.setDf.bind(this), 'N·s/m'));
 
         return container;
     }

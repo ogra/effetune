@@ -183,52 +183,16 @@ class OscilloscopePlugin extends PluginBase {
       parametersGrid.className = 'parameters-grid';
   
       // --- Display Time Control (ms) ---
-      const dtRow = document.createElement('div');
-      dtRow.className = 'parameter-row';
-  
-      const dtLabel = document.createElement('label');
-      dtLabel.textContent = 'Display Time (ms):';
-      dtLabel.htmlFor = `${this.id}-${this.name}-display-time-slider`;
-
-      // Allowed range: 1 to 100 ms.
-      const dtSlider = document.createElement('input');
-      dtSlider.type = 'range';
-      dtSlider.id = `${this.id}-${this.name}-display-time-slider`;
-      dtSlider.name = `${this.id}-${this.name}-display-time-slider`;
-      dtSlider.min = 1;
-      dtSlider.max = 100;
-      dtSlider.step = 1;
-      dtSlider.value = (this.displayTime * 1000).toFixed(0);
-      dtSlider.autocomplete = "off";
-
-      const dtValue = document.createElement('input');
-      dtValue.type = 'number';
-      dtValue.id = `${this.id}-${this.name}-display-time-value`;
-      dtValue.name = `${this.id}-${this.name}-display-time-value`;
-      dtValue.value = (this.displayTime * 1000).toFixed(0);
-      dtValue.step = 1;
-      dtValue.min = 1;
-      dtValue.max = 100;
-      dtValue.autocomplete = "off";
-  
-      const dtHandler = (e) => {
-        const value = parseFloat(e.target.value) / 1000; // convert ms to sec.
-        dtValue.value = (value * 1000).toFixed(0);
-        dtSlider.value = (value * 1000).toFixed(0);
-        this.setDisplayTime(value);
-        this.clearBuffer();
-        this.updateParameters();
-      };
-  
-      dtSlider.addEventListener('input', dtHandler);
-      dtValue.addEventListener('change', dtHandler);
-      this.boundEventListeners.set(dtSlider, dtHandler);
-      this.boundEventListeners.set(dtValue, dtHandler);
-  
-      dtRow.appendChild(dtLabel);
-      dtRow.appendChild(dtSlider);
-      dtRow.appendChild(dtValue);
-      parametersGrid.appendChild(dtRow);
+      parametersGrid.appendChild(this.createParameterControl(
+        'Display Time', 1, 100, 1,
+        (this.displayTime * 1000).toFixed(0),
+        (value) => {
+          this.setDisplayTime(value / 1000);
+          this.clearBuffer();
+          this.updateParameters();
+        },
+        'ms'
+      ));
   
       // --- Trigger Mode Control (Auto/Normal) ---
       const tmRow = document.createElement('div');
@@ -308,50 +272,16 @@ class OscilloscopePlugin extends PluginBase {
       sourceRadios.forEach(r => tsRow.appendChild(r));
       parametersGrid.appendChild(tsRow);
   
-      // --- Trigger Level Control (linear amplitude) ---
-      const tlRow = document.createElement('div');
-      tlRow.className = 'parameter-row';
-  
-      const tlLabel = document.createElement('label');
-      tlLabel.textContent = 'Trigger Level:';
-      tlLabel.htmlFor = `${this.id}-${this.name}-trigger-level-slider`;
-
-      const tlSlider = document.createElement('input');
-      tlSlider.type = 'range';
-      tlSlider.id = `${this.id}-${this.name}-trigger-level-slider`;
-      tlSlider.name = `${this.id}-${this.name}-trigger-level-slider`;
-      tlSlider.min = -1;
-      tlSlider.max = 1;
-      tlSlider.step = 0.001;
-      tlSlider.value = this.triggerLevel;
-      tlSlider.autocomplete = "off";
-
-      const tlValue = document.createElement('input');
-      tlValue.type = 'number';
-      tlValue.id = `${this.id}-${this.name}-trigger-level-value`;
-      tlValue.name = `${this.id}-${this.name}-trigger-level-value`;
-      tlValue.value = this.triggerLevel.toFixed(3);
-      tlValue.step = 0.001;
-      tlValue.min = -1;
-      tlValue.max = 1;
-      tlValue.autocomplete = "off";
-  
-      const tlHandler = (e) => {
-        const value = parseFloat(e.target.value);
-        tlValue.value = value.toFixed(3);
-        tlSlider.value = value;
-        this.setTriggerLevel(value);
-      };
-  
-      tlSlider.addEventListener('input', tlHandler);
-      tlValue.addEventListener('change', tlHandler);
-      this.boundEventListeners.set(tlSlider, tlHandler);
-      this.boundEventListeners.set(tlValue, tlHandler);
-  
-      tlRow.appendChild(tlLabel);
-      tlRow.appendChild(tlSlider);
-      tlRow.appendChild(tlValue);
-      parametersGrid.appendChild(tlRow);
+      // --- Trigger Level Control ---
+      parametersGrid.appendChild(this.createParameterControl(
+        'Trigger Level', -1.0, 1.0, 0.01,
+        this.triggerLevel,
+        (value) => {
+          this.setTriggerLevel(value);
+          this.updateParameters();
+        },
+        ''
+      ));
   
       // --- Trigger Edge Control (Rising/Falling) ---
       const teRow = document.createElement('div');
@@ -393,145 +323,37 @@ class OscilloscopePlugin extends PluginBase {
       parametersGrid.appendChild(teRow);
   
       // --- Holdoff Control (ms) ---
-      const hoRow = document.createElement('div');
-      hoRow.className = 'parameter-row';
+      parametersGrid.appendChild(this.createParameterControl(
+        'Holdoff', 0.1, 10, 0.1,
+        (this.holdoff * 1000).toFixed(1),
+        (value) => {
+          this.setHoldoff(value / 1000);
+          this.updateParameters();
+        },
+        'ms'
+      ));
   
-      const hoLabel = document.createElement('label');
-      hoLabel.textContent = 'Holdoff (ms):';
-      hoLabel.htmlFor = `${this.id}-${this.name}-holdoff-slider`;
+      // --- Display Level Control (dB) ---
+      parametersGrid.appendChild(this.createParameterControl(
+        'Display Level', -96, 0, 1,
+        this.displayLevel,
+        (value) => {
+          this.setDisplayLevel(value);
+          this.updateParameters();
+        },
+        'dB'
+      ));
 
-      // Allowed range: 0.1 ms to 10 ms.
-      const hoSlider = document.createElement('input');
-      hoSlider.type = 'range';
-      hoSlider.id = `${this.id}-${this.name}-holdoff-slider`;
-      hoSlider.name = `${this.id}-${this.name}-holdoff-slider`;
-      hoSlider.min = Math.log10(1e-4);
-      hoSlider.max = Math.log10(1e-2);
-      hoSlider.step = 'any';
-      hoSlider.value = Math.log10(this.holdoff);
-      hoSlider.autocomplete = "off";
-
-      const hoValue = document.createElement('input');
-      hoValue.type = 'number';
-      hoValue.id = `${this.id}-${this.name}-holdoff-value`;
-      hoValue.name = `${this.id}-${this.name}-holdoff-value`;
-      hoValue.value = (this.holdoff * 1000).toFixed(2);
-      hoValue.step = 'any';
-      hoValue.min = (1e-4 * 1000);
-      hoValue.autocomplete = "off";
-      hoValue.max = (1e-2 * 1000);
-  
-      const hoHandler = (e) => {
-        let value;
-        if (e.target === hoSlider) {
-          value = Math.pow(10, parseFloat(e.target.value));
-        } else {
-          value = parseFloat(e.target.value) / 1000;
-        }
-        hoValue.value = (value * 1000).toFixed(2);
-        hoSlider.value = Math.log10(value);
-        this.setHoldoff(value);
-      };
-  
-      hoSlider.addEventListener('input', hoHandler);
-      hoValue.addEventListener('change', hoHandler);
-      this.boundEventListeners.set(hoSlider, hoHandler);
-      this.boundEventListeners.set(hoValue, hoHandler);
-  
-      hoRow.appendChild(hoLabel);
-      hoRow.appendChild(hoSlider);
-      hoRow.appendChild(hoValue);
-      parametersGrid.appendChild(hoRow);
-  
-      // --- Display Level Control (dB: -96 to 0) ---
-      const dlRow = document.createElement('div');
-      dlRow.className = 'parameter-row';
-  
-      const dlLabel = document.createElement('label');
-      dlLabel.textContent = 'Display Level (dB):';
-      dlLabel.htmlFor = `${this.id}-${this.name}-display-level-slider`;
-
-      const dlSlider = document.createElement('input');
-      dlSlider.type = 'range';
-      dlSlider.id = `${this.id}-${this.name}-display-level-slider`;
-      dlSlider.name = `${this.id}-${this.name}-display-level-slider`;
-      dlSlider.min = -96;
-      dlSlider.max = 0;
-      dlSlider.step = 1;
-      dlSlider.value = this.displayLevel;
-      dlSlider.autocomplete = "off";
-
-      const dlValue = document.createElement('input');
-      dlValue.type = 'number';
-      dlValue.id = `${this.id}-${this.name}-display-level-value`;
-      dlValue.name = `${this.id}-${this.name}-display-level-value`;
-      dlValue.value = this.displayLevel;
-      dlValue.step = 1;
-      dlValue.min = -96;
-      dlValue.max = 0;
-      dlValue.autocomplete = "off";
-  
-      const dlHandler = (e) => {
-        const value = parseInt(e.target.value);
-        dlValue.value = value;
-        dlSlider.value = value;
-        this.setDisplayLevel(value);
-      };
-  
-      dlSlider.addEventListener('input', dlHandler);
-      dlValue.addEventListener('change', dlHandler);
-      this.boundEventListeners.set(dlSlider, dlHandler);
-      this.boundEventListeners.set(dlValue, dlHandler);
-  
-      dlRow.appendChild(dlLabel);
-      dlRow.appendChild(dlSlider);
-      dlRow.appendChild(dlValue);
-      parametersGrid.appendChild(dlRow);
-  
-      // --- Vertical Offset Control (linear, -1 to 1) ---
-      const voRow = document.createElement('div');
-      voRow.className = 'parameter-row';
-  
-      const voLabel = document.createElement('label');
-      voLabel.textContent = 'Vertical Offset:';
-      voLabel.htmlFor = `${this.id}-${this.name}-vertical-offset-slider`;
-
-      const voSlider = document.createElement('input');
-      voSlider.type = 'range';
-      voSlider.id = `${this.id}-${this.name}-vertical-offset-slider`;
-      voSlider.name = `${this.id}-${this.name}-vertical-offset-slider`;
-      voSlider.min = -1;
-      voSlider.max = 1;
-      voSlider.step = 0.01;
-      voSlider.value = this.verticalOffset;
-      voSlider.autocomplete = "off";
-
-      const voValue = document.createElement('input');
-      voValue.type = 'number';
-      voValue.id = `${this.id}-${this.name}-vertical-offset-value`;
-      voValue.name = `${this.id}-${this.name}-vertical-offset-value`;
-      voValue.value = this.verticalOffset.toFixed(2);
-      voValue.step = 0.01;
-      voValue.min = -1;
-      voValue.max = 1;
-      voValue.autocomplete = "off";
-  
-      const voHandler = (e) => {
-        const value = parseFloat(e.target.value);
-        voValue.value = value.toFixed(2);
-        voSlider.value = value;
-        this.setVerticalOffset(value);
-      };
-  
-      voSlider.addEventListener('input', voHandler);
-      voValue.addEventListener('change', voHandler);
-      this.boundEventListeners.set(voSlider, voHandler);
-      this.boundEventListeners.set(voValue, voHandler);
-  
-      voRow.appendChild(voLabel);
-      voRow.appendChild(voSlider);
-      voRow.appendChild(voValue);
-      parametersGrid.appendChild(voRow);
+      // --- Vertical Offset Control ---
+      parametersGrid.appendChild(this.createParameterControl(
+        'Vertical Offset', -1.0, 1.0, 0.01,
+        this.verticalOffset,
+        (value) => {
+          this.setVerticalOffset(value);
+          this.updateParameters();
+        },
+        ''
+      ));
   
       container.appendChild(parametersGrid);
   
@@ -872,7 +694,7 @@ class OscilloscopePlugin extends PluginBase {
         ctx.stroke();
         // Only draw text if it does not overlap the top or bottom edge.
         if (y - textMargin >= 0 && y + textMargin <= height) {
-          ctx.fillText(tick.toFixed(decimals), 80, y);
+          ctx.fillText(tick.toFixed(decimals), 64, y);
         }
       }
   

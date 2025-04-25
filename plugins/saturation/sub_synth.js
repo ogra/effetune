@@ -258,55 +258,6 @@ class SubSynthPlugin extends PluginBase {
     const container = document.createElement("div");
     container.className = "sub-synth-plugin-ui plugin-parameter-ui";
 
-    // Helper to create a parameter row with slider and number input
-    const createRow = (labelText, min, max, step, value, onInput, paramName) => {
-      const row = document.createElement("div");
-      row.className = "parameter-row";
-      
-      // Create unique IDs for the inputs
-      const sliderId = `${this.id}-${this.name}-${paramName}-slider`;
-      const inputId = `${this.id}-${this.name}-${paramName}-input`;
-      
-      const label = document.createElement("label");
-      label.textContent = labelText;
-      label.htmlFor = sliderId;
-      
-      const slider = document.createElement("input");
-      slider.type = "range";
-      slider.min = min;
-      slider.max = max;
-      slider.step = step;
-      slider.value = value;
-      slider.id = sliderId;
-      slider.name = sliderId;
-      slider.autocomplete = "off";
-      
-      const numberInput = document.createElement("input");
-      numberInput.type = "number";
-      numberInput.min = min;
-      numberInput.max = max;
-      numberInput.step = step;
-      numberInput.value = value;
-      numberInput.id = inputId;
-      numberInput.name = inputId;
-      numberInput.autocomplete = "off";
-      
-      slider.addEventListener("input", e => {
-        onInput(parseFloat(e.target.value));
-        numberInput.value = e.target.value;
-      });
-      
-      numberInput.addEventListener("input", e => {
-        onInput(parseFloat(e.target.value) || 0);
-        slider.value = e.target.value;
-      });
-      
-      row.appendChild(label);
-      row.appendChild(slider);
-      row.appendChild(numberInput);
-      return row;
-    };
-
     // Helper to create a slope select box
     const createSlopeSelect = (current, onChange, paramName) => {
       const select = document.createElement("select");
@@ -324,21 +275,36 @@ class SubSynthPlugin extends PluginBase {
         select.appendChild(option);
       });
       
-      select.addEventListener("change", e => onChange(parseInt(e.target.value)));
+      // Use the instance canvas for drawing
+      select.addEventListener("change", e => {
+        onChange(parseInt(e.target.value));
+        if (this.canvas) this.drawGraph(this.canvas);
+      });
       return select;
     };
 
-    // Create parameter rows
-    const subLevelRow = createRow("Sub Level (%):", 0, 200, 1, this.sl, v => this.setSl(v), "sublevel");
-    const subLpfRow = createRow("Sub LPF (Hz):", 5, 400, 1, this.slf, v => this.setSlf(v), "sublpf");
+    // Create parameter rows using base helper
+    const subLevelRow = this.createParameterControl("Sub Level", 0, 200, 1, this.sl, v => this.setSl(v), '%');
+    const subLpfRow = this.createParameterControl("Sub LPF", 5, 400, 1, this.slf, v => {
+      this.setSlf(v);
+      if (this.canvas) this.drawGraph(this.canvas);
+    }, 'Hz');
     subLpfRow.appendChild(createSlopeSelect(this.sls, v => this.setSls(v), "sublpfslope"));
-    const subHpfRow = createRow("Sub HPF (Hz):", 5, 400, 1, this.shf, v => this.setShf(v), "subhpf");
+
+    const subHpfRow = this.createParameterControl("Sub HPF", 5, 400, 1, this.shf, v => {
+      this.setShf(v);
+      if (this.canvas) this.drawGraph(this.canvas);
+    }, 'Hz');
     subHpfRow.appendChild(createSlopeSelect(this.shs, v => this.setShs(v), "subhpfslope"));
-    const dryLevelRow = createRow("Dry Level (%):", 0, 200, 1, this.dl, v => this.setDl(v), "drylevel");
-    const dryHpfRow = createRow("Dry HPF (Hz):", 5, 400, 1, this.dhf, v => this.setDhf(v), "dryhpf");
+
+    const dryLevelRow = this.createParameterControl("Dry Level", 0, 200, 1, this.dl, v => this.setDl(v), '%');
+    const dryHpfRow = this.createParameterControl("Dry HPF", 5, 400, 1, this.dhf, v => {
+      this.setDhf(v);
+      if (this.canvas) this.drawGraph(this.canvas);
+    }, 'Hz');
     dryHpfRow.appendChild(createSlopeSelect(this.dhs, v => this.setDhs(v), "dryhpfslope"));
 
-    // Create graph container and canvas
+    // Create graph container and canvas (original position)
     const graphContainer = document.createElement("div");
     graphContainer.style.position = "relative";
     const canvas = document.createElement("canvas");
@@ -347,7 +313,7 @@ class SubSynthPlugin extends PluginBase {
     canvas.style.width = "600px";
     canvas.style.height = "240px";
     graphContainer.appendChild(canvas);
-    this.canvas = canvas;
+    this.canvas = canvas; // Store canvas reference on instance
 
     container.appendChild(subLevelRow);
     container.appendChild(subLpfRow);
@@ -355,7 +321,14 @@ class SubSynthPlugin extends PluginBase {
     container.appendChild(dryLevelRow);
     container.appendChild(dryHpfRow);
     container.appendChild(graphContainer);
-    this.drawGraph(canvas);
+
+    // Restore updateParameters override
+    this.updateParameters = () => {
+      super.updateParameters();
+      if (this.canvas) this.drawGraph(this.canvas);
+    };
+
+    this.drawGraph(canvas); // Initial draw
     return container;
   }
 

@@ -50,52 +50,13 @@ class VolumePlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // Volume slider
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = -60;
-        slider.max = 24;
-        slider.step = 0.1;
-        slider.value = this.vl;
-        slider.id = `${this.id}-${this.name}-slider`;
-        slider.name = `${this.id}-${this.name}-slider`;
-        slider.autocomplete = "off";
-        slider.addEventListener('input', (e) => {
-            this.setVl(parseFloat(e.target.value));
-            valueInput.value = e.target.value;
-        });
-
-        // Volume text input
-        const valueInput = document.createElement('input');
-        valueInput.type = 'number';
-        valueInput.min = -60;
-        valueInput.max = 24;
-        valueInput.step = 0.1;
-        valueInput.value = this.vl;
-        valueInput.id = `${this.id}-${this.name}-input`;
-        valueInput.name = `${this.id}-${this.name}-input`;
-        valueInput.autocomplete = "off";
-        valueInput.addEventListener('input', (e) => {
-            const parsedValue = parseFloat(e.target.value) || 0;
-            const value = parsedValue < -60 ? -60 : (parsedValue > 24 ? 24 : parsedValue);
-            this.setVl(value);
-            slider.value = value;
-            e.target.value = value;
-        });
-
-        // Label
-        const label = document.createElement('label');
-        label.textContent = 'Volume (dB):';
-        label.htmlFor = `${this.id}-${this.name}-slider`;
-
-        // Volume parameter row
-        const volumeRow = document.createElement('div');
-        volumeRow.className = 'parameter-row';
-        volumeRow.appendChild(label);
-        volumeRow.appendChild(slider);
-        volumeRow.appendChild(valueInput);
-        container.appendChild(volumeRow);
-
+        // Use helper to create volume control
+        const volumeControl = this.createParameterControl(
+            'Volume', -60, 24, 0.1, this.vl, 
+            (value) => this.setVl(value), 'dB'
+        );
+        container.appendChild(volumeControl);
+        
         return container;
     }
 }

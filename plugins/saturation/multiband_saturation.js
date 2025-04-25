@@ -572,16 +572,16 @@ class MultibandSaturationPlugin extends PluginBase {
         const freqContainer = document.createElement('div');
         freqContainer.className = 'mbs-freq-sliders';
 
-        const createFreqSlider = (label, min, max, value, setter, freqNum) => {
+        const createFreqSlider = (label, min, max, value, setter, freqNum, idPrefix = this.instanceId) => {
             const sliderContainer = document.createElement('div');
             sliderContainer.className = 'mbs-freq-slider';
 
             const topRow = document.createElement('div');
             topRow.className = 'mbs-freq-slider-top';
 
-            // Create unique IDs for the inputs
-            const sliderId = `${this.id}-${this.name}-freq${freqNum}-slider`;
-            const inputId = `${this.id}-${this.name}-freq${freqNum}-input`;
+            // Create unique IDs for the inputs using provided prefix
+            const sliderId = `${idPrefix}-freq${freqNum}-slider`;
+            const inputId = `${idPrefix}-freq${freqNum}-input`;
 
             const labelEl = document.createElement('label');
             labelEl.textContent = label;
@@ -627,8 +627,8 @@ class MultibandSaturationPlugin extends PluginBase {
             return sliderContainer;
         };
 
-        freqContainer.appendChild(createFreqSlider('Freq 1 (Hz)', 20, 2000, this.f1, this.setF1.bind(this), 1));
-        freqContainer.appendChild(createFreqSlider('Freq 2 (Hz)', 200, 20000, this.f2, this.setF2.bind(this), 2));
+        freqContainer.appendChild(createFreqSlider('Freq 1 (Hz)', 20, 2000, this.f1, this.setF1.bind(this), 1, this.instanceId));
+        freqContainer.appendChild(createFreqSlider('Freq 2 (Hz)', 200, 20000, this.f2, this.setF2.bind(this), 2, this.instanceId));
         container.appendChild(freqContainer);
 
         // Band settings UI
@@ -665,62 +665,42 @@ class MultibandSaturationPlugin extends PluginBase {
             content.className = `mbs-band-content plugin-parameter-ui ${i === 0 ? 'active' : ''}`;
             content.setAttribute('data-instance-id', this.instanceId);
 
-            const createControl = (label, min, max, step, value, setter, paramName) => {
-                const row = document.createElement('div');
-                row.className = 'parameter-row';
-                
-                // Create unique IDs for the inputs
-                const sliderId = `${this.id}-${this.name}-band${i}-${paramName}-slider`;
-                const inputId = `${this.id}-${this.name}-band${i}-${paramName}-input`;
-                
-                const labelEl = document.createElement('label');
-                labelEl.textContent = label;
-                labelEl.htmlFor = sliderId;
-                
-                const slider = document.createElement('input');
-                slider.type = 'range';
-                slider.min = min;
-                slider.max = max;
-                slider.step = step;
-                slider.value = value;
-                slider.id = sliderId;
-                slider.name = sliderId;
-                slider.autocomplete = "off";
-                
-                const numberInput = document.createElement('input');
-                numberInput.type = 'number';
-                numberInput.min = min;
-                numberInput.max = max;
-                numberInput.step = step;
-                numberInput.value = value;
-                numberInput.id = inputId;
-                numberInput.name = inputId;
-                numberInput.autocomplete = "off";
-                
-                slider.addEventListener('input', (e) => {
-                    setter(parseFloat(e.target.value));
-                    numberInput.value = e.target.value;
-                });
-                
-                numberInput.addEventListener('input', (e) => {
-                    const parsedValue = parseFloat(e.target.value) || 0;
-                    const val = parsedValue < min ? min : (parsedValue > max ? max : parsedValue);
-                    setter(val);
-                    slider.value = val;
-                    e.target.value = val;
-                });
-                
-                row.appendChild(labelEl);
-                row.appendChild(slider);
-                row.appendChild(numberInput);
-                return row;
-            };
-
             const band = this.bands[i];
-            content.appendChild(createControl('Drive:', 0, 10, 0.1, band.dr, this.setDr.bind(this), 'drive'));
-            content.appendChild(createControl('Bias:', -0.3, 0.3, 0.01, band.bs, this.setBs.bind(this), 'bias'));
-            content.appendChild(createControl('Mix (%):', 0, 100, 1, band.mx, this.setMx.bind(this), 'mix'));
-            content.appendChild(createControl('Gain (dB):', -18, 18, 0.1, band.gn, this.setGn.bind(this), 'gain'));
+            
+            // Create a wrapped version of createParameterControl that uses the bandIdPrefix
+            const createBandControl = (label, min, max, step, value, setter, unit = '') => {
+                // Temporarily store the original ID
+                const originalId = this.id;
+                
+                // Temporarily change ID to include band index for uniqueness
+                this.id = `${originalId}-band${i}`;
+                
+                // Create the control
+                const control = this.createParameterControl(label, min, max, step, value, setter, unit);
+                
+                // Restore the original ID
+                this.id = originalId;
+                
+                return control;
+            };
+            
+            content.appendChild(createBandControl('Drive', 0, 10, 0.1, band.dr,
+                 (v) => this.setDr(v), // Use bound setter directly
+                 '' // No unit for Drive
+            ));
+            content.appendChild(createBandControl('Bias', -0.3, 0.3, 0.01, band.bs,
+                (v) => this.setBs(v),
+                '' // No unit for Bias
+            ));
+            content.appendChild(createBandControl('Mix', 0, 100, 1, band.mx,
+                (v) => this.setMx(v),
+                '%'
+            ));
+            content.appendChild(createBandControl('Gain', -18, 18, 0.1, band.gn,
+                (v) => this.setGn(v),
+                'dB'
+            ));
+            
             bandContents.appendChild(content);
         }
 
