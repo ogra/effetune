@@ -107,6 +107,12 @@ class PluginProcessor extends AudioWorkletProcessor {
             } else if (pluginConfig.outputBus !== undefined) {
                 this.plugins[index].outputBus = pluginConfig.outputBus;
             }
+
+            if (pluginConfig.parameters && pluginConfig.parameters.channel !== undefined) {
+                this.plugins[index].channel = pluginConfig.parameters.channel;
+            } else if (pluginConfig.channel !== undefined) {
+                this.plugins[index].channel = pluginConfig.channel;
+            }
         }
     }
 
@@ -290,6 +296,12 @@ class PluginProcessor extends AudioWorkletProcessor {
             const inputBuffer = this.busBuffers.get(inputBus);
             // All used buses should already be initialized
             
+            // Check for channel-specific processing
+            const targetChannel = plugin.channel; // "L", "R", or undefined
+            let channelIndex = -1;
+            if (targetChannel === 'L') channelIndex = 0;
+            else if (targetChannel === 'R') channelIndex = 1;
+
             // Process the plugin with its input buffer
             const params = {
                 ...plugin.parameters,
@@ -301,31 +313,88 @@ class PluginProcessor extends AudioWorkletProcessor {
             
             // If input and output buses are different, make a copy of the input buffer
             // to prevent in-place modifications from affecting the input buffer
-            let processingBuffer = inputBuffer;
-            if (inputBus !== outputBus) {
-                processingBuffer = new Float32Array(inputBuffer.length);
-                processingBuffer.set(inputBuffer);
+            // Also, handle channel specific processing here
+            let processingBuffer;
+            let result;
+            const outputBuffer = this.busBuffers.get(outputBus); // Get output buffer early
+
+            if (channelIndex !== -1 && channelCount > channelIndex) {
+                // Channel specific processing
+                const singleChannelInput = new Float32Array(this.blockSize);
+                // Extract target channel
+                for (let i = 0; i < this.blockSize; i++) {
+                    singleChannelInput[i] = inputBuffer[channelIndex * this.blockSize + i];
+                }
+
+                // Create a copy for the processor function if input/output buses differ or if processing in place is not desired
+                // The processor function is expected to handle a single channel buffer now
+                processingBuffer = (inputBus !== outputBus) ? new Float32Array(singleChannelInput) : singleChannelInput;
+                const singleChannelParams = { ...params, channelCount: 1 }; // Indicate single channel processing
+
+                // Call the processor with single channel data
+                const singleChannelResult = processor.call(null, context, processingBuffer, singleChannelParams, time);
+
+                // Prepare the final result buffer (potentially multi-channel)
+                result = new Float32Array(inputBuffer.length); // Create a full buffer
+                result.set(inputBuffer); // Copy original input (pass-through)
+
+                // Write the processed channel back to the result buffer
+                if (singleChannelResult && singleChannelResult.length === this.blockSize) {
+                    for (let i = 0; i < this.blockSize; i++) {
+                        result[channelIndex * this.blockSize + i] = singleChannelResult[i];
+                    }
+                    // Copy measurements from single channel result to the main result
+                    if (singleChannelResult.measurements) {
+                        result.measurements = singleChannelResult.measurements;
+                    }
+                } else {
+                    console.warn(`Plugin ${plugin.id} (${plugin.type}) returned invalid result for channel ${targetChannel}`);
+                    // Keep original channel data if processing failed
+                }
+
+            } else {
+                // Process all channels (existing logic)
+                processingBuffer = (inputBus !== outputBus) ? new Float32Array(inputBuffer) : inputBuffer;
+                result = processor.call(null, context, processingBuffer, params, time);
             }
-            
-            const result = processor.call(null, context, processingBuffer, params, time);
+
             if (!result || result.length !== inputBuffer.length) {
-                continue; // Skip if result is invalid
+                // Post message only if measurements exist even if result is invalid? Seems unlikely.
+                // If measurements exist on invalid result, handle them before continuing.
+                if (result && result.measurements) {
+                    // Handle measurements even if buffer is invalid
+                    const currentTime = (this.currentFrame / sampleRate) * 1000;
+                     if (currentTime - this.lastMessageTime >= this.MESSAGE_INTERVAL) {
+                        for (const [pluginId, data] of this.messageQueue) {
+                            this.port.postMessage({ type: 'processBuffer', pluginId: pluginId, ...data });
+                        }
+                        this.messageQueue.clear();
+                        this.port.postMessage({ type: 'processBuffer', pluginId: plugin.id, measurements: result.measurements });
+                        this.lastMessageTime = currentTime;
+                    } else {
+                        this.messageQueue.set(plugin.id, { measurements: result.measurements });
+                    }
+                     result.measurements = null; // Prevent double processing
+                }
+                continue; // Skip applying result if invalid buffer length
             }
-            
+
+            // --- Apply result to outputBuffer ---
             // Get the output buffer - all used buses should already be initialized
-            const outputBuffer = this.busBuffers.get(outputBus);
-            
+            // Moved up: const outputBuffer = this.busBuffers.get(outputBus);
+
             // If input and output buses are the same,
             // overwrite the output buffer with the result
             if (inputBus === outputBus) {
                 outputBuffer.set(result);
             } else {
                 // Otherwise, add the result to the existing output buffer
+                // This handles send/return buses correctly
                 for (let i = 0; i < outputBuffer.length; i++) {
                     outputBuffer[i] += result[i];
                 }
             }
-            
+
             // Message sending control
             const currentTime = (this.currentFrame / sampleRate) * 1000; // ms
             if (result.measurements) {

@@ -129,7 +129,7 @@ export class UIManager {
                     throw new Error('Each plugin state must be an object');
                 }
 
-                const { nm: name, en: enabled, ib: inputBus, ob: outputBus, ...allParams } = serializedParams;
+                const { nm: name, en: enabled, ib: inputBus, ob: outputBus, ch: channel, ...allParams } = serializedParams;
 
                 // Validate plugin name
                 if (typeof name !== 'string' || name.trim() === '') {
@@ -163,6 +163,9 @@ export class UIManager {
                 }
                 if (outputBus !== undefined) {
                     result.outputBus = outputBus;
+                }
+                if (channel !== undefined) {
+                    result.channel = channel;
                 }
 
                 return result;

@@ -7,7 +7,6 @@ class TimeAlignmentPlugin extends PluginBase {
 
         // Initialize parameters
         this.dl = 0.00;  // dl: Delay (formerly delay) - 0 to 100 ms
-        this.ch = 'All'; // ch: Channel - 'All', 'Left', or 'Right'
 
         this.lastProcessTime = performance.now() / 1000;
 
@@ -28,71 +27,35 @@ class TimeAlignmentPlugin extends PluginBase {
             // Calculate delay in samples
             const delaySamples = Math.floor(parameters.dl * parameters.sampleRate / 1000);
 
-            // Process based on selected channel
-            const ch = parameters.ch;
-            if (ch === 'All') {
-                // Process all channels
-                for (let ch = 0; ch < parameters.channelCount; ch++) {
-                    const offset = ch * parameters.blockSize;
-                    const delayBuffer = context.delayBuffers[ch];
-                    let writeIndex = context.delayIndices[ch];
+            // Always process all channels
+            for (let ch = 0; ch < parameters.channelCount; ch++) {
+                const offset = ch * parameters.blockSize;
+                const delayBuffer = context.delayBuffers[ch];
+                let writeIndex = context.delayIndices[ch];
 
-                    if (delaySamples === 0) {
-                        // No delay: output current sample directly and update the delay buffer
-                        for (let i = 0; i < parameters.blockSize; i++) {
-                            const currentSample = data[offset + i];
-                            delayBuffer[writeIndex] = currentSample;
-                            writeIndex = (writeIndex + 1) % delayBuffer.length;
-                        }
-                    } else {
-                        // Compute readIndex offset by delaySamples
-                        let readIndex = (writeIndex + delayBuffer.length - delaySamples) % delayBuffer.length;
-                        for (let i = 0; i < parameters.blockSize; i++) {
-                            const currentSample = data[offset + i];
-                            // Output the delayed sample from the buffer
-                            data[offset + i] = delayBuffer[readIndex];
-                            // Write current sample into the delay buffer
-                            delayBuffer[writeIndex] = currentSample;
-                            // Increment indices in circular buffer
-                            writeIndex = (writeIndex + 1) % delayBuffer.length;
-                            readIndex = (readIndex + 1) % delayBuffer.length;
-                        }
+                if (delaySamples === 0) {
+                    // No delay: output current sample directly and update the delay buffer
+                    for (let i = 0; i < parameters.blockSize; i++) {
+                        const currentSample = data[offset + i];
+                        delayBuffer[writeIndex] = currentSample;
+                        writeIndex = (writeIndex + 1) % delayBuffer.length;
                     }
-                    // Save updated write index for next block processing
-                    context.delayIndices[ch] = writeIndex;
-                }
-            } else {
-                // Process only selected channel (Left = 0, Right = 1)
-                const targetCh = ch === 'Left' ? 0 : 1;
-                if (targetCh < parameters.channelCount) {
-                    const offset = targetCh * parameters.blockSize;
-                    const delayBuffer = context.delayBuffers[targetCh];
-                    let writeIndex = context.delayIndices[targetCh];
-
-                    if (delaySamples === 0) {
-                        // No delay: output current sample directly and update the delay buffer
-                        for (let i = 0; i < parameters.blockSize; i++) {
-                            const currentSample = data[offset + i];
-                            delayBuffer[writeIndex] = currentSample;
-                            writeIndex = (writeIndex + 1) % delayBuffer.length;
-                        }
-                    } else {
-                        // Compute readIndex offset by delaySamples
-                        let readIndex = (writeIndex + delayBuffer.length - delaySamples) % delayBuffer.length;
-                        for (let i = 0; i < parameters.blockSize; i++) {
-                            const currentSample = data[offset + i];
-                            // Output the delayed sample from the buffer
-                            data[offset + i] = delayBuffer[readIndex];
-                            // Write current sample into the delay buffer
-                            delayBuffer[writeIndex] = currentSample;
-                            // Increment indices in circular buffer
-                            writeIndex = (writeIndex + 1) % delayBuffer.length;
-                            readIndex = (readIndex + 1) % delayBuffer.length;
-                        }
+                } else {
+                    // Compute readIndex offset by delaySamples
+                    let readIndex = (writeIndex + delayBuffer.length - delaySamples) % delayBuffer.length;
+                    for (let i = 0; i < parameters.blockSize; i++) {
+                        const currentSample = data[offset + i];
+                        // Output the delayed sample from the buffer
+                        data[offset + i] = delayBuffer[readIndex];
+                        // Write current sample into the delay buffer
+                        delayBuffer[writeIndex] = currentSample;
+                        // Increment indices in circular buffer
+                        writeIndex = (writeIndex + 1) % delayBuffer.length;
+                        readIndex = (readIndex + 1) % delayBuffer.length;
                     }
-                    // Save updated write index for next block processing
-                    context.delayIndices[targetCh] = writeIndex;
                 }
+                // Save updated write index for next block processing
+                context.delayIndices[ch] = writeIndex;
             }
 
             return data;
@@ -111,7 +74,6 @@ class TimeAlignmentPlugin extends PluginBase {
         // Map shortened parameter names to their original names for clarity
         const { 
             dl: delay,  // dl: Delay (formerly delay)
-            ch: channel // ch: Channel
         } = params;
 
         // Update delay parameter with type checking
@@ -122,13 +84,6 @@ class TimeAlignmentPlugin extends PluginBase {
             }
         }
 
-        // Update channel parameter
-        if (channel !== undefined) {
-            if (['All', 'Left', 'Right'].includes(channel)) {
-                this.ch = channel;
-            }
-        }
-
         if (params.enabled !== undefined) this.enabled = params.enabled;
 
         this.updateParameters();
@@ -136,13 +91,11 @@ class TimeAlignmentPlugin extends PluginBase {
 
     // Parameter setters
     setDelay(value) { this.setParameters({ dl: value }); }
-    setChannel(value) { this.setParameters({ ch: value }); }
 
     getParameters() {
         return {
             type: this.constructor.name,
             dl: this.dl,
-            ch: this.ch,
             enabled: this.enabled
         };
     }
@@ -150,39 +103,6 @@ class TimeAlignmentPlugin extends PluginBase {
     createUI() {
         const container = document.createElement('div');
         container.className = 'time-alignment-plugin-ui plugin-parameter-ui';
-
-        // Channel selector row
-        const channelRow = document.createElement('div');
-        channelRow.className = 'parameter-row';
-        const channelLabel = document.createElement('label');
-        channelLabel.textContent = 'Channel:';
-        channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`;
-        channelRow.appendChild(channelLabel);
-
-        const channelContainer = document.createElement('div');
-        channelContainer.className = 'radio-group';
-        const channels = ['All', 'Left', 'Right'];
-        channels.forEach(ch => {
-            const label = document.createElement('label');
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = `${this.id}-${this.name}-channel-${ch}`;
-            radio.name = `${this.id}-${this.name}-channel`;
-            radio.value = ch;
-            radio.checked = this.ch === ch;
-            radio.autocomplete = "off";
-            radio.addEventListener('change', () => {
-                if (radio.checked) {
-                    this.setChannel(radio.value);
-                }
-            });
-            label.htmlFor = `${this.id}-${this.name}-channel-${ch}`;
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(ch));
-            channelContainer.appendChild(label);
-        });
-        channelRow.appendChild(channelContainer);
-        container.appendChild(channelRow);
 
         // Use helper to create delay control
         const delayControl = this.createParameterControl(

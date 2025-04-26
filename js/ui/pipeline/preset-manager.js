@@ -242,6 +242,7 @@ export class PresetManager {
                         en: pluginState.enabled,
                         ...(pluginState.inputBus !== undefined && { ib: pluginState.inputBus }),
                         ...(pluginState.outputBus !== undefined && { ob: pluginState.outputBus }),
+                        ...(pluginState.channel !== undefined && { ch: pluginState.channel }),
                         ...pluginState.parameters
                     };
                     

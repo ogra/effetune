@@ -1,9 +1,9 @@
 class LevelMeterPlugin extends PluginBase {
     constructor() {
         super('Level Meter', 'Displays audio level with peak hold');
-        this.lv = new Array(2).fill(-144);     // lv: Levels (formerly levels) - Range: -144 to 0 dB
-        this.pl = new Array(2).fill(-144);     // pl: Peak Levels (formerly peakLevels) - Range: -144 to 0 dB
-        this.ph = new Array(2).fill(0);       // ph: Peak Hold Times (formerly peakHoldTimes)
+        this.lv = [];     // lv: Levels (formerly levels) - Range: -144 to 0 dB
+        this.pl = [];     // pl: Peak Levels (formerly peakLevels) - Range: -144 to 0 dB
+        this.ph = [];       // ph: Peak Hold Times (formerly peakHoldTimes)
         this.ol = false;                      // ol: Overload (formerly overload)
         this.ot = 0;                          // ot: Overload Time (formerly overloadTime)
         this.OVERLOAD_DISPLAY_TIME = 5.0; // seconds
@@ -121,8 +121,21 @@ class LevelMeterPlugin extends PluginBase {
         const deltaTime = time - this.lastProcessTime;
         this.lastProcessTime = time;
 
+        // Check and resize arrays if channel count changed
+        const numChannels = message.measurements.channels.length;
+        if (numChannels !== this.lv.length) {
+            this.lv = new Array(numChannels).fill(-144);
+            this.pl = new Array(numChannels).fill(-144);
+            this.ph = new Array(numChannels).fill(0);
+            // Reset overload state if channel count changes, although it might not be strictly necessary
+            this.ol = false;
+            this.ot = 0;
+            // Trigger UI redraw or parameter update if needed after resize
+            this.updateParameters(); // Or potentially redraw UI if layout changes significantly
+        }
+
         // Process each channel
-        for (let ch = 0; ch < message.measurements.channels.length; ch++) {
+        for (let ch = 0; ch < numChannels; ch++) {
             const channelPeak = message.measurements.channels[ch].peak;
             const dbLevel = this.amplitudeToDB(channelPeak);
             
@@ -293,13 +306,15 @@ class LevelMeterPlugin extends PluginBase {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-        // Skip drawing if disabled
-        if (!this.enabled) return;
+        // Skip drawing if disabled or no channels yet
+        if (!this.enabled || this.lv.length === 0) return;
 
         // Draw each channel
-        for (let channel = 0; channel < this.lv.length; channel++) {
-            const y = channel * (this.canvasHeight / 2);
-            const channelHeight = (this.canvasHeight / 2) - 2;
+        const numDrawableChannels = this.lv.length; // Use the actual number of channels
+        const channelHeight = numDrawableChannels > 0 ? (this.canvasHeight / numDrawableChannels) - (numDrawableChannels > 1 ? 2 : 0) : 0; // Calculate height per channel, add padding if more than one channel
+
+        for (let channel = 0; channel < numDrawableChannels; channel++) {
+            const y = channel * (this.canvasHeight / numDrawableChannels); // Calculate y position based on number of channels
 
             // Create gradient for this channel
             const gradient = ctx.createLinearGradient(0, y, this.canvasWidth, y);
@@ -329,7 +344,8 @@ class LevelMeterPlugin extends PluginBase {
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
             const peakText = peakLevel.toFixed(1) + ' dB';
-            ctx.fillText(peakText, this.canvasWidth - 10, y + channelHeight/2 + 2);
+            // Adjust text position based on channel height
+            ctx.fillText(peakText, this.canvasWidth - 10, y + channelHeight / 2 + (numDrawableChannels === 1 ? 0 : 1));
         }
 
         // Update overload indicator

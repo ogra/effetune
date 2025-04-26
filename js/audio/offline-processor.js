@@ -110,9 +110,11 @@ export class OfflineProcessor {
                     
                     const inputBus = plugin.getParameters().inputBus || plugin.inputBus || 0;
                     const outputBus = plugin.getParameters().outputBus || plugin.outputBus || 0;
-                    
+                    const channel = plugin.getParameters().channel || plugin.channel || null;
+
                     usedBuses.add(inputBus);
                     usedBuses.add(outputBus);
+                    usedBuses.add(channel);
                 }
                 
                 // Initialize Main bus (index 0) with input data
@@ -158,44 +160,94 @@ export class OfflineProcessor {
                     // Determine input and output buses
                     const inputBus = parameters.inputBus || plugin.inputBus || 0; // Default to Main bus (index 0)
                     const outputBus = parameters.outputBus || plugin.outputBus || 0; // Default to Main bus (index 0)
-                    
+                    const channel = parameters.channel || plugin.channel || null;
+
                     // Get the input buffer for this plugin
                     const inputBuffer = busBuffers.get(inputBus);
                     // All used buses should already be initialized
+
+                    // Check for channel-specific processing
+                    const targetChannel = plugin.channel; // "L", "R", or undefined
+                    let channelIndex = -1;
+                    if (targetChannel === 'L') channelIndex = 0;
+                    else if (targetChannel === 'R') channelIndex = 1;
 
                     try {
                         const pluginContext = createContext(plugin.id);
                         pluginContext.currentTime = offset / sampleRate;
 
                         if (!(inputBuffer instanceof Float32Array)) {
+                            // This should not happen if initialization is correct, but adding a safeguard.
+                            console.warn('Offline Processor: Input buffer was not Float32Array, converting.');
                             inputBuffer = new Float32Array(inputBuffer);
                         }
-                        
-                        // If input and output buses are different, make a copy of the input buffer
-                        // to prevent in-place modifications from affecting the input buffer
-                        let processingBuffer = inputBuffer;
-                        if (inputBus !== outputBus) {
-                            processingBuffer = new Float32Array(inputBuffer.length);
-                            processingBuffer.set(inputBuffer);
+
+                        // Handle channel specific processing
+                        let processingBuffer;
+                        let result;
+
+                        if (channelIndex !== -1 && numberOfChannels > channelIndex) {
+                            // Channel specific processing
+                            const singleChannelInput = new Float32Array(blockSize);
+                            // Extract target channel from interleaved inputBuffer
+                            for (let i = 0; i < blockSize; i++) {
+                                singleChannelInput[i] = inputBuffer[channelIndex * blockSize + i];
+                            }
+
+                            // Create a copy for the processor function if input/output buses differ
+                            processingBuffer = (inputBus !== outputBus) ? new Float32Array(singleChannelInput) : singleChannelInput;
+                            const singleChannelParams = { ...parameters, channelCount: 1 }; // Set channelCount to 1
+
+                            // Call the processor with single channel data
+                            const singleChannelResult = plugin.executeProcessor(
+                                pluginContext,
+                                processingBuffer, // single channel buffer
+                                singleChannelParams,
+                                pluginContext.currentTime
+                            );
+
+                            // Prepare the final result buffer (potentially multi-channel)
+                            result = new Float32Array(inputBuffer.length); // Create a full buffer
+                            result.set(inputBuffer); // Copy original input (pass-through)
+
+                            // Write the processed channel back to the interleaved result buffer
+                            if (singleChannelResult && singleChannelResult.length === blockSize) {
+                                for (let i = 0; i < blockSize; i++) {
+                                    result[channelIndex * blockSize + i] = singleChannelResult[i];
+                                }
+                            } else {
+                                console.warn(`Offline Plugin ${plugin.id} (${plugin.constructor.name}) returned invalid result for channel ${targetChannel}`);
+                                // Keep original channel data if processing failed
+                            }
+
+                        } else {
+                            // Process all channels (existing logic)
+                            processingBuffer = (inputBus !== outputBus) ? new Float32Array(inputBuffer) : inputBuffer;
+                            result = plugin.executeProcessor(
+                                pluginContext,
+                                processingBuffer, // multi-channel interleaved buffer
+                                parameters, // original parameters with correct channelCount
+                                pluginContext.currentTime
+                            );
                         }
-                        
-                        const result = plugin.executeProcessor(
-                            pluginContext,
-                            processingBuffer,
-                            parameters,
-                            pluginContext.currentTime
-                        );
 
                         if (!result || !(result instanceof Float32Array) || result.length !== blockSize * numberOfChannels) {
-                            throw new Error('Invalid plugin output');
+                            // Use original parameters.channelCount here as result.length is based on it
+                            throw new Error(`Invalid plugin output for plugin ${plugin.id}. Expected length ${blockSize * parameters.channelCount}, got ${result ? result.length : 'null'}`);
                         }
-                        
+
+                        // --- Apply result to outputBuffer ---
                         // Get the output buffer - all used buses should already be initialized
-                        const outputBuffer = busBuffers.get(outputBus);
-                        
+                        let outputBuffer = busBuffers.get(outputBus);
+                        if (!outputBuffer) {
+                            // Initialize buffer for this bus if it doesn't exist
+                            outputBuffer = new Float32Array(blockSize * numberOfChannels);
+                            busBuffers.set(outputBus, outputBuffer);
+                        }
+
                         // If input and output buses are the same, or this is a new output bus,
                         // overwrite the output buffer with the result
-                        if (inputBus === outputBus || outputBuffer.every(sample => sample === 0)) {
+                        if (inputBus === outputBus || outputBuffer.every(sample => sample === 0)) { // Check if buffer is empty/new before deciding to overwrite
                             outputBuffer.set(result);
                         } else {
                             // Otherwise, add the result to the existing output buffer

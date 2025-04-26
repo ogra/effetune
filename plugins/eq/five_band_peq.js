@@ -250,17 +250,9 @@ class FiveBandPEQPlugin extends PluginBase {
   
   // --- Audio Processing ---
   
-  const targetChannelSetting = parameters.ch;
-  const processAllChannels = targetChannelSetting === 'All';
-  // Determine target channel index (0 for Left, 1 for Right, -1 for All)
-  const targetChannel = processAllChannels ? -1 : (targetChannelSetting === 'Left' ? 0 : 1);
-  
-  // Determine channel loop bounds based on setting and actual channel count
-  const startCh = processAllChannels ? 0 : (targetChannel < channelCount ? targetChannel : channelCount); // Don't process non-existent channels
-  const endCh = processAllChannels ? channelCount : startCh + 1;
-  
-  // Process audio block channel by channel
-  for (let ch = startCh; ch < endCh; ch++) {
+  // Loop through each channel
+  for (let ch = 0; ch < channelCount; ch++) {
+      // --- Process Samples Block for the Current Channel ---
       const offset = ch * blockSize; // Starting index for this channel's data in the buffer
   
       // Apply each filter band sequentially to the current channel's data
@@ -308,7 +300,6 @@ class FiveBandPEQPlugin extends PluginBase {
           // Store the final state values for this channel back into the context arrays
           state_x1[ch] = x1; state_x2[ch] = x2;
           state_y1[ch] = y1; state_y2[ch] = y2;
-  
       } // End loop over bands
   } // End loop over channels
   
@@ -388,33 +379,20 @@ class FiveBandPEQPlugin extends PluginBase {
     }
   }
 
-  // Set channel
-  setChannel(value) {
-    if (['All', 'Left', 'Right'].includes(value)) {
-      this.ch = value;
-      this.updateParameters();
-    }
-  }
-
   // Reset all bands to initial values
   reset() {
-    for (let i = 0; i < 5; i++) {
-      this['f' + i] = FiveBandPEQPlugin.BANDS[i].freq;
-      this['g' + i] = 0;
-      this['q' + i] = 1.0;
-      this['t' + i] = 'pk';
-      this['e' + i] = true;
-    }
-    this.setChannel('All');
+    this.bands.forEach((band, index) => {
+      this.setBand(index, FiveBandPEQPlugin.BANDS[index].freq, 0.0, 1.41, 'pk', true);
+    });
+    this.enabled = true;
     this.updateParameters();
+    this.setUIValues();
   }
 
   getParameters() {
       const params = {
           type: this.constructor.name,
           enabled: this.enabled,
-          ch: this.ch,
-          sampleRate: this._sampleRate
       };
       for (let i = 0; i < 5; i++) {
           params['f' + i] = this['f' + i];
@@ -434,7 +412,6 @@ class FiveBandPEQPlugin extends PluginBase {
           this._sampleRate = params.sampleRate;
           shouldUpdateResponse = true;
       }
-      if (params.ch !== undefined) this.setChannel(params.ch);
       for (let i = 0; i < 5; i++) {
           if (params['f' + i] !== undefined) {
               this['f' + i] = params['f' + i];
@@ -472,42 +449,6 @@ class FiveBandPEQPlugin extends PluginBase {
   createUI() {
     const container = document.createElement('div');
     container.className = 'five-band-peq-plugin-ui plugin-parameter-ui';
-
-    // Channel selector row
-    const channelRow = document.createElement('div');
-    channelRow.className = 'parameter-row';
-    
-    const channelLabel = document.createElement('label');
-    channelLabel.textContent = 'Channel:';
-    channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`; // Associate with the first radio button
-    
-    const channels = ['All', 'Left', 'Right'];
-    const channelRadios = channels.map(ch => {
-      const label = document.createElement('label');
-      label.className = 'five-band-peq-radio-label';
-      
-      const radio = document.createElement('input');
-      radio.type = 'radio';
-      radio.id = `${this.id}-${this.name}-channel-${ch}`;
-      radio.name = `${this.id}-${this.name}-channel`;
-      radio.value = ch;
-      radio.checked = ch === this.ch;
-      radio.autocomplete = "off";
-      
-      radio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          this.setChannel(e.target.value);
-        }
-      });
-      
-      label.htmlFor = radio.id;
-      label.appendChild(radio);
-      label.appendChild(document.createTextNode(ch));
-      return label;
-    });
-
-    channelRow.appendChild(channelLabel);
-    channelRadios.forEach(radio => channelRow.appendChild(radio));
 
     // Graph container
     const graphContainer = document.createElement('div');
@@ -816,7 +757,6 @@ class FiveBandPEQPlugin extends PluginBase {
       controlsContainer.appendChild(bandControls);
     }
 
-    container.appendChild(channelRow);
     container.appendChild(graphContainer);
     container.appendChild(controlsContainer);
 

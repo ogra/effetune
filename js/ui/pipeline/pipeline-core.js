@@ -124,12 +124,21 @@ export class PipelineCore {
         header.appendChild(name);
 
         // Display bus routing info if set
-        if (plugin.inputBus !== null || plugin.outputBus !== null) {
+        if (plugin.inputBus !== null || plugin.outputBus !== null || plugin.channel !== null) {
             const busInfo = document.createElement('div');
             busInfo.className = 'bus-info';
-            const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
-            const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
-            busInfo.textContent = `${inputBusName}→${outputBusName}`;
+            if (plugin.inputBus !== null || plugin.outputBus !== null) {
+                const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
+                const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
+                busInfo.textContent = `${inputBusName}→${outputBusName}`;
+            }
+            if (plugin.channel !== null) {
+                const channelName = plugin.channel == 'L' ? 'Left' : 'Right';
+                if (busInfo.textContent != '') {
+                    busInfo.textContent += ' ';
+                }
+                busInfo.textContent += `${channelName}`;
+            }
             busInfo.title = 'Click to configure bus routing';
             busInfo.style.cursor = 'pointer';
             
@@ -322,7 +331,8 @@ export class PipelineCore {
                             enabled: this.enabled,
                             parameters: parameters,
                             inputBus: this.inputBus,
-                            outputBus: this.outputBus
+                            outputBus: this.outputBus,
+                            channel: this.channel
                         }
                     });
                 }
@@ -729,7 +739,8 @@ export class PipelineCore {
                         enabled: plugin.enabled,
                         parameters: parameters,
                         inputBus: plugin.inputBus,
-                        outputBus: plugin.outputBus
+                        outputBus: plugin.outputBus,
+                        channel: plugin.channel
                     };
                 });
                 
@@ -770,7 +781,8 @@ export class PipelineCore {
                     enabled: plugin.enabled,
                     parameters: parameters,
                     inputBus: plugin.inputBus,
-                    outputBus: plugin.outputBus
+                    outputBus: plugin.outputBus,
+                    channel: plugin.channel
                 };
             });
             
@@ -799,7 +811,8 @@ export class PipelineCore {
                     enabled: plugin.enabled,
                     parameters: parameters,
                     inputBus: plugin.inputBus,
-                    outputBus: plugin.outputBus
+                    outputBus: plugin.outputBus,
+                    channel: plugin.channel
                 }
             });
         }
@@ -835,6 +848,39 @@ export class PipelineCore {
         header.appendChild(closeBtn);
         dialog.appendChild(header);
         
+        // Create channel selector
+        const channelContainer = document.createElement('div');
+        channelContainer.className = 'routing-dialog-row';
+
+        const channelLabel = document.createElement('label');
+        channelLabel.textContent = window.uiManager.t('ui.channel'); // Add translation key 'ui.channel'
+        channelContainer.appendChild(channelLabel);
+
+        const channelSelect = document.createElement('select');
+        const channelOptions = ['All', 'Left', 'Right'];
+        const channelValues = ['All', 'L', 'R']; // Use 'L' and 'R' internally
+
+        channelOptions.forEach((optionText, index) => {
+            const option = document.createElement('option');
+            option.value = channelValues[index]; // Value is 'All', 'L', 'R'
+            option.textContent = optionText;
+            // Compare plugin.channel (null, 'L', 'R') with option value ('All', 'L', 'R')
+            const currentChannelValue = plugin.channel === null ? 'All' : plugin.channel;
+            option.selected = currentChannelValue === channelValues[index];
+            channelSelect.appendChild(option);
+        });
+
+        channelSelect.onchange = () => {
+            const value = channelSelect.value; // 'All', 'L', or 'R'
+            // Store null for 'All', 'L' or 'R' otherwise
+            plugin.channel = value === 'All' ? null : value;
+            plugin.updateParameters(); 
+            // this.updateBusInfo(plugin); // No UI update needed for channel change
+        };
+
+        channelContainer.appendChild(channelSelect);
+        dialog.appendChild(channelContainer);
+
         // Create input bus selector
         const inputBusContainer = document.createElement('div');
         inputBusContainer.className = 'routing-dialog-row';
@@ -931,11 +977,8 @@ export class PipelineCore {
      * @param {Object} plugin - The plugin to update bus info for
      */
     updateBusInfo(plugin) {
-        // Find the plugin's pipeline item
-        const index = this.audioManager.pipeline.indexOf(plugin);
-        if (index === -1) return;
-        
-        const pipelineItem = this.pipelineList.children[index];
+        // Find the plugin's pipeline item using its data-plugin-id
+        const pipelineItem = this.pipelineList.querySelector(`.pipeline-item[data-plugin-id='${plugin.id}']`);
         if (!pipelineItem) return;
         
         // Find or create the bus info element

@@ -115,13 +115,9 @@ if (needsInit) {
 }
 
 // --- Audio Processing ---
-const targetChannelSetting = parameters.ch;
-const processAllChannels = targetChannelSetting === 'All';
 // Determine start and end channels for processing loop
-const targetChannel = processAllChannels ? -1 : (targetChannelSetting === 'Left' ? 0 : 1);
-const startCh = processAllChannels ? 0 : (targetChannel < channelCount ? targetChannel : channelCount);
-// Ensure endCh does not exceed channelCount
-const endCh = processAllChannels ? channelCount : Math.min(startCh + 1, channelCount);
+const startCh = 0; // Always start from channel 0
+const endCh = channelCount; // Process all available channels
 
 // Get filter coefficients and state (already cached in context)
 const lcf = context.lowShelfCoefs;
@@ -182,7 +178,6 @@ return data; // Return the modified buffer
         // Initialize parameters
         this.f0 = 6.91;  // Default pivot frequency exponent (exp(6.91) ≈ 1/002kHz)
         this.sl = 0.0;  // Default slope (0 dB/oct)
-        this.ch = 'All'; // Default channel
 
         // Register processor function
         this.registerProcessor(TiltEQPlugin.processorFunction);
@@ -204,19 +199,10 @@ return data; // Return the modified buffer
         }
     }
 
-    // Set channel
-    setChannel(value) {
-        if (['All', 'Left', 'Right'].includes(value)) {
-            this.ch = value;
-            this.updateParameters();
-        }
-    }
-
     // Reset to default values
     reset() {
         this.setPivotFreq(6.0);
         this.setSlope(0.0);
-        this.setChannel('All');
     }
 
     getParameters() {
@@ -224,8 +210,7 @@ return data; // Return the modified buffer
             type: this.constructor.name,
             enabled: this.enabled,
             f0: this.f0,
-            sl: this.sl,
-            ch: this.ch
+            sl: this.sl
         };
     }
 
@@ -242,46 +227,12 @@ return data; // Return the modified buffer
             this.setSlope(params.sl);
         }
 
-        if (params.ch !== undefined) {
-            this.setChannel(params.ch);
-        }
-
         this.updateParameters();
     }
 
     createUI() {
         const container = document.createElement('div');
         container.className = 'tilt-eq-plugin-ui plugin-parameter-ui';
-
-        // Channel selector row - Unchanged
-        const channelRow = document.createElement('div');
-        channelRow.className = 'parameter-row';
-        const channelLabel = document.createElement('label');
-        channelLabel.textContent = 'Channel:';
-        channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`;
-        const channels = ['All', 'Left', 'Right'];
-        const channelRadios = channels.map(ch => {
-            const label = document.createElement('label');
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = `${this.id}-${this.name}-channel-${ch}`;
-            radio.name = `${this.id}-${this.name}-channel`;
-            radio.value = ch;
-            radio.checked = ch === this.ch;
-            radio.autocomplete = "off";
-            radio.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.setChannel(e.target.value);
-                }
-            });
-            label.htmlFor = radio.id;
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(ch));
-            return label;
-        });
-        channelRow.appendChild(channelLabel);
-        channelRadios.forEach(radio => channelRow.appendChild(radio));
-        container.appendChild(channelRow);
 
         // Parameter controls container - Keep original structure
         const controlsContainer = document.createElement('div');
@@ -397,11 +348,6 @@ return data; // Return the modified buffer
                 slopeElements[1].value = this.sl; // Number input
             }
 
-            // Update Channel selector (unchanged)
-            channelRadios.forEach(label => {
-                const radio = label.querySelector('input');
-                radio.checked = radio.value === 'All';
-            });
             this.drawGraph(canvas);
         });
         graphContainer.appendChild(resetButton);

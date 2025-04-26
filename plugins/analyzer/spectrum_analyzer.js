@@ -5,7 +5,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         // Initialize parameters
         this.dr = -96;
         this.pt = 12;
-        this.ch = 'All';
         const fftSize = 1 << this.pt; // Using bit shift for power of 2
         this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
         this.peaks = new Float32Array(fftSize >> 1).fill(-144);
@@ -41,41 +40,45 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const result = new Float32Array(data.length);
         result.set(data);
 
-        const { channelCount, blockSize, pt, ch } = parameters;
+        const { channelCount, blockSize, pt } = parameters; // Removed ch
         const fftSize = 1 << pt; // Using bit shift for power of 2
         
-        // Initialize context if needed
-        if (!context.initialized || context.fftSize !== fftSize || context.buffer?.length !== channelCount) {
+        // Initialize context if needed - Modified for single average buffer
+        if (!context.initialized || context.fftSize !== fftSize || !context.buffer) { // Check if buffer exists
             // Clean up old buffers if they exist
-            if (context.buffer) {
-                context.buffer.forEach(buffer => buffer.fill(0));
-            }
+            // if (context.buffer) { // No need to iterate if only one buffer
+            //     context.buffer.forEach(buffer => buffer.fill(0));
+            // }
             
-            // Create new buffers
-            context.buffer = new Array(channelCount);
-            for (let i = 0; i < channelCount; i++) {
-                context.buffer[i] = new Float32Array(fftSize);
-            }
+            // Create a single buffer for the average
+            // context.buffer = new Array(channelCount); // Original
+            context.buffer = [new Float32Array(fftSize)]; // Single buffer in an array
+            // for (let i = 0; i < channelCount; i++) { // Original
+            //     context.buffer[i] = new Float32Array(fftSize); // Original
+            // } // Original
             context.bufferPosition = 0;
             context.fftSize = fftSize;
             context.initialized = true;
         }
 
-        // Process input data for UI updates
-        for (let chIndex = 0; chIndex < channelCount; chIndex++) {
-            const offset = chIndex * blockSize;
-            let bufferPosition = context.bufferPosition;
-            for (let i = 0; i < blockSize; i++) {
-                context.buffer[chIndex][bufferPosition] = data[offset + i];
-                bufferPosition = (bufferPosition + 1) & (fftSize - 1);
-            }
+        // --- Process input data: Calculate average and write to single buffer ---
+        const averageBuffer = context.buffer[0]; // Target the single buffer
+        let bufferPosition = context.bufferPosition;
+        for (let i = 0; i < blockSize; i++) {
+            const leftSample = data[i] || 0; // Get Left sample (or 0 if undefined)
+            const rightSample = channelCount > 1 ? data[blockSize + i] : leftSample; // Get Right sample (or use Left if mono)
+            const averageSample = (leftSample + rightSample) * 0.5; // Calculate arithmetic average
+            averageBuffer[bufferPosition] = averageSample; // Write average to buffer[0]
+            bufferPosition = (bufferPosition + 1) & (fftSize - 1);
         }
-        context.bufferPosition = (context.bufferPosition + blockSize) & (fftSize - 1);
+        context.bufferPosition = bufferPosition; // Update position
 
         // Send buffer to UI every half FFT size
         if (context.bufferPosition % (fftSize / 2) === 0) {
             result.measurements = {
-                buffer: context.buffer.map(buf => Float32Array.from(buf)),
+                // Send only the average buffer inside an array
+                // buffer: context.buffer.map(buf => Float32Array.from(buf)), // Original
+                buffer: [Float32Array.from(context.buffer[0])], // Send copy of average buffer in array
                 bufferPosition: context.bufferPosition,
                 time: time,
                 sampleRate: sampleRate
@@ -170,18 +173,10 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.updateParameters();
     }
 
-    setChannel(value) {
-        if (['All', 'Left', 'Right'].includes(value)) {
-            this.ch = value;
-            this.updateParameters();
-        }
-    }
-
     // Reset parameters
     reset() {
         this.setDBRange(-96);
         this.setPoints(12);
-        this.setChannel('All');
     }
 
     getParameters() {
@@ -189,8 +184,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             type: this.constructor.name,
             enabled: this.enabled,
             dr: this.dr,
-            pt: this.pt,
-            ch: this.ch
+            pt: this.pt
         };
     }
 
@@ -199,7 +193,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         if (params.enabled !== undefined) this.enabled = params.enabled;
         if (params.dr !== undefined) this.setDBRange(params.dr);
         if (params.pt !== undefined) this.setPoints(params.pt);
-        if (params.ch !== undefined) this.setChannel(params.ch);
 
         // Always update parameters after all changes
         this.updateParameters();
@@ -224,25 +217,23 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const fftSize = 1 << this.pt;
         const halfFft = fftSize >> 1;
         const bufferPosition = message.measurements.bufferPosition;
-        const [bufferL, bufferR] = message.measurements.buffer;
+        // --- Modify buffer retrieval to get the single average buffer ---
+        // const [bufferL, bufferR] = message.measurements.buffer; // Original
+        const [averageBuffer] = message.measurements.buffer; // Get the single average buffer
 
-        if (fftSize != bufferL.length) return audioBuffer;
+        // --- Check if averageBuffer exists and size matches fftSize ---
+        if (!averageBuffer || fftSize !== averageBuffer.length) return audioBuffer;
 
         // Reset FFT buffers
         this.imag.fill(0);
 
-        // Copy and window the time domain data
+        // Copy and window the time domain data from the average buffer
         let pos = bufferPosition % fftSize;
         for (let i = 0; i < fftSize; i++) {
-            let sample = 0;
-            if (this.ch === 'All') {
-                sample = (bufferL[pos] + bufferR[pos]) / Math.SQRT2;
-            } else if (this.ch === 'Left') {
-                sample = bufferL[pos];
-            } else {
-                sample = bufferR[pos];
-            }
-            this.real[i] = sample * this.window[i];
+            // --- Use averageBuffer directly --- 
+            // let sample = (bufferL[pos] + bufferR[pos]) * 0.7071067811865476; // Original - Power Average
+            let sample = averageBuffer[pos]; // Use the average sample directly
+            this.real[i] = sample * this.window[i]; // Apply window
             pos++;
             if (pos >= fftSize) pos = 0;
         }
@@ -345,44 +336,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         pointsRow.appendChild(pointsSlider);
         pointsRow.appendChild(pointsValue);
 
-        // Channel parameter row
-        const channelRow = document.createElement('div');
-        channelRow.className = 'parameter-row';
-        
-        const channelLabel = document.createElement('label');
-        channelLabel.textContent = 'Channel:';
-        channelLabel.htmlFor = `${this.id}-${this.name}-channel-all`; // Add htmlFor attribute
-        
-        const channels = ['All', 'Left', 'Right'];
-        const channelRadios = channels.map(ch => {
-            const label = document.createElement('label');
-            label.className = 'radio-label';
-            const radioId = `${this.id}-${this.name}-channel-${ch.toLowerCase()}`;
-            label.htmlFor = radioId;
-            
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = radioId;
-            radio.name = `${this.id}-${this.name}-channel`;
-            radio.value = ch;
-            radio.checked = ch === this.ch;
-            radio.autocomplete = "off";
-            
-            const radioHandler = (e) => {
-                if (e.target.checked) {
-                    this.setChannel(e.target.value);
-                }
-            };
-            radio.addEventListener('change', radioHandler);
-            this.boundEventListeners.set(radio, radioHandler);
-            
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(ch));
-            return label;
-        });
-        channelRow.appendChild(channelLabel);
-        channelRadios.forEach(radio => channelRow.appendChild(radio));
-
         // Graph container
         const graphContainer = document.createElement('div');
         graphContainer.className = 'graph-container';
@@ -409,15 +362,10 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const resetHandler = () => {
             const defaultDBRange = -96;
             const defaultPoints = 10;
-            const defaultChannel = 'All';
 
             // Update UI first
             pointsSlider.value = defaultPoints;
             pointsValue.value = 1 << defaultPoints;
-            channelRadios.forEach(label => {
-                const radio = label.querySelector('input');
-                radio.checked = radio.value === defaultChannel;
-            });
 
             // Then update plugin state
             this.reset();
@@ -429,7 +377,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
         // Add all elements to container
         container.appendChild(pointsRow);
-        container.appendChild(channelRow);
         container.appendChild(graphContainer);
 
         // Store canvas reference

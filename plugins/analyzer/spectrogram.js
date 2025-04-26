@@ -5,7 +5,6 @@ class SpectrogramPlugin extends PluginBase {
         // Initialize parameters
         this.dr = -96;
         this.pt = 12;  // exponent for FFT size (2^pt)
-        this.ch = 'All';
         const fftSize = 1 << this.pt; // using bit shift for power of 2
         this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
         this.lastProcessTime = performance.now() / 1000;
@@ -56,38 +55,42 @@ class SpectrogramPlugin extends PluginBase {
         // Create result buffer
         const result = data;
 
-        const { channelCount, blockSize, pt, ch } = parameters;
+        const { channelCount, blockSize, pt } = parameters; // Removed ch
         const fftSize = Math.pow(2, pt);
         
-        // Initialize context if needed
-        if (!context.initialized || context.fftSize !== fftSize || !context.buffer || context.buffer.length !== channelCount) {
-            if (context.buffer) {
-                context.buffer.forEach(buf => buf.fill(0));
-            }
-            context.buffer = new Array(channelCount);
-            for (let i = 0; i < channelCount; i++) {
-                context.buffer[i] = new Float32Array(fftSize);
-            }
+        // Initialize context if needed - Modified for single average buffer
+        if (!context.initialized || context.fftSize !== fftSize || !context.buffer) { // Check if buffer exists
+            // if (context.buffer) { // Original check included length
+            //     context.buffer.forEach(buf => buf.fill(0));
+            // }
+            // context.buffer = new Array(channelCount); // Original
+            context.buffer = [new Float32Array(fftSize)]; // Single buffer in an array
+            // for (let i = 0; i < channelCount; i++) { // Original
+            //     context.buffer[i] = new Float32Array(fftSize); // Original
+            // } // Original
             context.bufferPosition = 0;
             context.fftSize = fftSize;
             context.initialized = true;
         }
 
-        // Process input data for UI updates
-        for (let chIndex = 0; chIndex < channelCount; chIndex++) {
-            const offset = chIndex * blockSize;
-            let bufferPosition = context.bufferPosition;
-            for (let i = 0; i < blockSize; i++) {
-                context.buffer[chIndex][bufferPosition] = data[offset + i];
-                bufferPosition = (bufferPosition + 1) & (fftSize - 1);
-            }
+        // --- Process input data: Calculate average and write to single buffer ---
+        const averageBuffer = context.buffer[0]; // Target the single buffer
+        let bufferPosition = context.bufferPosition;
+        for (let i = 0; i < blockSize; i++) {
+            const leftSample = data[i] || 0; // Get Left sample (or 0 if undefined)
+            const rightSample = channelCount > 1 ? data[blockSize + i] : leftSample; // Get Right sample (or use Left if mono)
+            const averageSample = (leftSample + rightSample) * 0.5; // Calculate arithmetic average
+            averageBuffer[bufferPosition] = averageSample; // Write average to buffer[0]
+            bufferPosition = (bufferPosition + 1) & (fftSize - 1);
         }
-        context.bufferPosition = (context.bufferPosition + blockSize) & (fftSize - 1);
+        context.bufferPosition = bufferPosition; // Update position
 
         // Send buffer to UI every half FFT size
         if (context.bufferPosition % (fftSize / 2) === 0) {
             result.measurements = {
-                buffer: context.buffer.map(buf => Float32Array.from(buf)),
+                // Send only the average buffer inside an array
+                // buffer: context.buffer.map(buf => Float32Array.from(buf)), // Original
+                buffer: [Float32Array.from(context.buffer[0])], // Send copy of average buffer in array
                 bufferPosition: context.bufferPosition,
                 time: time,
                 sampleRate: sampleRate
@@ -192,19 +195,12 @@ class SpectrogramPlugin extends PluginBase {
         this.updateParameters();
     }
 
-    setChannel(value) {
-        if (['All', 'Left', 'Right'].includes(value)) {
-            this.ch = value;
-            this.updateParameters();
-        }
-    }
-
     // Reset parameters
     reset() {
         this.setDBRange(-96);
         this.setPoints(10);
-        this.setChannel('All');
         this.spectrogramBuffer.fill(-144);
+        this.updateParameters();
     }
 
     getParameters() {
@@ -212,8 +208,7 @@ class SpectrogramPlugin extends PluginBase {
             type: this.constructor.name,
             enabled: this.enabled,
             dr: this.dr,
-            pt: this.pt,
-            ch: this.ch
+            pt: this.pt
         };
     }
 
@@ -221,7 +216,6 @@ class SpectrogramPlugin extends PluginBase {
         if (params.enabled !== undefined) this.enabled = params.enabled;
         if (params.dr !== undefined) this.setDBRange(params.dr);
         if (params.pt !== undefined) this.setPoints(params.pt);
-        if (params.ch !== undefined) this.setChannel(params.ch);
         this.updateParameters();
     }
 
@@ -237,9 +231,9 @@ class SpectrogramPlugin extends PluginBase {
 
         const fftSize = 1 << this.pt;
         const bufferPosition = message.measurements.bufferPosition;
-        const [bufferL, bufferR] = message.measurements.buffer;
+        const [averageBuffer] = message.measurements.buffer;
 
-        if (fftSize != bufferL.length || this.imag == null) return audioBuffer;
+        if (!averageBuffer || fftSize !== averageBuffer.length || !this.imag) return audioBuffer;
 
         // Reset FFT buffers
         this.imag.fill(0);
@@ -247,14 +241,7 @@ class SpectrogramPlugin extends PluginBase {
         // Copy and window the time domain data using precomputed window
         for (let i = 0; i < fftSize; i++) {
             const pos = (bufferPosition + i) & (fftSize - 1); // faster modulo for power-of-2 sizes
-            let sample;
-            if (this.ch === 'All') {
-                sample = (bufferL[pos] + bufferR[pos]) * 0.5;
-            } else if (this.ch === 'Left') {
-                sample = bufferL[pos];
-            } else {
-                sample = bufferR[pos];
-            }
+            let sample = averageBuffer[pos];
             this.real[i] = sample * this.window[i];
         }
 
@@ -381,41 +368,6 @@ class SpectrogramPlugin extends PluginBase {
         pointsRow.appendChild(pointsSlider);
         pointsRow.appendChild(pointsValue);
 
-        // Channel parameter row
-        const channelRow = document.createElement('div');
-        channelRow.className = 'parameter-row';
-        
-        const channelLabel = document.createElement('label');
-        channelLabel.textContent = 'Channel:';
-        channelLabel.htmlFor = `${this.id}-${this.name}-channel-all`; // Add htmlFor attribute
-        
-        channelRow.appendChild(channelLabel);
-        const channels = ['All', 'Left', 'Right'];
-        channels.forEach(chVal => {
-            const label = document.createElement('label');
-            label.className = 'radio-label';
-            const radioId = `${this.id}-${this.name}-channel-${chVal.toLowerCase()}`;
-            label.htmlFor = radioId;
-            
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = radioId;
-            radio.name = `${this.id}-${this.name}-channel`;
-            radio.value = chVal;
-            radio.checked = chVal === this.ch;
-            radio.autocomplete = "off";
-            const radioHandler = (e) => {
-                if (e.target.checked) {
-                    this.setChannel(e.target.value);
-                }
-            };
-            radio.addEventListener('change', radioHandler);
-            this.boundEventListeners.set(radio, radioHandler);
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(chVal));
-            channelRow.appendChild(label);
-        });
-
         // Graph container and main canvas
         const graphContainer = document.createElement('div');
         graphContainer.className = 'graph-container';
@@ -448,7 +400,6 @@ class SpectrogramPlugin extends PluginBase {
         }
 
         container.appendChild(pointsRow);
-        container.appendChild(channelRow);
         container.appendChild(graphContainer);
 
         this.canvas = canvas;

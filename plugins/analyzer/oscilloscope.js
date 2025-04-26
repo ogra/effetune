@@ -12,8 +12,6 @@ class OscilloscopePlugin extends PluginBase {
       // Trigger parameters:
       // Trigger Mode (tm): "Auto" (continuous sweep with forced update) or "Normal" (freeze display if no trigger)
       this.triggerMode = 'Auto';
-      // Trigger Source (ts): "Left" (channel 0) or "Right" (channel 1)
-      this.triggerSource = 'Left';
       // Trigger Level (tl): linear amplitude value (expected raw signal in [-1,1])
       this.triggerLevel = 0.0;
       // Trigger Edge (te): "Rising" or "Falling"
@@ -103,16 +101,12 @@ class OscilloscopePlugin extends PluginBase {
   
       const { channelCount, blockSize } = parameters;
       // Use short parameter names:
-      // ts: triggerSource, tm: triggerMode, tl: triggerLevel, te: triggerEdge, ho: holdoff
+      // tm: triggerMode, tl: triggerLevel, te: triggerEdge, ho: holdoff
       const mode = parameters.tm;
-      const channel = parameters.ts === 'Left' ? 0 : 1;
   
       // Initialize state if needed.
-      if (!context.initialized || (context.buffer && context.buffer.length !== channelCount)) {
-        context.buffer = new Array(channelCount);
-        for (let i = 0; i < channelCount; i++) {
-          context.buffer[i] = new Float32Array(65536);
-        }
+      if (!context.initialized || !context.buffer) {
+        context.buffer = [new Float32Array(65536)];
         context.bufferPosition = 0;
         context.initialized = true;
         context.lastTriggerTime = 0;
@@ -120,23 +114,30 @@ class OscilloscopePlugin extends PluginBase {
         context.lastAutoSweepTime = 0;
       }
   
-      // Write the current block into the circular buffer for the selected channel.
+      // Write the average of L/R channels into the circular buffer.
+      const averageBuffer = context.buffer[0];
+      let currentPosition = context.bufferPosition;
       for (let i = 0; i < blockSize; i++) {
-        context.buffer[channel][context.bufferPosition] = data[channel * blockSize + i];
-        context.bufferPosition = (context.bufferPosition + 1) & (65536 - 1);
+        const leftSample = data[i] || 0;
+        const rightSample = channelCount > 1 ? data[blockSize + i] : leftSample;
+        const averageSample = (leftSample + rightSample) * 0.5;
+        averageBuffer[currentPosition] = averageSample;
+        currentPosition = (currentPosition + 1) & (65536 - 1);
       }
+      context.bufferPosition = currentPosition;
   
       let triggered = false;
       const trigLevel = parameters.tl;
       const rising = parameters.te === 'Rising';
-      // Check for a trigger event in the current block.
-      for (let i = 1; i < blockSize; i++) {
-        const curr = data[channel * blockSize + i];
-        const prev = data[channel * blockSize + i - 1];
-        if ((rising && prev < trigLevel && curr >= trigLevel) ||
-            (!rising && prev > trigLevel && curr <= trigLevel)) {
+      let prevAvg = averageBuffer[(currentPosition - blockSize + 65536) & (65536 - 1)];
+      for (let i = 0; i < blockSize; i++) {
+        const currentSampleIndexInBuffer = (currentPosition - blockSize + i + 65536) & (65536 - 1);
+        const currAvg = averageBuffer[currentSampleIndexInBuffer];
+        
+        if ((rising && prevAvg < trigLevel && currAvg >= trigLevel) ||
+            (!rising && prevAvg > trigLevel && currAvg <= trigLevel)) {
           if (time - context.lastTriggerTime >= parameters.ho) {
-            context.triggerIndex = (context.bufferPosition - blockSize + i) & (65536 - 1);
+            context.triggerIndex = currentSampleIndexInBuffer;
             context.lastTriggerTime = time;
             triggered = true;
             if (mode === 'Auto') {
@@ -145,8 +146,8 @@ class OscilloscopePlugin extends PluginBase {
             break;
           }
         }
+        prevAvg = currAvg;
       }
-      // In Auto mode, force a sweep update if no trigger was detected for 100 ms.
       if (mode === 'Auto' && !triggered) {
         if (!context.lastAutoSweepTime) {
           context.lastAutoSweepTime = time;
@@ -158,7 +159,7 @@ class OscilloscopePlugin extends PluginBase {
       }
   
       result.measurements = {
-        buffer: context.buffer[channel],
+        buffer: context.buffer[0],
         triggerIndex: context.triggerIndex,
         currentPosition: context.bufferPosition,
         time: time,
@@ -232,45 +233,6 @@ class OscilloscopePlugin extends PluginBase {
       tmRow.appendChild(tmLabel);
       modeRadios.forEach(r => tmRow.appendChild(r));
       parametersGrid.appendChild(tmRow);
-  
-      // --- Trigger Source Control (Left/Right) ---
-      const tsRow = document.createElement('div');
-      tsRow.className = 'parameter-row';
-  
-      const tsLabel = document.createElement('label');
-      tsLabel.textContent = 'Trigger Source:';
-
-      const sources = ['Left', 'Right'];
-      const sourceRadios = sources.map(source => {
-        const label = document.createElement('label');
-        label.className = 'radio-label';
-        const radioId = `${this.id}-${this.name}-trigger-source-${source.toLowerCase()}`;
-        label.htmlFor = radioId;
-
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.id = radioId;
-        radio.name = `${this.id}-${this.name}-trigger-source`;
-        radio.value = source;
-        radio.checked = (source === this.triggerSource);
-        radio.autocomplete = "off";
-  
-        const radioHandler = (e) => {
-          if (e.target.checked) {
-            this.setTriggerSource(e.target.value);
-            this.clearBuffer();
-          }
-        };
-        radio.addEventListener('change', radioHandler);
-        this.boundEventListeners.set(radio, radioHandler);
-  
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(source));
-        return label;
-      });
-      tsRow.appendChild(tsLabel);
-      sourceRadios.forEach(r => tsRow.appendChild(r));
-      parametersGrid.appendChild(tsRow);
   
       // --- Trigger Level Control ---
       parametersGrid.appendChild(this.createParameterControl(
@@ -401,16 +363,6 @@ class OscilloscopePlugin extends PluginBase {
       }
     }
   
-    setTriggerSource(value) {
-      if (['Left', 'Right'].includes(value)) {
-        this.triggerSource = value;
-        this.frozenDisplayBuffer = null;
-        this.lastProcessedTriggerIndex = null;
-        this.clearBuffer();
-        this.updateParameters();
-      }
-    }
-  
     setTriggerLevel(value) {
       const newValue = typeof value === 'number' ? value : parseFloat(value);
       if (!isNaN(newValue)) {
@@ -463,7 +415,6 @@ class OscilloscopePlugin extends PluginBase {
         enabled: this.enabled,
         dt: this.displayTime,      // Display Time
         tm: this.triggerMode,      // Trigger Mode
-        ts: this.triggerSource,    // Trigger Source
         tl: this.triggerLevel,     // Trigger Level
         te: this.triggerEdge,      // Trigger Edge
         ho: this.holdoff,          // Holdoff
@@ -475,7 +426,6 @@ class OscilloscopePlugin extends PluginBase {
     setParameters(params) {
       if (params.dt !== undefined) this.setDisplayTime(params.dt);
       if (params.tm !== undefined) this.setTriggerMode(params.tm);
-      if (params.ts !== undefined) this.setTriggerSource(params.ts);
       if (params.tl !== undefined) this.setTriggerLevel(params.tl);
       if (params.te !== undefined) this.setTriggerEdge(params.te);
       if (params.ho !== undefined) this.setHoldoff(params.ho);

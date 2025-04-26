@@ -124,7 +124,8 @@ export class PipelineProcessor {
                 enabled: plugin.enabled,
                 parameters: params,
                 inputBus: plugin.inputBus,
-                outputBus: plugin.outputBus
+                outputBus: plugin.outputBus,
+                channel: plugin.channel
             };
         });
     }

@@ -66,6 +66,7 @@
   "ui.busRouting": "Bus Routing",
   "ui.inputBus": "Input Bus:",
   "ui.outputBus": "Output Bus:",
+  "ui.channel": "Channel:",
   
   // Main menu
   "menu.file": "File",

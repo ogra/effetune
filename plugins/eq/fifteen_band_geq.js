@@ -128,12 +128,9 @@ for (let i = 0; i < NUM_BANDS; i++) {
 }
 
 // --- Audio Processing ---
-const targetChannelSetting = parameters.ch;
-const processAllChannels = targetChannelSetting === 'All';
 // Determine start and end channels for processing loop
-const targetChannel = processAllChannels ? -1 : (targetChannelSetting === 'Left' ? 0 : 1);
-const startCh = processAllChannels ? 0 : (targetChannel < channelCount ? targetChannel : channelCount); // Handle invalid target channel gracefully
-const endCh = processAllChannels ? channelCount : startCh + 1;
+const startCh = 0; // Always start from channel 0
+const endCh = channelCount; // Process all available channels
 
 
 // Process samples block by block, channel by channel
@@ -192,9 +189,6 @@ return data; // Return the modified buffer
             this['b' + i] = 0;  // b0-b14: Band 0-14 gains (formerly band0-band14) - Range: -12 to +12 dB
         }
         
-        // Initialize channel parameter
-        this.ch = 'All';  // 'All', 'Left', or 'Right'
-        
         this.registerProcessor(FifteenBandGEQPlugin.processorFunction);
     }
 
@@ -204,27 +198,18 @@ return data; // Return the modified buffer
         this.updateParameters();
     }
 
-    // Set channel
-    setChannel(value) {
-        if (['All', 'Left', 'Right'].includes(value)) {
-            this.ch = value;
-            this.updateParameters();
-        }
-    }
-
     // Reset all bands to default values
     reset() {
         for (let i = 0; i < 15; i++) {
             this.setBand(i, 0);
         }
-        this.setChannel('All');
+        this.setUIValues();
     }
 
     getParameters() {
         const params = {
             type: this.constructor.name,
-            enabled: this.enabled,
-            ch: this.ch
+            enabled: this.enabled
         };
         
         // Add all band parameters
@@ -240,10 +225,6 @@ return data; // Return the modified buffer
             this.enabled = params.enabled;
         }
         
-        if (params.ch !== undefined) {
-            this.setChannel(params.ch);
-        }
-        
         // Update band parameters
         for (let i = 0; i < 15; i++) {
             if (params['b' + i] !== undefined) {
@@ -257,42 +238,6 @@ return data; // Return the modified buffer
     createUI() {
         const container = document.createElement('div');
         container.className = 'fifteen-band-geq-plugin-ui plugin-parameter-ui';
-
-        // Channel selector row
-        const channelRow = document.createElement('div');
-        channelRow.className = 'parameter-row';
-        
-        const channelLabel = document.createElement('label');
-        channelLabel.textContent = 'Channel:';
-        channelLabel.htmlFor = `${this.id}-${this.name}-channel-All`; // Associate with the first radio button
-        
-        const channels = ['All', 'Left', 'Right'];
-        const channelRadios = channels.map(ch => {
-            const label = document.createElement('label');
-            label.className = 'fifteen-band-geq-radio-label';
-            
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = `${this.id}-${this.name}-channel-${ch}`;
-            radio.name = `${this.id}-${this.name}-channel`;
-            radio.value = ch;
-            radio.checked = ch === this.ch;
-            radio.autocomplete = "off";
-            
-            radio.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.setChannel(e.target.value);
-                }
-            });
-            
-            label.htmlFor = radio.id;
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(ch));
-            return label;
-        });
-
-        channelRow.appendChild(channelLabel);
-        channelRadios.forEach(radio => channelRow.appendChild(radio));
 
         // Create sliders container
         const slidersContainer = document.createElement('div');
@@ -372,17 +317,11 @@ return data; // Return the modified buffer
                 sliders[i].value = this['b' + i];
                 valueDisplays[i].textContent = this['b' + i].toFixed(1) + ' dB';
             }
-            // Update channel radios
-            channelRadios.forEach(label => {
-                const radio = label.querySelector('input');
-                radio.checked = radio.value === 'All';
-            });
             this.drawGraph(canvas);
         });
         graphContainer.appendChild(resetButton);
 
         // Add all elements to container
-        container.appendChild(channelRow);
         container.appendChild(slidersContainer);
         container.appendChild(graphContainer);
 
@@ -483,6 +422,16 @@ return data; // Return the modified buffer
             }
         }
         ctx.stroke();
+    }
+
+    setUIValues() {
+        this.container.querySelector('#geq-enabled').checked = this.enabled;
+        for (let i = 0; i < 15; i++) {
+            this.container.querySelector(`#band-${i}-slider`).value = this['b' + i];
+            this.container.querySelector(`#band-${i}-label`).textContent = `${this['b' + i].toFixed(1)} dB`;
+        }
+
+        this.drawGraph(this.graphCanvas);
     }
 }
 

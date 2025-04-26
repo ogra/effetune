@@ -12,6 +12,7 @@ class PluginBase {
         this.errorState = null; // Holds error state
         this.inputBus = null; // Input bus (null = default Main bus, index 0)
         this.outputBus = null; // Output bus (null = default Main bus, index 0)
+        this.channel = null; // Channel processing: null ('All'), 'Left', 'Right'
 
         // Message control properties
         this.lastUpdateTime = 0;
@@ -180,7 +181,8 @@ class PluginBase {
                     enabled: this.enabled,
                     parameters: parameters,
                     inputBus: this.inputBus,
-                    outputBus: this.outputBus
+                    outputBus: this.outputBus,
+                    channel: this.channel
                 }
             });
             if (window.uiManager) {
@@ -196,7 +198,8 @@ class PluginBase {
             id: this.id,
             enabled: this.enabled,
             ...(this.inputBus !== null && { inputBus: this.inputBus }),
-            ...(this.outputBus !== null && { outputBus: this.outputBus })
+            ...(this.outputBus !== null && { outputBus: this.outputBus }),
+            ...(this.channel !== null && { channel: this.channel })
         };
     }
 
@@ -205,7 +208,7 @@ class PluginBase {
         const params = this.getParameters();
         const serializedParams = JSON.parse(JSON.stringify(params));
         // Remove internal properties that should not be serialized
-        const { type, id, inputBus, outputBus, ...cleanParams } = serializedParams;
+        const { type, id, inputBus, outputBus, channel, ...cleanParams } = serializedParams;
         
         // Add input and output bus with short names if they exist
         if (inputBus !== undefined) {
@@ -214,19 +217,24 @@ class PluginBase {
         if (outputBus !== undefined) {
             cleanParams.ob = outputBus;
         }
+        // Add channel with short name if it exists and is not default ('All' which is null)
+        if (channel === 'L' || channel === 'R') {
+            cleanParams.ch = channel;
+        }
         
         return cleanParams;
     }
 
     // Set parameters from a serialized state.
     setSerializedParameters(params) {
-        const { nm, en, id, ib, ob, ...pluginParams } = params;
+        const { nm, en, id, ib, ob, ch, ...pluginParams } = params;
         const parameters = {
             type: this.constructor.name,
             enabled: en,
             ...(id !== undefined && { id }),
             ...(ib !== undefined && { inputBus: ib }),
             ...(ob !== undefined && { outputBus: ob }),
+            ...(ch !== undefined && { channel: ch }),
             ...pluginParams
         };
         this.setParameters(parameters);
@@ -262,6 +270,9 @@ class PluginBase {
         }
         if (params.outputBus !== undefined) {
             this.outputBus = params.outputBus;
+        }
+        if (params.channel !== undefined) {
+            this.channel = params.channel;
         }
         
         // Subclasses must override this method to handle their specific parameters

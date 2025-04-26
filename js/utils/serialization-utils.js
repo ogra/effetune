@@ -45,6 +45,9 @@ export function getSerializablePluginStateShort(plugin) {
     if (plugin.outputBus !== null && plugin.outputBus !== undefined) {
         result.ob = plugin.outputBus;
     }
+    if (plugin.channel !== null && plugin.channel !== undefined) {
+        result.ch = plugin.channel;
+    }
     
     return result;
 }
@@ -96,7 +99,9 @@ export function getSerializablePluginStateLong(plugin, useDeepCopy = false) {
     if (plugin.outputBus !== null && plugin.outputBus !== undefined) {
         result.outputBus = plugin.outputBus;
     }
-    
+    if (plugin.channel !== null && plugin.channel !== undefined) {
+        result.channel = plugin.channel;
+    }
     return result;
 }
 
@@ -108,9 +113,18 @@ export function getSerializablePluginStateLong(plugin, useDeepCopy = false) {
 export function applySerializedState(plugin, state) {
     if (!plugin || !state) return;
     
+    // Helper function to normalize channel value
+    const normalizeChannel = (chValue) => {
+        if (chValue === 'Left') return 'L';
+        if (chValue === 'Right') return 'R';
+        if (chValue === 'All') return null;
+        // Keep 'L', 'R', null as is, default others to null
+        return (chValue === 'L' || chValue === 'R') ? chValue : null;
+    };
+    
     // Handle both short and long format
     if (state.nm !== undefined) {
-        // Short format (nm/en/ib/ob)
+        // Short format (nm/en/ib/ob/ch)
         plugin.name = state.nm;
         
         if (state.en !== undefined) {
@@ -124,8 +138,11 @@ export function applySerializedState(plugin, state) {
             plugin.outputBus = state.ob;
         }
         
+        // Apply channel, normalizing for compatibility
+        plugin.channel = normalizeChannel(state.ch);
+        
         // Extract parameters from state
-        const { nm, en, ib, ob, ...params } = state;
+        const { nm, en, ib, ob, ch, ...params } = state;
         
         // Apply parameters
         if (plugin.setSerializedParameters) {
@@ -136,7 +153,7 @@ export function applySerializedState(plugin, state) {
             Object.assign(plugin.parameters, params);
         }
     } else if (state.name !== undefined) {
-        // Long format (name/enabled/parameters)
+        // Long format (name/enabled/parameters/inputBus/outputBus/channel)
         plugin.name = state.name;
         
         if (state.enabled !== undefined) {
@@ -149,6 +166,10 @@ export function applySerializedState(plugin, state) {
         if (state.outputBus !== undefined) {
             plugin.outputBus = state.outputBus;
         }
+        
+        // Apply channel, normalizing for compatibility
+        // Assuming channel is stored at the top level in long format as well
+        plugin.channel = normalizeChannel(state.channel);
         
         // Apply parameters
         if (state.parameters) {
@@ -188,6 +209,10 @@ export function convertLongToShortFormat(longState) {
     if (longState.outputBus !== undefined) {
         result.ob = longState.outputBus;
     }
+    // Add channel short name if channel exists in long format
+    if (longState.channel === 'L' || longState.channel === 'R') {
+        result.ch = longState.channel;
+    }
     
     return result;
 }
@@ -200,7 +225,7 @@ export function convertLongToShortFormat(longState) {
 export function convertShortToLongFormat(shortState) {
     if (!shortState) return null;
     
-    const { nm, en, ib, ob, ...params } = shortState;
+    const { nm, en, ib, ob, ch, ...params } = shortState; // Extract ch here
     
     const result = {
         name: nm,
@@ -213,6 +238,10 @@ export function convertShortToLongFormat(shortState) {
     }
     if (ob !== undefined) {
         result.outputBus = ob;
+    }
+    // Add channel long name if ch exists in short format
+    if (ch === 'L' || ch === 'R') {
+        result.channel = ch;
     }
     
     return result;
