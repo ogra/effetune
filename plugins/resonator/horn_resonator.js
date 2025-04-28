@@ -328,6 +328,7 @@ class HornResonatorPlugin extends PluginBase {
     getParameters() {
         return {
             type: this.constructor.name,
+            enabled: this.enabled,
             en: this.enabled,
             ln: this.ln, th: this.th, mo: this.mo,
             cv: this.cv,

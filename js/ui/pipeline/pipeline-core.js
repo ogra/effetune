@@ -875,7 +875,7 @@ export class PipelineCore {
             // Store null for 'All', 'L' or 'R' otherwise
             plugin.channel = value === 'All' ? null : value;
             plugin.updateParameters(); 
-            // this.updateBusInfo(plugin); // No UI update needed for channel change
+            this.updateBusInfo(plugin); // Call updateBusInfo to reflect channel change
         };
 
         channelContainer.appendChild(channelSelect);
@@ -983,23 +983,42 @@ export class PipelineCore {
         
         // Find or create the bus info element
         let busInfo = pipelineItem.querySelector('.bus-info');
-        
-        if (plugin.inputBus !== null || plugin.outputBus !== null) {
+        const header = pipelineItem.querySelector('.pipeline-item-header');
+        const routingBtn = pipelineItem.querySelector('.routing-button'); // Find routing button for insertion point
+
+        // Determine if there's bus or channel info to display
+        const hasBusInfo = plugin.inputBus !== null || plugin.outputBus !== null;
+        const hasChannelInfo = plugin.channel !== null;
+
+        if (hasBusInfo || hasChannelInfo) {
             if (!busInfo) {
                 busInfo = document.createElement('div');
                 busInfo.className = 'bus-info';
-                const header = pipelineItem.querySelector('.pipeline-item-header');
-                // Insert before the routing button
-                const routingBtn = pipelineItem.querySelector('.routing-button');
+                // Insert before the routing button or as the first child if no routing button
                 if (routingBtn) {
                     header.insertBefore(busInfo, routingBtn);
                 } else {
-                    header.insertBefore(busInfo, header.firstChild);
+                    // Fallback: insert before the first element (e.g., move up/down buttons)
+                    // This might need adjustment based on exact header structure if routingBtn is absent
+                    header.insertBefore(busInfo, header.children[2] || null); 
                 }
             }
-            const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
-            const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
-            busInfo.textContent = `${inputBusName}→${outputBusName}`;
+            
+            let busText = '';
+            if (hasBusInfo) {
+                const inputBusName = plugin.inputBus === null ? 'Main' : `Bus ${plugin.inputBus || 0}`;
+                const outputBusName = plugin.outputBus === null ? 'Main' : `Bus ${plugin.outputBus || 0}`;
+                busText = `${inputBusName}→${outputBusName}`;
+            }
+            
+            let channelText = '';
+            if (hasChannelInfo) {
+                channelText = plugin.channel === 'L' ? 'Left' : 'Right';
+            }
+
+            // Combine bus and channel info
+            busInfo.textContent = [busText, channelText].filter(Boolean).join(' '); // Filter out empty strings and join with space
+
             busInfo.title = 'Click to configure bus routing';
             busInfo.style.cursor = 'pointer';
             
@@ -1011,10 +1030,11 @@ export class PipelineCore {
                 this.handlePluginSelection(plugin, e);
                 
                 // Show routing dialog
-                const routingBtn = pipelineItem.querySelector('.routing-button');
-                this.showRoutingDialog(plugin, routingBtn || busInfo);
+                const actualRoutingBtn = pipelineItem.querySelector('.routing-button'); // Re-query in case it was added
+                this.showRoutingDialog(plugin, actualRoutingBtn || busInfo);
             };
         } else if (busInfo) {
+            // Remove busInfo element if no bus or channel info is set
             busInfo.remove();
         }
         

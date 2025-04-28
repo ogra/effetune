@@ -88,7 +88,7 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
 6. Use o botão **ON** para desativar (bypass) efeitos individuais
 7. Clique no botão **?** para abrir sua documentação detalhada em uma nova aba
 8. Remova os efeitos utilizando o botão ×
-9. Clique no botão de roteamento para configurar os buses de entrada e saída  
+9. Clique no botão de roteamento para definir os canais a serem processados e os barramentos de entrada e saída  
    - [Mais sobre funções de bus](bus-function.md)
 
 ### Usando Presets

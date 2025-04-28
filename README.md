@@ -85,7 +85,7 @@ To use EffeTune with CD players, network players, or other physical sources:
 6. Use the ON button to bypass individual effects
 7. Click the ? button to open its detailed documentation in a new tab
 8. Remove effects using the × button
-9. Click the routing button to set the input and output busses
+9. Click the routing button to set the channels to be processed and the input and output busses
    - [More about bus functions](docs/bus-function.md)
 
 ### Using Presets

@@ -79,7 +79,7 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
 6. Utiliza el botón **ON** para omitir efectos individuales
 7. Haz clic en el botón **?** para abrir su documentación detallada en una nueva pestaña
 8. Elimina efectos utilizando el botón ×
-9. Haz clic en el botón de enrutamiento para configurar los buses de entrada y salida  
+9. Haga clic en el botón de enrutamiento para configurar los canales que se procesarán y los buses de entrada y salida  
    - [Más información sobre las funciones de los buses](bus-function.md)
 
 ### Uso de Presets

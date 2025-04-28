@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.47 (Apr 28, 2025)
+- All plugins support independent channel processing
+- Various minor improvements
+
 ### Version 1.46 (Apr 24, 2025)
 - Supports multi-column display of effect pipeline
 - Added Horn Resonator effect

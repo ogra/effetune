@@ -196,6 +196,7 @@ class ModalResonatorPlugin extends PluginBase {
     getParameters() {
         return {
             type: this.constructor.name,
+            enabled: this.enabled,
             en: this.en,
             rs: this.rs,
             mx: this.mx,

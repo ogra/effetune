@@ -23,7 +23,7 @@ class MultibandBalancePlugin extends PluginBase {
 
     getProcessorCode() {
         return `
-            if (!parameters.enabled) {
+            if (!parameters.enabled || parameters.channelCount < 2) {
                 return data;
             }
             let result = data;

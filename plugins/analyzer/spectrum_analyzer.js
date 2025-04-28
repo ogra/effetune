@@ -81,7 +81,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
                 buffer: [Float32Array.from(context.buffer[0])], // Send copy of average buffer in array
                 bufferPosition: context.bufferPosition,
                 time: time,
-                sampleRate: sampleRate
+                sampleRate: parameters.sampleRate
             };
         }
 
