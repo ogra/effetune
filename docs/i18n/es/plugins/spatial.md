@@ -4,8 +4,48 @@ Una colección de plugins que mejoran cómo suena la música en tus auriculares 
 
 ## Lista de Plugins
 
+- [MS Matrix](#ms-matrix) - Ajusta la imagen estéreo controlando por separado los niveles Mid y Side, con un intercambio opcional Left/Right  
 - [Multiband Balance](#multiband-balance) - Control de balance estéreo dependiente de frecuencia de 5 bandas
 - [Stereo Blend](#stereo-blend) - Controla el ancho estéreo desde mono hasta estéreo mejorado
+
+## MS Matrix
+
+Un procesador mid/side flexible que te permite controlar de forma independiente el centro (mid) y el ancho (side) de tu señal estéreo. Utiliza controles de ganancia sencillos y un intercambio opcional Left/Right para ajustar con precisión cómo se sitúa tu audio en el campo estéreo sin enrutamientos complejos.
+
+### Características principales
+- Ganancia Mid y Side por separado (–18 dB a +18 dB)  
+- Selector Mode: Encode (Stereo→M/S) o Decode (M/S→Stereo)  
+- Intercambio opcional Left/Right antes de la codificación o después de la decodificación  
+- Cambios de parámetros sin clics para ajustes fluidos  
+
+### Parámetros
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB a +18 dB): Ajusta el nivel del contenido central  
+- **Side Gain** (–18 dB a +18 dB): Ajusta el nivel de la diferencia estéreo (ancho)  
+- **Swap L/R** (Off/On): Intercambia los canales izquierdo y derecho antes de la codificación o después de la decodificación  
+
+### Ajustes recomendados
+1. **Ensanchamiento sutil**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **Enfoque central**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **Volteo creativo**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### Guía de inicio rápido
+1. Selecciona **Mode** para la conversión  
+2. Ajusta **Mid Gain** y **Side Gain**  
+3. Activa **Swap L/R** para la corrección de canales o inversión creativa  
+4. Activa Bypass para comparar y verificar que no haya problemas de fase  
 
 ## Multiband Balance
 

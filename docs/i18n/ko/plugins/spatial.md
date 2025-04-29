@@ -4,8 +4,48 @@
 
 ## 플러그인 목록
 
+- [MS Matrix](#ms-matrix) - Mid 및 Side 레벨을 개별적으로 제어하여 스테레오 이미지를 조정하며, 선택적으로 왼쪽/오른쪽 전환을 사용할 수 있음
 - [Multiband Balance](#multiband-balance) - 5밴드 주파수 의존 스테레오 밸런스 제어
 - [Stereo Blend](#stereo-blend) - 모노에서 향상된 스테레오까지 스테레오 폭 제어
+
+## MS Matrix
+
+유연한 Mid/Side 프로세서로, 스테레오 신호의 중앙(Mid)과 폭(Side)을 독립적으로 제어할 수 있습니다. 간단한 게인 컨트롤과 선택적 왼쪽/오른쪽 전환으로 복잡한 라우팅 없이도 오디오의 스테레오 배치를 세밀하게 조정하세요.
+
+### 주요 기능
+- Mid 및 Side 게인(–18 dB~+18 dB) 분리 제어  
+- Mode 전환: Encode (스테레오→M/S) 또는 Decode (M/S→스테레오)  
+- 인코딩 전 또는 디코딩 후 선택적 왼쪽/오른쪽 전환  
+- 클릭 없는 파라미터 변경으로 부드러운 조정  
+
+### 파라미터
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB~+18 dB): 중앙 콘텐츠 레벨 조정  
+- **Side Gain** (–18 dB~+18 dB): 스테레오 차이(폭) 레벨 조정  
+- **Swap L/R** (Off/On): 인코딩 전 또는 디코딩 후 좌우 채널 전환  
+
+### 권장 설정
+1. **은은한 확장**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **중앙 집중**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **창의적 반전**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### 빠른 시작 가이드
+1. 변환할 **Mode**를 선택  
+2. **Mid Gain** 및 **Side Gain** 조정  
+3. 채널 보정 또는 창의적 반전을 위해 **Swap L/R** 활성화  
+4. 바이패스하여 위상 문제가 없는지 비교 및 확인  
 
 ## Multiband Balance
 

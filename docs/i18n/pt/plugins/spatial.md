@@ -4,8 +4,48 @@ Uma coleção de plugins que aprimoram como a música soa em seus fones de ouvid
 
 ## Lista de Plugins
 
+- [MS Matrix](#ms-matrix) - Ajusta a imagem estéreo controlando separadamente os níveis de Mid e Side, com troca opcional dos canais esquerdo/direito  
 - [Multiband Balance](#multiband-balance) - Controle de balanço estéreo dependente de frequência de 5 bandas
 - [Stereo Blend](#stereo-blend) - Controla a largura estéreo de mono a estéreo aprimorado
+
+## MS Matrix
+
+Processador mid/side flexível que permite controlar de forma independente o centro (mid) e a largura (side) do seu sinal estéreo. Use controles de ganho simples e troca opcional de canais esquerdo/direito para ajustar como o áudio se posiciona no campo estéreo sem roteamento complexo.
+
+### Recursos Principais
+- Ganho de Mid e Side separados (–18 dB a +18 dB)  
+- Chave Mode: Encode (Stereo→M/S) ou Decode (M/S→Stereo)  
+- Troca opcional dos canais esquerdo/direito antes da codificação ou após a decodificação  
+- Alterações de parâmetros sem cliques para ajustes suaves  
+
+### Parâmetros
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB a +18 dB): Ajusta o nível do conteúdo central  
+- **Side Gain** (–18 dB a +18 dB): Ajusta o nível da diferença estéreo (largura)  
+- **Swap L/R** (Off/On): Inverte os canais esquerdo e direito antes de codificar ou após decodificar  
+
+### Configurações Recomendadas
+1. **Largura Sutil**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **Foco Central**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **Inversão Criativa**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### Guia de Início Rápido
+1. Selecione **Mode** para conversão  
+2. Ajuste **Mid Gain** e **Side Gain**  
+3. Ative **Swap L/R** para correção de canais ou inversão criativa  
+4. Bypass para comparar e verificar ausência de problemas de fase  
 
 ## Multiband Balance
 

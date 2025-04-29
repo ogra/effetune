@@ -4,8 +4,48 @@
 
 ## プラグイン一覧
 
+- [MS Matrix](#ms-matrix) - Mid と Side のレベルを個別に制御し、オプションで Swap L/R によるステレオイメージを調整  
 - [Multiband Balance](#multiband-balance) - 5バンドの周波数依存ステレオバランス制御
 - [Stereo Blend](#stereo-blend) - モノラルから拡張ステレオまでのステレオ幅を制御
+
+## MS Matrix
+
+ステレオ信号の中央（mid）と幅（side）を独立してコントロールできる柔軟なミッド/サイドプロセッサです。シンプルなゲイン調整とオプションの Swap L/R を利用して、複雑なルーティングなしでステレオフィールド内でのオーディオの定位を微調整できます。
+
+### 主な機能
+- Mid と Side のゲインを個別に設定 (–18 dB ～ +18 dB)  
+- Mode 切替: Encode (Stereo→M/S) または Decode (M/S→Stereo)  
+- エンコード前またはデコード後にオプションで Swap L/R を適用  
+- クリック音なしのパラメータ変更でスムーズな調整  
+
+### パラメータ
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB ～ +18 dB): 中央成分のレベルを調整  
+- **Side Gain** (–18 dB ～ +18 dB): ステレオ差（幅）のレベルを調整  
+- **Swap L/R** (Off/On): エンコード前またはデコード後に左右チャンネルを入れ替え  
+
+### 推奨設定
+1. **さりげないワイド化**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **中央フォーカス**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **クリエイティブフリップ**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### クイックスタートガイド
+1. 変換用に **Mode** を選択  
+2. **Mid Gain** と **Side Gain** を調整  
+3. チャンネル補正またはクリエイティブな反転のため **Swap L/R** を有効化  
+4. バイパスして比較し、位相問題がないことを確認  
 
 ## Multiband Balance
 

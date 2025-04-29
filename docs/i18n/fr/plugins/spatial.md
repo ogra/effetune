@@ -4,8 +4,48 @@ Une collection de plugins qui améliorent le rendu de votre musique dans vos cas
 
 ## Liste des Plugins
 
+- [MS Matrix](#ms-matrix) - Ajuste l'image stéréo en contrôlant séparément les niveaux Mid et Side, avec option de permutation Left/Right  
 - [Multiband Balance](#multiband-balance) - Contrôle de balance stéréo dépendant de la fréquence à 5 bandes
 - [Stereo Blend](#stereo-blend) - Contrôle la largeur stéréo de mono à stéréo améliorée
+
+## MS Matrix
+
+Un processeur mid/side flexible qui vous permet de contrôler indépendamment le centre (mid) et la largeur (side) de votre signal stéréo. Utilisez des commandes de gain simples et une option de permutation Left/Right pour affiner la position de votre son dans le champ stéréo sans routage complexe.
+
+### Fonctionnalités clés
+- Gains Mid et Side séparés (–18 dB à +18 dB)  
+- Sélecteur de Mode : Encode (Stereo→M/S) ou Decode (M/S→Stereo)  
+- Permutation Left/Right facultative avant l'encodage ou après le décodage  
+- Modifications de paramètres sans clic pour des ajustements fluides  
+
+### Paramètres
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB à +18 dB) : Ajuste le niveau du contenu central  
+- **Side Gain** (–18 dB à +18 dB) : Ajuste le niveau de la différence stéréo (largeur)  
+- **Swap L/R** (Off/On) : Échange les canaux gauche et droit avant l'encodage ou après le décodage  
+
+### Paramètres recommandés
+1. **Élargissement subtil**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **Focus central**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **Inversion créative**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### Guide de démarrage rapide
+1. Sélectionnez **Mode** pour la conversion  
+2. Ajustez **Mid Gain** et **Side Gain**  
+3. Activez **Swap L/R** pour la correction des canaux ou l'inversion créative  
+4. Bypass pour comparer et vérifier l'absence de problèmes de phase  
 
 ## Multiband Balance
 

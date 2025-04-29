@@ -4,8 +4,48 @@
 
 ## 插件列表
 
+- [MS Matrix](#ms-matrix) - 通过分别控制 Mid Gain 和 Side Gain 电平，并可选择性地切换左右通道来调整立体声影像
 - [Multiband Balance](#multiband-balance) - 5频段频率相关立体声平衡控制
 - [Stereo Blend](#stereo-blend) - 控制立体声宽度从单声道到增强立体声
+
+## MS Matrix
+
+这是一个灵活的中侧处理器，可让您独立地控制立体声信号的中心（mid）和宽度（side）。使用简单的增益控制和可选的左右通道交换，无需复杂路由即可微调音频在立体声声场中的位置。
+
+### 主要功能
+- 独立控制 Mid Gain 和 Side Gain（–18 dB 至 +18 dB）
+- Mode 切换：Encode（立体声→M/S）或 Decode（M/S→立体声）
+- 在编码前或解码后可选地进行左右通道交换
+- 无点击噪声的参数变更，实现平滑调整
+
+### 参数
+- **Mode** (Encode/Decode)
+- **Mid Gain**（–18 dB 至 +18 dB）：调整中心内容的电平
+- **Side Gain**（–18 dB 至 +18 dB）：调整立体声差异（宽度）的电平
+- **Swap L/R** (Off/On): 在编码前或解码后交换左右通道
+
+### 推荐设置
+1. **细微扩宽**
+   - Mode: Decode
+   - Mid Gain: 0 dB
+   - Side Gain: +3 dB
+   - Swap: Off
+2. **聚焦中心**
+   - Mode: Decode
+   - Mid Gain: +3 dB
+   - Side Gain: –3 dB
+   - Swap: Off
+3. **创意翻转**
+   - Mode: Encode
+   - Mid Gain: 0 dB
+   - Side Gain: 0 dB
+   - Swap: On
+
+### 快速入门指南
+1. 选择 **Mode** 进行转换
+2. 调整 **Mid Gain** 和 **Side Gain**
+3. 启用 **Swap L/R** 进行通道校正或创意倒置
+4. 使用旁通模式比较并确认无相位问题
 
 ## Multiband Balance
 

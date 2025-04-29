@@ -1,11 +1,47 @@
-# Spatial Audio Plugins
-
-A collection of plugins that enhance how music sounds in your headphones or speakers by adjusting the stereo (left and right) balance. These effects can make your music sound more spacious and natural, especially when listening with headphones.
-
 ## Plugin List
 
-- [Multiband Balance](#multiband-balance) - 5-band frequency-dependent stereo balance control
+- [MS Matrix](#ms-matrix) - Adjust stereo image by separately controlling Mid and Side levels, with optional Left/Right swap  
+- [Multiband Balance](#multiband-balance) - 5-band frequency-dependent stereo balance control  
 - [Stereo Blend](#stereo-blend) - Controls stereo width from mono to enhanced stereo
+
+## MS Matrix
+
+A flexible mid/side processor that lets you control the center (mid) and width (side) of your stereo signal independently. Use simple gain controls and an optional Left/Right swap to fine-tune how your audio sits in the stereo field without complex routing.
+
+### Key Features
+- Separate Mid and Side gain (–18 dB to +18 dB)  
+- Mode switch: Encode (Stereo→M/S) or Decode (M/S→Stereo)  
+- Optional Left/Right swap before encoding or after decoding  
+- Click-free parameter changes for smooth adjustments  
+
+### Parameters
+- **Mode** (Encode/Decode)  
+- **Mid Gain** (–18 dB to +18 dB): Adjusts level of center content  
+- **Side Gain** (–18 dB to +18 dB): Adjusts level of stereo difference (width)  
+- **Swap L/R** (Off/On): Swaps left and right channels before encoding or after decoding  
+
+### Recommended Settings
+1. **Subtle Widening**  
+   - Mode: Decode  
+   - Mid Gain: 0 dB  
+   - Side Gain: +3 dB  
+   - Swap: Off  
+2. **Center Focus**  
+   - Mode: Decode  
+   - Mid Gain: +3 dB  
+   - Side Gain: –3 dB  
+   - Swap: Off  
+3. **Creative Flip**  
+   - Mode: Encode  
+   - Mid Gain: 0 dB  
+   - Side Gain: 0 dB  
+   - Swap: On  
+
+### Quick Start Guide
+1. Select **Mode** for conversion  
+2. Adjust **Mid Gain** and **Side Gain**  
+3. Enable **Swap L/R** for channel correction or creative inversion  
+4. Bypass to compare and verify no phase issues  
 
 ## Multiband Balance
 

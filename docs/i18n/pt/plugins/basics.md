@@ -1,104 +1,110 @@
-# Plugins Básicos de Áudio
+# Plugins de Áudio Básicos
 
-Uma coleção de ferramentas essenciais para ajustar os aspectos fundamentais da reprodução de música. Esses plugins ajudam você a controlar volume, balanço e outros aspectos básicos da sua experiência de audição.
+Uma coleção de ferramentas essenciais para ajustar os aspectos fundamentais da reprodução da sua música. Esses plugins ajudam você a controlar o volume, o balanceamento e outros aspectos básicos da sua experiência auditiva.
 
 ## Lista de Plugins
 
-- [Volume](#volume) - Controla o volume da reprodução
 - [DC Offset](#dc-offset) - Ajuda a corrigir áudio que soa desequilibrado
-- [Polarity Inversion](#polarity-inversion) - Pode melhorar como o áudio estéreo soa
-- [Stereo Balance](#stereo-balance) - Ajusta o balanço esquerda-direita da sua música
-
-## Volume
-
-Um controle simples mas essencial que permite ajustar o volume da sua música. Perfeito para encontrar o nível ideal de audição para diferentes situações.
-
-### Guia de Aprimoramento da Audição
-- Ajuste para diferentes cenários:
-  - Música de fundo durante o trabalho
-  - Sessões de audição ativa
-  - Audição silenciosa noturna
-- Mantenha o volume em níveis confortáveis para evitar:
-  - Fadiga auditiva
-  - Distorção do som
-  - Possíveis danos à audição
-
-### Parâmetros
-- **Volume** - Controla o volume geral (-60dB a +24dB)
-  - Valores menores: Reprodução mais baixa
-  - Valores maiores: Reprodução mais alta
-  - 0dB: Nível de volume original
+- [Mute](#mute) - Silencia a saída de áudio
+- [Polarity Inversion](#polarity-inversion) - Pode melhorar como a música estéreo soa
+- [Stereo Balance](#stereo-balance) - Ajusta o balanceamento esquerdo-direito da sua música
+- [Volume](#volume) - Controla o quão alto a música toca
 
 ## DC Offset
 
-Uma utilidade que pode ajudar a corrigir áudio que soa desequilibrado ou estranho. A maioria dos ouvintes não precisará disso frequentemente, mas é útil quando você encontra áudio que não soa muito bem.
+Uma ferramenta que pode ajudar a corrigir áudio que soa desequilibrado ou estranho. A maioria dos ouvintes não precisará dela com frequência, mas é útil quando você encontra um áudio que não soa exatamente certo.
 
 ### Quando Usar
-- Se a música soar incomumente desequilibrada
-- Quando um canal parece mais alto do que deveria
+- Se a música soar inusitadamente desequilibrada
+- Quando um canal parecer mais alto do que deveria
 - Se outros efeitos não estiverem funcionando como esperado
 
 ### Parâmetros
-- **Offset** - Ajusta o balanço do áudio (-1.0 a +1.0)
+- **Offset** - Ajusta o balanceamento de áudio (-1.0 a +1.0)
   - 0.0: Configuração normal
-  - Ajuste se algo soar estranho
-  - Ajustes pequenos geralmente funcionam melhor
+  - Ajuste se algo soar fora do lugar
+  - Pequenos ajustes geralmente funcionam melhor
+
+## Mute
+
+Uma ferramenta simples que silencia toda a saída de áudio preenchendo o buffer com zeros. Útil para mutar sinais de áudio instantaneamente.
+
+### Quando Usar
+- Para silenciar o áudio instantaneamente sem fade
+- Durante seções silenciosas ou pausas
+- Para evitar ruídos indesejados
 
 ## Polarity Inversion
 
 Uma ferramenta que pode melhorar como a música estéreo soa em certas situações. É como "inverter" a onda de áudio para potencialmente fazê-la soar melhor.
 
-### Quando Usar
-- Quando a música estéreo soa "vazia" ou "estranha"
-- Se combinando com outros efeitos estéreo
-- Quando tentando melhorar a imagem estéreo
+Você também pode inverter a polaridade apenas de canais específicos limitando os canais a serem processados nas configurações comuns do efeito.
 
-### Parâmetros
-- **Channel** - Escolha qual lado ajustar
-  - All: Afeta ambos esquerdo e direito
-  - Left: Afeta apenas o alto-falante/fone esquerdo
-  - Right: Afeta apenas o alto-falante/fone direito
+### Quando Usar
+- Quando a música estéreo soar "vazia" ou "estranha"
+- Se combinado com outros efeitos estéreo
+- Ao tentar melhorar a espacialização estéreo
 
 ## Stereo Balance
 
-Permite ajustar como a música é distribuída entre seus alto-falantes ou fones de ouvido esquerdo e direito. Perfeito para corrigir estéreo desigual ou criar seu posicionamento sonoro preferido.
+Permite ajustar como a música é distribuída entre seus alto-falantes ou fones de ouvido esquerdo e direito. Perfeito para corrigir estéreo desigual ou criar seu posicionamento de som preferido.
 
-### Guia de Aprimoramento da Audição
-- Balanço Perfeito:
+### Guia de Melhoria de Audição
+- Balance Perfeito:
   - Posição central para estéreo natural
   - Volume igual em ambos os ouvidos
   - Melhor para a maioria das músicas
-- Balanço Ajustado:
-  - Compensa a acústica do ambiente
-  - Ajusta para diferenças auditivas
-  - Cria palco sonoro preferido
+- Balance Ajustado:
+  - Compensar acústica do ambiente
+  - Ajustar para diferenças de audição
+  - Criar palco sonoro preferido
 
 ### Parâmetros
 - **Balance** - Controla a distribuição esquerda-direita (-100% a +100%)
-  - Centro (0%): Igual em ambos os lados
-  - Esquerda (-100%): Mais som na esquerda
-  - Direita (+100%): Mais som na direita
+  - Central (0%): Igual em ambos os lados
+  - Esquerda (-100%): Mais som no lado esquerdo
+  - Direita (+100%): Mais som no lado direito
 
-### Display Visual
-- Controle deslizante fácil de usar
+### Exibição Visual
+- Slider de fácil uso
 - Exibição clara de números
 - Indicador visual da posição estéreo
 
 ### Usos Recomendados
 
 1. Audição Geral
-   - Mantenha o balanço centralizado (0%)
+   - Mantenha o balanceamento centralizado (0%)
    - Ajuste se o estéreo parecer desigual
    - Use ajustes sutis
 
 2. Audição com Fones
    - Ajuste fino para conforto
-   - Compense diferenças auditivas
-   - Crie imagem estéreo preferida
+   - Compensar diferenças de audição
+   - Criar imagem estéreo preferida
 
-3. Audição com Alto-falantes
-   - Ajuste para configuração do ambiente
-   - Balance para posição de audição
-   - Compense a acústica do ambiente
+3. Audição em Caixas de Som
+   - Ajustar para a configuração do ambiente
+   - Balancear para a posição de audição
+   - Compensar a acústica da sala
 
-Lembre-se: Estes controles básicos são a base de um bom som. Comece com estes ajustes antes de usar efeitos mais complexos!
+## Volume
+
+Um controle simples mas essencial que permite ajustar o quão alto sua música toca. Perfeito para encontrar o nível de audição certo para diferentes situações.
+
+### Guia de Melhoria de Audição
+- Ajuste para diferentes cenários de audição:
+  - Música de fundo enquanto trabalha
+  - Sessões de audição ativa
+  - Audição silenciosa tarde da noite
+- Mantenha o volume em níveis confortáveis para evitar:
+  - Fadiga auditiva
+  - Distorção de som
+  - Possível dano auditivo
+
+### Parâmetros
+- **Volume** - Controla o volume geral (-60dB a +24dB)
+  - Valores mais baixos: Reprodução mais silenciosa
+  - Valores mais altos: Reprodução mais alta
+  - 0dB: Nível de volume original
+
+Lembre-se: Esses controles básicos são a base de um bom som. Comece com esses ajustes antes de usar efeitos mais complexos!

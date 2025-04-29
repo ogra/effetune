@@ -4,30 +4,11 @@ A collection of essential tools for adjusting the fundamental aspects of your mu
 
 ## Plugin List
 
-- [Volume](#volume) - Controls how loud the music plays
 - [DC Offset](#dc-offset) - Helps fix audio that sounds unbalanced
+- [Mute](#mute) - Silences the audio output
 - [Polarity Inversion](#polarity-inversion) - Can improve how stereo music sounds
 - [Stereo Balance](#stereo-balance) - Adjusts the left-right balance of your music
-
-## Volume
-
-A simple but essential control that lets you adjust how loud your music plays. Perfect for finding the right listening level for different situations.
-
-### Listening Enhancement Guide
-- Adjust for different listening scenarios:
-  - Background music while working
-  - Active listening sessions
-  - Late night quiet listening
-- Keep volume at comfortable levels to avoid:
-  - Listening fatigue
-  - Sound distortion
-  - Potential hearing damage
-
-### Parameters
-- **Volume** - Controls the overall loudness (-60dB to +24dB)
-  - Lower values: Quieter playback
-  - Higher values: Louder playback
-  - 0dB: Original volume level
+- [Volume](#volume) - Controls how loud the music plays
 
 ## DC Offset
 
@@ -44,20 +25,25 @@ A utility that can help fix audio that sounds unbalanced or strange. Most listen
   - Adjust if something sounds off
   - Small adjustments usually work best
 
+## Mute
+
+A simple utility that silences all audio output by filling the buffer with zeros. Useful for instantly muting audio signals.
+
+### When to Use
+- To instantly silence audio without fade
+- During silent sections or pauses
+- To prevent unwanted noise output
+
 ## Polarity Inversion
 
 A tool that can improve how stereo music sounds in certain situations. It's like "flipping" the audio wave to potentially make it sound better.
+
+You can also invert the polarity of only specific channels by limiting the channels to be processed in the effector common settings.
 
 ### When to Use
 - When stereo music sounds "hollow" or "weird"
 - If combining this with other stereo effects
 - When trying to improve stereo imaging
-
-### Parameters
-- **Channel** - Choose which side to adjust
-  - All: Affects both left and right
-  - Left: Only affects left speaker/earphone
-  - Right: Only affects right speaker/earphone
 
 ## Stereo Balance
 
@@ -100,5 +86,25 @@ Lets you adjust how the music is distributed between your left and right speaker
    - Adjust for room setup
    - Balance for listening position
    - Compensate for room acoustics
+
+## Volume
+
+A simple but essential control that lets you adjust how loud your music plays. Perfect for finding the right listening level for different situations.
+
+### Listening Enhancement Guide
+- Adjust for different listening scenarios:
+  - Background music while working
+  - Active listening sessions
+  - Late night quiet listening
+- Keep volume at comfortable levels to avoid:
+  - Listening fatigue
+  - Sound distortion
+  - Potential hearing damage
+
+### Parameters
+- **Volume** - Controls the overall loudness (-60dB to +24dB)
+  - Lower values: Quieter playback
+  - Higher values: Louder playback
+  - 0dB: Original volume level
 
 Remember: These basic controls are the foundation of good sound. Start with these adjustments before using more complex effects!
