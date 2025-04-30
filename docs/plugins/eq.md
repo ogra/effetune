@@ -5,6 +5,7 @@ A collection of plugins that let you adjust different aspects of your music's so
 ## Plugin List
 
 - [15Band GEQ](#15band-geq) - Detailed sound adjustment with 15 precise controls
+- [5Band Dynamic EQ](#5band-dynamic-eq) - Dynamics-based equalizer that responds to your music
 - [5Band PEQ](#5band-peq) - Professional parametric equalizer with flexible controls
 - [Hi Pass Filter](#hi-pass-filter) - Remove unwanted low frequencies with precision
 - [Lo Pass Filter](#lo-pass-filter) - Remove unwanted high frequencies with precision
@@ -61,6 +62,55 @@ A detailed sound adjustment tool with 15 separate controls, each affecting a spe
 - Real-time graph showing your sound adjustments
 - Easy-to-use sliders with precise control
 - One-click reset to default settings
+
+## 5Band Dynamic EQ
+
+A smart equalizer that automatically adjusts frequency bands based on the content of your music. It combines precise equalization with dynamic processing that responds to changes in your music in real-time, creating an enhanced listening experience without constant manual adjustments.
+
+### Listening Enhancement Guide
+- Tame Harsh Vocals:
+  - Use peak filter at 3000Hz with higher ratio (4.0-10.0)
+  - Set moderate threshold (-24dB) and fast attack (10ms)
+  - Automatically reduces harshness only when vocals get too aggressive
+- Enhance Clarity and Brilliance:
+  - Use BBE-style high-frequency enhancement (Filter Type: Highshelf, SC Freq: 1200Hz, Ratio: 0.5, Attack: 1ms)
+  - Mids trigger high frequencies for natural-sounding clarity
+  - Adds sparkle to music without permanent brightness
+- Control Excessive Bass:
+  - Use lowshelf filter at 100Hz with moderate ratio (2.0-4.0)
+  - Keep bass impact while preventing speaker distortion
+  - Perfect for bass-heavy music on smaller speakers
+- Adaptive Sound Tailoring:
+  - Lets music dynamics control the sound balance
+  - Automatically adjusts to different songs and recordings
+  - Maintains consistent sound quality across your playlist
+
+### Parameters
+- **Five Band Controls** - Each with independent settings
+  - Band 1: 100Hz (Bass Region)
+  - Band 2: 300Hz (Lower Midrange)
+  - Band 3: 1000Hz (Midrange)
+  - Band 4: 3000Hz (Upper Midrange)
+  - Band 5: 10000Hz (High Frequencies)
+- **Band Settings**
+  - Filter Type: Choose between Peak, Lowshelf, or Highshelf
+  - Frequency: Fine-tune center/corner frequency (20Hz-20kHz)
+  - Q: Control bandwidth/sharpness (0.1-10.0)
+  - Max Gain: Set maximum gain adjustment (0-24dB)
+  - Threshold: Set level when processing begins (-60dB to 0dB)
+  - Ratio: Control processing intensity (0.1-10.0)
+    - Below 1.0: Expander (enhances when signal exceeds threshold)
+    - Above 1.0: Compressor (reduces when signal exceeds threshold)
+  - Knee Width: Smooth transition around threshold (0-30dB)
+  - Attack: How quickly processing begins (0.1-100ms)
+  - Release: How quickly processing ends (1-1000ms)
+  - Sidechain Frequency: Detection frequency (20Hz-20kHz)
+  - Sidechain Q: Detection bandwidth (0.1-10.0)
+
+### Visual Display
+- Real-time frequency response graph
+- Band-specific gain reduction indicators
+- Interactive frequency and gain controls
 
 ## 5Band PEQ
 

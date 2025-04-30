@@ -257,50 +257,53 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 ## Efeitos Disponíveis
 
 | Categoria | Efeito | Descrição | Documentação |
-|-----------|--------|-----------|--------------|
-| Analyzer  | Level Meter       | Exibe o nível de áudio com retenção de pico                                      | [Detalhes](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope      | Visualização em tempo real da forma de onda                                      | [Detalhes](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram       | Exibe as alterações do espectro de frequências ao longo do tempo                  | [Detalhes](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | Análise do espectro em tempo real                                                 | [Detalhes](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter      | Visualiza o equilíbrio estéreo e o movimento do som                               | [Detalhes](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset         | Ajuste do offset DC                                                                | [Detalhes](plugins/basics.md#dc-offset) |
-| Basics    | Polarity Inversion| Inversão da polaridade do sinal                                                    | [Detalhes](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance    | Controle do equilíbrio dos canais estéreo                                          | [Detalhes](plugins/basics.md#stereo-balance) |
-| Basics    | Volume            | Controle básico de volume                                                          | [Detalhes](plugins/basics.md#volume) |
-| Delay     | Delay             | Efeito de atraso padrão                                                           | [Detalhes](plugins/delay.md#delay) |
-| Delay     | Time Alignment    | Ajustes precisos de temporização para canais de áudio                             | [Detalhes](plugins/delay.md#time-alignment) |
-| Dynamics  | Auto Leveler      | Ajuste automático de volume baseado em medição LUFS para uma experiência de escuta consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |
-| Dynamics  | Brickwall Limiter | Controle transparente de picos para uma escuta segura e confortável              | [Detalhes](plugins/dynamics.md#brickwall-limiter) |
-| Dynamics  | Compressor        | Compressão da faixa dinâmica com controle de threshold, ratio e knee               | [Detalhes](plugins/dynamics.md#compressor) |
-| Dynamics  | Gate              | Noise gate com controle de threshold, ratio e knee para redução de ruído           | [Detalhes](plugins/dynamics.md#gate) |
-| Dynamics  | Multiband Compressor | Processador de dinâmica profissional de 5 bandas com modelagem de som no estilo rádio FM | [Detalhes](plugins/dynamics.md#multiband-compressor) |
-| EQ        | 15Band GEQ        | Equalizador gráfico de 15 bandas                                                   | [Detalhes](plugins/eq.md#15band-geq) |
-| EQ        | 5Band PEQ         | Equalizador paramétrico profissional com 5 bandas totalmente configuráveis         | [Detalhes](plugins/eq.md#5band-peq) |
-| EQ | Hi Pass Filter | Remove frequências baixas indesejadas com precisão | [Detalhes](plugins/eq.md#hi-pass-filter) |
-| EQ | Lo Pass Filter | Remove frequências altas indesejadas com precisão | [Detalhes](plugins/eq.md#lo-pass-filter) |
-| EQ        | Loudness Equalizer| Correção do equilíbrio de frequência para audição em volume baixo                  | [Detalhes](plugins/eq.md#loudness-equalizer) |
-| EQ        | Narrow Range      | Combinação de filtro passa-alta e passa-baixa                                      | [Detalhes](plugins/eq.md#narrow-range) |
-| EQ        | Tilt EQ | Equalizador de inclinação para modelagem rápida do tom | [Detalhes](plugins/eq.md#tilt-eq) |
-| EQ        | Tone Control      | Controle de tom de três bandas                                                     | [Detalhes](plugins/eq.md#tone-control) |
-| Lo-Fi     | Bit Crusher       | Redução da profundidade de bits e efeito de retenção de ordem zero                   | [Detalhes](plugins/lofi.md#bit-crusher) |
-| Lo-Fi     | Noise Blender     | Geração e mistura de ruído                                                         | [Detalhes](plugins/lofi.md#noise-blender) |
-| Lo-Fi     | Simple Jitter     | Simulação de jitter digital                                                        | [Detalhes](plugins/lofi.md#simple-jitter) |
-| Modulation | Doppler Distortion | Simula as mudanças naturais e dinâmicas no som causadas pelos movimentos sutis do cone do alto-falante | [Detalhes](plugins/modulation.md#doppler-distortion) |
-| Modulation | Pitch Shifter | Efeito leve de alteração de tom | [Detalhes](docs/plugins/modulation.md#pitch-shifter) |
-| Modulation | Tremolo | Efeito de modulação baseado em volume | [Detalhes](docs/plugins/modulation.md#tremolo) |
-| Modulation | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](docs/plugins/modulation.md#wow-flutter) |
-| Resonator | Horn Resonator | Simulacao de ressonancia de corneta com dimensoes personalizaveis | [Detalhes](plugins/resonator.md#horn-resonator) |
-| Resonator | Modal Resonator | Efeito de ressonancia de frequencia com ate 5 ressonadores | [Detalhes](plugins/resonator.md#modal-resonator) |
-| Reverb    | RS Reverb         | Reverb de dispersão aleatória com difusão natural                                  | [Detalhes](plugins/reverb.md#rs-reverb) |
-| Saturation| Hard Clipping     | Efeito de hard clipping digital                                                    | [Detalhes](plugins/saturation.md#hard-clipping) |
-| Saturation | Harmonic Distortion | Adiciona um caráter único através da distorção harmônica com controle independente de cada harmônico | [Detalhes](plugins/saturation.md#harmonic-distortion) |
-| Saturation| Multiband Saturation | Efeito de saturação de 3 bandas para um aquecimento preciso baseado em frequência    | [Detalhes](plugins/saturation.md#multiband-saturation) |
-| Saturation| Saturation        | Efeito de saturação                                                                | [Detalhes](plugins/saturation.md#saturation) |
-| Saturation| Sub Synth         | Mistura sinais subharmônicos para realce dos graves                                | [Detalhes](plugins/saturation.md#sub-synth) |
-| Spatial   | Multiband Balance | Controle de equilíbrio estéreo dependente da frequência com 5 bandas                 | [Detalhes](plugins/spatial.md#multiband-balance) |
-| Spatial   | Stereo Blend      | Efeito de controle de largura estéreo                                              | [Detalhes](plugins/spatial.md#stereo-blend) |
-| Others    | Oscillator        | Gerador de sinal de áudio com múltiplas formas de onda                             | [Detalhes](plugins/others.md#oscillator) |
-| Control   | Section           | Group multiple effects for unified control                                         | [Details](plugins/control.md) |
+|-----------|--------|-------------|---------------|
+| Analyzer  | Level Meter | Exibe o nível de áudio com retenção de pico | [Detalhes](plugins/analyzer.md#level-meter) |
+| Analyzer  | Oscilloscope | Visualização em tempo real da forma de onda | [Detalhes](plugins/analyzer.md#oscilloscope) |
+| Analyzer  | Spectrogram | Mostra as mudanças no espectro de frequência ao longo do tempo | [Detalhes](plugins/analyzer.md#spectrogram) |
+| Analyzer  | Spectrum Analyzer | Análise de espectro em tempo real | [Detalhes](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter | Visualiza o equilíbrio estéreo e movimentação do som | [Detalhes](plugins/analyzer.md#stereo-meter) |
+| Basics    | DC Offset | Ajuste de deslocamento CC | [Detalhes](plugins/basics.md#dc-offset) |
+| Basics    | Mute | Silencia completamente o sinal de áudio | [Detalhes](plugins/basics.md#mute) |
+| Basics    | Polarity Inversion | Inversão de polaridade do sinal | [Detalhes](plugins/basics.md#polarity-inversion) |
+| Basics    | Stereo Balance | Controle de equilíbrio dos canais estéreo | [Detalhes](plugins/basics.md#stereo-balance) |
+| Basics    | Volume | Controle básico de volume | [Detalhes](plugins/basics.md#volume) |
+| Delay     | Delay | Efeito de atraso padrão | [Detalhes](plugins/delay.md#delay) |
+| Delay     | Time Alignment | Ajustes finos de sincronização para canais de áudio | [Detalhes](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler | Ajuste automático de volume baseado na medição LUFS para experiência de audição consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter | Controle transparente de picos para audição segura e confortável | [Detalhes](plugins/dynamics.md#brickwall-limiter) |
+| Dynamics  | Compressor | Compressão de faixa dinâmica com controle de limiar, razão e knee | [Detalhes](plugins/dynamics.md#compressor) |
+| Dynamics  | Gate | Portão de ruído com controle de limiar, razão e knee para redução de ruído | [Detalhes](plugins/dynamics.md#gate) |
+| Dynamics  | Multiband Compressor | Processador de dinâmica profissional de 5 bandas com modelagem sonora estilo rádio FM | [Detalhes](plugins/dynamics.md#multiband-compressor) |
+| EQ        | 15Band GEQ | Equalizador gráfico de 15 bandas | [Detalhes](plugins/eq.md#15band-geq) |
+| EQ        | 5Band PEQ | Equalizador paramétrico profissional com 5 bandas totalmente configuráveis | [Detalhes](plugins/eq.md#5band-peq) |
+| EQ        | Five Band Dynamic EQ | Equalizador dinâmico de 5 bandas com ajuste de frequência baseado em limiar | [Detalhes](plugins/eq.md#five-band-dynamic-eq) |
+| EQ        | Hi Pass Filter | Remove frequências baixas indesejadas com precisão | [Detalhes](plugins/eq.md#hi-pass-filter) |
+| EQ        | Lo Pass Filter | Remove frequências altas indesejadas com precisão | [Detalhes](plugins/eq.md#lo-pass-filter) |
+| EQ        | Loudness Equalizer | Correção de balanço de frequência para audição em baixo volume | [Detalhes](plugins/eq.md#loudness-equalizer) |
+| EQ        | Narrow Range | Combinação de filtros passa-alta e passa-baixa | [Detalhes](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ | Equalizador tilt para modelagem rápida de tonalidade | [Detalhes](plugins/eq.md#tilt-eq) |
+| EQ        | Tone Control | Controle de tonalidade de três bandas | [Detalhes](plugins/eq.md#tone-control) |
+| Lo-Fi     | Bit Crusher | Redução de profundidade de bits e efeito de retenção de ordem zero | [Detalhes](plugins/lofi.md#bit-crusher) |
+| Lo-Fi     | Noise Blender | Geração e mistura de ruído | [Detalhes](plugins/lofi.md#noise-blender) |
+| Lo-Fi     | Simple Jitter | Simulação de jitter digital | [Detalhes](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | Simula mudanças naturais e dinâmicas no som causadas por sutis movimentos do cone do alto-falante | [Detalhes](plugins/modulation.md#doppler-distortion) |
+| Modulation | Pitch Shifter | Efeito de alteração de pitch leve | [Detalhes](plugins/modulation.md#pitch-shifter) |
+| Modulation | Tremolo | Efeito de modulação baseado em volume | [Detalhes](plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | Efeito de modulação baseado em tempo | [Detalhes](plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | Simulação de ressonância de corno com dimensões personalizáveis | [Detalhes](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | Efeito de ressonância de frequência com até 5 ressonadores | [Detalhes](plugins/resonator.md#modal-resonator) |
+| Reverb    | RS Reverb | Reverberação por espalhamento randômico com difusão natural | [Detalhes](plugins/reverb.md#rs-reverb) |
+| Saturation| Hard Clipping | Efeito de hard clipping digital | [Detalhes](plugins/saturation.md#hard-clipping) |
+| Saturation | Harmonic Distortion | Adiciona caráter único através de distorção harmônica com controle independente de cada harmônico | [Detalhes](plugins/saturation.md#harmonic-distortion) |
+| Saturation| Multiband Saturation | Efeito de saturação de 3 bandas para aquecimento preciso baseado em frequência | [Detalhes](plugins/saturation.md#multiband-saturation) |
+| Saturation| Saturation | Efeito de saturação | [Detalhes](plugins/saturation.md#saturation) |
+| Saturation| Sub Synth | Mistura sinais sub-harmônicos para realce de graves | [Detalhes](plugins/saturation.md#sub-synth) |
+| Spatial   | MS Matrix | Codificação e decodificação mid-side para manipulação estéreo | [Detalhes](plugins/spatial.md#ms-matrix) |
+| Spatial   | Multiband Balance | Controle de balanço estéreo dependente de frequência de 5 bandas | [Detalhes](plugins/spatial.md#multiband-balance) |
+| Spatial   | Stereo Blend | Efeito de controle de largura estéreo | [Detalhes](plugins/spatial.md#stereo-blend) |
+| Others    | Oscillator | Gerador de sinal de áudio multi-forma de onda | [Detalhes](plugins/others.md#oscillator) |
+| Control   | Section | Agrupa múltiplos efeitos para controle unificado | [Detalhes](plugins/control.md) |
 
 ## Informações Técnicas
 

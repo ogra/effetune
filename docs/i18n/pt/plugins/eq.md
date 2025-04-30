@@ -5,6 +5,7 @@ Uma coleção de plugins que permite ajustar diferentes aspectos do som da sua m
 ## Lista de Plugins
 
 - [15Band GEQ](#15band-geq) - Ajuste detalhado do som com 15 controles precisos
+- [5Band Dynamic EQ](#5band-dynamic-eq) - Equalizador baseado em dinâmica que reage à sua música
 - [5Band PEQ](#5band-peq) - Equalizador paramétrico profissional com controles flexíveis
 - [Hi Pass Filter](#hi-pass-filter) - Remove frequências baixas indesejadas com precisão
 - [Lo Pass Filter](#lo-pass-filter) - Remove frequências altas indesejadas com precisão
@@ -61,6 +62,55 @@ Uma ferramenta de ajuste de som detalhada com 15 controles separados, cada um af
 - Gráfico em tempo real mostrando os ajustes do seu som
 - Sliders fáceis de usar com controle preciso
 - Reinicialização para as configurações padrão com um clique
+
+## 5Band Dynamic EQ
+
+Um equalizador inteligente que ajusta automaticamente as bandas de frequência com base no conteúdo da sua música. Ele combina equalização precisa com processamento dinâmico que reage às mudanças na sua música em tempo real, criando uma experiência de audição aprimorada sem ajustes manuais constantes.
+
+### Guia de Aprimoramento de Audição
+- Domar Vocais Agressivos:
+  - Use o filtro Peak em 3000Hz com razão maior (4.0-10.0)
+  - Defina um Threshold moderado (-24dB) e um Attack rápido (10ms)
+  - Reduz automaticamente a aspereza apenas quando os vocais ficarem muito agressivos
+- Realçar Clareza e Brilho:
+  - Use aprimoramento de alta frequência estilo BBE (Filter Type: Highshelf, SC Freq: 1200Hz, Ratio: 0.5, Attack: 1ms)
+  - Mids disparam altas frequências para uma clareza natural
+  - Adiciona brilho à música sem luminosidade permanente
+- Controlar Graves Excessivos:
+  - Use o filtro Lowshelf em 100Hz com razão moderada (2.0-4.0)
+  - Mantém o impacto dos graves enquanto previne distorções nos alto-falantes
+  - Perfeito para músicas com graves intensos em alto-falantes menores
+- Personalização Adaptativa do Som:
+  - Permite que a dinâmica da música controle o equilíbrio sonoro
+  - Ajusta automaticamente a diferentes músicas e gravações
+  - Mantém qualidade de som consistente em toda sua playlist
+
+### Parâmetros
+- **Five Band Controls** - Cada um com configurações independentes
+  - Band 1: 100Hz (Região de Graves)
+  - Band 2: 300Hz (Médio Baixo)
+  - Band 3: 1000Hz (Médio)
+  - Band 4: 3000Hz (Médio Alto)
+  - Band 5: 10000Hz (Frequências Agudas)
+- **Band Settings**
+  - Filter Type: Escolha entre Peak, Lowshelf ou Highshelf
+  - Frequency: Ajuste fino da frequência central/de canto (20Hz-20kHz)
+  - Q: Controla largura de banda/nitidez (0.1-10.0)
+  - Max Gain: Defina o ajuste máximo de ganho (0-24dB)
+  - Threshold: Defina o nível em que o processamento começa (-60dB a 0dB)
+  - Ratio: Controle a intensidade do processamento (0.1-10.0)
+    - Below 1.0: Expander (potencializa quando o sinal excede o Threshold)
+    - Above 1.0: Compressor (reduz quando o sinal excede o Threshold)
+  - Knee Width: Transição suave em torno do Threshold (0-30dB)
+  - Attack: Velocidade de início do processamento (0.1-100ms)
+  - Release: Velocidade de término do processamento (1-1000ms)
+  - Sidechain Frequency: Frequência de detecção (20Hz-20kHz)
+  - Sidechain Q: Largura de banda de detecção (0.1-10.0)
+
+### Exibição Visual
+- Gráfico de resposta de frequência em tempo real
+- Indicadores de redução de ganho específicos por banda
+- Controles interativos de frequência e ganho
 
 ## 5Band PEQ
 

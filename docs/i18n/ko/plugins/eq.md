@@ -5,6 +5,7 @@
 ## 플러그인 목록
 
 - [15Band GEQ](#15band-geq) - 15개의 정밀한 컨트롤로 세밀한 사운드 조정
+- [5Band Dynamic EQ](#5band-dynamic-eq) - 음악에 반응하는 다이내믹 기반 이퀄라이저
 - [5Band PEQ](#5band-peq) - 유연한 컨트롤을 갖춘 전문 파라메트릭 이퀄라이저
 - [Hi Pass Filter](#hi-pass-filter) - 불필요한 저주파를 정밀하게 제거
 - [Lo Pass Filter](#lo-pass-filter) - 불필요한 고주파를 정밀하게 제거
@@ -61,6 +62,55 @@
 - 실시간 그래프로 사운드 조정을 보여줍니다.
 - 정밀한 제어가 가능한 사용하기 쉬운 슬라이더
 - 한 번의 클릭으로 기본 설정으로 재설정
+
+## 5Band Dynamic EQ
+
+음악 콘텐츠에 따라 주파수 밴드를 자동으로 조정하는 스마트 이퀄라이저입니다. 정확한 이퀄라이제이션과 실시간 음악 변화에 반응하는 다이내믹 프로세싱을 결합하여 지속적인 수동 조정 없이도 향상된 청취 환경을 제공합니다。
+
+### 청취 향상 가이드
+- 거친 보컬 다듬기:
+  - 3000Hz에서 Ratio(4.0-10.0)를 높게 설정한 Peak 필터 사용
+  - 적당한 Threshold(-24dB)와 빠른 Attack(10ms) 설정
+  - 보컬이 과도하게 거칠어질 때에만 자동으로 거칠기를 감소시킴
+- 선명도 및 화사함 강화:
+  - BBE 방식의 고주파 향상 사용 (Filter Type: Highshelf, SC Freq: 1200Hz, Ratio: 0.5, Attack: 1ms)
+  - 중음이 고주파를 트리거하여 자연스러운 선명도를 제공
+  - 영구적인 밝기 증가 없이 음악에 반짝임 추가
+- 과도한 베이스 제어:
+  - 100Hz에서 Ratio(2.0-4.0)를 중간 정도로 설정한 Lowshelf 필터 사용
+  - 스피커 왜곡을 방지하면서 베이스 임팩트 유지
+  - 작은 스피커에서 베이스가 강한 음악에 적합
+- 적응형 사운드 맞춤 설정:
+  - 음악 다이내믹이 사운드 밸런스를 제어하도록 허용
+  - 서로 다른 곡 및 녹음에 자동으로 조정
+  - 재생 목록 전반에 걸쳐 일관된 음질 유지
+
+### 파라미터
+- **Five Band Controls** - 각 밴드별 독립 설정
+  - Band 1: 100Hz (Bass Region)
+  - Band 2: 300Hz (Lower Midrange)
+  - Band 3: 1000Hz (Midrange)
+  - Band 4: 3000Hz (Upper Midrange)
+  - Band 5: 10000Hz (High Frequencies)
+- **Band Settings**
+  - Filter Type: Peak, Lowshelf, Highshelf 중 선택
+  - Frequency: 중심/코너 주파수 미세 조정 (20Hz-20kHz)
+  - Q: 대역폭/선명도 제어 (0.1-10.0)
+  - Max Gain: 최대 게인 조정 설정 (0-24dB)
+  - Threshold: 프로세싱 시작 레벨 설정 (-60dB~0dB)
+  - Ratio: 프로세싱 강도 제어 (0.1-10.0)
+    - 1.0 이하: Expander (신호가 Threshold를 초과할 때 강화)
+    - 1.0 이상: Compressor (신호가 Threshold를 초과할 때 감쇄)
+  - Knee Width: Threshold 주변 부드러운 전환 (0-30dB)
+  - Attack: 프로세싱 시작 속도 (0.1-100ms)
+  - Release: 프로세싱 종료 속도 (1-1000ms)
+  - Sidechain Frequency: 감지 주파수 (20Hz-20kHz)
+  - Sidechain Q: 감지 대역폭 (0.1-10.0)
+
+### 시각적 표시
+- 실시간 주파수 응답 그래프
+- 밴드별 게인 감소 표시
+- 상호작용형 Frequency 및 Gain 컨트롤
 
 ## 5Band PEQ
 

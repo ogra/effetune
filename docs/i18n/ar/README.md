@@ -239,53 +239,56 @@
 **س. هل سيعمل هذا مع أي مصدر صوت؟**
 ج. نعم، يمكن لـ EffeTune معالجة أي صوت يتم تشغيله من جهاز الإدخال الذي اخترته، بما في ذلك خدمات البث، الملفات المحلية، والوسائط المادية.
 
-## التأثيرات المتوفرة
+## التأثيرات المتاحة
 
-| الفئة    | التأثير         | الوصف                                                       | الوثائق                                        |
-|----------|-----------------|-------------------------------------------------------------|------------------------------------------------|
-| Analyzer | Level Meter     | يعرض مستوى الصوت مع تثبيت القمة                             | [تفاصيل](plugins/analyzer.md#level-meter)       |
-| Analyzer | Oscilloscope    | تصور الموجة الزمنية في الوقت الحقيقي                         | [تفاصيل](plugins/analyzer.md#oscilloscope)      |
-| Analyzer | Spectrogram     | يعرض تغيرات طيف التردد مع مرور الوقت                        | [تفاصيل](plugins/analyzer.md#spectrogram)       |
-| Analyzer | Spectrum Analyzer | تحليل الطيف في الوقت الحقيقي                               | [تفاصيل](plugins/analyzer.md#spectrum-analyzer)  |
-| Analyzer | Stereo Meter    | يصوّر توازن الصوت الستيريو وحركة الصوت                         | [تفاصيل](plugins/analyzer.md#stereo-meter)       |
-| Basics   | DC Offset       | تعديل الإزاحة المستمرة (DC offset)                           | [تفاصيل](plugins/basics.md#dc-offset)           |
-| Basics   | Polarity Inversion | عكس قطبية الإشارة                                        | [تفاصيل](plugins/basics.md#polarity-inversion)   |
-| Basics   | Stereo Balance  | تحكم في توازن القنوات الستيريو                              | [تفاصيل](plugins/basics.md#stereo-balance)       |
-| Basics   | Volume          | تحكم أساسي في مستوى الصوت                                  | [تفاصيل](plugins/basics.md#volume)              |
-| Delay    | Delay           | تأثير تأخير قياسي                                          | [تفاصيل](plugins/delay.md#delay)              |
-| Delay    | Time Alignment  | ضبط دقيق لتوقيت القنوات الصوتية                           | [تفاصيل](plugins/delay.md#time-alignment)       |
-| Dynamics | Auto Leveler    | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متناسقة | [تفاصيل](plugins/dynamics.md#auto-leveler)      |
-| Dynamics | Brickwall Limiter | تحكم شفاف في القمم للاستماع الآمن والمريح                | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |
-| Dynamics | Compressor      | ضغط النطاق الديناميكي مع تحكم في العتبة والنسبة والنقاط الحرجة | [تفاصيل](plugins/dynamics.md#compressor)        |
-| Dynamics | Gate            | بوابة للحد من الضوضاء مع تحكم في العتبة والنسبة والنقاط الحرجة لتقليل الضوضاء | [تفاصيل](plugins/dynamics.md#gate)              |
-| Dynamics | Multiband Compressor | معالج ديناميكي احترافي بخمس نطاقات مع تشكيل صوت على نمط إذاعة FM | [تفاصيل](plugins/dynamics.md#multiband-compressor) |
-| EQ       | 15Band GEQ      | مضبط ترددات بياني بـ 15 نطاق                                | [تفاصيل](plugins/eq.md#15band-geq)               |
-| EQ       | 5Band PEQ       | مضبط ترددات بارامتري احترافي مع 5 نطاقات قابلة للتعديل بالكامل | [تفاصيل](plugins/eq.md#5band-peq)                |
-| EQ | Hi Pass Filter | إزالة الترددات المنخفضة غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#hi-pass-filter) |
-| EQ | Lo Pass Filter | إزالة الترددات العالية غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#lo-pass-filter) |
-| EQ       | Loudness Equalizer | تصحيح توازن الترددات للاستماع بمستوى صوت منخفض              | [تفاصيل](plugins/eq.md#loudness-equalizer)       |
-| EQ       | Narrow Range    | مزيج من مرشحات التردد العالي والمنخفض                       | [تفاصيل](plugins/eq.md#narrow-range)            |
-| EQ       | Tilt EQ         | معادل الإمالة لتشكيل النغمة بسرعة                          | [تفاصيل](plugins/eq.md#tilt-eq)                  |
-| EQ       | Tone Control    | تحكم في النغم بثلاث نطاقات                                  | [تفاصيل](plugins/eq.md#tone-control)             |
-| Lo-Fi    | Bit Crusher     | تقليل عمق البت وتأثير الاحتفاظ بالترتيب الصفري                 | [تفاصيل](plugins/lofi.md#bit-crusher)            |
-| Lo-Fi    | Noise Blender   | توليد وخلط الضوضاء                                          | [تفاصيل](plugins/lofi.md#noise-blender)          |
-| Lo-Fi    | Simple Jitter   | محاكاة التذبذب الرقمي                                       | [تفاصيل](plugins/lofi.md#simple-jitter)          |
-| Modulation | Doppler Distortion | يحاكي التحولات الطبيعية والديناميكية في الصوت الناتجة عن حركة مخروط السماعة الدقيقة | [تفاصيل](plugins/modulation.md#doppler-distortion) |
-| Modulation | Pitch Shifter | تأثير خفيف لتغيير حدة الصوت | [تفاصيل](docs/plugins/modulation.md#pitch-shifter) |
-| Modulation | Tremolo | تأثير تعديل يعتمد على مستوى الصوت | [تفاصيل](docs/plugins/modulation.md#tremolo) |
-| Modulation | Wow Flutter | تأثير تعديل يعتمد على الوقت | [تفاصيل](docs/plugins/modulation.md#wow-flutter) |
-| Resonator | Horn Resonator | محاكاة رنين البوق مع أبعاد قابلة للتخصيص | [تفاصيل](plugins/resonator.md#horn-resonator) |
-| Resonator | Modal Resonator | تأثير رنين التردد مع ما يصل إلى 5 مرنات | [تفاصيل](plugins/resonator.md#modal-resonator) |
-| Reverb   | RS Reverb       | تأثير صدى مع تشتت عشوائي وانتشار طبيعي                      | [تفاصيل](plugins/reverb.md#rs-reverb)            |
-| Saturation | Hard Clipping   | تأثير قص رقمي صارم                                         | [تفاصيل](plugins/saturation.md#hard-clipping)    |
-| Saturation | Harmonic Distortion | يضيف طابعًا فريدًا من خلال التشويه التوافقي مع تحكم مستقل في كل توافقية | [تفاصيل](plugins/saturation.md#harmonic-distortion) |
-| Saturation | Multiband Saturation | تأثير تشبع بـ 3 نطاقات لدفء يعتمد على التردد بدقة       | [تفاصيل](plugins/saturation.md#multiband-saturation) |
-| Saturation | Saturation      | تأثير التشبع                                             | [تفاصيل](plugins/saturation.md#saturation)       |
-| Saturation | Sub Synth      | يخلط الإشارات الفرعية لتعزيز الجهير                         | [تفاصيل](plugins/saturation.md#sub-synth)        |
-| Spatial  | Multiband Balance | تحكم في توازن الصوت الستيريو يعتمد على التردد عبر 5 نطاقات   | [تفاصيل](plugins/spatial.md#multiband-balance)   |
-| Spatial  | Stereo Blend    | تأثير التحكم في عرض الستيريو                                | [تفاصيل](plugins/spatial.md#stereo-blend)        |
-| Others   | Oscillator      | مولّد إشارات صوتية متعددة الموجات                          | [تفاصيل](plugins/others.md#oscillator)           |
-| Control  | Section         | Group multiple effects for unified control                | [Details](plugins/control.md)                  |
+| الفئة | التأثير | الوصف | الوثائق |
+|-----------|--------|-------------|---------------|
+| Analyzer  | Level Meter | يعرض مستوى الصوت مع تثبيت ذروة | [تفاصيل](plugins/analyzer.md#level-meter) |
+| Analyzer  | Oscilloscope | تصور شكل الموجة في الوقت الحقيقي | [تفاصيل](plugins/analyzer.md#oscilloscope) |
+| Analyzer  | Spectrogram | يعرض تغيرات طيف التردد بمرور الوقت | [تفاصيل](plugins/analyzer.md#spectrogram) |
+| Analyzer  | Spectrum Analyzer | تحليل طيفي في الوقت الحقيقي | [تفاصيل](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter | يصور توازن الستيريو وحركة الصوت | [تفاصيل](plugins/analyzer.md#stereo-meter) |
+| Basics    | DC Offset | ضبط الانحراف المستمر | [تفاصيل](plugins/basics.md#dc-offset) |
+| Basics    | Mute | كتم الإشارة الصوتية تمامًا | [تفاصيل](plugins/basics.md#mute) |
+| Basics    | Polarity Inversion | قلب قطبية الإشارة | [تفاصيل](plugins/basics.md#polarity-inversion) |
+| Basics    | Stereo Balance | التحكم في توازن القنوات الستيريو | [تفاصيل](plugins/basics.md#stereo-balance) |
+| Basics    | Volume | التحكم الأساسي في مستوى الصوت | [تفاصيل](plugins/basics.md#volume) |
+| Delay     | Delay          | تأثير تأخير قياسي                                   | [تفاصيل](plugins/delay.md#delay) |
+| Delay     | Time Alignment | ضبط توقيت القنوات الصوتية بدقة | [تفاصيل](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متسقة | [تفاصيل](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter | التحكم الشفاف في الذروة لأمان واستماع مريح | [تفاصيل](plugins/dynamics.md#brickwall-limiter) |
+| Dynamics  | Compressor | ضغط الديناميكيات مع التحكم في العتبة والنسبة والمنحدر | [تفاصيل](plugins/dynamics.md#compressor) |
+| Dynamics  | Gate | بوابة ضوضاء مع التحكم في العتبة والنسبة والمنحدر لتقليل الضوضاء | [تفاصيل](plugins/dynamics.md#gate) |
+| Dynamics  | Multiband Compressor | معالج ديناميكيات احترافي خماسي النطاق بتشكيل صوت يشبه راديو FM | [تفاصيل](plugins/dynamics.md#multiband-compressor) |
+| EQ        | 15Band GEQ | معادل رسومي 15-نطاق | [تفاصيل](plugins/eq.md#15band-geq) |
+| EQ        | 5Band PEQ | معادل بارامتري احترافي بخمسة نطاقات قابلة للتكوين بالكامل | [تفاصيل](plugins/eq.md#5band-peq) |
+| EQ        | Five Band Dynamic EQ | معادل ديناميكي خماسي النطاق مع تعديل تردد بناءً على العتبة | [تفاصيل](plugins/eq.md#five-band-dynamic-eq) |
+| EQ        | Hi Pass Filter | إزالة الترددات المنخفضة غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#hi-pass-filter) |
+| EQ        | Lo Pass Filter | إزالة الترددات العالية غير المرغوب فيها بدقة | [تفاصيل](plugins/eq.md#lo-pass-filter) |
+| EQ        | Loudness Equalizer | تصحيح توازن التردد للاستماع بمستويات منخفضة | [تفاصيل](plugins/eq.md#loudness-equalizer) |
+| EQ        | Narrow Range | مجموعة من مرشحات التمرير العالي والتمرير المنخفض | [تفاصيل](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ      | معادل مائل لتشكيل النغمة بسرعة | [تفاصيل](plugins/eq.md#tilt-eq)      |
+| EQ        | Tone Control | تحكم في النغمة بثلاث نطاقات | [تفاصيل](plugins/eq.md#tone-control) |
+| Lo-Fi     | Bit Crusher | تقليل العمق الثنائي وتأثير التثبيت الصفري | [تفاصيل](plugins/lofi.md#bit-crusher) |
+| Lo-Fi     | Noise Blender | توليد الضوضاء ومزجها | [تفاصيل](plugins/lofi.md#noise-blender) |
+| Lo-Fi     | Simple Jitter | محاكاة التذبذب الرقمي | [تفاصيل](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | يحاكي التغيرات الديناميكية الطبيعية في الصوت الناتجة عن حركات مخددات السماعة الطفيفة | [تفاصيل](plugins/modulation.md#doppler-distortion) |
+| Modulation | Pitch Shifter | تأثير تغيير درجة الصوت خفيف الوزن | [تفاصيل](plugins/modulation.md#pitch-shifter) |
+| Modulation | Tremolo | تأثير التضمين بناءً على مستوى الصوت | [تفاصيل](plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | تأثير التضمين الزمني | [تفاصيل](plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | محاكاة رنين القرن بأبعاد قابلة للتخصيص | [تفاصيل](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | تأثير رنين ترددي مع ما يصل إلى 5 رنانات | [تفاصيل](plugins/resonator.md#modal-resonator) |
+| Reverb    | RS Reverb | صدى منتشر عشوائي مع انتشار طبيعي | [تفاصيل](plugins/reverb.md#rs-reverb) |
+| Saturation| Hard Clipping | تأثير القص الرقمي الصلب | [تفاصيل](plugins/saturation.md#hard-clipping) |
+| Saturation | Harmonic Distortion | يضيف طابعًا فريدًا من خلال التشويه التوافقي مع التحكم المستقل في كل توافقي | [تفاصيل](plugins/saturation.md#harmonic-distortion) |
+| Saturation| Multiband Saturation | تأثير تشبع ثلاثي النطاقات لدفء دقيق حسب التردد | [تفاصيل](plugins/saturation.md#multiband-saturation) |
+| Saturation| Saturation | تأثير التشبع | [تفاصيل](plugins/saturation.md#saturation) |
+| Saturation| Sub Synth | مزج إشارات تحت-توافقي لتعزيز الجهير | [تفاصيل](plugins/saturation.md#sub-synth) |
+| Spatial   | MS Matrix | ترميز وفك ترميز منتصف-جانبي للتلاعب الستيريو | [تفاصيل](plugins/spatial.md#ms-matrix) |
+| Spatial   | Multiband Balance | التحكم في توازن الستيريو حسب التردد بخمسة نطاقات | [تفاصيل](plugins/spatial.md#multiband-balance) |
+| Spatial   | Stereo Blend | تأثير التحكم في عرض الستيريو | [تفاصيل](plugins/spatial.md#stereo-blend) |
+| Others    | Oscillator | مولد إشارة صوتية متعددة الأشكال | [تفاصيل](plugins/others.md#oscillator) |
+| Control   | Section | تجميع تأثيرات متعددة للتحكم الموحد | [تفاصيل](plugins/control.md) |
 
 ## المعلومات التقنية
 

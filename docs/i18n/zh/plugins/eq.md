@@ -5,6 +5,7 @@
 ## 插件列表
 
 - [15Band GEQ](#15band-geq) - 15个精确控制实现详细的声音调整
+- [5Band Dynamic EQ](#5band-dynamic-eq) - 基于动态的均衡器，可响应您的音乐
 - [5Band PEQ](#5band-peq) - 专业参数均衡器，具有灵活的控制
 - [Hi Pass Filter](#hi-pass-filter) - 精确去除不需要的低频
 - [Lo Pass Filter](#lo-pass-filter) - 精确去除不需要的高频
@@ -61,6 +62,55 @@
 - 实时图表展示您的声音调整情况
 - 易于使用的滑块，提供精确控制
 - 一键重置为默认设置
+
+## 5Band Dynamic EQ
+
+一个智能均衡器，根据音乐内容自动调整频段。它结合了精确的均衡与动态处理，可实时响应音乐变化，提供无需持续手动调节的增强聆听体验。
+
+### 听感增强指南
+- 驯服刺耳人声:
+  - 使用 Peak 滤波器于 3000Hz, 并设置较高比率 (4.0-10.0)
+  - 设置适中 Threshold (-24dB) 和快速 Attack (10ms)
+  - 仅在人声过于激进时自动降低刺耳感
+- 提升清晰度与光彩:
+  - 使用 BBE 风格高频增强 (Filter Type: Highshelf, SC Freq: 1200Hz, Ratio: 0.5, Attack: 1ms)
+  - 中频触发高频, 实现自然清晰感
+  - 为音乐增添闪亮效果, 无需永久提升亮度
+- 控制过量低频:
+  - 使用 lowshelf 滤波器于 100Hz, 并设置中等比率 (2.0-4.0)
+  - 保持低频冲击力, 同时防止扬声器失真
+  - 适用于小型扬声器播放重低音乐
+- 自适应声音定制:
+  - 让音乐动态控制声音平衡
+  - 自动适应不同歌曲和录音
+  - 在播放列表中保持一致的音质
+
+### 参数
+- **Five Band Controls** - 各频段独立设置
+  - Band 1: 100Hz (低频区域)
+  - Band 2: 300Hz (低中频区域)
+  - Band 3: 1000Hz (中频区域)
+  - Band 4: 3000Hz (高中频区域)
+  - Band 5: 10000Hz (高频区域)
+- **Band Settings**
+  - Filter Type: 可选择 Peak, Lowshelf 或 Highshelf
+  - Frequency: 微调中心/拐点频率 (20Hz-20kHz)
+  - Q: 控制带宽/锐度 (0.1-10.0)
+  - Max Gain: 设置最大增益调整 (0-24dB)
+  - Threshold: 设置处理开始电平 (-60dB 至 0dB)
+  - Ratio: 控制处理强度 (0.1-10.0)
+    - Below 1.0: Expander (当信号超过阈值时增强)
+    - Above 1.0: Compressor (当信号超过阈值时压缩)
+  - Knee Width: 在阈值附近平滑过渡 (0-30dB)
+  - Attack: 处理开始速度 (0.1-100ms)
+  - Release: 处理结束速度 (1-1000ms)
+  - Sidechain Frequency: 检测频率 (20Hz-20kHz)
+  - Sidechain Q: 检测带宽 (0.1-10.0)
+
+### 可视化显示
+- 实时频率响应图
+- 各频段增益减少指示
+- 交互式频率和增益控制
 
 ## 5Band PEQ
 

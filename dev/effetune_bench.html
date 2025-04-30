@@ -395,24 +395,38 @@
                     benchmarkStatus.textContent = `Benchmarking ${name} (${completedCount + 1}/${pluginCount})...`;
                     const plugin = manager.createPlugin(name);
 
+                    let note = '';
                     if (name === 'Pitch Shifter') {
                         plugin.setParameters({ ps: 1 });
+                        note = 'Pitch Shift + 1 semitone';
                     } else if (name === 'Time Alignment') {
                         plugin.setParameters({ dl: 10 });
+                        note = 'Delay + 10ms';
                     } else if (name === '15Band GEQ') {
                         const params = {};
                         for (let i = 0; i < 15; i++) {
                             params['b' + i] = i % 2 === 0 ? 1 : -1;
                         }
                         plugin.setParameters(params);
+                        note = 'Enable all 15 bands';
+                    } else if (name === '5Band Dynamic EQ') {
+                        const params = {};
+                        params['bs'] = Array.from({ length: 5 }, () => ({}));
+                        for (let i = 0; i < 5; i++) {
+                            params['bs'][i]['en'] = true;
+                        }
+                        plugin.setParameters(params);
+                        note = 'Enable all 5 bands';
                     } else if (name === '5Band PEQ') {
                         const params = {};
                         for (let i = 0; i < 5; i++) {
                             params['g' + i] = i % 2 === 0 ? 1 : -1;
                         }
                         plugin.setParameters(params);
+                        note = 'Enable all 5 bands';
                     } else if (name === 'Tilt EQ') {
                         plugin.setParameters({ sl: 1 });
+                        note = 'Slope + 1db/oct';
                     }
 
                     const result = await benchmarkPlugin(plugin, audioBuffer, SAMPLE_RATE, BUFFER_SIZE, CHANNEL_COUNT);
@@ -420,6 +434,7 @@
                     // Retrieve category from pluginDefinitions
                     const def = pluginDefinitions.get(name);
                     result.category = def.category;
+                    result.note = note;
 
                     results.push(result);
                     completedCount++;
@@ -435,7 +450,7 @@
 
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                ['Category', 'Effect', 'Samples/sec', 'Real-Time Factor(x)', 'CPU usage (%)'].forEach(text => {
+                ['Category', 'Effect', 'Samples/sec', 'Real-Time Factor(x)', 'CPU usage (%)', 'Note'].forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
                     headerRow.appendChild(th);
@@ -467,6 +482,10 @@
                     const cpuUsage = (1 / parseFloat(result.speedupFactor)) * 100;
                     cpuUsageCell.textContent = cpuUsage.toFixed(1);
                     row.appendChild(cpuUsageCell);
+
+                    const noteCell = document.createElement('td');
+                    noteCell.textContent = result.note;
+                    row.appendChild(noteCell);
 
                     tbody.appendChild(row);
                 });

@@ -248,51 +248,54 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 
 ## 可用效果
 
-| 分类      | 效果              | 描述                                      | 文档          |
-|-----------|-------------------|-------------------------------------------|---------------|
-| Analyzer  | Level Meter       | 显示具有峰值保持的音频电平                   | [详情](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope      | 实时波形可视化                              | [详情](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram       | 显示频谱随时间变化的情况                     | [详情](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | 实时频谱分析                              | [详情](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter      | 可视化立体声平衡及声音运动                    | [详情](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset         | 直流偏移调整                               | [详情](plugins/basics.md#dc-offset) |
-| Basics    | Polarity Inversion| 信号极性反转                               | [详情](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance    | 立体声通道平衡控制                          | [详情](plugins/basics.md#stereo-balance) |
-| Basics    | Volume            | 基本音量控制                               | [详情](plugins/basics.md#volume) |
-| Delay     | Delay             | 标准延迟效果                               | [详情](plugins/delay.md#delay) |
-| Delay     | Time Alignment    | 音频通道的精确时间调整                      | [详情](plugins/delay.md#time-alignment) |
-| Dynamics  | Auto Leveler      | 基于 LUFS 测量的自动音量调整，确保一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
-| Dynamics  | Brickwall Limiter | 透明的峰值控制，实现安全舒适的聆听           | [详情](plugins/dynamics.md#brickwall-limiter) |
-| Dynamics  | Compressor        | 带有阈值、比例和拐点控制的动态范围压缩            | [详情](plugins/dynamics.md#compressor) |
-| Dynamics  | Gate              | 带有阈值、比例和拐点控制的降噪门                   | [详情](plugins/dynamics.md#gate) |
-| Dynamics  | Multiband Compressor | 专业的 5 频段动态处理器，具有 FM 电台风格的声音塑形   | [详情](plugins/dynamics.md#multiband-compressor) |
-| EQ        | 15Band GEQ        | 15 频段图形均衡器                           | [详情](plugins/eq.md#15band-geq) |
-| EQ        | 5Band PEQ         | 专业参数均衡器，具有 5 个全可配置频段              | [详情](plugins/eq.md#5band-peq) |
-| EQ | Hi Pass Filter | 精确地去除不需要的低频 | [详情](plugins/eq.md#hi-pass-filter) |
-| EQ | Lo Pass Filter | 精确地去除不需要的高频 | [详情](plugins/eq.md#lo-pass-filter) |
-| EQ        | Loudness Equalizer| 针对低音量聆听的频率平衡校正                    | [详情](plugins/eq.md#loudness-equalizer) |
-| EQ        | Narrow Range      | 高通和低通滤波器组合                         | [详情](plugins/eq.md#narrow-range) |
-| EQ        | Tilt EQ           | 用于快速音调塑造的倾斜均衡器                   | [详情](plugins/eq.md#tilt-eq)      |
-| EQ        | Tone Control      | 三频段音调控制                              | [详情](plugins/eq.md#tone-control) |
-| Lo-Fi     | Bit Crusher       | 位深度降低及零阶保持效果                       | [详情](plugins/lofi.md#bit-crusher) |
-| Lo-Fi     | Noise Blender     | 噪声生成与混合                              | [详情](plugins/lofi.md#noise-blender) |
-| Lo-Fi     | Simple Jitter     | 数字抖动模拟                               | [详情](plugins/lofi.md#simple-jitter) |
-| Modulation | Doppler Distortion | 模拟因音箱锥体微妙运动产生的自然、动态的声音变化 | [详情](plugins/modulation.md#doppler-distortion) |
-| Modulation | Pitch Shifter | 轻量级音高变换效果 | [详情](docs/plugins/modulation.md#pitch-shifter) |
-| Modulation | Tremolo | 基于音量的调制效果 | [详情](docs/plugins/modulation.md#tremolo) |
-| Modulation | Wow Flutter | 基于时间的调制效果 | [详情](docs/plugins/modulation.md#wow-flutter) |
-| Resonator | Horn Resonator | 具有可定制尺寸的喇叭共振模拟 | [详情](plugins/resonator.md#horn-resonator) |
-| Resonator | Modal Resonator | 具有最多5个共振器的频率共振效果 | [详情](plugins/resonator.md#modal-resonator) |
-| Reverb    | RS Reverb         | 随机散射混响，具有自然扩散效果                    | [详情](plugins/reverb.md#rs-reverb) |
-| Saturation| Hard Clipping     | 数字硬削波效果                              | [详情](plugins/saturation.md#hard-clipping) |
-| Saturation | Harmonic Distortion | 通过独立控制各谐波的谐波失真添加独特的特性 | [详情](plugins/saturation.md#harmonic-distortion) |
-| Saturation| Multiband Saturation | 3 频段饱和效果，实现精确的频率基础暖音             | [详情](plugins/saturation.md#multiband-saturation) |
-| Saturation| Saturation        | 饱和效果                                  | [详情](plugins/saturation.md#saturation) |
-| Saturation| Sub Synth         | 混合次谐波信号以增强低音                      | [详情](plugins/saturation.md#sub-synth) |
-| Spatial   | Multiband Balance | 5 频段频率依赖的立体声平衡控制                   | [详情](plugins/spatial.md#multiband-balance) |
-| Spatial   | Stereo Blend      | 立体声宽度控制效果                           | [详情](plugins/spatial.md#stereo-blend) |
-| Others    | Oscillator        | 多波形音频信号生成器                          | [详情](plugins/others.md#oscillator) |
-| Control   | Section           | Group multiple effects for unified control  | [详情](plugins/control.md) |
+| 类别 | 效果 | 描述 | 文档 |
+|-----------|--------|-------------|---------------|
+| Analyzer  | Level Meter | 显示带峰值保持的音频电平 | [详情](plugins/analyzer.md#level-meter) |
+| Analyzer  | Oscilloscope | 实时波形可视化 | [详情](plugins/analyzer.md#oscilloscope) |
+| Analyzer  | Spectrogram | 显示频谱随时间的变化 | [详情](plugins/analyzer.md#spectrogram) |
+| Analyzer  | Spectrum Analyzer | 实时频谱分析 | [详情](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer  | Stereo Meter | 可视化立体声平衡及声音运动 | [详情](plugins/analyzer.md#stereo-meter) |
+| Basics    | DC Offset | 直流偏移调整 | [详情](plugins/basics.md#dc-offset) |
+| Basics    | Mute | 完全静音音频信号 | [详情](plugins/basics.md#mute) |
+| Basics    | Polarity Inversion | 信号极性反转 | [详情](plugins/basics.md#polarity-inversion) |
+| Basics    | Stereo Balance | 立体声声道平衡控制 | [详情](plugins/basics.md#stereo-balance) |
+| Basics    | Volume | 基础音量控制 | [详情](plugins/basics.md#volume) |
+| Delay     | Delay | 标准延迟效果 | [详情](plugins/delay.md#delay) |
+| Delay     | Time Alignment | 音频通道的时序微调 | [详情](plugins/delay.md#time-alignment) |
+| Dynamics  | Auto Leveler | 基于LUFS测量的自动音量调整，以实现一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |
+| Dynamics  | Brickwall Limiter | 透明的峰值控制，确保安全舒适的聆听 | [详情](plugins/dynamics.md#brickwall-limiter) |
+| Dynamics  | Compressor | 具有阈值、比率和斜率控制的动态范围压缩 | [详情](plugins/dynamics.md#compressor) |
+| Dynamics  | Gate | 带阈值、比率和斜率控制的噪声门，用于降噪 | [详情](plugins/dynamics.md#gate) |
+| Dynamics  | Multiband Compressor | 专业的5频段动态处理器，具有FM广播风格的音色塑造 | [详情](plugins/dynamics.md#multiband-compressor) |
+| EQ        | 15Band GEQ | 15频段图示均衡器 | [详情](plugins/eq.md#15band-geq) |
+| EQ        | 5Band PEQ | 具有5个完全可配置频段的专业参数均衡器 | [详情](plugins/eq.md#5band-peq) |
+| EQ        | Five Band Dynamic EQ | 基于阈值的5频段动态均衡器 | [详情](plugins/eq.md#five-band-dynamic-eq) |
+| EQ        | Hi Pass Filter | 精确去除不需要的低频 | [详情](plugins/eq.md#hi-pass-filter) |
+| EQ        | Lo Pass Filter | 精确去除不需要的高频 | [详情](plugins/eq.md#lo-pass-filter) |
+| EQ        | Loudness Equalizer | 针对低音量聆听的频率平衡校正 | [详情](plugins/eq.md#loudness-equalizer) |
+| EQ        | Narrow Range | 高通和低通滤波器的组合 | [详情](plugins/eq.md#narrow-range) |
+| EQ        | Tilt EQ | 倾斜均衡器，用于快速音色塑造 | [详情](plugins/eq.md#tilt-eq)      |
+| EQ        | Tone Control | 三频段音色控制 | [详情](plugins/eq.md#tone-control) |
+| Lo-Fi     | Bit Crusher | 降低位深并应用零阶保持效果 | [详情](plugins/lofi.md#bit-crusher) |
+| Lo-Fi     | Noise Blender | 噪音生成与混合 | [详情](plugins/lofi.md#noise-blender) |
+| Lo-Fi     | Simple Jitter | 数字抖动模拟 | [详情](plugins/lofi.md#simple-jitter) |
+| Modulation | Doppler Distortion | 模拟因扬声器振膜微动引起的自然动态音色变化 | [详情](plugins/modulation.md#doppler-distortion) |
+| Modulation | Pitch Shifter | 轻量级移调效果 | [详情](plugins/modulation.md#pitch-shifter) |
+| Modulation | Tremolo | 基于音量的调制效果 | [详情](plugins/modulation.md#tremolo) |
+| Modulation | Wow Flutter | 基于时间的调制效果 | [详情](plugins/modulation.md#wow-flutter) |
+| Resonator | Horn Resonator | 具有可自定义尺寸的号角共鸣模拟 | [详情](plugins/resonator.md#horn-resonator) |
+| Resonator | Modal Resonator | 支持最多5个谐振器的频率共鸣效果 | [详情](plugins/resonator.md#modal-resonator) |
+| Reverb    | RS Reverb | 具有自然扩散的随机散射混响 | [详情](plugins/reverb.md#rs-reverb) |
+| Saturation| Hard Clipping | 数字硬削波效果 | [详情](plugins/saturation.md#hard-clipping) |
+| Saturation | Harmonic Distortion | 通过独立控制各谐波添加独特音色 | [详情](plugins/saturation.md#harmonic-distortion) |
+| Saturation| Multiband Saturation | 用于精确频率基暖音的三频段饱和效果 | [详情](plugins/saturation.md#multiband-saturation) |
+| Saturation| Saturation | 饱和效果 | [详情](plugins/saturation.md#saturation) |
+| Saturation| Sub Synth | 混入次谐波信号以增强低音 | [详情](plugins/saturation.md#sub-synth) |
+| Spatial   | MS Matrix | 用于立体声处理的中侧编码和解码 | [详情](plugins/spatial.md#ms-matrix) |
+| Spatial   | Multiband Balance | 具有5频段频率依赖立体声平衡控制 | [详情](plugins/spatial.md#multiband-balance) |
+| Spatial   | Stereo Blend | 立体声宽度控制效果 | [详情](plugins/spatial.md#stereo-blend) |
+| Others    | Oscillator | 多波形音频信号发生器 | [详情](plugins/others.md#oscillator) |
+| Control   | Section | 将多个效果分组以实现统一控制 | [详情](plugins/control.md) |
 
 ## 技术信息
 

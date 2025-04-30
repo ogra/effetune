@@ -35,6 +35,7 @@ export class PlaybackManager {
     if (!append) {
       this.playlist = [];
       this.originalPlaylist = []; // Clear original playlist as well
+      this.currentTrackIndex = 0; // Reset the track index when replacing the playlist
     }
     
     // Add files to playlist
