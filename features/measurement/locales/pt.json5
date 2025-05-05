@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ Nova Medição",
+  "button:import": "Importar",
+  "title:measurementHistory": "Histórico de Medições",
+
+  // Measurement Config Screen
+  "title:measurementConfig": "Configuração de Medição",
+  "label:measurementName": "Nome da Medição:",
+  "placeholder:measurementName": "Insira um nome para esta medição",
+  "help:measurementName": "Dê um nome à medição que você está prestes a realizar.",
+  "label:audioInput": "Dispositivo de Entrada de Áudio:",
+  "label:inputChannel": "Canal de Entrada:",
+  "help:inputChannel": "Selecione o canal ao qual o microfone de calibração está conectado para o dispositivo de entrada de áudio selecionado.",
+  "label:audioOutput": "Dispositivo de Saída de Áudio:",
+  "help:audioOutput": "Selecione o dispositivo de áudio que emite o sinal de medição.",
+  "label:outputChannel": "Canal de Saída:",
+  "help:outputChannel": "Especifique o canal (alto-falante esquerdo/direito ou fones, etc.) a ser medido.",
+  "help:audioInput": "Especifique o dispositivo de entrada de áudio ao qual o microfone de medição está conectado.",
+  "label:sampleRate": "Frequência de Amostragem:",
+  "help:sampleRate": "Especifique a frequência de amostragem ao realizar medições.",
+  "label:sweepLength": "Comprimento do Sweep (amostras):",
+  "help:sweepLength": "Especifica o comprimento do sinal de medição em amostras.",
+  "label:averaging": "Média Sincronizada:",
+  "help:averaging": "Especifique o número de vezes para repetir a medição no mesmo ponto para maior precisão.",
+  "button:next": "Próximo",
+
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "Reproduzir sinal de teste para verificar o volume",
+  "button:stopTestSignal": "Parar sinal de teste",
+  "label:signalLevel": "Nível de Sinal: ",
+  "help:signalLevel": "Ajuste o nível do sinal de medição reproduzido.",
+  "title:inputLevel": "Nível de Entrada",
+  "help:inputLevel": "Reproduza o sinal de teste e ajuste o ganho do microfone para que o nível de entrada fique entre -36dB e -6dB.",
+  "warning:inputTooHigh": "Entrada muito alta! Reduza o ganho do microfone ou o volume do alto-falante.",
+  "warning:inputTooLow": "Entrada muito baixa. Aumente o ganho do microfone ou o volume do alto-falante.",
+  "warning:signalTooLow": "O sinal de medição estava muito baixo para resultados precisos",
+  "warning:signalTooHigh": "O sinal de medição estava muito alto para resultados precisos",
+  "button:startMeasurement": "Iniciar Medição",
+
+  // Sweep Measurement Screen
+  "help:measurement": "O sinal de medição para uma medição extra e para o número de medições especificado é reproduzido.",
+  "title:frequencyResponseMeasurement": "Medição de Resposta em Frequência",
+  "title:currentMeasurement": "Medição Atual",
+  "button:redo": "Refazer",
+  "button:saveAndContinue": "Salvar e Medir Outro Ponto",
+  "button:saveAndFinish": "Salvar e Finalizar",
+  "help:measurementActions": "Clique em Refazer para descartar esta medição e medir novamente.\nClique em Salvar e Medir Outro Ponto para salvar esta medição e medir outro ponto para melhorar a precisão da correção (a medição inicia imediatamente após clicar no botão).\nClique em Salvar e Finalizar para aceitar esta medição e concluir a medição.",
+
+  // Results Display Screen
+  "message:noMeasurement": "Nenhuma medição disponível. Clique em \"Nova Medição\" para começar.",
+  "title:measurementResults": "Resultados da Medição",
+  "button:saveChanges": "Salvar Alterações",
+  "button:discardChanges": "Descartar Alterações",
+  "title:measurementPoints": "Pontos de Medição",
+  "title:frequencyResponse": "Resposta em Frequência",
+  "label:showOriginal": "Resposta Original",
+  "label:showCorrection": "EQ de Correção",
+  "label:showCorrected": "Resposta Corrigida",
+  "label:smoothing": "Suavização (σ):",
+  "unit:octave": "oct.",
+  "help:smoothing": "Quantidade de suavização da resposta em frequência para ajustar a sensibilidade a picos e vales.",
+  "label:targetLowFreq": "Freq. Baixa:",
+  "help:targetLowFreq": "O limite inferior de frequência para correção da resposta em frequência. Geralmente é melhor defini-lo no limite inferior das capacidades de reprodução do sistema.",
+  "label:targetHighFreq": "Freq. Alta:",
+  "help:targetHighFreq": "O limite superior de frequência para correção da resposta em frequência. Recomenda-se determiná-lo com base no limite superior de frequência do microfone de medição.",
+  "label:eqBandCount": "Banda PEQ:",
+  "unit:band": "Banda",
+  "help:eqBandCount": "O número de bandas do equalizador paramétrico para correção. Quanto mais bandas, mais detalhada será a correção de frequência, mas aumentará a carga de processamento.",
+  "button:copyPEQ": "Copiar configurações PEQ do EffeTune para a área de transferência",
+  "button:exportCSV": "Exportar Parâmetros de Correção (CSV)",
+  "help:exportOptions": "As configurações de correção de frequência copiadas podem ser coladas no Pipeline de Efeitos do EffeTune com Ctrl+V.",
+  "title:measurementDetails": "Detalhes da Medição",
+
+  // Dialogs
+  "button:confirm": "Confirmar",
+  "button:cancel": "Cancelar",
+  "label:doNotWarnAgain": "Não me avisar novamente",
+  "button:ok": "OK",
+  "confirm:deleteMeasurement": "Tem certeza de que deseja excluir esta medição? Esta ação não pode ser desfeita.",
+  "confirm:deletePoint": "Tem certeza de que deseja excluir este ponto de medição? Esta ação não pode ser desfeita.",
+  "confirm:discardChanges": "Você tem alterações não salvas. Descartar alterações e continuar?",
+
+  // New translations
+  "title:main": "Medição de Resposta em Frequência do EffeTune",
+  "title:levelAdjustment": "Ajuste de Nível",
+  "button:back": "Voltar ao EffeTune",
+  "button:backSimple": "Voltar",
+
+  // Error messages
+  "error:dialogElementsNotFound": "Elementos de diálogo de confirmação não encontrados no DOM",
+  "error:confirmationDialogNotFound": "Elemento de diálogo de confirmação não encontrado no DOM",
+  "error:notificationDialogNotFound": "Elementos de diálogo de notificação não encontrados no DOM",
+  "error:noPEQSettings": "Nenhuma configuração de PEQ disponível para esta medição",
+
+  // Messages
+  "message:peqCopied": "Configurações de PEQ copiadas para a área de transferência com sucesso. As configurações copiadas podem ser coladas no Pipeline de Efeitos do EffeTune com Ctrl+V.",
+
+  // Channel options
+  "option:left": "Canal Esquerdo",
+  "option:right": "Canal Direito",
+  "option:both": "Ambos os Canais (média)",
+  "option:bothSimple": "Ambos os Canais",
+
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz",
+  "option:sampleRate48000": "48 kHz (Default)",
+  "option:sampleRate88200": "88.2 kHz",
+  "option:sampleRate96000": "96 kHz",
+  "option:sampleRate176400": "176.4 kHz",
+  "option:sampleRate192000": "192 kHz",
+
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)",
+  "option:sweepLength32768": "32,768 (2¹⁵)",
+  "option:sweepLength65536": "65,536 (2¹⁶)",
+  "option:sweepLength131072": "131,072 (2¹⁷) - Default",
+  "option:sweepLength262144": "262,144 (2¹⁸)",
+  "option:sweepLength524288": "524,288 (2¹⁹)",
+  "option:sweepLength1048576": "1,048,576 (2²⁰)",
+
+  // Averaging options
+  "option:averaging1": "1",
+  "option:averaging2": "2",
+  "option:averaging3": "3",
+  "option:averaging4": "4 - Default",
+  "option:averaging5": "5",
+  "option:averaging6": "6",
+  "option:averaging7": "7",
+  "option:averaging8": "8",
+  "option:averaging10": "10",
+  "option:averaging12": "12",
+  "option:averaging16": "16"
+}

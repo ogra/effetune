@@ -1,0 +1,134 @@
+{
+  // 計測履歴セクション
+  "button:newMeasurement": "+ 新しい測定を開始", // 新しい測定を開始
+  "button:import": "インポート", // 保存済み測定を読み込む
+  "title:measurementHistory": "測定履歴", // 測定履歴セクションのタイトル
+
+  // 測定設定画面
+  "title:measurementConfig": "測定設定", // 測定設定セクションのタイトル
+  "label:measurementName": "測定名：", // 測定名入力のラベル
+  "placeholder:measurementName": "この測定の名前を入力してください", // 測定名入力のプレースホルダー
+  "help:measurementName": "これから行う測定に名前を付けてください。", // 測定名のヘルプテキスト
+  "label:audioInput": "オーディオ入力デバイス：", // オーディオ入力デバイス選択のラベル
+  "help:audioInput": "測定マイクが接続されているオーディオ入力デバイスを指定してください。", // オーディオ入力のヘルプ
+  "label:inputChannel": "入力チャンネル：", // 入力チャンネル選択のラベル
+  "help:inputChannel": "選択したオーディオ入力デバイスにキャリブレーションマイクが接続されているチャンネルを選択してください。", // 入力チャンネルのヘルプ
+  "label:audioOutput": "オーディオ出力デバイス：", // オーディオ出力デバイス選択のラベル
+  "help:audioOutput": "測定信号を出力するオーディオデバイスを選択してください。", // オーディオ出力のヘルプ
+  "label:outputChannel": "出力チャンネル：", // 出力チャンネル選択のラベル
+  "help:outputChannel": "測定に使用するチャネル（左/右スピーカーやヘッドホンなど）を指定してください。", // 出力チャンネルのヘルプ
+  "label:sampleRate": "サンプリング周波数：", // サンプリング周波数選択のラベル
+  "help:sampleRate": "測定時のサンプリング周波数を指定してください。", // サンプリング周波数のヘルプ
+  "label:sweepLength": "スイープ長（サンプル数）：", // スイープ長選択のラベル
+  "help:sweepLength": "測定信号の長さをサンプル数で指定します。", // スイープ長のヘルプ
+  "label:averaging": "同期平均化：", // 同期平均化選択のラベル
+  "help:averaging": "より正確な測定のために、同一測定点での測定を繰り返す回数を指定してください。", // 同期平均化のヘルプ
+  "button:next": "次へ", // レベル調整画面に進む
+
+  // レベル調整画面
+  "button:playbackTestSignal": "音量確認用テスト信号を再生", // テスト信号再生
+  "button:stopTestSignal": "テスト信号停止", // テスト信号停止
+  "label:signalLevel": "信号レベル：", // 信号レベル調整のラベル
+  "help:signalLevel": "測定用に再生される信号のレベルを調整してください。", // 信号レベルのヘルプ
+  "title:inputLevel": "入力レベル", // 入力レベルメーターのタイトル
+  "help:inputLevel": "テスト信号を再生し、入力レベルが-36dB〜-6dBの間になるようマイクゲインを調整してください。", // 入力レベルのヘルプ
+  "warning:inputTooHigh": "入力レベルが高すぎます！マイクゲインまたはスピーカー音量を下げてください。", // 入力過大の警告
+  "warning:inputTooLow": "入力レベルが低すぎます。マイクゲインまたはスピーカー音量を上げてください。", // 入力過小の警告
+  "warning:signalTooLow": "測定信号のレベルが低すぎたため正確な測定ができていません", // グラフ上の信号レベル低すぎ警告
+  "warning:signalTooHigh": "測定信号のレベルが高すぎたため正確な測定ができていません", // グラフ上の信号レベル高すぎ警告
+  "button:startMeasurement": "測定開始", // 測定開始ボタン
+
+  // スイープ測定画面
+  "help:measurement": "追加の1回分と指定した測定回数分の測定信号が再生されます。",
+  "title:frequencyResponseMeasurement": "周波数応答測定", // 測定画面のタイトル
+  "title:currentMeasurement": "現在の測定", // 現在の測定グラフのタイトル
+  "button:redo": "やり直し", // 再測定
+  "button:saveAndContinue": "保存して別のポイントを測定", // 保存して続ける
+  "button:saveAndFinish": "保存して完了", // 保存して完了
+  "help:measurementActions": "「やり直し」をクリックするとこの測定を破棄して再測定します。\n「保存して別のポイントを測定」をクリックするとこの測定を保存し、別のポイントを測定して補正精度を高めます（クリック後すぐに測定が開始されます）。\n「保存して完了」をクリックするとこの測定を確定して測定を完了します。", // 測定操作のヘルプ
+
+  // 結果表示画面
+  "message:noMeasurement": "利用可能な測定がありません。「新規測定」をクリックして開始してください。", // 測定なしメッセージ
+  "title:measurementResults": "測定結果", // 測定結果のタイトル
+  "button:saveChanges": "変更を保存", // 変更保存
+  "button:discardChanges": "変更を破棄", // 変更破棄
+  "title:measurementPoints": "測定ポイント", // 測定ポイントタイトル
+  "title:frequencyResponse": "周波数応答", // 周波数応答タイトル
+  "label:showOriginal": "元の応答", // 元の応答表示
+  "label:showCorrection": "補正EQ", // 補正EQ表示
+  "label:showCorrected": "補正後の応答", // 補正後の応答表示
+  "label:smoothing": "スムージング（σ）：", // 平滑化のラベル
+  "unit:octave": "オクターブ", // オクターブの単位
+  "help:smoothing": "周波数応答の平滑化量を指定し、ピークやディップへの感度を調整します。", // スムージングのヘルプ
+  "label:targetLowFreq": "低域：", // 低域制限のラベル
+  "help:targetLowFreq": "周波数応答補正の下限周波数。通常はシステムの再生能力の下限に設定するのが最適です。", // 低域のヘルプ
+  "label:targetHighFreq": "高域：", // 高域制限のラベル
+  "help:targetHighFreq": "周波数応答補正の上限周波数。測定マイクの上限周波数を基に設定することを推奨します。", // 高域のヘルプ
+  "label:eqBandCount": "PEQバンド数：", // EQバンド数のラベル
+  "unit:band": "バンド", // バンドの単位
+  "help:eqBandCount": "補正用パラメトリックイコライザーのバンド数。バンド数が多いほど詳細な補正が可能ですが、処理負荷が増加します。", // EQバンド数のヘルプ
+  "button:copyPEQ": "EffeTune PEQ設定をクリップボードにコピー", // PEQ設定コピー
+  "button:exportCSV": "補正パラメータをCSVでエクスポート", // CSVエクスポート
+  "help:exportOptions": "コピーした設定はEffeTuneのエフェクトパイプラインにCtrl+Vで貼り付けられます。", // エクスポートオプションのヘルプ
+  "title:measurementDetails": "測定詳細", // 測定詳細のタイトル
+
+  // ダイアログ
+  "button:confirm": "確定", // 確認ボタン
+  "button:cancel": "キャンセル", // キャンセルボタン
+  "label:doNotWarnAgain": "今後警告しない", // 今後警告しないチェックボックス
+  "button:ok": "OK", // 通知ダイアログのOK
+  "confirm:deleteMeasurement": "この測定を削除してもよろしいですか？この操作は元に戻せません。", // 測定削除の確認メッセージ
+  "confirm:deletePoint": "この測定ポイントを削除してもよろしいですか？この操作は元に戻せません。", // 測定ポイント削除の確認メッセージ
+  "confirm:discardChanges": "未保存の変更があります。変更を破棄して続行しますか？", // 未保存の変更破棄の確認メッセージ
+  
+  // 新規翻訳
+  "title:main": "EffeTune 周波数応答測定", // メインページのタイトル
+  "title:levelAdjustment": "レベル調整", // レベル調整画面のタイトル
+  "button:back": "EffeTuneに戻る", // 戻るボタンのテキスト
+  "button:backSimple": "戻る", // シンプルな戻るボタンのテキスト
+  
+  // エラーメッセージ
+  "error:dialogElementsNotFound": "確認ダイアログの要素がDOMに見つかりません", // ダイアログ要素が見つからない場合のエラー
+  "error:confirmationDialogNotFound": "確認ダイアログ要素がDOMに見つかりません", // 確認ダイアログが見つからない場合のエラー
+  "error:notificationDialogNotFound": "通知ダイアログの要素がDOMに見つかりません", // 通知ダイアログが見つからない場合のエラー
+  "error:noPEQSettings": "この測定に対応するPEQ設定がありません", // PEQ設定がない場合のエラー
+  
+  // メッセージ
+  "message:peqCopied": "PEQ設定がクリップボードにコピーされました。コピーした設定はEffeTuneのエフェクトパイプラインにCtrl+Vで貼り付けられます。", // PEQコピー成功メッセージ
+  
+  // チャンネルオプション
+  "option:left": "左チャンネル", // 左チャンネルのオプション
+  "option:right": "右チャンネル", // 右チャンネルのオプション
+  "option:both": "両方のチャンネル（平均）", // 両方のチャンネルのオプション
+  "option:bothSimple": "両方のチャンネル", // 両方のチャンネル（シンプル）のオプション
+  
+  // サンプルレートオプション
+  "option:sampleRate44100": "44.1 kHz", // 44.1 kHzサンプルレートのオプション
+  "option:sampleRate48000": "48 kHz（デフォルト）", // 48 kHzサンプルレートのオプション
+  "option:sampleRate88200": "88.2 kHz", // 88.2 kHzサンプルレートのオプション
+  "option:sampleRate96000": "96 kHz", // 96 kHzサンプルレートのオプション
+  "option:sampleRate176400": "176.4 kHz", // 176.4 kHzサンプルレートのオプション
+  "option:sampleRate192000": "192 kHz", // 192 kHzサンプルレートのオプション
+  
+  // スイープ長オプション
+  "option:sweepLength16384": "16,384 (2¹⁴)", // 16384スイープ長のオプション
+  "option:sweepLength32768": "32,768 (2¹⁵)", // 32768スイープ長のオプション
+  "option:sweepLength65536": "65,536 (2¹⁶)", // 65536スイープ長のオプション
+  "option:sweepLength131072": "131,072 (2¹⁷) - デフォルト", // 131072スイープ長のオプション
+  "option:sweepLength262144": "262,144 (2¹⁸)", // 262144スイープ長のオプション
+  "option:sweepLength524288": "524,288 (2¹⁹)", // 524288スイープ長のオプション
+  "option:sweepLength1048576": "1,048,576 (2²⁰)", // 1048576スイープ長のオプション
+  
+  // 平均化オプション
+  "option:averaging1": "1", // 1回平均化のオプション
+  "option:averaging2": "2", // 2回平均化のオプション
+  "option:averaging3": "3", // 3回平均化のオプション
+  "option:averaging4": "4 - デフォルト", // 4回平均化のオプション
+  "option:averaging5": "5", // 5回平均化のオプション
+  "option:averaging6": "6", // 6回平均化のオプション
+  "option:averaging7": "7", // 7回平均化のオプション
+  "option:averaging8": "8", // 8回平均化のオプション
+  "option:averaging10": "10", // 10回平均化のオプション
+  "option:averaging12": "12", // 12回平均化のオプション
+  "option:averaging16": "16" // 16回平均化のオプション
+}

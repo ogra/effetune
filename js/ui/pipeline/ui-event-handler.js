@@ -2,7 +2,7 @@
  * UIEventHandler - Handles keyboard shortcuts, drag and drop events, and selection management
  */
 import { PipelineCore } from './pipeline-core.js';
-import { PluginListManager } from '../plugin-list-manager.js'; // 仮パス
+import { PluginListManager } from '../plugin-list-manager.js'; // Temporary path
 
 export class UIEventHandler {
     /**
@@ -14,7 +14,7 @@ export class UIEventHandler {
     constructor(pipelineManager, historyManager, core) {
         this.pipelineManager = pipelineManager;
         this.historyManager = historyManager;
-        this.core = core; // PipelineCore への参照を想定
+        this.core = core; // Reference to PipelineCore instance
         this.clipboardManager = pipelineManager.clipboardManager;
         this.pipelineListElement = document.getElementById('pipelineList'); 
 

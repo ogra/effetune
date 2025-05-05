@@ -95,6 +95,8 @@
 
   "menu.settings": "सेटिंग्स",
   "menu.settings.audioDevices": "ऑडियो उपकरण...",
+  "menu.settings.performanceBenchmark": "प्रदर्शन बेंचमार्क",
+  "menu.settings.frequencyResponseMeasurement": "फ्रीक्वेंसी रिस्पॉन्स मापन",
 
   "menu.help": "सहायता",
   "menu.help.help": "सहायता",

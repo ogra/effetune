@@ -1,0 +1,134 @@
+{
+// Measurement History Section
+"button:newMeasurement": "+ नया माप", // Button to start a new measurement
+"button:import": "आयात करें", // Import button for loading saved measurements
+"title:measurementHistory": "माप इतिहास", // Title for the measurement history section
+
+// Measurement Config Screen
+"title:measurementConfig": "माप कॉन्फ़िगरेशन", // Title for the measurement configuration section
+"label:measurementName": "माप का नाम:", // Label for measurement name input
+"placeholder:measurementName": "इस माप के लिए एक नाम दर्ज करें", // Placeholder text for measurement name input
+"help:measurementName": "आप जो माप करने जा रहे हैं, उसे एक नाम दें।", // Help text for measurement name
+"label:audioInput": "ऑडियो इनपुट डिवाइस:", // Label for audio input device selection
+"label:inputChannel": "इनपुट चैनल:", // Label for input channel selection
+"help:inputChannel": "चयनित ऑडियो इनपुट डिवाइस के लिए उस चैनल का चयन करें जिसमें कैलिब्रेशन माइक्रोफोन जुड़ा है।", // Help text for input channel
+"label:audioOutput": "ऑडियो आउटपुट डिवाइस:", // Label for audio output device selection
+"help:audioOutput": "उस ऑडियो डिवाइस का चयन करें जो माप संकेत आउटपुट करता है।", // Help text for audio output
+"label:outputChannel": "आउटपुट चैनल:", // Label for output channel selection
+"help:outputChannel": "माप के लिए चैनल (बायाँ/दायाँ स्पीकर या हेडफ़ोन आदि) निर्दिष्ट करें।", // Help text for output channel
+"help:audioInput": "उस ऑडियो इनपुट डिवाइस को निर्दिष्ट करें जिसमें माप माइक्रोफोन जुड़ा है।", // Help text for audio input
+"label:sampleRate": "नमूना आवृत्ति:", // Label for sample rate selection
+"help:sampleRate": "माप लेते समय नमूना आवृत्ति निर्दिष्ट करें।", // Help text for sample rate
+"label:sweepLength": "स्वीप लंबाई (नमूने):", // Label for sweep length selection
+"help:sweepLength": "माप संकेत की लंबाई नमूनों में निर्दिष्ट करता है।", // Help text for sweep length
+"label:averaging": "सामयिक औसत:", // Label for synchronous averaging selection
+"help:averaging": "अधिक सटीक माप के लिए एक ही माप बिंदु पर माप को दोहराने की संख्या निर्दिष्ट करें।", // Help text for averaging
+"button:next": "अगला", // Next button in configuration form to move to the Level Adjustment Screen
+
+// Level Adjustment Screen
+"button:playbackTestSignal": "वॉल्यूम जांचने के लिए टेस्ट संकेत प्लेबैक करें", // Button to play test signal
+"button:stopTestSignal": "टेस्ट संकेत बंद करें", // Button to stop test signal
+"label:signalLevel": "सिग्नल स्तर: ", // Label for signal level control
+"help:signalLevel": "माप के लिए प्लेबैक किए जाने वाले माप संकेत का स्तर समायोजित करें।", // Help text for signal level
+"title:inputLevel": "इनपुट स्तर", // Title for input level meter
+"help:inputLevel": "टेस्ट संकेत चलाएँ और माइक्रोफोन गेन ऐसा समायोजित करें कि इनपुट स्तर -36dB और -6dB के बीच हो।", // Help text for input level
+"warning:inputTooHigh": "इनपुट बहुत अधिक! माइक्रोफोन गेन या स्पीकर वॉल्यूम कम करें।", // Warning message for high input level
+"warning:inputTooLow": "इनपुट बहुत कम। माइक्रोफोन गेन या स्पीकर वॉल्यूम बढ़ाएँ।", // Warning message for low input level
+"warning:signalTooLow": "माप संकेत बहुत कम था जिससे सटीक परिणाम नहीं मिले", // Graph warning for signal level too low
+"warning:signalTooHigh": "माप संकेत बहुत अधिक था जिससे सटीक परिणाम नहीं मिले", // Graph warning for signal level too high
+"button:startMeasurement": "मापन प्रारंभ करें", // Button to start measurement
+
+// Sweep Measurement Screen
+"help:measurement": "एक अतिरिक्त माप के लिए मापन सिग्नल और निर्दिष्ट मापों की संख्या के लिए मापन सिग्नल पुन: उत्पन्न किया जाता है।",
+"title:frequencyResponseMeasurement": "फ्रीक्वेंसी रिस्पांस माप", // Title for measurement screen
+"title:currentMeasurement": "वर्तमान माप", // Title for current measurement graph
+"button:redo": "दोबारा करें", // Button to redo measurement
+"button:saveAndContinue": "सहेजें और दूसरा बिंदु मापें", // Button to save and continue measuring
+"button:saveAndFinish": "सहेजें और समाप्त करें", // Button to save and finish measurement
+"help:measurementActions": "दोबारा करें पर क्लिक करके इस माप को रद्द करें और फिर से मापें।\nसहेजें और दूसरा बिंदु मापें पर क्लिक करके इस माप को सहेजें और सुधार सटीकता बढ़ाने के लिए एक और बिंदु मापें (बटन क्लिक करते ही माप आरंभ हो जाएगा)।\nसहेजें और समाप्त करें पर क्लिक करके इस माप को स्वीकार करें और माप पूरा करें।", // Help text for measurement actions
+
+// Results Display Screen
+"message:noMeasurement": "कोई माप उपलब्ध नहीं। शुरू करने के लिए \"नया माप\" पर क्लिक करें।", // Message when no measurements are available
+"title:measurementResults": "माप परिणाम", // Title for measurement results
+"button:saveChanges": "परिवर्तनों को सहेजें", // Button to save changes
+"button:discardChanges": "परिवर्तनों को रद्द करें", // Button to discard changes
+"title:measurementPoints": "माप बिंदु", // Title for measurement points section
+"title:frequencyResponse": "फ्रीक्वेंसी रिस्पांस", // Title for frequency response section
+"label:showOriginal": "मूल रिस्पांस", // Label for original response checkbox
+"label:showCorrection": "सुधार EQ", // Label for correction EQ checkbox
+"label:showCorrected": "सुधारित रिस्पांस", // Label for corrected response checkbox
+"label:smoothing": "स्मूथिंग (σ):", // Label for smoothing control
+"unit:octave": "ऑक्टेव्", // Unit for octave
+"help:smoothing": "पीक्स और डिप्स के प्रति संवेदनशीलता समायोजित करने के लिए फ्रीक्वेंसी रिस्पांस स्मूथिंग की मात्रा।", // Help text for smoothing
+"label:targetLowFreq": "निम्न आवृत्ति:", // Label for low frequency limit
+"help:targetLowFreq": "फ्रीक्वेंसी रिस्पांस सुधार के लिए निचली सीमा आवृत्ति। इसे आमतौर पर सिस्टम की प्लेबैक क्षमताओं की निचली सीमा पर सेट करना सबसे अच्छा होता है।", // Help text for low frequency limit
+"label:targetHighFreq": "उच्च आवृत्ति:", // Label for high frequency limit
+"help:targetHighFreq": "फ्रीक्वेंसी रिस्पांस सुधार के लिए ऊपरी सीमा आवृत्ति। इसे माप माइक्रोफोन की ऊपरी सीमा आवृत्ति के आधार पर निर्धारित करने की अनुशंसा की जाती है।", // Help text for high frequency limit
+"label:eqBandCount": "PEQ बैंड:", // Label for EQ band count
+"unit:band": "बैंड", // Unit for band
+"help:eqBandCount": "सुधार के लिए पैरामीट्रिक इक्वलाइज़र के बैंड की संख्या। जितने अधिक बैंड होंगे, फ्रीक्वेंसी सुधार उतना ही विस्तृत होगा, लेकिन प्रोसेसिंग लोड बढ़ जाएगा।", // Help text for EQ band count
+"button:copyPEQ": "EffeTune PEQ सेटिंग्स क्लिपबोर्ड पर कॉपी करें", // Button to copy PEQ settings
+"button:exportCSV": "सुधार पैरामीटर निर्यात करें (CSV)", // Button to export CSV
+"help:exportOptions": "कॉपी की गई फ्रीक्वेंसी सुधार सेटिंग्स को Ctrl+V द्वारा EffeTune के इफेक्ट पाइपलाइन में चिपकाया जा सकता है।", // Help text for export options
+"title:measurementDetails": "माप विवरण", // Title for measurement details section
+
+// Dialogs
+"button:confirm": "पुष्टि करें", // Confirm button in dialog
+"button:cancel": "रद्द करें", // Cancel button in dialog
+"label:doNotWarnAgain": "मुझे फिर चेतावनी न दें", // Label for "do not warn again" checkbox
+"button:ok": "ठीक है", // OK button in notification dialog
+"confirm:deleteMeasurement": "क्या आप वाकई इस माप को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।", // Confirmation message for deleting a measurement
+"confirm:deletePoint": "क्या आप वाकई इस माप बिंदु को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।", // Confirmation message for deleting a measurement point
+"confirm:discardChanges": "आपके पास असहेजे परिवर्तन हैं। परिवर्तन रद्द करें और जारी रखें?", // Confirmation message for discarding unsaved changes
+
+// New translations
+"title:main": "EffeTune फ्रीक्वेंसी रिस्पांस माप", // Title for the main page
+"title:levelAdjustment": "स्तर समायोजन", // Title for level adjustment screen
+"button:back": "EffeTune पर वापस जाएँ", // Back button text
+"button:backSimple": "वापस", // Simple back button text
+
+// Error messages
+"error:dialogElementsNotFound": "DOM में पुष्टि डायलॉग तत्व नहीं मिले", // Error when dialog elements not found
+"error:confirmationDialogNotFound": "DOM में पुष्टि डायलॉग तत्व नहीं मिला", // Error when confirmation dialog not found
+"error:notificationDialogNotFound": "DOM में सूचना डायलॉग तत्व नहीं मिले", // Error when notification dialog not found
+"error:noPEQSettings": "इस माप के लिए कोई PEQ सेटिंग उपलब्ध नहीं है", // Error when no PEQ settings available
+
+// Messages
+"message:peqCopied": "PEQ सेटिंग्स सफलतापूर्वक क्लिपबोर्ड पर कॉपी हो गईं। कॉपी की गई सेटिंग्स को Ctrl+V द्वारा EffeTune के इफेक्ट पाइपलाइन में चिपकाया जा सकता है।", // Success message for PEQ copy
+
+// Channel options
+"option:left": "बायाँ चैनल", // Option for left channel
+"option:right": "दायाँ चैनल", // Option for right channel
+"option:both": "दोनों चैनल (औसत)", // Option for both channels
+"option:bothSimple": "दोनों चैनल", // Option for both channels (simple)
+
+// Sample rate options
+"option:sampleRate44100": "44.1 kHz", // Option for 44.1 kHz sample rate
+"option:sampleRate48000": "48 kHz (Default)", // Option for 48 kHz sample rate
+"option:sampleRate88200": "88.2 kHz", // Option for 88.2 kHz sample rate
+"option:sampleRate96000": "96 kHz", // Option for 96 kHz sample rate
+"option:sampleRate176400": "176.4 kHz", // Option for 176.4 kHz sample rate
+"option:sampleRate192000": "192 kHz", // Option for 192 kHz sample rate
+
+// Sweep length options
+"option:sweepLength16384": "16,384 (2¹⁴)", // Option for 16384 sweep length
+"option:sweepLength32768": "32,768 (2¹⁵)", // Option for 32768 sweep length
+"option:sweepLength65536": "65,536 (2¹⁶)", // Option for 65536 sweep length
+"option:sweepLength131072": "131,072 (2¹⁷) - Default", // Option for 131072 sweep length
+"option:sweepLength262144": "262,144 (2¹⁸)", // Option for 262144 sweep length
+"option:sweepLength524288": "524,288 (2¹⁹)", // Option for 524288 sweep length
+"option:sweepLength1048576": "1,048,576 (2²⁰)", // Option for 1048576 sweep length
+
+// Averaging options
+"option:averaging1": "1", // Option for 1 averaging
+"option:averaging2": "2", // Option for 2 averaging
+"option:averaging3": "3", // Option for 3 averaging
+"option:averaging4": "4 - Default", // Option for 4 averaging
+"option:averaging5": "5", // Option for 5 averaging
+"option:averaging6": "6", // Option for 6 averaging
+"option:averaging7": "7", // Option for 7 averaging
+"option:averaging8": "8", // Option for 8 averaging
+"option:averaging10": "10", // Option for 10 averaging
+"option:averaging12": "12", // Option for 12 averaging
+"option:averaging16": "16" // Option for 16 averaging
+}

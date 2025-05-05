@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title:main">Frequency Response Measurement</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <button id="back-button" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span data-i18n="button:back">Back to EffeTune</span>
+    </button>
+    <h1 data-i18n="title:main">EffeTune Frequency Response Measurement</h1>
+
+    <div class="app-container">
+        <!-- Left Pane: Measurement History -->
+        <div class="left-pane">
+            <div class="new-measurement-btn-container">
+                <button id="newMeasurementBtn" class="primary-btn" data-i18n="button:newMeasurement">+ Start aNew Measurement</button>
+                <button id="importBtn" class="secondary-btn" data-i18n="button:import">Import</button>
+                <input type="file" id="importInput" accept=".json" style="display: none;">
+            </div>
+            <div class="measurement-history">
+                <h3 data-i18n="title:measurementHistory">Measurement History</h3>
+                <ul id="measurementList" class="measurement-list">
+                    <!-- Measurement items will be populated here -->
+                </ul>
+            </div>
+            <div class="options-menu">
+            </div>
+        </div>
+
+        <!-- Right Pane: Main Content Area -->
+        <div class="main-content">
+            <!-- This area will dynamically change based on the current screen -->
+            <div id="measurementConfigScreen" class="screen" style="display: none;">
+                <h2 data-i18n="title:measurementConfig">Measurement Configuration</h2>
+                <form id="configForm">
+                    <div class="form-group">
+                        <label for="measurementName" data-i18n="label:measurementName">Measurement Name:</label>
+                        <input type="text" id="measurementName" required data-i18n="placeholder:measurementName" placeholder="Enter a name for this measurement">
+                        <div class="explanation-text" data-i18n="help:measurementName">Give a name to the measurement you are about to make.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioInput" data-i18n="label:audioInput">Audio Input Device:</label>
+                        <select id="audioInput" required></select>
+                        <div class="explanation-text" data-i18n="help:audioInput">Specify the audio input device to which the measurement microphone is connected.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputChannel" data-i18n="label:inputChannel">Input Channel:</label>
+                        <select id="inputChannel" required>
+                            <option value="left" data-i18n="option:left">Left Channel</option>
+                            <option value="right" data-i18n="option:right">Right Channel</option>
+                            <option value="both" selected data-i18n="option:both">Both Channels (average)</option>
+                        </select>
+                        <div class="explanation-text" data-i18n="help:inputChannel">Select the channel to which the calibration microphone is connected for the selected audio input device.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioOutput" data-i18n="label:audioOutput">Audio Output Device:</label>
+                        <select id="audioOutput" required></select>
+                    </div>
+                    <div class="explanation-text" data-i18n="help:audioOutput">Select the audio device that outputs the measurement signal.</div>
+                    <div class="form-group">
+                        <label for="outputChannel" data-i18n="label:outputChannel">Output Channel:</label>
+                        <select id="outputChannel" required>
+                            <option value="left" data-i18n="option:left">Left Channel</option>
+                            <option value="right" data-i18n="option:right">Right Channel</option>
+                            <option value="both" selected data-i18n="option:bothSimple">Both Channels</option>
+                        </select>
+                    </div>
+                    <div class="explanation-text" data-i18n="help:outputChannel">Specify the channel (left/right speaker or headphones, etc.) to measure.</div>
+                    <div class="form-group">
+                        <label for="sampleRate" data-i18n="label:sampleRate">Sampling Frequency:</label>
+                        <select id="sampleRate" required>
+                            <option value="44100" data-i18n="option:sampleRate44100">44.1 kHz</option>
+                            <option value="48000" selected data-i18n="option:sampleRate48000">48 kHz (Default)</option>
+                            <option value="88200" data-i18n="option:sampleRate88200">88.2 kHz</option>
+                            <option value="96000" data-i18n="option:sampleRate96000">96 kHz</option>
+                            <option value="176400" data-i18n="option:sampleRate176400">176.4 kHz</option>
+                            <option value="192000" data-i18n="option:sampleRate192000">192 kHz</option>
+                        </select>
+                    </div>
+                    <div class="explanation-text" data-i18n="help:sampleRate">Specify the sampling frequency when taking measurements.</div>
+                    <div class="form-group">
+                        <label for="sweepLength" data-i18n="label:sweepLength">Sweep Length (samples):</label>
+                        <select id="sweepLength" required>
+                            <option value="16384" data-i18n="option:sweepLength16384">16,384 (2¹⁴)</option>
+                            <option value="32768" data-i18n="option:sweepLength32768">32,768 (2¹⁵)</option>
+                            <option value="65536" data-i18n="option:sweepLength65536">65,536 (2¹⁶)</option>
+                            <option value="131072" selected data-i18n="option:sweepLength131072">131,072 (2¹⁷) - Default</option>
+                            <option value="262144" data-i18n="option:sweepLength262144">262,144 (2¹⁸)</option>
+                            <option value="524288" data-i18n="option:sweepLength524288">524,288 (2¹⁹)</option>
+                            <option value="1048576" data-i18n="option:sweepLength1048576">1,048,576 (2²⁰)</option>
+                        </select>
+                        <div class="explanation-text" data-i18n="help:sweepLength">Specifies the length of the measurement signal in samples.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="averaging" data-i18n="label:averaging">Synchronous Averaging:</label>
+                        <select id="averaging" required>
+                            <option value="1" data-i18n="option:averaging1">1</option>
+                            <option value="2" data-i18n="option:averaging2">2</option>
+                            <option value="3" data-i18n="option:averaging3">3</option>
+                            <option value="4" selected data-i18n="option:averaging4">4 - Default</option>
+                            <option value="5" data-i18n="option:averaging5">5</option>
+                            <option value="6" data-i18n="option:averaging6">6</option>
+                            <option value="7" data-i18n="option:averaging7">7</option>
+                            <option value="8" data-i18n="option:averaging8">8</option>
+                            <option value="10" data-i18n="option:averaging10">10</option>
+                            <option value="12" data-i18n="option:averaging12">12</option>
+                            <option value="16" data-i18n="option:averaging16">16</option>
+                        </select>
+                        <div class="explanation-text" data-i18n="help:averaging">Specify the number of times to repeat the measurement at the same measurement point for more accurate measurement.</div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="primary-btn" data-i18n="button:next">Next</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="levelAdjustmentScreen" class="screen" style="display: none;">
+                <div class="screen-header">
+                    <button id="backFromLevelBtn" class="back-btn"><span class="back-arrow">&larr;</span> <span data-i18n="button:backSimple">Back</span></button>
+                    <h2 data-i18n="title:levelAdjustment">Level Adjustment</h2>
+                </div>
+                <div class="noise-controls">
+                    <button id="noiseToggleBtn" class="primary-btn" data-i18n="button:playbackTestSignal">Playback test signal for checking volume</button>
+                    <div class="level-control">
+                        <label for="noiseLevel"><span data-i18n="label:signalLevel">Signal Level:</span> <span id="noiseLevelValue">-6 dB</span></label>
+                        <input type="range" id="noiseLevel" min="-36" max="0" value="-6" step="1">
+                    </div>
+                    <div class="explanation-text" data-i18n="help:signalLevel">Adjust the level of the measurement signal that is played back for measurement.</div>
+                </div>
+                <div class="level-meter-container">
+                    <h3 data-i18n="title:inputLevel">Input Level</h3>
+                    <div id="levelMeter" class="level-meter">
+                        <div id="levelBar" class="level-bar"></div>
+                        <div class="level-marks">
+                            <span class="mark" style="left: 0%">-60</span>
+                            <span class="mark" style="left: 20%">-48</span>
+                            <span class="mark" style="left: 40%">-36</span>
+                            <span class="mark" style="left: 60%">-24</span>
+                            <span class="mark" style="left: 80%">-12</span>
+                            <span class="mark" style="left: 100%">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation-text" data-i18n="help:inputLevel">Play the test signal and adjust the microphone gain so that the input level is between -36dB and -6dB.</div>
+                <div id="levelWarningContainer" class="warning-container">
+                    <div id="levelWarning" class="warning-message" data-i18n="warning:inputTooHigh">Input too high! Reduce microphone gain or speaker volume.</div>
+                </div>
+                <div class="form-actions">
+                    <button id="startMeasurementBtn" class="primary-btn" data-i18n="button:startMeasurement">Start Measurement</button>
+                </div>
+            </div>
+
+            <div id="sweepMeasurementScreen" class="screen" style="display: none;">
+                <div class="screen-header">
+                    <button id="backFromSweepBtn" class="back-btn"><span class="back-arrow">&larr;</span> <span data-i18n="button:backSimple">Back</span></button>
+                    <h2 data-i18n="title:frequencyResponseMeasurement">Frequency Response Measurement</h2>
+                </div>
+                <div class="measurement-progress">
+                    <h3 data-i18n="title:inputLevel">Input Level</h3>
+                    <canvas id="levelGraph" width="800" height="200"></canvas>
+                    <div class="explanation-text" data-i18n="help:measurement">The measurement signal for one extra measurement plus the number of measurements is reproduced.</div>
+                </div>
+                <div class="frequency-response-preview" style="position: relative;">
+                    <h3 data-i18n="title:currentMeasurement">Current Measurement</h3>
+                    <canvas id="frequencyResponseGraph" width="800" height="300"></canvas>
+                    <div id="loading-spinner-measurement" class="loading-spinner"></div>
+                </div>
+                <div class="measurement-actions">
+                    <button id="redoBtn" class="secondary-btn" data-i18n="button:redo">Redo</button>
+                    <button id="saveAndContinueBtn" class="primary-btn" data-i18n="button:saveAndContinue">Save and Measure Another Point</button>
+                    <button id="saveAndFinishBtn" class="primary-btn" data-i18n="button:saveAndFinish">Save and Finish</button>
+                </div>
+                <div id="measurementActionsExplanation" class="explanation-text" data-i18n="help:measurementActions">Click Redo to discard this measurement and measure again.
+                    Click Save and Measure Another Point to save this measurement and measure another point to improve the correction accuracy (measurement starts immediately after clicking the button).
+                    Click Save and Finish to accept this measurement and complete the measurement.</div>
+            </div>
+
+            <div id="resultsDisplayScreen" class="screen">
+                <div id="noMeasurementMessage" class="empty-state">
+                    <p data-i18n="message:noMeasurement">No measurements available. Click "New Measurement" to begin.</p>
+                </div>
+                <div id="measurementResults" style="display: none;">
+                    <div class="result-header">
+                        <h2 id="resultTitle" data-i18n="title:measurementResults">Measurement Results</h2>
+                        <div id="editActions" class="edit-actions" style="display: none;">
+                            <button id="saveChangesBtn" class="primary-btn" data-i18n="button:saveChanges">Save Changes</button>
+                            <button id="discardChangesBtn" class="secondary-btn" data-i18n="button:discardChanges">Discard Changes</button>
+                        </div>
+                    </div>
+                    <div class="measurement-points">
+                        <h3 data-i18n="title:measurementPoints">Measurement Points</h3>
+                        <div id="pointsGrid" class="points-grid"></div>
+                    </div>
+                    <div class="frequency-response">
+                        <h3 data-i18n="title:frequencyResponse">Frequency Response</h3>
+                        <div class="graph-options">
+                            <label><input type="checkbox" id="showOriginal" checked> <span data-i18n="label:showOriginal">Original Response</span> <span class="legend-line original-line"></span></label>
+                            <label><input type="checkbox" id="showCorrection" checked> <span data-i18n="label:showCorrection">Correction EQ</span> <span class="legend-line correction-line"></span></label>
+                            <label><input type="checkbox" id="showCorrected" checked> <span data-i18n="label:showCorrected">Corrected Response</span> <span class="legend-line corrected-line"></span></label>
+                        </div>
+                        <div class="graph-container" style="position: relative;">
+                            <canvas id="resultsGraph" width="800" height="400"></canvas>
+                            <div id="loading-spinner-results" class="loading-spinner"></div>
+                        </div>
+                        <div class="correction-controls">
+                            <div class="control-row">
+                                <label for="smoothing" data-i18n="label:smoothing">Smoothing (σ):</label>
+                                <input type="range" id="smoothing" min="0.01" max="1.00" value="0.3" step="0.01">
+                                <div class="value-unit-wrapper">
+                                    <span id="smoothingValue">0.3</span>&nbsp;<span data-i18n="unit:octave">oct.</span>
+                                </div>
+                            </div>
+                            <div class="explanation-text2" data-i18n="help:smoothing">Amount of frequency response smoothing to adjust sensitivity to peaks and dips.</div>
+                            <div class="control-row">
+                                <label for="targetLowFreqSlider" data-i18n="label:targetLowFreq">Low Freq:</label>
+                                <input type="range" id="targetLowFreqSlider" min="20" max="1000" value="0" step="1" class="slider">
+                                <div class="value-unit-wrapper">
+                                    <span id="targetLowFreqValue">20</span>&nbsp;Hz
+                                </div>
+                            </div>
+                            <div class="explanation-text2" data-i18n="help:targetLowFreq">The lower limit frequency for frequency response correction. It is usually best to set it at the lower limit of the system's playback capabilities.</div>
+                            <div class="control-row">
+                                <label for="targetHighFreqSlider" data-i18n="label:targetHighFreq">High Freq:</label>
+                                <input type="range" id="targetHighFreqSlider" min="1000" max="20000" value="20000" step="100" class="slider">
+                                <div class="value-unit-wrapper">
+                                    <span id="targetHighFreqValue">20000</span>&nbsp;Hz
+                                </div>
+                            </div>
+                            <div class="explanation-text2" data-i18n="help:targetHighFreq">The upper frequency limit for frequency response correction. It is recommended to determine this based on the upper frequency limit of the measurement microphone.</div>
+                            <div class="control-row eq-type">
+                                <label for="eqBandCount" data-i18n="label:eqBandCount">PEQ Band:</label>
+                                <input type="range" id="eqBandCount" min="3" max="15" value="5" step="1">
+                                <div class="value-unit-wrapper">
+                                    <span id="eqBandCountValue">5</span>&nbsp;<span data-i18n="unit:band">Band</span>
+                                </div>
+                            </div>
+                            <div class="explanation-text2" data-i18n="help:eqBandCount">The number of bands of the parametric equalizer for correction. The more bands you have, the more detailed the frequency correction will be, but the processing load will increase.</div>
+                        </div>
+                    </div>
+                    <div class="export-section">
+                        <button id="copyPEQBtn" class="primary-btn" data-i18n="button:copyPEQ">Copy EffeTune PEQ settings to clipboard</button>
+                        <button id="exportCSVBtn" class="secondary-btn" data-i18n="button:exportCSV">Export Correction Parameters (CSV)</button>
+                        <div class="explanation-text" data-i18n="help:exportOptions">The copied frequency correction settings can be pasted into EffeTune's Effect Pipeline by Ctrl+V.</div>
+                    </div>
+                    <div class="result-metadata">
+                        <h3 data-i18n="title:measurementDetails">Measurement Details</h3>
+                        <table class="metadata-table">
+                            <tbody id="measurementDetails">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmationDialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <p id="confirmationMessage"></p>
+            <div id="confirmationCheckbox" style="display: none;">
+                <label><input type="checkbox" id="doNotWarnAgain"> <span data-i18n="label:doNotWarnAgain">Do not warn me again</span></label>
+            </div>
+            <div class="dialog-buttons">
+                <button id="confirmBtn" class="primary-btn" data-i18n="button:confirm">Confirm</button>
+                <button id="cancelBtn" class="secondary-btn" data-i18n="button:cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Dialog -->
+    <div id="notificationDialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <p id="notificationMessage"></p>
+            <div class="dialog-buttons">
+                <button id="notificationOkBtn" class="primary-btn" data-i18n="button:ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js" type="module"></script>
+    <script src="audioUtils.js" type="module"></script>
+    <script src="dataStorage.js" type="module"></script>
+    <script src="uiManager.js" type="module"></script>
+    <script src="measurementController.js" type="module"></script>
+    <script src="peqCalculator.js"></script>
+    <script src="app.js" type="module"></script>
+    <script>
+        // Back button functionality
+        document.getElementById('back-button').addEventListener('click', function() {
+            if (window.electronAPI) {
+                window.electronAPI.navigateToMain()
+                    .then(result => {
+                        if (!result || !result.success) {
+                            console.error('Failed to navigate to main page:', result ? result.error : 'Unknown error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error navigating to main page:', error);
+                    });
+            } else {
+                window.location.href = '../../effetune.html';
+            }
+        });
+
+        // Hide application menu when the page is loaded (Electron only)
+        window.addEventListener('load', () => {
+            if (window.electronAPI) {
+                window.electronAPI.hideApplicationMenu()
+                    .then(result => {
+                        if (!result || !result.success) {
+                            console.error('Failed to hide application menu:', result ? result.error : 'Unknown error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error hiding application menu:', error);
+                    });
+            }
+        });
+
+        // Restore default menu when the page is unloaded (Electron only)
+        window.addEventListener('beforeunload', () => {
+            if (window.electronAPI) {
+                window.electronAPI.restoreDefaultMenu()
+                    .catch(error => {
+                        console.error('Error restoring default menu:', error);
+                    });
+            }
+        });
+    </script>
+</body>
+</html> 

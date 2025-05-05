@@ -94,6 +94,8 @@
 
   "menu.settings": "設定",
   "menu.settings.audioDevices": "オーディオデバイス...",
+  "menu.settings.performanceBenchmark": "パフォーマンスベンチマーク",
+  "menu.settings.frequencyResponseMeasurement": "周波数応答測定",
 
   "menu.help": "ヘルプ",
   "menu.help.help": "ヘルプ",

@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ Новое измерение", // Button to start a new measurement
+  "button:import": "Импорт", // Import button for loading saved measurements
+  "title:measurementHistory": "История измерений", // Title for the measurement history section
+
+  // Measurement Config Screen
+  "title:measurementConfig": "Настройка измерения", // Title for the measurement configuration section
+  "label:measurementName": "Название измерения:", // Label for measurement name input
+  "placeholder:measurementName": "Введите название для этого измерения", // Placeholder text for measurement name input
+  "help:measurementName": "Задайте имя измерению, которое вы собираетесь провести.", // Help text for measurement name
+  "label:audioInput": "Устройство для ввода аудио:", // Label for audio input device selection
+  "label:inputChannel": "Входной канал:", // Label for input channel selection
+  "help:inputChannel": "Выберите канал, к которому подключён калибровочный микрофон для выбранного устройства ввода аудио.", // Help text for input channel
+  "label:audioOutput": "Устройство для вывода аудио:", // Label for audio output device selection
+  "help:audioOutput": "Выберите аудиоустройство, которое воспроизводит измерительный сигнал.", // Help text for audio output
+  "label:outputChannel": "Выходной канал:", // Label for output channel selection
+  "help:outputChannel": "Укажите канал (левый/правый динамик или наушники и т. д.) для измерения.", // Help text for output channel
+  "help:audioInput": "Укажите устройство ввода аудио, к которому подключён измерительный микрофон.", // Help text for audio input
+  "label:sampleRate": "Частота дискретизации:", // Label for sample rate selection
+  "help:sampleRate": "Укажите частоту дискретизации при проведении измерений.", // Help text for sample rate
+  "label:sweepLength": "Длина сигнала (сэмплы):", // Label for sweep length selection
+  "help:sweepLength": "Указывает длину измерительного сигнала в сэмплах.", // Help text for sweep length
+  "label:averaging": "Синхронное усреднение:", // Label for synchronous averaging selection
+  "help:averaging": "Укажите количество повторений измерения в одной точке для повышения точности.", // Help text for averaging
+  "button:next": "Далее", // Next button in configuration form to move to the Level Adjustment Screen
+
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "Воспроизвести тестовый сигнал для проверки громкости", // Button to play test signal
+  "button:stopTestSignal": "Остановить тестовый сигнал", // Button to stop test signal
+  "label:signalLevel": "Уровень сигнала: ", // Label for signal level control
+  "help:signalLevel": "Отрегулируйте уровень воспроизводимого измерительного сигнала.", // Help text for signal level
+  "title:inputLevel": "Уровень входа", // Title for input level meter
+  "help:inputLevel": "Воспроизведите тестовый сигнал и отрегулируйте усиление микрофона так, чтобы уровень входа был в диапазоне от -36 дБ до -6 дБ.", // Help text for input level
+  "warning:inputTooHigh": "Слишком высокий вход! Уменьшите усиление микрофона или громкость динамиков.", // Warning message for high input level
+  "warning:inputTooLow": "Слишком низкий вход. Увеличьте усиление микрофона или громкость динамиков.", // Warning message for low input level
+  "warning:signalTooLow": "Измерительный сигнал слишком низкий для получения точных результатов", // Graph warning for signal level too low
+  "warning:signalTooHigh": "Измерительный сигнал слишком высокий для получения точных результатов", // Graph warning for signal level too high
+  "button:startMeasurement": "Начать измерение", // Button to start measurement
+
+  // Sweep Measurement Screen
+  "help:measurement": "Воспроизводится сигнал измерения для одного дополнительного измерения и для указанного числа измерений.",
+  "title:frequencyResponseMeasurement": "Измерение АЧХ", // Title for measurement screen
+  "title:currentMeasurement": "Текущее измерение", // Title for current measurement graph
+  "button:redo": "Повторить", // Button to redo measurement
+  "button:saveAndContinue": "Сохранить и измерить другую точку", // Button to save and continue measuring
+  "button:saveAndFinish": "Сохранить и завершить", // Button to save and finish measurement
+  "help:measurementActions": "Нажмите «Повторить», чтобы отменить это измерение и провести его снова.\nНажмите «Сохранить и измерить другую точку», чтобы сохранить это измерение и измерить другую точку для повышения точности коррекции (измерение начнётся сразу после нажатия кнопки).\nНажмите «Сохранить и завершить», чтобы принять это измерение и завершить процесс.", // Help text for measurement actions
+
+  // Results Display Screen
+  "message:noMeasurement": "Нет доступных измерений. Нажмите «Новое измерение», чтобы начать.", // Message when no measurements are available
+  "title:measurementResults": "Результаты измерений", // Title for measurement results
+  "button:saveChanges": "Сохранить изменения", // Button to save changes
+  "button:discardChanges": "Отменить изменения", // Button to discard changes
+  "title:measurementPoints": "Точки измерения", // Title for measurement points section
+  "title:frequencyResponse": "АЧХ", // Title for frequency response section
+  "label:showOriginal": "Исходная АЧХ", // Label for original response checkbox
+  "label:showCorrection": "Коррекция EQ", // Label for correction EQ checkbox
+  "label:showCorrected": "Скорректированная АЧХ", // Label for corrected response checkbox
+  "label:smoothing": "Сглаживание (σ):", // Label for smoothing control
+  "unit:octave": "окт.", // Unit for octave
+  "help:smoothing": "Степень сглаживания АЧХ для настройки чувствительности к пикам и впадинам.", // Help text for smoothing
+  "label:targetLowFreq": "Нижняя частота:", // Label for low frequency limit
+  "help:targetLowFreq": "Нижняя граница частотного диапазона для коррекции АЧХ. Обычно рекомендуется устанавливать её на нижний предел возможностей воспроизведения системы.", // Help text for low frequency limit
+  "label:targetHighFreq": "Верхняя частота:", // Label for high frequency limit
+  "help:targetHighFreq": "Верхняя граница частотного диапазона для коррекции АЧХ. Рекомендуется определять её на основе верхнего предела диапазона измерительного микрофона.", // Help text for high frequency limit
+  "label:eqBandCount": "Полосы PEQ:", // Label for EQ band count
+  "unit:band": "Полоса", // Unit for band
+  "help:eqBandCount": "Количество полос параметрического эквалайзера для коррекции. Чем больше полос, тем детальнее коррекция частот, но выше нагрузка на обработку.", // Help text for EQ band count
+  "button:copyPEQ": "Скопировать настройки PEQ EffeTune в буфер обмена", // Button to copy PEQ settings
+  "button:exportCSV": "Экспорт параметров коррекции (CSV)", // Button to export CSV
+  "help:exportOptions": "Скопированные настройки коррекции частоты можно вставить в Effect Pipeline EffeTune с помощью Ctrl+V.", // Help text for export options
+  "title:measurementDetails": "Детали измерения", // Title for measurement details section
+
+  // Dialogs
+  "button:confirm": "Подтвердить", // Confirm button in dialog
+  "button:cancel": "Отменить", // Cancel button in dialog
+  "label:doNotWarnAgain": "Больше не показывать предупреждение", // Label for "do not warn again" checkbox
+  "button:ok": "ОК", // OK button in notification dialog
+  "confirm:deleteMeasurement": "Вы уверены, что хотите удалить это измерение? Действие необратимо.", // Confirmation message for deleting a measurement
+  "confirm:deletePoint": "Вы уверены, что хотите удалить эту точку измерения? Действие необратимо.", // Confirmation message for deleting a measurement point
+  "confirm:discardChanges": "У вас есть несохранённые изменения. Отменить изменения и продолжить?", // Confirmation message for discarding unsaved changes
+
+  // New translations
+  "title:main": "Измерение АЧХ в EffeTune", // Title for the main page
+  "title:levelAdjustment": "Настройка уровня", // Title for level adjustment screen
+  "button:back": "Вернуться в EffeTune", // Back button text
+  "button:backSimple": "Назад", // Simple back button text
+
+  // Error messages
+  "error:dialogElementsNotFound": "Элементы диалога подтверждения не найдены в DOM", // Error when dialog elements not found
+  "error:confirmationDialogNotFound": "Элемент диалога подтверждения не найден в DOM", // Error when confirmation dialog not found
+  "error:notificationDialogNotFound": "Элементы диалога уведомления не найдены в DOM", // Error when notification dialog not found
+  "error:noPEQSettings": "Нет доступных настроек PEQ для этого измерения", // Error when no PEQ settings available
+
+  // Messages
+  "message:peqCopied": "Настройки PEQ успешно скопированы в буфер обмена. Скопированные настройки можно вставить в Effect Pipeline EffeTune с помощью Ctrl+V.", // Success message for PEQ copy
+
+  // Channel options
+  "option:left": "Левый канал", // Option for left channel
+  "option:right": "Правый канал", // Option for right channel
+  "option:both": "Оба канала (среднее)", // Option for both channels
+  "option:bothSimple": "Оба канала", // Option for both channels (simple)
+
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz", // Option for 44.1 kHz sample rate
+  "option:sampleRate48000": "48 kHz (Default)", // Option for 48 kHz sample rate
+  "option:sampleRate88200": "88.2 kHz", // Option for 88.2 kHz sample rate
+  "option:sampleRate96000": "96 kHz", // Option for 96 kHz sample rate
+  "option:sampleRate176400": "176.4 kHz", // Option for 176.4 kHz sample rate
+  "option:sampleRate192000": "192 kHz", // Option for 192 kHz sample rate
+
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)", // Option for 16384 sweep length
+  "option:sweepLength32768": "32,768 (2¹⁵)", // Option for 32768 sweep length
+  "option:sweepLength65536": "65,536 (2¹⁶)", // Option for 65536 sweep length
+  "option:sweepLength131072": "131,072 (2¹⁷) - Default", // Option for 131072 sweep length
+  "option:sweepLength262144": "262,144 (2¹⁸)", // Option for 262144 sweep length
+  "option:sweepLength524288": "524,288 (2¹⁹)", // Option for 524288 sweep length
+  "option:sweepLength1048576": "1,048,576 (2²⁰)", // Option for 1048576 sweep length
+
+  // Averaging options
+  "option:averaging1": "1", // Option for 1 averaging
+  "option:averaging2": "2", // Option for 2 averaging
+  "option:averaging3": "3", // Option for 3 averaging
+  "option:averaging4": "4 - Default", // Option for 4 averaging
+  "option:averaging5": "5", // Option for 5 averaging
+  "option:averaging6": "6", // Option for 6 averaging
+  "option:averaging7": "7", // Option for 7 averaging
+  "option:averaging8": "8", // Option for 8 averaging
+  "option:averaging10": "10", // Option for 10 averaging
+  "option:averaging12": "12", // Option for 12 averaging
+  "option:averaging16": "16" // Option for 16 averaging
+}

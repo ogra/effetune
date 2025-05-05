@@ -95,6 +95,8 @@
 
   "menu.settings": "Настройки",
   "menu.settings.audioDevices": "Аудиоустройства...",
+  "menu.settings.performanceBenchmark": "Тест производительности",
+  "menu.settings.frequencyResponseMeasurement": "Измерение частотной характеристики",
 
   "menu.help": "Помощь",
   "menu.help.help": "Помощь",

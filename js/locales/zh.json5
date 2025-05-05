@@ -95,6 +95,8 @@
 
   "menu.settings": "设置",
   "menu.settings.audioDevices": "音频设备…",
+  "menu.settings.performanceBenchmark": "性能基准测试",
+  "menu.settings.frequencyResponseMeasurement": "频率响应测量",
 
   "menu.help": "帮助",
   "menu.help.help": "帮助",

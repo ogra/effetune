@@ -95,6 +95,8 @@
 
   "menu.settings": "Configuración",
   "menu.settings.audioDevices": "Dispositivos de audio...",
+  "menu.settings.performanceBenchmark": "Prueba de rendimiento",
+  "menu.settings.frequencyResponseMeasurement": "Medición de respuesta en frecuencia",
 
   "menu.help": "Ayuda",
   "menu.help.help": "Ayuda",

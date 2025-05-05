@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ قياس جديد",
+  "button:import": "استيراد",
+  "title:measurementHistory": "تاريخ القياسات",
+  
+  // Measurement Config Screen
+  "title:measurementConfig": "تكوين القياس",
+  "label:measurementName": "اسم القياس:",
+  "placeholder:measurementName": "أدخل اسمًا لهذا القياس",
+  "help:measurementName": "قم بتسمية القياس الذي على وشك إجرائه.",
+  "label:audioInput": "جهاز إدخال الصوت:",
+  "help:audioInput": "حدد جهاز إدخال الصوت المتصل به ميكروفون القياس.",
+  "label:inputChannel": "قناة الإدخال:",
+  "help:inputChannel": "اختر القناة المتصل بها ميكروفون المعايرة للجهاز المحدد.",
+  "label:audioOutput": "جهاز إخراج الصوت:",
+  "help:audioOutput": "حدد جهاز الصوت الذي يصدر إشارة القياس.",
+  "label:outputChannel": "قناة الإخراج:",
+  "help:outputChannel": "حدد القناة (مكبر الصوت الأيسر/الأيمن أو سماعات الرأس، إلخ) للقياس.",
+  "label:sampleRate": "معدل العينة:",
+  "help:sampleRate": "حدد معدل أخذ العينات عند إجراء القياسات.",
+  "label:sweepLength": "طول المسح (عينات):",
+  "help:sweepLength": "يحدد طول إشارة القياس بالعينات.",
+  "label:averaging": "التوسط المتزامن:",
+  "help:averaging": "حدد عدد مرات تكرار القياس في نفس النقطة للحصول على قياس أكثر دقة.",
+  "button:next": "التالي",
+  
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "تشغيل إشارة الاختبار لفحص مستوى الصوت",
+  "button:stopTestSignal": "إيقاف إشارة الاختبار",
+  "label:signalLevel": "مستوى الإشارة:",
+  "help:signalLevel": "اضبط مستوى إشارة القياس التي يتم تشغيلها للقياس.",
+  "title:inputLevel": "مستوى الإدخال",
+  "help:inputLevel": "شغّل إشارة الاختبار واضبط مكاسب الميكروفون بحيث يكون مستوى الإدخال بين -36 ديسيبل و -6 ديسيبل.",
+  "warning:inputTooHigh": "الإدخال مرتفع جدًا! خفّض مكسب الميكروفون أو مستوى الصوت.",
+  "warning:inputTooLow": "الإدخال منخفض جدًا. ارفع مكسب الميكروفون أو مستوى الصوت.",
+  "warning:signalTooLow": "إشارة القياس منخفضة جدًا بحيث لا تعطي نتائج دقيقة",
+  "warning:signalTooHigh": "إشارة القياس مرتفعة جدًا بحيث لا تعطي نتائج دقيقة",
+  "button:startMeasurement": "بدء القياس",
+  
+  // Sweep Measurement Screen
+  "help:measurement": "يتم إعادة إنشاء إشارة القياس لقياس إضافي واحد ولعدد القياسات المحدد.",
+  "title:frequencyResponseMeasurement": "قياس استجابة التردد",
+  "title:currentMeasurement": "القياس الحالي",
+  "button:redo": "إعادة",
+  "button:saveAndContinue": "حفظ وقياس نقطة أخرى",
+  "button:saveAndFinish": "حفظ وإنهاء",
+  "help:measurementActions": "انقر على إعادة للتخلي عن هذا القياس وقياسه مجددًا.\nانقر على حفظ وقياس نقطة أخرى لحفظ هذا القياس وقياس نقطة أخرى لتحسين دقة التصحيح (يبدأ القياس فور النقر).\nانقر على حفظ وإنهاء لقبول هذا القياس وإكمال القياس.",
+  
+  // Results Display Screen
+  "message:noMeasurement": "لا توجد قياسات متاحة. انقر على \"قياس جديد\" للبدء.",
+  "title:measurementResults": "نتائج القياس",
+  "button:saveChanges": "حفظ التغييرات",
+  "button:discardChanges": "التخلي عن التغييرات",
+  "title:measurementPoints": "نقاط القياس",
+  "title:frequencyResponse": "استجابة التردد",
+  "label:showOriginal": "الاستجابة الأصلية",
+  "label:showCorrection": "معادل التصحيح",
+  "label:showCorrected": "الاستجابة بعد التصحيح",
+  "label:smoothing": "التنعيم (σ):",
+  "unit:octave": "أوكتاف",
+  "help:smoothing": "مقدار تنعيم استجابة التردد لضبط الحساسية للقمم والحفر.",
+  "label:targetLowFreq": "التردد المنخفض:",
+  "help:targetLowFreq": "الحد الأدنى للتردد لتصحيح استجابة التردد. يفضل عادة ضبطه على الحد الأدنى لإمكانيات النظام التشغيلية.",
+  "label:targetHighFreq": "التردد العالي:",
+  "help:targetHighFreq": "الحد الأقصى للتردد لتصحيح استجابة التردد. يوصى بتحديده بناءً على الحد الأقصى لتردد ميكروفون القياس.",
+  "label:eqBandCount": "عدد نطاقات المعادل:",
+  "unit:band": "نطاق",
+  "help:eqBandCount": "عدد نطاقات المعادل المعلمي للتصحيح. كلما زاد عدد النطاقات، كانت دقة التصحيح أعلى، ولكن يزيد الحمل على المعالجة.",
+  "button:copyPEQ": "نسخ إعدادات PEQ إلى الحافظة",
+  "button:exportCSV": "تصدير معلمات التصحيح (CSV)",
+  "help:exportOptions": "يمكن لصق إعدادات تصحيح التردد المنسوخة في خط أنابيب التأثير في EffeTune عبر Ctrl+V.",
+  "title:measurementDetails": "تفاصيل القياس",
+  
+  // Dialogs
+  "button:confirm": "تأكيد",
+  "button:cancel": "إلغاء",
+  "label:doNotWarnAgain": "لا تُظهر هذا التحذير مرة أخرى",
+  "button:ok": "موافق",
+  "confirm:deleteMeasurement": "هل أنت متأكد أنك تريد حذف هذا القياس؟ لا يمكن التراجع عن هذا الإجراء.",
+  "confirm:deletePoint": "هل أنت متأكد أنك تريد حذف هذه النقطة؟ لا يمكن التراجع عن هذا الإجراء.",
+  "confirm:discardChanges": "لديك تغييرات غير محفوظة. هل تريد التخلي عنها والمتابعة؟",
+  
+  // New translations
+  "title:main": "قياس استجابة التردد في EffeTune",
+  "title:levelAdjustment": "ضبط المستوى",
+  "button:back": "العودة إلى EffeTune",
+  "button:backSimple": "عودة",
+  
+  // Error messages
+  "error:dialogElementsNotFound": "لم يتم العثور على عناصر مربع التأكيد في DOM",
+  "error:confirmationDialogNotFound": "لم يتم العثور على عنصر مربع التأكيد في DOM",
+  "error:notificationDialogNotFound": "لم يتم العثور على عناصر مربع الإشعار في DOM",
+  "error:noPEQSettings": "لا توجد إعدادات PEQ لهذا القياس",
+  
+  // Messages
+  "message:peqCopied": "تم نسخ إعدادات PEQ إلى الحافظة بنجاح. يمكن لصق الإعدادات في خط أنابيب التأثير في EffeTune عبر Ctrl+V.",
+  
+  // Channel options
+  "option:left": "القناة اليسرى",
+  "option:right": "القناة اليمنى",
+  "option:both": "كلتا القناتين (متوسط)",
+  "option:bothSimple": "كلتا القناتين",
+  
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz",
+  "option:sampleRate48000": "48 kHz (Default)",
+  "option:sampleRate88200": "88.2 kHz",
+  "option:sampleRate96000": "96 kHz",
+  "option:sampleRate176400": "176.4 kHz",
+  "option:sampleRate192000": "192 kHz",
+  
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)",
+  "option:sweepLength32768": "32,768 (2¹⁵)",
+  "option:sweepLength65536": "65,536 (2¹⁶)",
+  "option:sweepLength131072": "131,072 (2¹⁷) - Default",
+  "option:sweepLength262144": "262,144 (2¹⁸)",
+  "option:sweepLength524288": "524,288 (2¹⁹)",
+  "option:sweepLength1048576": "1,048,576 (2²⁰)",
+  
+  // Averaging options
+  "option:averaging1": "1",
+  "option:averaging2": "2",
+  "option:averaging3": "3",
+  "option:averaging4": "4 - Default",
+  "option:averaging5": "5",
+  "option:averaging6": "6",
+  "option:averaging7": "7",
+  "option:averaging8": "8",
+  "option:averaging10": "10",
+  "option:averaging12": "12",
+  "option:averaging16": "16"
+}

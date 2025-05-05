@@ -20,6 +20,8 @@ Sin mitos audiophiles, solo pura ciencia.
 - Visualización de audio en vivo
 - Cadena de procesamiento de audio que se puede modificar en tiempo real
 - Procesamiento de archivos de audio sin conexión con la cadena de efectos actual
+- Función de sección para agrupar y controlar múltiples efectos
+- Característica de medición de respuesta en frecuencia para equipos de audio
 
 ## Guía de Configuración
 
@@ -154,6 +156,14 @@ Para usar EffeTune con reproductores de CD, reproductores de red u otras fuentes
 3. Opciones de Descarga o Guardado:
    - El archivo procesado se genera en formato WAV
    - Los múltiples archivos se empaquetan automáticamente en un archivo ZIP
+
+### Medición de Respuesta en Frecuencia
+
+1. Accede a la herramienta de medición desde el menú 'Measurement' o visitando [Herramienta de Medición](../../../features/measurement/measurement.html)
+2. Conecta tu equipo de audio a la entrada y salida de tu ordenador
+3. Configura los parámetros de medición (duración del barrido, rango de frecuencias)
+4. Ejecuta la medición para generar un gráfico de respuesta en frecuencia
+5. Analiza los resultados o exporta los datos de medición para un análisis más detallado
 
 ### Compartir Cadenas de Efectos
 

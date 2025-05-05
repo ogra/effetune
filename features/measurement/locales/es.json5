@@ -1,0 +1,134 @@
+{
+// Measurement History Section
+"button:newMeasurement": "+ Nueva medición", // Button to start a new measurement
+"button:import": "Importar", // Import button for loading saved measurements
+"title:measurementHistory": "Historial de mediciones", // Title for the measurement history section
+
+// Measurement Config Screen
+"title:measurementConfig": "Configuración de medición", // Title for the measurement configuration section
+"label:measurementName": "Nombre de la medición:", // Label for measurement name input
+"placeholder:measurementName": "Introduce un nombre para esta medición", // Placeholder text for measurement name input
+"help:measurementName": "Asigna un nombre a la medición que vas a realizar.", // Help text for measurement name
+"label:audioInput": "Dispositivo de entrada de audio:", // Label for audio input device selection
+"label:inputChannel": "Canal de entrada:", // Label for input channel selection
+"help:inputChannel": "Selecciona el canal al que está conectado el micrófono de calibración para el dispositivo de entrada de audio seleccionado.", // Help text for input channel
+"label:audioOutput": "Dispositivo de salida de audio:", // Label for audio output device selection
+"help:audioOutput": "Selecciona el dispositivo de audio que emite la señal de medición.", // Help text for audio output
+"label:outputChannel": "Canal de salida:", // Label for output channel selection
+"help:outputChannel": "Especifica el canal (altavoz izquierdo/derecho o auriculares, etc.) a medir.", // Help text for output channel
+"help:audioInput": "Especifica el dispositivo de entrada de audio al que está conectado el micrófono de medición.", // Help text for audio input
+"label:sampleRate": "Frecuencia de muestreo:", // Label for sample rate selection
+"help:sampleRate": "Especifica la frecuencia de muestreo al realizar mediciones.", // Help text for sample rate
+"label:sweepLength": "Longitud de barrido (muestras):", // Label for sweep length selection
+"help:sweepLength": "Especifica la longitud de la señal de medición en muestras.", // Help text for sweep length
+"label:averaging": "Promediado síncrono:", // Label for synchronous averaging selection
+"help:averaging": "Especifica el número de repeticiones de la medición en el mismo punto para mayor precisión.", // Help text for averaging
+"button:next": "Siguiente", // Next button in configuration form to move to the Level Adjustment Screen
+
+// Level Adjustment Screen
+"button:playbackTestSignal": "Reproducir señal de prueba para comprobar el volumen", // Button to play test signal
+"button:stopTestSignal": "Detener señal de prueba", // Button to stop test signal
+"label:signalLevel": "Nivel de señal: ", // Label for signal level control
+"help:signalLevel": "Ajusta el nivel de la señal de medición que se reproduce para la medición.", // Help text for signal level
+"title:inputLevel": "Nivel de entrada", // Title for input level meter
+"help:inputLevel": "Reproduce la señal de prueba y ajusta la ganancia del micrófono para que el nivel de entrada esté entre -36 dB y -6 dB.", // Help text for input level
+"warning:inputTooHigh": "¡Entrada demasiado alta! Reduce la ganancia del micrófono o el volumen del altavoz.", // Warning message for high input level
+"warning:inputTooLow": "Entrada demasiado baja. Aumenta la ganancia del micrófono o el volumen del altavoz.", // Warning message for low input level
+"warning:signalTooLow": "La señal de medición fue demasiado baja para obtener resultados precisos", // Graph warning for signal level too low
+"warning:signalTooHigh": "La señal de medición fue demasiado alta para obtener resultados precisos", // Graph warning for signal level too high
+"button:startMeasurement": "Iniciar medición", // Button to start measurement
+
+// Sweep Measurement Screen
+"help:measurement": "Se reproduce la señal de medición para una medición adicional y para el número de mediciones especificado.",
+"title:frequencyResponseMeasurement": "Medición de respuesta en frecuencia", // Title for measurement screen
+"title:currentMeasurement": "Medición actual", // Title for current measurement graph
+"button:redo": "Rehacer", // Button to redo measurement
+"button:saveAndContinue": "Guardar y medir otro punto", // Button to save and continue measuring
+"button:saveAndFinish": "Guardar y finalizar", // Button to save and finish measurement
+"help:measurementActions": "Haz clic en Rehacer para descartar esta medición y medir de nuevo.\nHaz clic en Guardar y medir otro punto para guardar esta medición y medir otro punto para mejorar la precisión de la corrección (la medición comienza inmediatamente después de hacer clic en el botón).\nHaz clic en Guardar y finalizar para aceptar esta medición y completar la medición.", // Help text for measurement actions
+
+// Results Display Screen
+"message:noMeasurement": "No hay mediciones disponibles. Haz clic en \"Nueva medición\" para comenzar.", // Message when no measurements are available
+"title:measurementResults": "Resultados de la medición", // Title for measurement results
+"button:saveChanges": "Guardar cambios", // Button to save changes
+"button:discardChanges": "Descartar cambios", // Button to discard changes
+"title:measurementPoints": "Puntos de medición", // Title for measurement points section
+"title:frequencyResponse": "Respuesta en frecuencia", // Title for frequency response section
+"label:showOriginal": "Respuesta original", // Label for original response checkbox
+"label:showCorrection": "EQ de corrección", // Label for correction EQ checkbox
+"label:showCorrected": "Respuesta corregida", // Label for corrected response checkbox
+"label:smoothing": "Suavizado (σ):", // Label for smoothing control
+"unit:octave": "oct.", // Unit for octave
+"help:smoothing": "Cantidad de suavizado de la respuesta en frecuencia para ajustar la sensibilidad a picos y caídas.", // Help text for smoothing
+"label:targetLowFreq": "Frecuencia mínima:", // Label for low frequency limit
+"help:targetLowFreq": "Frecuencia límite inferior para la corrección de la respuesta en frecuencia. Generalmente es mejor ajustarla al límite inferior de las capacidades de reproducción del sistema.", // Help text for low frequency limit
+"label:targetHighFreq": "Frecuencia máxima:", // Label for high frequency limit
+"help:targetHighFreq": "Límite superior de frecuencia para la corrección de la respuesta en frecuencia. Se recomienda determinarlo según el límite superior de frecuencia del micrófono de medición.", // Help text for high frequency limit
+"label:eqBandCount": "Banda de PEQ:", // Label for EQ band count
+"unit:band": "Banda", // Unit for band
+"help:eqBandCount": "Número de bandas del ecualizador paramétrico para la corrección. Cuantas más bandas tengas, más detallada será la corrección de frecuencia, pero aumentará la carga de procesamiento.", // Help text for EQ band count
+"button:copyPEQ": "Copiar ajustes de PEQ de EffeTune al portapapeles", // Button to copy PEQ settings
+"button:exportCSV": "Exportar parámetros de corrección (CSV)", // Button to export CSV
+"help:exportOptions": "Los ajustes de corrección de frecuencia copiados se pueden pegar en el Pipeline de Efectos de EffeTune con Ctrl+V.", // Help text for export options
+"title:measurementDetails": "Detalles de la medición", // Title for measurement details section
+
+// Dialogs
+"button:confirm": "Confirmar", // Confirm button in dialog
+"button:cancel": "Cancelar", // Cancel button in dialog
+"label:doNotWarnAgain": "No mostrar más esta advertencia", // Label for "do not warn again" checkbox
+"button:ok": "Aceptar", // OK button in notification dialog
+"confirm:deleteMeasurement": "¿Estás seguro de que deseas eliminar esta medición? Esta acción no se puede deshacer.", // Confirmation message for deleting a measurement
+"confirm:deletePoint": "¿Estás seguro de que deseas eliminar este punto de medición? Esta acción no se puede deshacer.", // Confirmation message for deleting a measurement point
+"confirm:discardChanges": "Tienes cambios sin guardar. ¿Descartar cambios y continuar?", // Confirmation message for discarding unsaved changes
+
+// New translations
+"title:main": "Medición de respuesta en frecuencia de EffeTune", // Title for the main page
+"title:levelAdjustment": "Ajuste de nivel", // Title for level adjustment screen
+"button:back": "Volver a EffeTune", // Back button text
+"button:backSimple": "Volver", // Simple back button text
+
+// Error messages
+"error:dialogElementsNotFound": "Elementos del diálogo de confirmación no encontrados en el DOM", // Error when dialog elements not found
+"error:confirmationDialogNotFound": "Elemento del diálogo de confirmación no encontrado en el DOM", // Error when confirmation dialog not found
+"error:notificationDialogNotFound": "Elementos del diálogo de notificación no encontrados en el DOM", // Error when notification dialog not found
+"error:noPEQSettings": "No hay ajustes de PEQ disponibles para esta medición", // Error when no PEQ settings available
+
+// Messages
+"message:peqCopied": "Ajustes de PEQ copiados al portapapeles correctamente. Los ajustes copiados se pueden pegar en el Pipeline de Efectos de EffeTune con Ctrl+V.", // Success message for PEQ copy
+
+// Channel options
+"option:left": "Canal izquierdo", // Option for left channel
+"option:right": "Canal derecho", // Option for right channel
+"option:both": "Ambos canales (promedio)", // Option for both channels
+"option:bothSimple": "Ambos canales", // Option for both channels (simple)
+
+// Sample rate options
+"option:sampleRate44100": "44.1 kHz", // Option for 44.1 kHz sample rate
+"option:sampleRate48000": "48 kHz (Default)", // Option for 48 kHz sample rate
+"option:sampleRate88200": "88.2 kHz", // Option for 88.2 kHz sample rate
+"option:sampleRate96000": "96 kHz", // Option for 96 kHz sample rate
+"option:sampleRate176400": "176.4 kHz", // Option for 176.4 kHz sample rate
+"option:sampleRate192000": "192 kHz", // Option for 192 kHz sample rate
+
+// Sweep length options
+"option:sweepLength16384": "16,384 (2¹⁴)", // Option for 16384 sweep length
+"option:sweepLength32768": "32,768 (2¹⁵)", // Option for 32768 sweep length
+"option:sweepLength65536": "65,536 (2¹⁶)", // Option for 65536 sweep length
+"option:sweepLength131072": "131,072 (2¹⁷) - Default", // Option for 131072 sweep length
+"option:sweepLength262144": "262,144 (2¹⁸)", // Option for 262144 sweep length
+"option:sweepLength524288": "524,288 (2¹⁹)", // Option for 524288 sweep length
+"option:sweepLength1048576": "1,048,576 (2²⁰)", // Option for 1048576 sweep length
+
+// Averaging options
+"option:averaging1": "1", // Option for 1 averaging
+"option:averaging2": "2", // Option for 2 averaging
+"option:averaging3": "3", // Option for 3 averaging
+"option:averaging4": "4 - Default", // Option for 4 averaging
+"option:averaging5": "5", // Option for 5 averaging
+"option:averaging6": "6", // Option for 6 averaging
+"option:averaging7": "7", // Option for 7 averaging
+"option:averaging8": "8", // Option for 8 averaging
+"option:averaging10": "10", // Option for 10 averaging
+"option:averaging12": "12", // Option for 12 averaging
+"option:averaging16": "16" // Option for 16 averaging
+}

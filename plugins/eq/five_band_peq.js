@@ -704,10 +704,9 @@ class FiveBandPEQPlugin extends PluginBase {
       qText.autocomplete = "off";
 
       const updateQControlsState = (type) => {
-        // Q is disabled for LP, HP (N/A) and fixed for LS, HS
-        const isQDisabled = type === 'lp' || type === 'hp';
+        // Q is fixed for LS, HS
         const isQShelving = type === 'ls' || type === 'hs';
-        const isQUserSettable = !isQDisabled && !isQShelving;
+        const isQUserSettable = !isQShelving;
 
         qSlider.disabled = !isQUserSettable;
         qText.disabled = !isQUserSettable;
@@ -718,9 +717,6 @@ class FiveBandPEQPlugin extends PluginBase {
           qText.value = 0.7;
           // Update the plugin state as well, as this is fixed
           this.setBand(i, undefined, undefined, 0.7);
-        } else if (isQDisabled) {
-          // Indicate Q is not applicable for LP/HP
-          // No need to change slider/text value, just disable
         }
         // For user-settable Q, controls are enabled, values remain as they are
       };

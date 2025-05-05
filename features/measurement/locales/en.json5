@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ New Measurement", // Button to start a new measurement
+  "button:import": "Import", // Import button for loading saved measurements
+  "title:measurementHistory": "Measurement History", // Title for the measurement history section
+  
+  // Measurement Config Screen
+  "title:measurementConfig": "Measurement Configuration", // Title for the measurement configuration section
+  "label:measurementName": "Measurement Name:", // Label for measurement name input
+  "placeholder:measurementName": "Enter a name for this measurement", // Placeholder text for measurement name input
+  "help:measurementName": "Give a name to the measurement you are about to make.", // Help text for measurement name
+  "label:audioInput": "Audio Input Device:", // Label for audio input device selection
+  "label:inputChannel": "Input Channel:", // Label for input channel selection
+  "help:inputChannel": "Select the channel to which the calibration microphone is connected for the selected audio input device.", // Help text for input channel
+  "label:audioOutput": "Audio Output Device:", // Label for audio output device selection
+  "help:audioOutput": "Select the audio device that outputs the measurement signal.", // Help text for audio output
+  "label:outputChannel": "Output Channel:", // Label for output channel selection
+  "help:outputChannel": "Specify the channel (left/right speaker or headphones, etc.) to measure.", // Help text for output channel
+  "help:audioInput": "Specify the audio input device to which the measurement microphone is connected.", // Help text for audio input
+  "label:sampleRate": "Sampling Frequency:", // Label for sample rate selection
+  "help:sampleRate": "Specify the sampling frequency when taking measurements.", // Help text for sample rate
+  "label:sweepLength": "Sweep Length (samples):", // Label for sweep length selection
+  "help:sweepLength": "Specifies the length of the measurement signal in samples.", // Help text for sweep length
+  "label:averaging": "Synchronous Averaging:", // Label for synchronous averaging selection
+  "help:averaging": "Specify the number of times to repeat the measurement at the same measurement point for more accurate measurement.", // Help text for averaging
+  "button:next": "Next", // Next button in configuration form to move to the Level Adjustment Screen
+  
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "Playback test signal for checking volume", // Button to play test signal
+  "button:stopTestSignal": "Stop test signal", // Button to stop test signal
+  "label:signalLevel": "Signal Level: ", // Label for signal level control
+  "help:signalLevel": "Adjust the level of the measurement signal that is played back for measurement.", // Help text for signal level
+  "title:inputLevel": "Input Level", // Title for input level meter
+  "help:inputLevel": "Play the test signal and adjust the microphone gain so that the input level is between -36dB and -6dB.", // Help text for input level
+  "warning:inputTooHigh": "Input too high! Reduce microphone gain or speaker volume.", // Warning message for high input level
+  "warning:inputTooLow": "Input too low. Increase microphone gain or speaker volume.", // Warning message for low input level
+  "warning:signalTooLow": "The measurement signal was too low to give accurate results", // Graph warning for signal level too low
+  "warning:signalTooHigh": "The measurement signal was too high to give accurate results", // Graph warning for signal level too high
+  "button:startMeasurement": "Start Measurement", // Button to start measurement
+  
+  // Sweep Measurement Screen
+  "help:measurement": "The measurement signal for one extra measurement plus the number of measurements is reproduced.",
+  "title:frequencyResponseMeasurement": "Frequency Response Measurement", // Title for measurement screen
+  "title:currentMeasurement": "Current Measurement", // Title for current measurement graph
+  "button:redo": "Redo", // Button to redo measurement
+  "button:saveAndContinue": "Save and Measure Another Point", // Button to save and continue measuring
+  "button:saveAndFinish": "Save and Finish", // Button to save and finish measurement
+  "help:measurementActions": "Click Redo to discard this measurement and measure again.\nClick Save and Measure Another Point to save this measurement and measure another point to improve the correction accuracy (measurement starts immediately after clicking the button).\nClick Save and Finish to accept this measurement and complete the measurement.", // Help text for measurement actions
+  
+  // Results Display Screen
+  "message:noMeasurement": "No measurements available. Click \"New Measurement\" to begin.", // Message when no measurements are available
+  "title:measurementResults": "Measurement Results", // Title for measurement results
+  "button:saveChanges": "Save Changes", // Button to save changes
+  "button:discardChanges": "Discard Changes", // Button to discard changes
+  "title:measurementPoints": "Measurement Points", // Title for measurement points section
+  "title:frequencyResponse": "Frequency Response", // Title for frequency response section
+  "label:showOriginal": "Original Response", // Label for original response checkbox
+  "label:showCorrection": "Correction EQ", // Label for correction EQ checkbox
+  "label:showCorrected": "Corrected Response", // Label for corrected response checkbox
+  "label:smoothing": "Smoothing (σ):", // Label for smoothing control
+  "unit:octave": "oct.", // Unit for octave
+  "help:smoothing": "Amount of frequency response smoothing to adjust sensitivity to peaks and dips.", // Help text for smoothing
+  "label:targetLowFreq": "Low Freq:", // Label for low frequency limit
+  "help:targetLowFreq": "The lower limit frequency for frequency response correction. It is usually best to set it at the lower limit of the system's playback capabilities.", // Help text for low frequency limit
+  "label:targetHighFreq": "High Freq:", // Label for high frequency limit
+  "help:targetHighFreq": "The upper frequency limit for frequency response correction. It is recommended to determine this based on the upper frequency limit of the measurement microphone.", // Help text for high frequency limit
+  "label:eqBandCount": "PEQ Band:", // Label for EQ band count
+  "unit:band": "Band", // Unit for band
+  "help:eqBandCount": "The number of bands of the parametric equalizer for correction. The more bands you have, the more detailed the frequency correction will be, but the processing load will increase.", // Help text for EQ band count
+  "button:copyPEQ": "Copy EffeTune PEQ settings to clipboard", // Button to copy PEQ settings
+  "button:exportCSV": "Export Correction Parameters (CSV)", // Button to export CSV
+  "help:exportOptions": "The copied frequency correction settings can be pasted into EffeTune's Effect Pipeline by Ctrl+V.", // Help text for export options
+  "title:measurementDetails": "Measurement Details", // Title for measurement details section
+  
+  // Dialogs
+  "button:confirm": "Confirm", // Confirm button in dialog
+  "button:cancel": "Cancel", // Cancel button in dialog
+  "label:doNotWarnAgain": "Do not warn me again", // Label for "do not warn again" checkbox
+  "button:ok": "OK", // OK button in notification dialog
+  "confirm:deleteMeasurement": "Are you sure you want to delete this measurement? This action cannot be undone.", // Confirmation message for deleting a measurement
+  "confirm:deletePoint": "Are you sure you want to delete this measurement point? This action cannot be undone.", // Confirmation message for deleting a measurement point
+  "confirm:discardChanges": "You have unsaved changes. Discard changes and continue?", // Confirmation message for discarding unsaved changes
+  
+  // New translations
+  "title:main": "EffeTune Frequency Response Measurement", // Title for the main page
+  "title:levelAdjustment": "Level Adjustment", // Title for level adjustment screen
+  "button:back": "Back to EffeTune", // Back button text
+  "button:backSimple": "Back", // Simple back button text
+  
+  // Error messages
+  "error:dialogElementsNotFound": "Confirmation dialog elements not found in the DOM", // Error when dialog elements not found
+  "error:confirmationDialogNotFound": "Confirmation dialog element not found in the DOM", // Error when confirmation dialog not found
+  "error:notificationDialogNotFound": "Notification dialog elements not found in the DOM", // Error when notification dialog not found
+  "error:noPEQSettings": "No PEQ settings available for this measurement", // Error when no PEQ settings available
+  
+  // Messages
+  "message:peqCopied": "PEQ settings copied to clipboard successfully. The copied settings can be pasted into EffeTune's Effect Pipeline by Ctrl+V.", // Success message for PEQ copy
+  
+  // Channel options
+  "option:left": "Left Channel", // Option for left channel
+  "option:right": "Right Channel", // Option for right channel
+  "option:both": "Both Channels (average)", // Option for both channels
+  "option:bothSimple": "Both Channels", // Option for both channels (simple)
+  
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz", // Option for 44.1 kHz sample rate
+  "option:sampleRate48000": "48 kHz (Default)", // Option for 48 kHz sample rate
+  "option:sampleRate88200": "88.2 kHz", // Option for 88.2 kHz sample rate
+  "option:sampleRate96000": "96 kHz", // Option for 96 kHz sample rate
+  "option:sampleRate176400": "176.4 kHz", // Option for 176.4 kHz sample rate
+  "option:sampleRate192000": "192 kHz", // Option for 192 kHz sample rate
+  
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)", // Option for 16384 sweep length
+  "option:sweepLength32768": "32,768 (2¹⁵)", // Option for 32768 sweep length
+  "option:sweepLength65536": "65,536 (2¹⁶)", // Option for 65536 sweep length
+  "option:sweepLength131072": "131,072 (2¹⁷) - Default", // Option for 131072 sweep length
+  "option:sweepLength262144": "262,144 (2¹⁸)", // Option for 262144 sweep length
+  "option:sweepLength524288": "524,288 (2¹⁹)", // Option for 524288 sweep length
+  "option:sweepLength1048576": "1,048,576 (2²⁰)", // Option for 1048576 sweep length
+  
+  // Averaging options
+  "option:averaging1": "1", // Option for 1 averaging
+  "option:averaging2": "2", // Option for 2 averaging
+  "option:averaging3": "3", // Option for 3 averaging
+  "option:averaging4": "4 - Default", // Option for 4 averaging
+  "option:averaging5": "5", // Option for 5 averaging
+  "option:averaging6": "6", // Option for 6 averaging
+  "option:averaging7": "7", // Option for 7 averaging
+  "option:averaging8": "8", // Option for 8 averaging
+  "option:averaging10": "10", // Option for 10 averaging
+  "option:averaging12": "12", // Option for 12 averaging
+  "option:averaging16": "16" // Option for 16 averaging
+} 

@@ -95,6 +95,8 @@
 
   "menu.settings": "الإعدادات",
   "menu.settings.audioDevices": "أجهزة الصوت...",
+  "menu.settings.performanceBenchmark": "معيار الأداء",
+  "menu.settings.frequencyResponseMeasurement": "قياس الاستجابة الترددية",
 
   "menu.help": "مساعدة",
   "menu.help.help": "مساعدة",

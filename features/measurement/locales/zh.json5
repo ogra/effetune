@@ -1,0 +1,134 @@
+{
+// Measurement History Section
+"button:newMeasurement": "+ 新测量", // Button to start a new measurement
+"button:import": "导入", // Import button for loading saved measurements
+"title:measurementHistory": "测量历史", // Title for the measurement history section
+
+// Measurement Config Screen
+"title:measurementConfig": "测量配置", // Title for the measurement configuration section
+"label:measurementName": "测量名称：", // Label for measurement name input
+"placeholder:measurementName": "请输入测量名称", // Placeholder text for measurement name input
+"help:measurementName": "为即将进行的测量命名。", // Help text for measurement name
+"label:audioInput": "音频输入设备：", // Label for audio input device selection
+"label:inputChannel": "输入通道：", // Label for input channel selection
+"help:inputChannel": "选择已连接校准麦克风的输入通道。", // Help text for input channel
+"label:audioOutput": "音频输出设备：", // Label for audio output device selection
+"help:audioOutput": "选择用于输出测量信号的音频设备。", // Help text for audio output
+"label:outputChannel": "输出通道：", // Label for output channel selection
+"help:outputChannel": "指定要测量的通道（左/右 扬声器或耳机等）。", // Help text for output channel
+"help:audioInput": "指定连接测量麦克风的音频输入设备。", // Help text for audio input
+"label:sampleRate": "采样频率：", // Label for sample rate selection
+"help:sampleRate": "指定测量时的采样频率。", // Help text for sample rate
+"label:sweepLength": "扫描长度（采样点）：", // Label for sweep length selection
+"help:sweepLength": "指定测量信号的采样长度。", // Help text for sweep length
+"label:averaging": "同步平均：", // Label for synchronous averaging selection
+"help:averaging": "指定在同一测量点重复测量的次数，以提高测量精度。", // Help text for averaging
+"button:next": "下一步", // Next button in configuration form to move to the Level Adjustment Screen
+
+// Level Adjustment Screen
+"button:playbackTestSignal": "播放测试信号以检查音量", // Button to play test signal
+"button:stopTestSignal": "停止测试信号", // Button to stop test signal
+"label:signalLevel": "信号电平：", // Label for signal level control
+"help:signalLevel": "调整用于测量的播放信号电平。", // Help text for signal level
+"title:inputLevel": "输入电平", // Title for input level meter
+"help:inputLevel": "播放测试信号并调整麦克风增益，使输入电平保持在 -36dB 到 -6dB 之间。", // Help text for input level
+"warning:inputTooHigh": "输入过高！请降低麦克风增益或扬声器音量。", // Warning message for high input level
+"warning:inputTooLow": "输入过低。请提高麦克风增益或扬声器音量。", // Warning message for low input level
+"warning:signalTooLow": "测量信号过低，无法获得准确结果", // Graph warning for signal level too low
+"warning:signalTooHigh": "测量信号过高，无法获得准确结果", // Graph warning for signal level too high
+"button:startMeasurement": "开始测量", // Button to start measurement
+
+// Sweep Measurement Screen
+"help:measurement": "一次额外测量的测量信号以及指定的测量次数的测量信号将被重放。",
+"title:frequencyResponseMeasurement": "频率响应测量", // Title for measurement screen
+"title:currentMeasurement": "当前测量", // Title for current measurement graph
+"button:redo": "重新测量", // Button to redo measurement
+"button:saveAndContinue": "保存并测量另一个点", // Button to save and continue measuring
+"button:saveAndFinish": "保存并完成", // Button to save and finish measurement
+"help:measurementActions": "单击“重新测量”可放弃本次测量并重新测量。\n单击“保存并测量另一个点”可保存本次测量并测量另一个点，以提高校正精度（点击按钮后立即开始测量）。\n单击“保存并完成”可接受本次测量并完成测量。", // Help text for measurement actions
+
+// Results Display Screen
+"message:noMeasurement": "没有可用的测量。点击“新测量”开始。", // Message when no measurements are available
+"title:measurementResults": "测量结果", // Title for measurement results
+"button:saveChanges": "保存更改", // Button to save changes
+"button:discardChanges": "放弃更改", // Button to discard changes
+"title:measurementPoints": "测量点", // Title for measurement points section
+"title:frequencyResponse": "频率响应", // Title for frequency response section
+"label:showOriginal": "原始响应", // Label for original response checkbox
+"label:showCorrection": "校正 EQ", // Label for correction EQ checkbox
+"label:showCorrected": "校正后响应", // Label for corrected response checkbox
+"label:smoothing": "平滑 (σ)：", // Label for smoothing control
+"unit:octave": "倍频程", // Unit for octave
+"help:smoothing": "频率响应平滑量，用于调整对峰值和凹陷的敏感度。", // Help text for smoothing
+"label:targetLowFreq": "低频：", // Label for low frequency limit
+"help:targetLowFreq": "频率响应校正的下限频率，通常设置为系统播放能力的下限。", // Help text for low frequency limit
+"label:targetHighFreq": "高频：", // Label for high frequency limit
+"help:targetHighFreq": "频率响应校正的上限频率，建议根据测量麦克风的上限频率确定。", // Help text for high frequency limit
+"label:eqBandCount": "PEQ 波段数：", // Label for EQ band count
+"unit:band": "波段", // Unit for band
+"help:eqBandCount": "参数均衡器的波段数。波段越多，频率校正越精细，但处理负载也会增加。", // Help text for EQ band count
+"button:copyPEQ": "将 EffeTune PEQ 设置复制到剪贴板", // Button to copy PEQ settings
+"button:exportCSV": "导出校正参数（CSV）", // Button to export CSV
+"help:exportOptions": "复制的频率校正设置可通过 Ctrl+V 粘贴到 EffeTune 的效果管道中。", // Help text for export options
+"title:measurementDetails": "测量详情", // Title for measurement details section
+
+// Dialogs
+"button:confirm": "确认", // Confirm button in dialog
+"button:cancel": "取消", // Cancel button in dialog
+"label:doNotWarnAgain": "不再提示", // Label for "do not warn again" checkbox
+"button:ok": "确定", // OK button in notification dialog
+"confirm:deleteMeasurement": "确定要删除此测量吗？此操作不可撤销。", // Confirmation message for deleting a measurement
+"confirm:deletePoint": "确定要删除此测量点吗？此操作不可撤销。", // Confirmation message for deleting a measurement point
+"confirm:discardChanges": "您有未保存的更改。是否放弃更改并继续？", // Confirmation message for discarding unsaved changes
+
+// New translations
+"title:main": "EffeTune 频率响应测量", // Title for the main page
+"title:levelAdjustment": "电平调整", // Title for level adjustment screen
+"button:back": "返回 EffeTune", // Back button text
+"button:backSimple": "返回", // Simple back button text
+
+// Error messages
+"error:dialogElementsNotFound": "未在 DOM 中找到确认对话框元素", // Error when dialog elements not found
+"error:confirmationDialogNotFound": "未在 DOM 中找到确认对话框元素", // Error when confirmation dialog not found
+"error:notificationDialogNotFound": "未在 DOM 中找到通知对话框元素", // Error when notification dialog not found
+"error:noPEQSettings": "此测量没有可用的 PEQ 设置", // Error when no PEQ settings available
+
+// Messages
+"message:peqCopied": "PEQ 设置已成功复制到剪贴板，可通过 Ctrl+V 将复制的设置粘贴到 EffeTune 的效果管道中。", // Success message for PEQ copy
+
+// Channel options
+"option:left": "左声道", // Option for left channel
+"option:right": "右声道", // Option for right channel
+"option:both": "双声道（平均）", // Option for both channels
+"option:bothSimple": "双声道", // Option for both channels (simple)
+
+// Sample rate options
+"option:sampleRate44100": "44.1 kHz", // Option for 44.1 kHz sample rate
+"option:sampleRate48000": "48 kHz (Default)", // Option for 48 kHz sample rate
+"option:sampleRate88200": "88.2 kHz", // Option for 88.2 kHz sample rate
+"option:sampleRate96000": "96 kHz", // Option for 96 kHz sample rate
+"option:sampleRate176400": "176.4 kHz", // Option for 176.4 kHz sample rate
+"option:sampleRate192000": "192 kHz", // Option for 192 kHz sample rate
+
+// Sweep length options
+"option:sweepLength16384": "16,384 (2¹⁴)", // Option for 16384 sweep length
+"option:sweepLength32768": "32,768 (2¹⁵)", // Option for 32768 sweep length
+"option:sweepLength65536": "65,536 (2¹⁶)", // Option for 65536 sweep length
+"option:sweepLength131072": "131,072 (2¹⁷) - Default", // Option for 131072 sweep length
+"option:sweepLength262144": "262,144 (2¹⁸)", // Option for 262144 sweep length
+"option:sweepLength524288": "524,288 (2¹⁹)", // Option for 524288 sweep length
+"option:sweepLength1048576": "1,048,576 (2²⁰)", // Option for 1048576 sweep length
+
+// Averaging options
+"option:averaging1": "1", // Option for 1 averaging
+"option:averaging2": "2", // Option for 2 averaging
+"option:averaging3": "3", // Option for 3 averaging
+"option:averaging4": "4 - Default", // Option for 4 averaging
+"option:averaging5": "5", // Option for 5 averaging
+"option:averaging6": "6", // Option for 6 averaging
+"option:averaging7": "7", // Option for 7 averaging
+"option:averaging8": "8", // Option for 8 averaging
+"option:averaging10": "10", // Option for 10 averaging
+"option:averaging12": "12", // Option for 12 averaging
+"option:averaging16": "16" // Option for 16 averaging
+}

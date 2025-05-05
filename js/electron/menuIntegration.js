@@ -62,7 +62,8 @@ export function updateApplicationMenu(isElectron) {
         label: t('menu.settings'),
         submenu: [
           { label: t('menu.settings.audioDevices') },
-          { label: t('menu.settings.performanceBenchmark') }
+          { label: t('menu.settings.performanceBenchmark') },
+          { label: t('menu.settings.frequencyResponseMeasurement') }
         ]
       },
       help: {

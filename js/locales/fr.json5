@@ -95,6 +95,8 @@
 
   "menu.settings": "Paramètres",
   "menu.settings.audioDevices": "Périphériques audio...",
+  "menu.settings.performanceBenchmark": "Référence de performance",
+  "menu.settings.frequencyResponseMeasurement": "Mesure de la réponse en fréquence"
 
   "menu.help": "Aide",
   "menu.help.help": "Aide",

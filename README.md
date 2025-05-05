@@ -26,6 +26,7 @@ No audiophile myths, Just pure science.
 - Live audio visualization
 - Audio pipeline that can be modified in real-time
 - Offline audio file processing with current effect chain
+- Frequency response measurement and correction for system calibration
 
 ## Setup Guide
 
@@ -177,6 +178,15 @@ If you experience audio issues (dropouts, glitches):
 1. Click the "Reset Audio" button in the top-left corner on the web app or select Reload from the View menu on the desktop app
 2. The audio pipeline will be rebuilt automatically
 3. Your effect chain configuration will be preserved
+
+### Frequency Response Measurement and Correction
+
+To measure your audio system's frequency response and create a flat correction EQ:
+1. Launch the [Frequency Response Measurement tool](features/measurement/measurement.html)
+2. Follow the guided setup to configure your measurement microphone and output device
+3. Measure your system's frequency response at one or more listening positions
+4. Generate a parametric EQ correction that can be directly imported into EffeTune
+5. Apply the correction to achieve a more accurate, neutral sound reproduction
 
 ## Common Effect Combinations
 

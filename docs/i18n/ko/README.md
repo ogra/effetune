@@ -15,16 +15,6 @@ EffeTune은 음악 청취 경험을 향상시키고자 하는 오디오 애호�
 
 아무런 오디오 애호가의 미신은 없고, 오직 순수한 과학만 있습니다.
 
-## Features
-
-- Real-time audio processing
-- Drag-and-drop interface for building effect chains
-- Expandable effect system with categorized effects
-- Live audio visualization
-- Audio pipeline that can be modified in real-time
-- Offline audio file processing with current effect chain
-- Section feature for grouping and controlling multiple effects together
-
 ## 기능
 
 - 실시간 오디오 처리
@@ -33,6 +23,8 @@ EffeTune은 음악 청취 경험을 향상시키고자 하는 오디오 애호�
 - 라이브 오디오 시각화
 - 실시간으로 수정 가능한 오디오 파이프라인
 - 현재 이펙트 체인을 사용하여 오프라인 오디오 파일 처리
+- 여러 이펙트를 그룹화하고 제어하기 위한 섹션 기능
+- 오디오 장비의 주파수 응답 측정 기능
 
 ## 설정 가이드
 
@@ -154,6 +146,14 @@ CD 플레이어, 네트워크 플레이어 또는 기타 물리적 소스를 사
 3. **다운로드 옵션:**
    - 단일 파일은 WAV 형식으로 다운로드됩니다.
    - 여러 파일은 자동으로 ZIP 파일로 압축됩니다.
+
+### 주파수 응답 측정
+
+1. 'Measurement' 메뉴에서 또는 [측정 도구](../../../features/measurement/measurement.html)를 방문하여 측정 도구에 접근합니다
+2. 오디오 장비를 컴퓨터의 입력 및 출력에 연결합니다
+3. 측정 매개변수를 구성합니다(스윕 지속 시간, 주파수 범위)
+4. 측정을 실행하여 주파수 응답 그래프를 생성합니다
+5. 결과를 분석하거나 추가 분석을 위해 측정 데이터를 내보냅니다
 
 ### 이펙트 체인 공유
 

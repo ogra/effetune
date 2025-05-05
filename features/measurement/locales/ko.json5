@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ 새 측정",
+  "button:import": "가져오기",
+  "title:measurementHistory": "측정 기록",
+
+  // Measurement Config Screen
+  "title:measurementConfig": "측정 구성",
+  "label:measurementName": "측정 이름:",
+  "placeholder:measurementName": "이 측정의 이름을 입력하세요",
+  "help:measurementName": "곧 수행할 측정에 이름을 지정하세요.",
+  "label:audioInput": "오디오 입력 장치:",
+  "label:inputChannel": "입력 채널:",
+  "help:inputChannel": "선택한 오디오 입력 장치에 보정 마이크가 연결된 채널을 선택하세요.",
+  "label:audioOutput": "오디오 출력 장치:",
+  "help:audioOutput": "측정 신호를 출력하는 오디오 장치를 선택하세요.",
+  "label:outputChannel": "출력 채널:",
+  "help:outputChannel": "측정할 채널(왼쪽/오른쪽 스피커 또는 헤드폰 등)을 지정하세요.",
+  "help:audioInput": "측정 마이크가 연결된 오디오 입력 장치를 지정하세요.",
+  "label:sampleRate": "샘플링 주파수:",
+  "help:sampleRate": "측정 시 샘플링 주파수를 지정하세요.",
+  "label:sweepLength": "스윕 길이(샘플):",
+  "help:sweepLength": "측정 신호의 길이를 샘플 단위로 지정합니다.",
+  "label:averaging": "동기 평균:",
+  "help:averaging": "정확한 측정을 위해 동일 측정 지점에서 측정을 반복할 횟수를 지정하세요.",
+  "button:next": "다음",
+
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "볼륨 확인용 테스트 신호 재생",
+  "button:stopTestSignal": "테스트 신호 중지",
+  "label:signalLevel": "신호 레벨: ",
+  "help:signalLevel": "측정을 위해 재생되는 측정 신호의 레벨을 조정하세요.",
+  "title:inputLevel": "입력 레벨",
+  "help:inputLevel": "테스트 신호를 재생하고 입력 레벨이 -36dB에서 -6dB 사이가 되도록 마이크 게인을 조정하세요.",
+  "warning:inputTooHigh": "입력 레벨이 너무 높습니다! 마이크 게인 또는 스피커 볼륨을 낮추세요.",
+  "warning:inputTooLow": "입력 레벨이 너무 낮습니다. 마이크 게인 또는 스피커 볼륨을 높이세요.",
+  "warning:signalTooLow": "측정 신호가 너무 낮아 정확한 결과를 얻을 수 없습니다",
+  "warning:signalTooHigh": "측정 신호가 너무 높아 정확한 결과를 얻을 수 없습니다",
+  "button:startMeasurement": "측정 시작",
+
+  // Sweep Measurement Screen
+  "help:measurement": "추가 측정 하나와 지정된 측정 횟수에 대한 측정 신호가 재생됩니다.",
+  "title:frequencyResponseMeasurement": "주파수 응답 측정",
+  "title:currentMeasurement": "현재 측정",
+  "button:redo": "다시 측정",
+  "button:saveAndContinue": "저장 후 다른 지점 측정",
+  "button:saveAndFinish": "저장 및 완료",
+  "help:measurementActions": "다시 측정을 클릭하면 이 측정을 취소하고 다시 측정합니다.\n저장 후 다른 지점 측정을 클릭하면 이 측정을 저장하고 교정 정확도를 높이기 위해 다른 지점을 측정합니다(버튼 클릭 후 즉시 측정이 시작됩니다).\n저장 및 완료를 클릭하면 이 측정을 확정하고 측정을 완료합니다.",
+
+  // Results Display Screen
+  "message:noMeasurement": "사용 가능한 측정이 없습니다. \"새 측정\"을 클릭하여 시작하세요.",
+  "title:measurementResults": "측정 결과",
+  "button:saveChanges": "변경 사항 저장",
+  "button:discardChanges": "변경 사항 취소",
+  "title:measurementPoints": "측정 지점",
+  "title:frequencyResponse": "주파수 응답",
+  "label:showOriginal": "원본 응답",
+  "label:showCorrection": "보정 EQ",
+  "label:showCorrected": "보정된 응답",
+  "label:smoothing": "스무딩(σ):",
+  "unit:octave": "옥타브",
+  "help:smoothing": "피크와 딥에 대한 민감도를 조정하기 위한 주파수 응답 스무딩 양입니다.",
+  "label:targetLowFreq": "저역:",
+  "help:targetLowFreq": "주파수 응답 보정의 하한 주파수입니다. 일반적으로 시스템 재생 능력의 하한에 설정하는 것이 좋습니다.",
+  "label:targetHighFreq": "고역:",
+  "help:targetHighFreq": "주파수 응답 보정의 상한 주파수입니다. 측정 마이크의 상한 주파수를 기준으로 결정하는 것이 좋습니다.",
+  "label:eqBandCount": "PEQ 밴드:",
+  "unit:band": "밴드",
+  "help:eqBandCount": "보정을 위한 파라메트릭 이퀄라이저의 밴드 수입니다. 밴드 수가 많을수록 주파수 보정이 더 세밀해지지만 처리 부담이 증가합니다.",
+  "button:copyPEQ": "EffeTune PEQ 설정을 클립보드에 복사",
+  "button:exportCSV": "보정 매개변수 내보내기(CSV)",
+  "help:exportOptions": "복사된 주파수 보정 설정은 Ctrl+V로 EffeTune의 이펙트 파이프라인에 붙여넣을 수 있습니다.",
+  "title:measurementDetails": "측정 세부사항",
+
+  // Dialogs
+  "button:confirm": "확인",
+  "button:cancel": "취소",
+  "label:doNotWarnAgain": "다시 경고하지 않음",
+  "button:ok": "확인",
+  "confirm:deleteMeasurement": "이 측정을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+  "confirm:deletePoint": "이 측정 지점을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+  "confirm:discardChanges": "저장되지 않은 변경 사항이 있습니다. 변경 사항을 버리고 계속하시겠습니까?",
+
+  // New translations
+  "title:main": "EffeTune 주파수 응답 측정",
+  "title:levelAdjustment": "레벨 조정",
+  "button:back": "EffeTune로 돌아가기",
+  "button:backSimple": "뒤로",
+
+  // Error messages
+  "error:dialogElementsNotFound": "확인 대화상자 요소를 DOM에서 찾을 수 없습니다",
+  "error:confirmationDialogNotFound": "DOM에서 확인 대화상자 요소를 찾을 수 없습니다",
+  "error:notificationDialogNotFound": "알림 대화상자 요소를 DOM에서 찾을 수 없습니다",
+  "error:noPEQSettings": "이 측정에 사용할 수 있는 PEQ 설정이 없습니다",
+
+  // Messages
+  "message:peqCopied": "PEQ 설정이 클립보드에 성공적으로 복사되었습니다. 복사된 설정은 Ctrl+V로 EffeTune의 이펙트 파이프라인에 붙여넣을 수 있습니다.",
+
+  // Channel options
+  "option:left": "왼쪽 채널",
+  "option:right": "오른쪽 채널",
+  "option:both": "양쪽 채널(평균)",
+  "option:bothSimple": "양쪽 채널",
+
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz",
+  "option:sampleRate48000": "48 kHz (기본)",
+  "option:sampleRate88200": "88.2 kHz",
+  "option:sampleRate96000": "96 kHz",
+  "option:sampleRate176400": "176.4 kHz",
+  "option:sampleRate192000": "192 kHz",
+
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)",
+  "option:sweepLength32768": "32,768 (2¹⁵)",
+  "option:sweepLength65536": "65,536 (2¹⁶)",
+  "option:sweepLength131072": "131,072 (2¹⁷) - 기본",
+  "option:sweepLength262144": "262,144 (2¹⁸)",
+  "option:sweepLength524288": "524,288 (2¹⁹)",
+  "option:sweepLength1048576": "1,048,576 (2²⁰)",
+
+  // Averaging options
+  "option:averaging1": "1",
+  "option:averaging2": "2",
+  "option:averaging3": "3",
+  "option:averaging4": "4 - 기본",
+  "option:averaging5": "5",
+  "option:averaging6": "6",
+  "option:averaging7": "7",
+  "option:averaging8": "8",
+  "option:averaging10": "10",
+  "option:averaging12": "12",
+  "option:averaging16": "16"
+}

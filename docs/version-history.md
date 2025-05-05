@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.48 (Mar 5, 2025)
+- Added frequency response measurement and correction function
+- Added Mute, 5Band Dynamic EQ and MS Matrix effects
+- Various minor improvements
+
 ### Version 1.47 (Apr 28, 2025)
 - All plugins support independent channel processing
 - Various minor improvements

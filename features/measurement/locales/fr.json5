@@ -1,0 +1,134 @@
+{
+  // Measurement History Section
+  "button:newMeasurement": "+ Nouvelle mesure",
+  "button:import": "Importer",
+  "title:measurementHistory": "Historique des mesures",
+
+  // Measurement Config Screen
+  "title:measurementConfig": "Configuration de la mesure",
+  "label:measurementName": "Nom de la mesure :",
+  "placeholder:measurementName": "Entrez un nom pour cette mesure",
+  "help:measurementName": "Donnez un nom à la mesure que vous allez effectuer.",
+  "label:audioInput": "Périphérique d'entrée audio :",
+  "label:inputChannel": "Canal d'entrée :",
+  "help:inputChannel": "Sélectionnez le canal auquel le microphone de calibration est connecté pour le périphérique audio sélectionné.",
+  "label:audioOutput": "Périphérique de sortie audio :",
+  "help:audioOutput": "Sélectionnez le périphérique audio qui diffuse le signal de mesure.",
+  "label:outputChannel": "Canal de sortie :",
+  "help:outputChannel": "Spécifiez le canal (enceinte gauche/droite ou casque, etc.) à mesurer.",
+  "help:audioInput": "Spécifiez le périphérique d'entrée audio auquel le microphone de mesure est connecté.",
+  "label:sampleRate": "Fréquence d'échantillonnage :",
+  "help:sampleRate": "Spécifiez la fréquence d'échantillonnage lors de la prise de mesures.",
+  "label:sweepLength": "Longueur du balayage (échantillons) :",
+  "help:sweepLength": "Spécifie la longueur du signal de mesure en échantillons.",
+  "label:averaging": "Moyenne synchrone :",
+  "help:averaging": "Spécifiez le nombre de répétitions de la mesure au même point pour une mesure plus précise.",
+  "button:next": "Suivant",
+
+  // Level Adjustment Screen
+  "button:playbackTestSignal": "Lire le signal de test pour vérifier le volume",
+  "button:stopTestSignal": "Arrêter le signal de test",
+  "label:signalLevel": "Niveau du signal : ",
+  "help:signalLevel": "Ajustez le niveau du signal de mesure qui est restitué pour la mesure.",
+  "title:inputLevel": "Niveau d'entrée",
+  "help:inputLevel": "Jouez le signal de test et ajustez le gain du microphone pour que le niveau d'entrée soit entre -36 dB et -6 dB.",
+  "warning:inputTooHigh": "Entrée trop haute ! Réduisez le gain du microphone ou le volume du haut-parleur.",
+  "warning:inputTooLow": "Entrée trop basse. Augmentez le gain du microphone ou le volume du haut-parleur.",
+  "warning:signalTooLow": "Le signal de mesure est trop faible pour fournir des résultats précis",
+  "warning:signalTooHigh": "Le signal de mesure est trop fort pour fournir des résultats précis",
+  "button:startMeasurement": "Démarrer la mesure",
+
+  // Sweep Measurement Screen
+  "help:measurement": "Le signal de mesure pour une mesure supplémentaire ainsi que pour le nombre de mesures spécifié est reproduit.",
+  "title:frequencyResponseMeasurement": "Mesure de la réponse en fréquence",
+  "title:currentMeasurement": "Mesure en cours",
+  "button:redo": "Recommencer",
+  "button:saveAndContinue": "Enregistrer et mesurer un autre point",
+  "button:saveAndFinish": "Enregistrer et terminer",
+  "help:measurementActions": "Cliquez sur Recommencer pour abandonner cette mesure et la refaire.\nCliquez sur Enregistrer et mesurer un autre point pour sauvegarder cette mesure et mesurer un autre point afin d'améliorer la précision de la correction (la mesure démarre immédiatement après avoir cliqué sur le bouton).\nCliquez sur Enregistrer et terminer pour accepter cette mesure et compléter la mesure.",
+
+  // Results Display Screen
+  "message:noMeasurement": "Aucune mesure disponible. Cliquez sur « Nouvelle mesure » pour commencer.",
+  "title:measurementResults": "Résultats de la mesure",
+  "button:saveChanges": "Enregistrer les modifications",
+  "button:discardChanges": "Annuler les modifications",
+  "title:measurementPoints": "Points de mesure",
+  "title:frequencyResponse": "Réponse en fréquence",
+  "label:showOriginal": "Réponse originale",
+  "label:showCorrection": "Égalisation de correction",
+  "label:showCorrected": "Réponse corrigée",
+  "label:smoothing": "Lissage (σ) :",
+  "unit:octave": "oct.",
+  "help:smoothing": "Quantité de lissage de la réponse en fréquence pour ajuster la sensibilité aux pics et aux creux.",
+  "label:targetLowFreq": "Fréquences basses :",
+  "help:targetLowFreq": "La fréquence limite inférieure pour la correction de la réponse en fréquence. Il est généralement préférable de la définir à la limite inférieure des capacités de lecture du système.",
+  "label:targetHighFreq": "Fréquences hautes :",
+  "help:targetHighFreq": "La fréquence limite supérieure pour la correction de la réponse en fréquence. Il est recommandé de la déterminer en fonction de la limite supérieure du microphone de mesure.",
+  "label:eqBandCount": "Nombre de bandes PEQ :",
+  "unit:band": "Bande",
+  "help:eqBandCount": "Le nombre de bandes de l'égaliseur paramétrique pour la correction. Plus vous augmentez le nombre de bandes, plus la correction de la fréquence sera détaillée, mais la charge de traitement augmentera.",
+  "button:copyPEQ": "Copier les paramètres PEQ d'EffeTune dans le presse-papiers",
+  "button:exportCSV": "Exporter les paramètres de correction (CSV)",
+  "help:exportOptions": "Les paramètres de correction de fréquence copiés peuvent être collés dans le pipeline d'effets d'EffeTune avec Ctrl+V.",
+  "title:measurementDetails": "Détails de la mesure",
+
+  // Dialogs
+  "button:confirm": "Confirmer",
+  "button:cancel": "Annuler",
+  "label:doNotWarnAgain": "Ne plus afficher cet avertissement",
+  "button:ok": "OK",
+  "confirm:deleteMeasurement": "Êtes-vous sûr de vouloir supprimer cette mesure ? Cette action est irréversible.",
+  "confirm:deletePoint": "Êtes-vous sûr de vouloir supprimer ce point de mesure ? Cette action est irréversible.",
+  "confirm:discardChanges": "Vous avez des modifications non enregistrées. Annuler les modifications et continuer ?",
+
+  // New translations
+  "title:main": "Mesure de la réponse en fréquence EffeTune",
+  "title:levelAdjustment": "Ajustement du niveau",
+  "button:back": "Retour à EffeTune",
+  "button:backSimple": "Retour",
+
+  // Error messages
+  "error:dialogElementsNotFound": "Éléments de dialogue de confirmation introuvables dans le DOM",
+  "error:confirmationDialogNotFound": "Élément de dialogue de confirmation introuvable dans le DOM",
+  "error:notificationDialogNotFound": "Éléments de dialogue de notification introuvables dans le DOM",
+  "error:noPEQSettings": "Aucun paramètre PEQ disponible pour cette mesure",
+
+  // Messages
+  "message:peqCopied": "Paramètres PEQ copiés dans le presse-papiers avec succès. Les paramètres copiés peuvent être collés dans le pipeline d'effets d'EffeTune avec Ctrl+V.",
+
+  // Channel options
+  "option:left": "Canal gauche",
+  "option:right": "Canal droit",
+  "option:both": "Deux canaux (moyenne)",
+  "option:bothSimple": "Deux canaux",
+
+  // Sample rate options
+  "option:sampleRate44100": "44.1 kHz",
+  "option:sampleRate48000": "48 kHz (Default)",
+  "option:sampleRate88200": "88.2 kHz",
+  "option:sampleRate96000": "96 kHz",
+  "option:sampleRate176400": "176.4 kHz",
+  "option:sampleRate192000": "192 kHz",
+
+  // Sweep length options
+  "option:sweepLength16384": "16,384 (2¹⁴)",
+  "option:sweepLength32768": "32,768 (2¹⁵)",
+  "option:sweepLength65536": "65,536 (2¹⁶)",
+  "option:sweepLength131072": "131,072 (2¹⁷) - Default",
+  "option:sweepLength262144": "262,144 (2¹⁸)",
+  "option:sweepLength524288": "524,288 (2¹⁹)",
+  "option:sweepLength1048576": "1,048,576 (2²⁰)",
+
+  // Averaging options
+  "option:averaging1": "1",
+  "option:averaging2": "2",
+  "option:averaging3": "3",
+  "option:averaging4": "4 - Default",
+  "option:averaging5": "5",
+  "option:averaging6": "6",
+  "option:averaging7": "7",
+  "option:averaging8": "8",
+  "option:averaging10": "10",
+  "option:averaging12": "12",
+  "option:averaging16": "16"
+}

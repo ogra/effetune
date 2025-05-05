@@ -484,7 +484,16 @@ function registerIpcHandlers() {
               click: () => {
                 const mainWin = constants.getMainWindow();
                 if (mainWin) {
-                  mainWin.loadFile('dev/effetune_bench.html');
+                  mainWin.loadFile('features/effetune_bench.html');
+                }
+              }
+            },
+            {
+              label: menuTemplate.settings.submenu[2].label, // Frequency Response Measurement
+              click: () => {
+                const mainWin = constants.getMainWindow();
+                if (mainWin) {
+                  mainWin.loadFile('features/measurement/measurement.html');
                 }
               }
             }
@@ -892,7 +901,16 @@ function createMenu() {
           click: () => {
             const mainWin = constants.getMainWindow();
             if (mainWin) {
-              mainWin.loadFile('dev/effetune_bench.html');
+              mainWin.loadFile('features/effetune_bench.html');
+            }
+          }
+        },
+        {
+          label: 'Frequency Response Measurement',
+          click: () => {
+            const mainWin = constants.getMainWindow();
+            if (mainWin) {
+              mainWin.loadFile('features/measurement/measurement.html');
             }
           }
         }

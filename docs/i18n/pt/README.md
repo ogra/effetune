@@ -12,15 +12,6 @@ EffeTune foi criado para entusiastas do áudio que desejam melhorar sua experiê
 
 Sem mitos audiófilos, apenas pura ciência.
 
-## Features
-
-- Real-time audio processing
-- Drag-and-drop interface for building effect chains
-- Expandable effect system with categorized effects
-- Live audio visualization
-- Audio pipeline that can be modified in real-time
-- Offline audio file processing with current effect chain
-
 ## Recursos
 
 - Processamento de áudio em tempo real
@@ -29,6 +20,8 @@ Sem mitos audiófilos, apenas pura ciência.
 - Visualização de áudio ao vivo
 - Pipeline de áudio que pode ser modificado em tempo real
 - Processamento offline de arquivos de áudio com a cadeia de efeitos atual
+- Recurso de seção para agrupar e controlar múltiplos efeitos
+- Recurso de medição de resposta de frequência para equipamentos de áudio
 
 ## Guia de Configuração
 
@@ -163,6 +156,14 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
 3. Opções de Download ou Salvamento:
    - O arquivo processado é gerado no formato WAV
    - Múltiplos arquivos são automaticamente empacotados em um arquivo ZIP
+
+### Medição de Resposta de Frequência
+
+1. Acesse a ferramenta de medição pelo menu 'Measurement' ou visitando [Ferramenta de Medição](../../../features/measurement/measurement.html)
+2. Conecte seu equipamento de áudio à entrada e saída do seu computador
+3. Configure os parâmetros de medição (duração da varredura, faixa de frequência)
+4. Execute a medição para gerar um gráfico de resposta de frequência
+5. Analise os resultados ou exporte os dados de medição para análise adicional
 
 ### Compartilhando Cadeias de Efeitos
 
