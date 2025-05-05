@@ -149,7 +149,7 @@ CD 플레이어, 네트워크 플레이어 또는 기타 물리적 소스를 사
 
 ### 주파수 응답 측정
 
-1. 'Measurement' 메뉴에서 또는 [측정 도구](../../../features/measurement/measurement.html)를 방문하여 측정 도구에 접근합니다
+1. 웹 버전에서는 [주파수 응답 측정 도구](https://frieve-a.github.io/effetune/features/measurement/measurement.html)를 실행하십시오. 앱 버전에서는 설정 메뉴에서 “주파수 응답 측정”을 선택하십시오
 2. 오디오 장비를 컴퓨터의 입력 및 출력에 연결합니다
 3. 측정 매개변수를 구성합니다(스윕 지속 시간, 주파수 범위)
 4. 측정을 실행하여 주파수 응답 그래프를 생성합니다

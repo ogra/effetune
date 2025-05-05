@@ -182,7 +182,7 @@ If you experience audio issues (dropouts, glitches):
 ### Frequency Response Measurement and Correction
 
 To measure your audio system's frequency response and create a flat correction EQ:
-1. Launch the [Frequency Response Measurement tool](features/measurement/measurement.html)
+1. For the web version, launch the [Frequency Response Measurement tool](https://frieve-a.github.io/effetune/features/measurement/measurement.html). For the app version, select Frequency Response Measurement from the Settings menu.
 2. Follow the guided setup to configure your measurement microphone and output device
 3. Measure your system's frequency response at one or more listening positions
 4. Generate a parametric EQ correction that can be directly imported into EffeTune

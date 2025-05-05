@@ -159,7 +159,7 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
 
 ### Medição de Resposta de Frequência
 
-1. Acesse a ferramenta de medição pelo menu 'Measurement' ou visitando [Ferramenta de Medição](../../../features/measurement/measurement.html)
+1. Para a versão web, abra a [ferramenta de Medição da Resposta em Frequência](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Para a versão do aplicativo, selecione “Medição da Resposta em Frequência” no menu Configurações
 2. Conecte seu equipamento de áudio à entrada e saída do seu computador
 3. Configure os parâmetros de medição (duração da varredura, faixa de frequência)
 4. Execute a medição para gerar um gráfico de resposta de frequência

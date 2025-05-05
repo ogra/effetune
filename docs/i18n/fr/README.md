@@ -157,7 +157,7 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
 
 ### Mesure de réponse en fréquence
 
-1. Accédez à l'outil de mesure depuis le menu 'Measurement' ou en visitant [Outil de Mesure](../../../features/measurement/measurement.html)
+1. Pour la version web, lancez l’[outil de mesure de la réponse en fréquence](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Pour la version application, sélectionnez « Mesure de la réponse en fréquence » dans le menu Paramètres
 2. Connectez votre équipement audio à l'entrée et à la sortie de votre ordinateur
 3. Configurez les paramètres de mesure (durée du balayage, plage de fréquences)
 4. Lancez la mesure pour générer un graphique de réponse en fréquence
