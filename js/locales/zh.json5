@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "音频设置",
   "dialog.audioConfig.inputDevice": "输入设备：",
   "dialog.audioConfig.outputDevice": "输出设备：",
+  "dialog.audioConfig.outputChannels": "输出通道：",
   "dialog.audioConfig.sampleRate": "采样率：",
   "dialog.audioConfig.useInputWithPlayer": "使用播放器时仍启用音频输入",
   "dialog.audioConfig.cancel": "取消",

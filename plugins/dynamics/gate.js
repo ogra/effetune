@@ -470,8 +470,8 @@ class GatePlugin extends PluginBase {
     }
     
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            const result = this.process(message.buffer, message);
+        if (message.type === 'processBuffer') {
+            const result = this.process(message);
             
             // Only update graphs if there's significant gain reduction
             const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
@@ -484,8 +484,8 @@ class GatePlugin extends PluginBase {
         }
     }
 
-    process(audioBuffer, message) {
-        if (!message?.measurements) return audioBuffer;
+    process(message) {
+        if (!message?.measurements) return;
 
         const time = performance.now() / 1000;
         const deltaTime = time - this.lastProcessTime;
@@ -502,7 +502,7 @@ class GatePlugin extends PluginBase {
         this.gr = this.gr + (targetGr - this.gr) * smoothingFactor;
         this.gr = this.gr < 0 ? 0 : this.gr;
 
-        return audioBuffer;
+        return;
     }
 
     setParameters(params) {

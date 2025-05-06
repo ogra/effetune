@@ -105,6 +105,7 @@
   "dialog.audioConfig.title": "オーディオ設定",
   "dialog.audioConfig.inputDevice": "入力デバイス:",
   "dialog.audioConfig.outputDevice": "出力デバイス:",
+  "dialog.audioConfig.outputChannels": "出力チャンネル数：",
   "dialog.audioConfig.sampleRate": "サンプルレート:",
   "dialog.audioConfig.useInputWithPlayer": "プレーヤー使用時も音声入力を有効にする",
   "dialog.audioConfig.cancel": "キャンセル",

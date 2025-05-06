@@ -117,9 +117,25 @@ export function applySerializedState(plugin, state) {
     const normalizeChannel = (chValue) => {
         if (chValue === 'Left') return 'L';
         if (chValue === 'Right') return 'R';
-        if (chValue === 'All') return null;
-        // Keep 'L', 'R', null as is, default others to null
-        return (chValue === 'L' || chValue === 'R') ? chValue : null;
+        if (chValue === 'All') return 'A';
+        if (chValue === '') return null;
+        
+        // Handle numeric channel values (3-8)
+        if (typeof chValue === 'string' && chValue >= '3' && chValue <= '8') {
+            return chValue;
+        }
+        
+        // Check for legacy 'All' value (was equivalent to null before multi-channel support)
+        if (chValue === null) return null;
+        
+        // Keep 'L', 'R', 'A', and '3'-'8' as is
+        if (chValue === 'L' || chValue === 'R' || chValue === 'A' || 
+            (typeof chValue === 'string' && chValue >= '3' && chValue <= '8')) {
+            return chValue;
+        }
+        
+        // Default to null (Stereo) for any other values
+        return null;
     };
     
     // Handle both short and long format
@@ -210,7 +226,7 @@ export function convertLongToShortFormat(longState) {
         result.ob = longState.outputBus;
     }
     // Add channel short name if channel exists in long format
-    if (longState.channel === 'L' || longState.channel === 'R') {
+    if (longState.channel !== undefined && longState.channel !== null) {
         result.ch = longState.channel;
     }
     
@@ -240,7 +256,7 @@ export function convertShortToLongFormat(shortState) {
         result.outputBus = ob;
     }
     // Add channel long name if ch exists in short format
-    if (ch === 'L' || ch === 'R') {
+    if (ch !== undefined && ch !== null) {
         result.channel = ch;
     }
     

@@ -163,6 +163,19 @@ export class AudioManager {
     }
     
     /**
+     * Update audio configuration in the worklet node
+     * @param {Object} audioPreferences - Audio preferences object
+     */
+    updateAudioConfig(audioPreferences) {
+        if (!this.workletNode) return;
+        
+        this.workletNode.port.postMessage({
+            type: 'updateAudioConfig',
+            outputChannels: audioPreferences.outputChannels || 2
+        });
+    }
+    
+    /**
      * Reset the audio system
      * @param {Object} audioPreferences - Audio preferences to save
      * @returns {Promise<string>} - Empty string on success, error message on failure

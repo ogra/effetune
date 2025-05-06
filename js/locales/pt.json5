@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "Configuração de Áudio",
   "dialog.audioConfig.inputDevice": "Dispositivo de Entrada:",
   "dialog.audioConfig.outputDevice": "Dispositivo de Saída:",
+  "dialog.audioConfig.outputChannels": "Canais de Saída:",
   "dialog.audioConfig.sampleRate": "Taxa de Amostragem:",
   "dialog.audioConfig.useInputWithPlayer": "Entrada de áudio mesmo ao usar o Player",
   "dialog.audioConfig.cancel": "Cancelar",

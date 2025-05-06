@@ -217,8 +217,8 @@ class PluginBase {
         if (outputBus !== undefined) {
             cleanParams.ob = outputBus;
         }
-        // Add channel with short name if it exists and is not default ('All' which is null)
-        if (channel === 'L' || channel === 'R') {
+        // Add channel with short name if it exists and is not default (Stereo which is null)
+        if (channel !== null && channel !== undefined) {
             cleanParams.ch = channel;
         }
         
@@ -413,5 +413,69 @@ class PluginBase {
             this.enabled = enabled;
             this.updateParameters();
         }
+    }
+
+    // Create channel select control for plugin UI
+    createChannelSelectControl() {
+        const row = document.createElement('div');
+        row.className = 'parameter-row channel-select-row';
+        
+        const label = document.createElement('label');
+        label.textContent = 'Channel:';
+        
+        const select = document.createElement('select');
+        select.id = `${this.id}-channel-select`;
+        
+        // Get output channel count from audio context
+        let outputChannelCount = 2;
+        if (window.audioContext && window.audioContext.destination) {
+            outputChannelCount = window.audioContext.destination.channelCount || 2;
+        }
+        
+        // Add channel options
+        const options = [
+            { value: '', text: 'Stereo' }, // Default now renamed to 'Stereo' - processes first 2 channels only
+            { value: 'A', text: 'All' },   // New option - process all available channels
+            { value: 'L', text: 'Left' },  // Process left channel only
+            { value: 'R', text: 'Right' }  // Process right channel only
+        ];
+        
+        // Add channel pair options if output channel count is high enough
+        if (outputChannelCount >= 4) {
+            options.push({ value: '34', text: '3+4' });
+        }
+        if (outputChannelCount >= 6) {
+            options.push({ value: '56', text: '5+6' });
+        }
+        if (outputChannelCount >= 8) {
+            options.push({ value: '78', text: '7+8' });
+        }
+        
+        // Add individual channel options based on output channel count
+        for (let i = 3; i <= Math.min(outputChannelCount, 8); i++) {
+            options.push({ value: String(i), text: `Ch ${i}` });
+        }
+        
+        // Create option elements
+        options.forEach(option => {
+            const optionEl = document.createElement('option');
+            optionEl.value = option.value;
+            optionEl.textContent = option.text;
+            if (this.channel === option.value) {
+                optionEl.selected = true;
+            }
+            select.appendChild(optionEl);
+        });
+        
+        // Add event listener
+        select.addEventListener('change', (e) => {
+            this.channel = e.target.value === '' ? null : e.target.value;
+            this.updateParameters();
+        });
+        
+        row.appendChild(label);
+        row.appendChild(select);
+        
+        return row;
     }
 }

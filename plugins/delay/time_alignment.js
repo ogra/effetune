@@ -62,14 +62,6 @@ class TimeAlignmentPlugin extends PluginBase {
         `);
     }
 
-    onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            const result = new Float32Array(message.buffer.length);
-            result.set(message.buffer);
-            return result;
-        }
-    }
-
     setParameters(params) {
         // Map shortened parameter names to their original names for clarity
         const { 

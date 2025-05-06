@@ -56,17 +56,57 @@ export class AudioContextManager {
                 // Default audio context options
                 let audioContextOptions = { };
                 
-                // If running in Electron, try to use saved sample rate preference
+                // If running in Electron, try to use saved audio preferences
                 if (window.electronAPI && window.electronIntegration) {
                     const preferences = await window.electronIntegration.loadAudioPreferences();
                     if (preferences && preferences.sampleRate) {
                         audioContextOptions.sampleRate = preferences.sampleRate;
+                    }
+                    
+                    // Try to set sinkId if available (experimental Chrome/Chromium feature)
+                    if (preferences && preferences.outputDeviceId) {
+                        // This is an experimental feature in Chrome/Chromium
+                        audioContextOptions.sinkId = preferences.outputDeviceId;
+                        console.log('Attempting to use sinkId in AudioContext:', preferences.outputDeviceId);
                     }
                 }
                 
                 // Create audio context with options
                 this.audioContext = new AudioContext(audioContextOptions);
                 window.audioContext = this.audioContext; // Global reference
+                
+                // Set audio context destination channel count based on preferences
+                if (window.electronAPI && window.electronIntegration) {
+                    const preferences = await window.electronIntegration.loadAudioPreferences();
+                    if (preferences && preferences.outputChannels) {
+                        // Check if requested channel count doesn't exceed the maximum supported
+                        const maxChannels = this.audioContext.destination.maxChannelCount || 2;
+                        const requestedChannels = preferences.outputChannels;
+                        const actualChannels = Math.min(requestedChannels, maxChannels);
+                        
+                        // Log channel count information
+                        console.log(`Audio output: requested=${requestedChannels}, maximum=${maxChannels}, actual=${actualChannels}`);
+                        
+                        // Set the channel count to the appropriate value
+                        this.audioContext.destination.channelCount = actualChannels;
+                        this.audioContext.destination.channelInterpretation = 'discrete';
+                        this.audioContext.destination.channelCountMode = 'explicit';
+                        
+                        // Update global audio preferences for AudioWorklet context
+                        preferences.outputChannels = actualChannels;
+                        window.audioPreferences = preferences;
+                        
+                        // Notify the worklet about audio config update
+                        // (Will be applied after the worklet is created)
+                        this._pendingAudioConfig = {
+                            outputChannels: actualChannels
+                        };
+                    } else {
+                        // Default to stereo (2ch)
+                        this.audioContext.destination.channelCount = 2;
+                        this.audioContext.destination.channelInterpretation = 'discrete';
+                    }
+                }
                 
                 // If this is the first launch, create a gain node with zero gain to ensure silence
                 if (this.isFirstLaunch) {
@@ -134,8 +174,24 @@ export class AudioContextManager {
             }
             
             // Create worklet node
-            this.workletNode = new AudioWorkletNode(this.audioContext, 'plugin-processor');
+            this.workletNode = new AudioWorkletNode(this.audioContext, 'plugin-processor', {
+                outputChannelCount: [this.audioContext.destination.channelCount],
+                processorOptions: {
+                    initialOutputChannelCount: this.audioContext.destination.channelCount
+                },
+                channelCountMode: 'explicit',
+                channelInterpretation: 'discrete'
+            });
             window.workletNode = this.workletNode;
+            
+            // Apply pending audio configuration if exists
+            if (this._pendingAudioConfig) {
+                this.workletNode.port.postMessage({
+                    type: 'updateAudioConfig',
+                    outputChannels: this._pendingAudioConfig.outputChannels
+                });
+                this._pendingAudioConfig = null;
+            }
             
             // We'll set up the message handler in the AudioManager class
             // to ensure proper event dispatching

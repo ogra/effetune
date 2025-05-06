@@ -22,6 +22,7 @@ Sin mitos audiophiles, solo pura ciencia.
 - Procesamiento de archivos de audio sin conexión con la cadena de efectos actual
 - Función de sección para agrupar y controlar múltiples efectos
 - Característica de medición de respuesta en frecuencia para equipos de audio
+- Procesamiento y salida multicanal
 
 ## Guía de Configuración
 

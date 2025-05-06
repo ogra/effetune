@@ -363,19 +363,6 @@ class MultibandSaturationPlugin extends PluginBase {
         `;
     }
 
-    onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            const result = this.process(message.buffer, message);
-            return result;
-        }
-    }
-    
-    process(audioBuffer, message) {
-        // This method is used for any post-processing after the audio processor has run
-        // Currently just returns the buffer, but could be extended for metering or other features
-        return audioBuffer;
-    }
-
     setParameters(params) {
         let graphNeedsUpdate = false;
 

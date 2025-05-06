@@ -178,6 +178,15 @@ export async function showAudioConfigDialog(isElectron, audioPreferences, callba
           </select>
         </div>
         <div class="device-section">
+          <label for="output-channels">${t('dialog.audioConfig.outputChannels')}</label>
+          <select id="output-channels">
+            <option value="2" ${audioPreferences?.outputChannels === 2 ? 'selected' : ''}>2 - Stereo (Default)</option>
+            <option value="4" ${audioPreferences?.outputChannels === 4 ? 'selected' : ''}>4</option>
+            <option value="6" ${audioPreferences?.outputChannels === 6 ? 'selected' : ''}>6</option>
+            <option value="8" ${audioPreferences?.outputChannels === 8 ? 'selected' : ''}>8</option>
+          </select>
+        </div>
+        <div class="device-section">
           <label for="sample-rate">${t('dialog.audioConfig.sampleRate')}</label>
           <select id="sample-rate">
             <option value="44100" ${currentSampleRate === 44100 ? 'selected' : ''}>44.1 kHz</option>
@@ -293,50 +302,59 @@ export async function showAudioConfigDialog(isElectron, audioPreferences, callba
     
     // Apply button
     applyButton.addEventListener('click', async () => {
-      const inputDeviceId = inputSelect.value;
-      const outputDeviceId = outputSelect.value;
-      
-      // Get selected device labels
-      const inputDevice = inputDevices.find(d => d.deviceId === inputDeviceId);
-      const outputDevice = outputDevices.find(d => d.deviceId === outputDeviceId);
-      
-      // Get selected sample rate
+      // Get selected values
+      const inputDeviceSelect = document.getElementById('input-device');
+      const outputDeviceSelect = document.getElementById('output-device');
       const sampleRateSelect = document.getElementById('sample-rate');
-      const selectedSampleRate = parseInt(sampleRateSelect.value, 10);
-      
-      // Get checkbox state
       const useInputWithPlayerCheckbox = document.getElementById('use-input-with-player');
-      const useInputWithPlayer = useInputWithPlayerCheckbox ? useInputWithPlayerCheckbox.checked : false;
+      const outputChannelsSelect = document.getElementById('output-channels');
       
+      const inputDevice = inputDevices.find(d => d.deviceId === inputDeviceSelect.value);
+      const outputDevice = outputDevices.find(d => d.deviceId === outputDeviceSelect.value);
+      const selectedSampleRate = parseInt(sampleRateSelect.value, 10);
+      const useInputWithPlayer = useInputWithPlayerCheckbox.checked;
+      const outputChannels = parseInt(outputChannelsSelect.value, 10);
+      
+      // Save preferences
       const preferences = {
-        inputDeviceId,
-        outputDeviceId,
+        inputDeviceId: inputDeviceSelect.value,
+        outputDeviceId: outputDeviceSelect.value,
         inputDeviceLabel: inputDevice?.label || '',
         outputDeviceLabel: outputDevice?.label || '',
         sampleRate: selectedSampleRate,
-        useInputWithPlayer: useInputWithPlayer
+        useInputWithPlayer: useInputWithPlayer,
+        outputChannels: outputChannels
       };
       
-      console.log('Saving audio preferences');
+      // Update global audio preferences for AudioWorklet context
+      window.audioPreferences = preferences;
       
-      // Save preferences
+      // Save and close
       await saveAudioPreferences(isElectron, preferences);
       
-      // Close dialog
+      // Update AudioWorklet with the new channel configuration
+      if (window.audioManager && window.audioManager.updateAudioConfig) {
+        window.audioManager.updateAudioConfig(preferences);
+      } else if (window.workletNode) {
+        // Fallback if audioManager is not available
+        window.workletNode.port.postMessage({
+          type: 'updateAudioConfig',
+          outputChannels: preferences.outputChannels
+        });
+      }
+      
+      // Remove dialog
       document.body.removeChild(dialogElement);
       document.head.removeChild(styleElement);
       
-      // Clear the "Configuring audio devices..." message
-      // Note: We don't clear the error message here because we're about to show a new message
-      // and reload the page. The error will be cleared when the page reloads.
-      
-      // Get translation function from UIManager
-      if (!window.uiManager) {
-        console.error('UIManager not available for translations');
-        return;
+      // Call callback if provided
+      if (callback) {
+        callback(preferences);
       }
-      const t = window.uiManager.t.bind(window.uiManager);
       
+      // Clear error message
+      clearErrorOnClose();
+
       // Show message about reloading
       const messageElement = document.createElement('div');
       messageElement.style.position = 'fixed';

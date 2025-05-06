@@ -22,6 +22,7 @@ Aucun mythe audiophile, juste de la science pure.
 - Traitement de fichiers audio hors ligne avec la chaîne d'effets actuelle
 - Fonctionnalité de section pour regrouper et contrôler plusieurs effets
 - Fonction de mesure de réponse en fréquence pour les équipements audio
+- Traitement et sortie multicanal
 
 ## Guide de configuration
 

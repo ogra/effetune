@@ -49,6 +49,15 @@ export class OfflineProcessor {
                 sampleRate
             );
             
+            // Define the actual output channel count - may be higher than the file's channel count
+            let outputChannelCount = numberOfChannels;
+            if (window.electronAPI && window.electronIntegration && window.electronIntegration.audioPreferences) {
+                const preferences = window.electronIntegration.audioPreferences;
+                if (preferences && preferences.outputChannels) {
+                    outputChannelCount = Math.max(numberOfChannels, preferences.outputChannels);
+                }
+            }
+            
             // Store reference to pipeline for processing
             this.pipeline = pipeline;
 

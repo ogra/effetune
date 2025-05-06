@@ -22,6 +22,7 @@ Sem mitos audiófilos, apenas pura ciência.
 - Processamento offline de arquivos de áudio com a cadeia de efeitos atual
 - Recurso de seção para agrupar e controlar múltiplos efeitos
 - Recurso de medição de resposta de frequência para equipamentos de áudio
+- Processamento e saída multicanal
 
 ## Guia de Configuração
 

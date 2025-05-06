@@ -199,19 +199,19 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            this.process(message.buffer, message);
+        if (message.type === 'processBuffer') {
+            this.process(message);
         }
     }
 
-    process(audioBuffer, message) {
-        if (!audioBuffer || !message?.measurements?.buffer) {
-            return audioBuffer;
+    process(message) {
+        if (!message?.measurements?.buffer) {
+            return;
         }
 
         // Skip processing if plugin is disabled
         if (!this.enabled) {
-            return audioBuffer;
+            return;
         }
 
         const fftSize = 1 << this.pt;
@@ -222,7 +222,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const [averageBuffer] = message.measurements.buffer; // Get the single average buffer
 
         // --- Check if averageBuffer exists and size matches fftSize ---
-        if (!averageBuffer || fftSize !== averageBuffer.length) return audioBuffer;
+        if (!averageBuffer || fftSize !== averageBuffer.length) return;
 
         // Reset FFT buffers
         this.imag.fill(0);
@@ -281,7 +281,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             this.updateParameters();
         }
         
-        return audioBuffer;
+        return;
     }
 
     createUI() {

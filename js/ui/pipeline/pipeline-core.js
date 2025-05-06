@@ -133,7 +133,24 @@ export class PipelineCore {
                 busInfo.textContent = `${inputBusName}→${outputBusName}`;
             }
             if (plugin.channel !== null) {
-                const channelName = plugin.channel == 'L' ? 'Left' : 'Right';
+                let channelName;
+                if (plugin.channel === 'L') {
+                    channelName = 'Left';
+                } else if (plugin.channel === 'R') {
+                    channelName = 'Right';
+                } else if (plugin.channel === 'A') {
+                    channelName = 'All';
+                } else if (plugin.channel === '34') {
+                    channelName = '3+4';
+                } else if (plugin.channel === '56') {
+                    channelName = '5+6';
+                } else if (plugin.channel === '78') {
+                    channelName = '7+8';
+                } else if (plugin.channel >= '3' && plugin.channel <= '8') {
+                    channelName = `Ch ${plugin.channel}`;
+                } else {
+                    channelName = plugin.channel;
+                }
                 if (busInfo.textContent != '') {
                     busInfo.textContent += ' ';
                 }
@@ -857,23 +874,37 @@ export class PipelineCore {
         channelContainer.appendChild(channelLabel);
 
         const channelSelect = document.createElement('select');
-        const channelOptions = ['All', 'Left', 'Right'];
-        const channelValues = ['All', 'L', 'R']; // Use 'L' and 'R' internally
 
-        channelOptions.forEach((optionText, index) => {
-            const option = document.createElement('option');
-            option.value = channelValues[index]; // Value is 'All', 'L', 'R'
-            option.textContent = optionText;
-            // Compare plugin.channel (null, 'L', 'R') with option value ('All', 'L', 'R')
-            const currentChannelValue = plugin.channel === null ? 'All' : plugin.channel;
-            option.selected = currentChannelValue === channelValues[index];
-            channelSelect.appendChild(option);
+        // Define channel options - changed for multi-channel support
+        const channelOptions = [
+            { text: 'Stereo', value: '' },  // Default - process first 2 channels only (null)
+            { text: 'All', value: 'A' },    // All channels
+            { text: 'Left', value: 'L' },   // Left channel only
+            { text: 'Right', value: 'R' },  // Right channel only
+            { text: '3+4', value: '34' },   // Channels 3 & 4 as stereo pair
+            { text: '5+6', value: '56' },   // Channels 5 & 6 as stereo pair
+            { text: '7+8', value: '78' }    // Channels 7 & 8 as stereo pair
+        ];
+
+        // Add individual channel options 3-8 based on output channel count
+        for (let i = 3; i <= 8; i++) {
+            channelOptions.push({ text: `Ch ${i}`, value: String(i) });
+        }
+
+        channelOptions.forEach(option => {
+            const optionEl = document.createElement('option');
+            optionEl.value = option.value;
+            optionEl.textContent = option.text;
+            // Compare plugin.channel with option value
+            const currentChannelValue = plugin.channel === null ? '' : plugin.channel;
+            optionEl.selected = currentChannelValue === option.value;
+            channelSelect.appendChild(optionEl);
         });
 
         channelSelect.onchange = () => {
-            const value = channelSelect.value; // 'All', 'L', or 'R'
-            // Store null for 'All', 'L' or 'R' otherwise
-            plugin.channel = value === 'All' ? null : value;
+            const value = channelSelect.value;
+            // Store null for empty string (Stereo), otherwise store the value
+            plugin.channel = value === '' ? null : value;
             plugin.updateParameters(); 
             this.updateBusInfo(plugin); // Call updateBusInfo to reflect channel change
         };
@@ -1013,7 +1044,23 @@ export class PipelineCore {
             
             let channelText = '';
             if (hasChannelInfo) {
-                channelText = plugin.channel === 'L' ? 'Left' : 'Right';
+                if (plugin.channel === 'L') {
+                    channelText = 'Left';
+                } else if (plugin.channel === 'R') {
+                    channelText = 'Right';
+                } else if (plugin.channel === 'A') {
+                    channelText = 'All';
+                } else if (plugin.channel === '34') {
+                    channelText = '3+4';
+                } else if (plugin.channel === '56') {
+                    channelText = '5+6';
+                } else if (plugin.channel === '78') {
+                    channelText = '7+8';
+                } else if (plugin.channel >= '3' && plugin.channel <= '8') {
+                    channelText = `Ch ${plugin.channel}`;
+                } else {
+                    channelText = plugin.channel;
+                }
             }
 
             // Combine bus and channel info

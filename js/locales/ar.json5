@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "إعدادات الصوت",
   "dialog.audioConfig.inputDevice": "جهاز الإدخال:",
   "dialog.audioConfig.outputDevice": "جهاز الإخراج:",
+  "dialog.audioConfig.outputChannels": "قنوات الإخراج:",
   "dialog.audioConfig.sampleRate": "معدل العينة:",
   "dialog.audioConfig.useInputWithPlayer": "استخدام إدخال الصوت حتى عند استخدام المشغل",
   "dialog.audioConfig.cancel": "إلغاء",

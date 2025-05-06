@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "ऑडियो विन्यास",
   "dialog.audioConfig.inputDevice": "इनपुट डिवाइस:",
   "dialog.audioConfig.outputDevice": "आउटपुट डिवाइस:",
+  "dialog.audioConfig.outputChannels": "आउटपुट चैनल:",
   "dialog.audioConfig.sampleRate": "नमूना दर:",
   "dialog.audioConfig.useInputWithPlayer": "प्लेयर का उपयोग करते समय भी ऑडियो इनपुट",
   "dialog.audioConfig.cancel": "रद्द करें",

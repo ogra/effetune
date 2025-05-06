@@ -102,19 +102,19 @@ class LevelMeterPlugin extends PluginBase {
 
     // Handle messages from audio processor
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            this.process(message.buffer, message);
+        if (message.type === 'processBuffer') {
+            this.process(message);
         }
     }
 
-    process(audioBuffer, message) {
-        if (!audioBuffer || !message?.measurements?.channels) {
-            return audioBuffer;
+    process(message) {
+        if (!message?.measurements?.channels) {
+            return;
         }
 
         // Skip processing if plugin is disabled
         if (!this.enabled) {
-            return audioBuffer;
+            return;
         }
 
         const time = performance.now() / 1000;
@@ -178,7 +178,6 @@ class LevelMeterPlugin extends PluginBase {
         if (this.ol !== wasOverloaded) {
             this.updateParameters();
         }
-        return audioBuffer;
     }
 
     // Create UI elements for the plugin
@@ -339,13 +338,15 @@ class LevelMeterPlugin extends PluginBase {
             ctx.fillRect(peakX - 1, y + 1, 2, channelHeight);
 
             // Display peak level value
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
-            const peakText = peakLevel.toFixed(1) + ' dB';
-            // Adjust text position based on channel height
-            ctx.fillText(peakText, this.canvasWidth - 10, y + channelHeight / 2 + (numDrawableChannels === 1 ? 0 : 1));
+            if (numDrawableChannels <= 4) { // Only show text for 4 or fewer channels
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const peakText = peakLevel.toFixed(1) + ' dB';
+                // Adjust text position based on channel height
+                ctx.fillText(peakText, this.canvasWidth - 10, y + channelHeight / 2 + (numDrawableChannels === 1 ? 0 : 1));
+            }
         }
 
         // Update overload indicator

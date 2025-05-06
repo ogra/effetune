@@ -632,8 +632,8 @@ class MultibandCompressorPlugin extends PluginBase {
   }
 
   onMessage(message) {
-    if (message.type === 'processBuffer' && message.buffer) {
-      const result = this.process(message.buffer, message);
+    if (message.type === 'processBuffer') {
+      const result = this.process(message);
       // Only update graphs if there's significant gain reduction (using a threshold to avoid lingering updates)
       const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
       if (this.canvas && this.bands.some(band => band.gr > GR_THRESHOLD)) {
@@ -643,8 +643,8 @@ class MultibandCompressorPlugin extends PluginBase {
     }
   }
 
-  process(audioBuffer, message) {
-    if (!message?.measurements) return audioBuffer;
+  process(message) {
+    if (!message?.measurements) return;
     const currentTime = performance.now() / 1000;
     const deltaTime = currentTime - this.lastProcessTime;
     this.lastProcessTime = currentTime;
@@ -658,7 +658,7 @@ class MultibandCompressorPlugin extends PluginBase {
         : Math.min(1, deltaTime / releaseTime);
       this.bands[i].gr = Math.max(0, this.bands[i].gr + (targetGrs[i] - this.bands[i].gr) * smoothingFactor);
     }
-    return audioBuffer;
+    return;
   }
 
   setParameters(params) {

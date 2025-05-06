@@ -107,6 +107,7 @@
   "dialog.audioConfig.title": "Audio Configuration",
   "dialog.audioConfig.inputDevice": "Input Device:",
   "dialog.audioConfig.outputDevice": "Output Device:",
+  "dialog.audioConfig.outputChannels": "Output Channels:",
   "dialog.audioConfig.sampleRate": "Sample Rate:",
   "dialog.audioConfig.useInputWithPlayer": "Audio input even when using Player",
   "dialog.audioConfig.cancel": "Cancel",

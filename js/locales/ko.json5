@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "오디오 설정",
   "dialog.audioConfig.inputDevice": "입력 장치:",
   "dialog.audioConfig.outputDevice": "출력 장치:",
+  "dialog.audioConfig.outputChannels": "출력 채널:",
   "dialog.audioConfig.sampleRate": "샘플링 속도:",
   "dialog.audioConfig.useInputWithPlayer": "플레이어 사용 시에도 오디오 입력 사용",
   "dialog.audioConfig.cancel": "취소",

@@ -220,20 +220,20 @@ class SpectrogramPlugin extends PluginBase {
     }
 
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            this.process(message.buffer, message);
+        if (message.type === 'processBuffer') {
+            this.process(message);
         }
     }
 
-    process(audioBuffer, message) {
-        if (!audioBuffer || !message?.measurements?.buffer) return audioBuffer;
-        if (!this.enabled) return audioBuffer;
+    process(message) {
+        if (!message?.measurements?.buffer) return;
+        if (!this.enabled) return;
 
         const fftSize = 1 << this.pt;
         const bufferPosition = message.measurements.bufferPosition;
         const [averageBuffer] = message.measurements.buffer;
 
-        if (!averageBuffer || fftSize !== averageBuffer.length || !this.imag) return audioBuffer;
+        if (!averageBuffer || fftSize !== averageBuffer.length || !this.imag) return;
 
         // Reset FFT buffers
         this.imag.fill(0);
@@ -316,7 +316,7 @@ class SpectrogramPlugin extends PluginBase {
             this.updateParameters();
         }
         
-        return audioBuffer;
+        return;
     }
 
     createUI() {

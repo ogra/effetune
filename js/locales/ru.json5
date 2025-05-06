@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "Настройка аудио",
   "dialog.audioConfig.inputDevice": "Входное устройство:",
   "dialog.audioConfig.outputDevice": "Выходное устройство:",
+  "dialog.audioConfig.outputChannels": "Каналы вывода:",
   "dialog.audioConfig.sampleRate": "Частота дискретизации:",
   "dialog.audioConfig.useInputWithPlayer": "Использовать аудиовход даже при использовании проигрывателя",
   "dialog.audioConfig.cancel": "Отмена",

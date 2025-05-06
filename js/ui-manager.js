@@ -252,6 +252,10 @@ export class UIManager {
         if (!this.sampleRate) return;
 
         const sleepModeText = this.t('ui.sleepMode');
+        
+        // Get current channel count from audio context destination
+        const channelCount = this.audioManager.audioContext.destination.channelCount || 2;
+        const showChannelCount = channelCount > 2;
 
         if (isSleepMode) {
             // Add sleep mode indicator if not already present
@@ -264,14 +268,18 @@ export class UIManager {
             // Remove sleep mode indicator and ensure sample rate is displayed correctly
             let currentText = this.sampleRate.textContent;
             let updatedText = currentText.replace(` - ${sleepModeText}`, '');
-             if (this.sampleRate) { // Added check
+            if (this.sampleRate) { // Added check
                 this.sampleRate.textContent = updatedText;
-             }
+            }
             // Make sure the sample rate is still displayed correctly
             if (!this.sampleRate.textContent.includes('Hz') && sampleRate) {
-                 if (this.sampleRate) { // Added check
-                    this.sampleRate.textContent = `${sampleRate} Hz`;
-                 }
+                if (this.sampleRate) { // Added check
+                    if (showChannelCount) {
+                        this.sampleRate.textContent = `${sampleRate} Hz ${channelCount}ch`;
+                    } else {
+                        this.sampleRate.textContent = `${sampleRate} Hz`;
+                    }
+                }
             }
         }
     }
@@ -281,12 +289,24 @@ export class UIManager {
         if (this.audioManager.audioContext && this.sampleRate) {
             // Get the current sample rate from the audio context
             const currentSampleRate = this.audioManager.audioContext.sampleRate;
+            
+            // Get current channel count from audio context destination
+            const channelCount = this.audioManager.audioContext.destination.channelCount || 2;
 
             // Preserve sleep mode indicator if present
             const sleepModeText = this.t('ui.sleepMode');
             const isSleepMode = this.sampleRate.textContent.includes(sleepModeText);
+            
+            // Set the basic sample rate text
             if (this.sampleRate) { // Added check
-                this.sampleRate.textContent = `${currentSampleRate} Hz`;
+                // Display channel count only if it's not the default stereo (2ch)
+                if (channelCount > 2) {
+                    this.sampleRate.textContent = `${currentSampleRate} Hz ${channelCount}ch`;
+                } else {
+                    this.sampleRate.textContent = `${currentSampleRate} Hz`;
+                }
+                
+                // Add sleep mode text if needed
                 if (isSleepMode) {
                     this.sampleRate.textContent += ` - ${sleepModeText}`;
                 }
@@ -295,14 +315,14 @@ export class UIManager {
             // Add a visual indicator if the sample rate is below recommended value
             if (currentSampleRate < 88200) {
                 this.sampleRate.classList.add('low-sample-rate');
-                 if (this.sampleRate) { // Added check
+                if (this.sampleRate) { // Added check
                     this.sampleRate.title = this.t('error.sampleRateWarning');
-                 }
+                }
             } else {
                 this.sampleRate.classList.remove('low-sample-rate');
-                 if (this.sampleRate) { // Added check
+                if (this.sampleRate) { // Added check
                     this.sampleRate.title = '';
-                 }
+                }
             }
         }
     }

@@ -27,6 +27,7 @@ No audiophile myths, Just pure science.
 - Audio pipeline that can be modified in real-time
 - Offline audio file processing with current effect chain
 - Frequency response measurement and correction for system calibration
+- Multi-channel processing and output
 
 ## Setup Guide
 

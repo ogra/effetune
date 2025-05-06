@@ -106,6 +106,7 @@
   "dialog.audioConfig.title": "Configuration audio",
   "dialog.audioConfig.inputDevice": "Périphérique d'entrée :",
   "dialog.audioConfig.outputDevice": "Périphérique de sortie :",
+  "dialog.audioConfig.outputChannels": "Canaux de sortie :",
   "dialog.audioConfig.sampleRate": "Fréquence d'échantillonnage :",
   "dialog.audioConfig.useInputWithPlayer": "Entrée audio même lors de l'utilisation du lecteur",
   "dialog.audioConfig.cancel": "Annuler",

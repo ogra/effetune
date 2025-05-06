@@ -251,8 +251,10 @@ class ElectronIntegration {
     const preferences = await loadAudioPreferences(this.isElectron);
     if (preferences) {
       this.audioPreferences = preferences;
+      // Make sure to set a global reference that can be accessed in AudioWorklet context
+      window.audioPreferences = preferences;
     }
-    return this.audioPreferences;
+    return preferences;
   }
 
   /**
@@ -260,7 +262,12 @@ class ElectronIntegration {
    * @param {Object} preferences - Audio device preferences
    */
   async saveAudioPreferences(preferences) {
-    this.audioPreferences = preferences;
+    // Update global audio preferences reference
+    if (preferences) {
+      this.audioPreferences = preferences;
+      // Make sure to update the global reference for AudioWorklet context
+      window.audioPreferences = preferences;
+    }
     return saveAudioPreferences(this.isElectron, preferences);
   }
 

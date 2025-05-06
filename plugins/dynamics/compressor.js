@@ -307,8 +307,8 @@ class CompressorPlugin extends PluginBase {
     }
 
     onMessage(message) {
-        if (message.type === 'processBuffer' && message.buffer) {
-            const result = this.process(message.buffer, message);
+        if (message.type === 'processBuffer') {
+            const result = this.process(message);
             
             // Only update graphs if there's significant gain reduction
             const GR_THRESHOLD = 0.05; // 0.05 dB threshold for considering gain reduction significant
@@ -321,8 +321,8 @@ class CompressorPlugin extends PluginBase {
         }
     }
 
-    process(audioBuffer, message) {
-        if (!message?.measurements) return audioBuffer;
+    process(message) {
+        if (!message?.measurements) return;
 
         // Use cached time constants for better performance
         if (!this._timeConstants) {
@@ -342,7 +342,7 @@ class CompressorPlugin extends PluginBase {
         // Fast path: if gain reduction is very small, skip processing
         if ((targetGr >= 0 ? targetGr : -targetGr) < 0.01 && (this.gr >= 0 ? this.gr : -this.gr) < 0.01) {
             this.gr = 0;
-            return audioBuffer;
+            return;
         }
         
         // Smoothing calculation
@@ -355,7 +355,7 @@ class CompressorPlugin extends PluginBase {
         this.gr += (targetGr - this.gr) * smoothingFactor;
         this.gr = this.gr < 0 ? 0 : this.gr;
 
-        return audioBuffer;
+        return;
     }
 
     setParameters(params) {

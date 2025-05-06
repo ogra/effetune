@@ -14,6 +14,7 @@ export class AudioIOManager {
         this.audioElement = null;
         this.defaultDestinationConnection = null;
         this.silenceNode = null;
+        this.useMultichannelOutput = false;
     }
     
     /**
@@ -166,8 +167,22 @@ export class AudioIOManager {
      */
     async initAudioOutput() {
         try {
-            // Create a MediaStreamDestination to get a MediaStream
-            // Check if createMediaStreamDestination is supported
+            // For Electron, check if we're using multichannel output
+            const preferences = window.electronAPI && window.electronIntegration ? 
+                await window.electronIntegration.loadAudioPreferences() : null;
+            const isMultiChannel = preferences && preferences.outputChannels && preferences.outputChannels > 2;
+            
+            // For multichannel mode, we'll use direct connection to AudioContext.destination
+            // rather than MediaStreamDestination which only supports stereo
+            if (isMultiChannel) {
+                console.log(`Using direct connection for ${preferences.outputChannels} channel output`);
+                // Skip MediaStreamDestination for multichannel mode
+                this.destinationNode = null;
+                this.useMultichannelOutput = true;
+                return '';
+            }
+            
+            // For standard stereo mode, use MediaStreamDestination
             try {
                 if (typeof this.contextManager.audioContext.createMediaStreamDestination === 'function') {
                     this.destinationNode = this.contextManager.audioContext.createMediaStreamDestination();
@@ -183,14 +198,9 @@ export class AudioIOManager {
                 return `Audio Error: Failed to create audio destination: ${error.message}`;
             }
             
-            // Note: We don't connect to the default destination here anymore
-            // This will be done in connectAudioNodes to ensure proper order of operations
-            
-            // For Electron, prepare audio output device
-            if (window.electronAPI && window.electronIntegration) {
-                // If running in Electron, try to use saved output device
-                const preferences = await window.electronIntegration.loadAudioPreferences();
-                // If we have preferences with an output device ID, try to use it
+            // For Electron, prepare audio output device (only in stereo mode)
+            if (!isMultiChannel && window.electronAPI && window.electronIntegration) {
+                // Rest of function continues for stereo output with device selection...
                 if (preferences && preferences.outputDeviceId) {
                     try {
                         // Create a new audio element for actual use
@@ -330,6 +340,12 @@ export class AudioIOManager {
                             this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
                         }
                         
+                        // Ensure proper multichannel configuration for the destination connection
+                        if (this.contextManager.audioContext.destination.channelCount > 2) {
+                            this.contextManager.audioContext.destination.channelCountMode = 'explicit';
+                            this.contextManager.audioContext.destination.channelInterpretation = 'discrete';
+                        }
+                        
                         // Add event listeners for debugging
                         this.audioElement.addEventListener('error', (e) => {
                             // If there's an error with the audio element, make sure we're using the default output
@@ -428,24 +444,59 @@ export class AudioIOManager {
                 return `Audio Error: Failed to connect audio nodes: ${error.message}`;
             }
             
-            // Connect worklet to destination
-            if (this.destinationNode) {
+            // Connect based on our mode (multichannel or stereo)
+            if (this.useMultichannelOutput) {
+                // Multichannel mode - connect directly to destination
+                try {
+                    this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                    
+                    // Ensure proper multichannel configuration
+                    this.contextManager.audioContext.destination.channelCountMode = 'explicit';
+                    this.contextManager.audioContext.destination.channelInterpretation = 'discrete';
+                    
+                    const preferences = window.electronAPI && window.electronIntegration ? 
+                        await window.electronIntegration.loadAudioPreferences() : null;
+                    const channelCount = preferences?.outputChannels || 4;
+                    
+                    console.log(`Multichannel connection established with ${channelCount} channels`);
+                } catch (error) {
+                    console.error('Error connecting multichannel output:', error);
+                    return `Audio Error: Failed to connect multichannel output: ${error.message}`;
+                }
+            } else if (this.destinationNode) {
+                // Stereo mode with device selection - connect to MediaStreamDestination
                 try {
                     this.contextManager.workletNode.connect(this.destinationNode);
                 } catch (error) {
                     console.error('Error connecting worklet to destination:', error);
                     return `Audio Error: Failed to connect to audio destination: ${error.message}`;
                 }
-            }
-            
-            // For web app (non-Electron), always connect to default destination
-            // This is crucial for audio output to work
-            if (!window.electronAPI || !window.electronIntegration) {
+            } else {
+                // Fallback for stereo mode without MediaStreamDestination - direct connection
                 try {
                     this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
                 } catch (error) {
                     console.error('Error connecting to default audio destination:', error);
                     return `Audio Error: Failed to connect to default audio destination: ${error.message}`;
+                }
+            }
+            
+            // For web app (non-Electron), always connect to default destination
+            // This is crucial for audio output to work
+            if (!window.electronAPI || !window.electronIntegration) {
+                if (!this.defaultDestinationConnection) {
+                    try {
+                        this.defaultDestinationConnection = this.contextManager.workletNode.connect(this.contextManager.audioContext.destination);
+                        
+                        // Ensure proper multichannel configuration for the destination
+                        if (this.contextManager.audioContext.destination.channelCount > 2) {
+                            this.contextManager.audioContext.destination.channelCountMode = 'explicit';
+                            this.contextManager.audioContext.destination.channelInterpretation = 'discrete';
+                        }
+                    } catch (error) {
+                        console.error('Error connecting to default audio destination:', error);
+                        return `Audio Error: Failed to connect to default audio destination: ${error.message}`;
+                    }
                 }
             }
             
