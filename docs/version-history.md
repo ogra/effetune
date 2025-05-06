@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.49 (Mar 6, 2025)
+- Supports multi-channel processing and output
+- Added Matrix effect
+- Various minor improvements
+
 ### Version 1.48 (Mar 5, 2025)
 - Added frequency response measurement and correction function
 - Added Mute, 5Band Dynamic EQ and MS Matrix effects

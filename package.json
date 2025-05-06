@@ -1,6 +1,6 @@
 {
   "name": "effetune",
-  "version": "1.48.0",
+  "version": "1.49.0",
   "description": "Desktop Audio Effect Processor",
   "main": "electron/main.js",
   "scripts": {

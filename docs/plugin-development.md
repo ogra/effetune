@@ -166,6 +166,7 @@ window.MyPlugin = MyPlugin;
     - For single words: Use the first letters (e.g., volume → vl, bass → bs)
     - For compound words: Use the first letter of each word (e.g., tpdfDither → td, zohFreq → zf)
   * Document the original parameter name in comments for clarity
+  * The following parameter names are reserved and cannot be used: nm (plugin name abbreviation), en (enabled state abbreviation), ib (inputBus abbreviation), ob (outputBus abbreviation), ch (channel abbreviation), type, id, inputBus, outputBus, and channel
 
 - Implement `getParameters()` to return current plugin state
   * Must include `type` and `enabled` fields
