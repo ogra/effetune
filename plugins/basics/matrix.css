@@ -35,7 +35,6 @@
 }
 
 .matrix-button.active {
-    border: 1px solid #606060;
     background-color: #4CAF50;
 }
 
@@ -45,7 +44,6 @@
 
 .matrix-button.phase-button.active {
     background-color: #aa0000;
-    border-color: #ff0000;
 }
 
 .matrix-table .disabled {

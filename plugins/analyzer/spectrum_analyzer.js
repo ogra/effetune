@@ -9,7 +9,11 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
         this.peaks = new Float32Array(fftSize >> 1).fill(-144);
         this.lastProcessTime = performance.now() / 1000;
-        this.sampleRate = 48000;
+        this.sampleRate = 48000; // Default, updated from processor messages
+
+        // dB correction factors for 0dBFS scaling (assuming 1/N FFT normalization & Hann window)
+        this.correctionAC = 10 * Math.log10(16); // For AC components (approx. +12.04dB)
+        this.correctionDC = 10 * Math.log10(4);  // For DC component (approx. +6.02dB)
 
         // Initialize FFT buffers and tables
         this.real = new Float32Array(fftSize);
@@ -45,17 +49,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         
         // Initialize context if needed - Modified for single average buffer
         if (!context.initialized || context.fftSize !== fftSize || !context.buffer) { // Check if buffer exists
-            // Clean up old buffers if they exist
-            // if (context.buffer) { // No need to iterate if only one buffer
-            //     context.buffer.forEach(buffer => buffer.fill(0));
-            // }
-            
-            // Create a single buffer for the average
-            // context.buffer = new Array(channelCount); // Original
             context.buffer = [new Float32Array(fftSize)]; // Single buffer in an array
-            // for (let i = 0; i < channelCount; i++) { // Original
-            //     context.buffer[i] = new Float32Array(fftSize); // Original
-            // } // Original
             context.bufferPosition = 0;
             context.fftSize = fftSize;
             context.initialized = true;
@@ -76,12 +70,10 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         // Send buffer to UI every half FFT size
         if (context.bufferPosition % (fftSize / 2) === 0) {
             result.measurements = {
-                // Send only the average buffer inside an array
-                // buffer: context.buffer.map(buf => Float32Array.from(buf)), // Original
                 buffer: [Float32Array.from(context.buffer[0])], // Send copy of average buffer in array
                 bufferPosition: context.bufferPosition,
                 time: time,
-                sampleRate: parameters.sampleRate
+                sampleRate: parameters.sampleRate 
             };
         }
 
@@ -142,13 +134,13 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     setPoints(value) {
-        // Set range between 8 and 14
         const parsedValue = typeof value === 'number' ? value : parseFloat(value);
         const newPoints = parsedValue < 8 ? 8 : (parsedValue > 14 ? 14 : parsedValue);
         if (newPoints === this.pt) return;
+        
+        this.pt = newPoints; // Update pt first
         const fftSize = 1 << newPoints;
         
-        // Create new arrays
         this.spectrum = new Float32Array(fftSize >> 1).fill(-144);
         this.peaks = new Float32Array(fftSize >> 1).fill(-144);
         this.real = new Float32Array(fftSize);
@@ -157,7 +149,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         this.sinTable = new Float32Array(fftSize);
         this.cosTable = new Float32Array(fftSize);
 
-        // Initialize tables
         const factor = 2 * Math.PI / fftSize;
         for (let i = 0; i < fftSize; i++) {
             const t = factor * i;
@@ -165,18 +156,15 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             this.cosTable[i] = Math.cos(t);
             this.window[i] = 0.5 * (1 - Math.cos(t));
         }
-
-        this.pt = newPoints;
-        // Reset time tracking to ensure proper peak decay
-        this.lastProcessTime = performance.now() / 1000;
         
+        this.lastProcessTime = performance.now() / 1000;
         this.updateParameters();
     }
 
     // Reset parameters
     reset() {
         this.setDBRange(-96);
-        this.setPoints(12);
+        this.setPoints(12); // Note: constructor uses 12, reset button might use 10. Keeping 12 here.
     }
 
     getParameters() {
@@ -189,12 +177,9 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     setParameters(params) {
-        // Update parameters
         if (params.enabled !== undefined) this.enabled = params.enabled;
         if (params.dr !== undefined) this.setDBRange(params.dr);
         if (params.pt !== undefined) this.setPoints(params.pt);
-
-        // Always update parameters after all changes
         this.updateParameters();
     }
 
@@ -209,7 +194,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
             return;
         }
 
-        // Skip processing if plugin is disabled
         if (!this.enabled) {
             return;
         }
@@ -217,49 +201,45 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const fftSize = 1 << this.pt;
         const halfFft = fftSize >> 1;
         const bufferPosition = message.measurements.bufferPosition;
-        // --- Modify buffer retrieval to get the single average buffer ---
-        // const [bufferL, bufferR] = message.measurements.buffer; // Original
-        const [averageBuffer] = message.measurements.buffer; // Get the single average buffer
+        const [averageBuffer] = message.measurements.buffer;
 
-        // --- Check if averageBuffer exists and size matches fftSize ---
         if (!averageBuffer || fftSize !== averageBuffer.length) return;
 
-        // Reset FFT buffers
-        this.imag.fill(0);
+        // Update sampleRate if it has changed
+        if (message.measurements.sampleRate && this.sampleRate !== message.measurements.sampleRate) {
+            this.sampleRate = message.measurements.sampleRate;
+            // this.updateParameters(); // Could inform processor if needed, or just for UI
+        }
 
-        // Copy and window the time domain data from the average buffer
+        this.imag.fill(0);
         let pos = bufferPosition % fftSize;
         for (let i = 0; i < fftSize; i++) {
-            // --- Use averageBuffer directly --- 
-            // let sample = (bufferL[pos] + bufferR[pos]) * 0.7071067811865476; // Original - Power Average
-            let sample = averageBuffer[pos]; // Use the average sample directly
-            this.real[i] = sample * this.window[i]; // Apply window
+            let sample = averageBuffer[pos];
+            this.real[i] = sample * this.window[i];
             pos++;
             if (pos >= fftSize) pos = 0;
         }
 
-        // Perform FFT
         this.fft(this.real, this.imag);
-
-        // Precompute constant corrections
-        const windowPowerCorrection = 10 * Math.log10(8 / 3);
-        const singleSideCorrection = 10 * Math.log10(2);
-        const totalCorrection = windowPowerCorrection + singleSideCorrection;
 
         // Calculate magnitude spectrum
         for (let i = 0; i < halfFft; i++) {
-            // Calculate raw power
             const rawPower = this.real[i] * this.real[i] + this.imag[i] * this.imag[i];
             
-            // Convert to dB with corrections
-            const db = 10 * Math.log10(rawPower + 1e-24) + totalCorrection;
+            let currentCorrection;
+            if (i === 0) { // DC component
+                currentCorrection = this.correctionDC;
+            } else { // AC components
+                currentCorrection = this.correctionAC;
+            }
+            
+            const db = 10 * Math.log10(rawPower + 1e-24) + currentCorrection;
             this.spectrum[i] = db;
         }
 
-        // Validate and update peaks
         const currentTime = message.measurements.time;
-        const deltaTime = this.lastProcessTime < currentTime ?  currentTime - this.lastProcessTime: 0.02;
-        const decay = 20 * deltaTime; // 20dB/sec decay rate
+        const deltaTime = this.lastProcessTime < currentTime ? currentTime - this.lastProcessTime : 0.02;
+        const decay = 20 * deltaTime;
 
         if (!this.peaks || this.peaks.length !== halfFft) {
             this.peaks = new Float32Array(halfFft).fill(-144);
@@ -275,12 +255,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         }
         
         this.lastProcessTime = currentTime;
-
-        if (message.measurements.sampleRate && this.sampleRate !== message.measurements.sampleRate) {
-            this.sampleRate = message.measurements.sampleRate;
-            this.updateParameters();
-        }
-        
         return;
     }
 
@@ -291,102 +265,84 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const container = document.createElement('div');
         container.className = 'plugin-parameter-ui';
 
-        // Use helper function for DB Range
         container.appendChild(this.createParameterControl(
             'DB Range', -144, -48, 1, this.dr, (v) => this.setDBRange(v), 'dB'
         ));
 
-        // Points parameter row (Cannot use helper due to 2^pt display logic)
         const pointsRow = document.createElement('div');
         pointsRow.className = 'parameter-row';
-        
         const pointsLabel = document.createElement('label');
         pointsLabel.textContent = 'Points:';
         pointsLabel.htmlFor = `${this.id}-${this.name}-points-slider`;
-        
         const pointsSlider = document.createElement('input');
-        pointsSlider.type = 'range';
-        pointsSlider.id = `${this.id}-${this.name}-points-slider`;
-        pointsSlider.name = `${this.id}-${this.name}-points-slider`;
-        pointsSlider.min = 8;
-        pointsSlider.max = 14;
-        pointsSlider.step = 1;
-        pointsSlider.value = this.pt;
-        pointsSlider.autocomplete = "off";
-
+        pointsSlider.type = 'range'; pointsSlider.id = `${this.id}-${this.name}-points-slider`; pointsSlider.name = `${this.id}-${this.name}-points-slider`;
+        pointsSlider.min = 8; pointsSlider.max = 14; pointsSlider.step = 1; pointsSlider.value = this.pt; pointsSlider.autocomplete = "off";
         const pointsValue = document.createElement('input');
-        pointsValue.type = 'number';
-        pointsValue.id = `${this.id}-${this.name}-points-value`;
-        pointsValue.name = `${this.id}-${this.name}-points-value`;
-        pointsValue.value = 1 << this.pt;
-        pointsValue.step = 1;
-        pointsValue.min = 1 << 8;
-        pointsValue.max = 1 << 14;
-        pointsValue.autocomplete = "off";
+        pointsValue.type = 'number'; pointsValue.id = `${this.id}-${this.name}-points-value`; pointsValue.name = `${this.id}-${this.name}-points-value`;
+        pointsValue.value = 1 << this.pt; pointsValue.step = 1; pointsValue.min = 1 << 8; pointsValue.max = 1 << 14; pointsValue.autocomplete = "off";
 
         const pointsHandler = (e) => {
             const value = parseInt(e.target.value);
-            pointsValue.value = 1 << value;
+            pointsValue.value = 1 << value; // Update text input when slider changes
             this.setPoints(value);
         };
         pointsSlider.addEventListener('input', pointsHandler);
         this.boundEventListeners.set(pointsSlider, pointsHandler);
+        
+        // Update slider when text input changes
+        pointsValue.addEventListener('change', (e) => {
+            const numFFTPoints = parseInt(e.target.value);
+            const exponent = Math.round(Math.log2(numFFTPoints)); // Allow nearest power of 2
+            if (exponent >= 8 && exponent <= 14) {
+                pointsSlider.value = exponent;
+                pointsValue.value = 1 << exponent; // Ensure value is a power of 2
+                this.setPoints(exponent);
+            } else {
+                 pointsValue.value = 1 << this.pt; // Revert to current if invalid
+            }
+        });
+
 
         pointsRow.appendChild(pointsLabel);
         pointsRow.appendChild(pointsSlider);
         pointsRow.appendChild(pointsValue);
+        container.appendChild(pointsRow);
 
-        // Graph container
         const graphContainer = document.createElement('div');
         graphContainer.className = 'graph-container';
-        graphContainer.style.position = 'relative';
-        graphContainer.style.width = '1024px';
-        graphContainer.style.height = '480px';
+        graphContainer.style.position = 'relative'; graphContainer.style.width = '1024px'; graphContainer.style.height = '480px';
         
         const canvas = document.createElement('canvas');
-        // Set canvas buffer size for high-resolution display.
-        // This size is intentionally larger than the display size
-        // to ensure sharpness when scaled or on high-DPI screens.
-        canvas.width = 2048;
-        canvas.height = 960;
-        canvas.style.width = '1024px';
-        canvas.style.height = '480px';
-        
+        canvas.width = 2048; canvas.height = 960;
+        canvas.style.width = '1024px'; canvas.style.height = '480px';
         graphContainer.appendChild(canvas);
+        this.canvas = canvas;
 
-        // Reset button
         const resetButton = document.createElement('button');
-        resetButton.className = 'analyzer-reset-button';
-        resetButton.textContent = 'Reset';
-        
+        resetButton.className = 'analyzer-reset-button'; resetButton.textContent = 'Reset';
         const resetHandler = () => {
             const defaultDBRange = -96;
-            const defaultPoints = 10;
+            const defaultPoints = 12; // Reset to 12 as per constructor/reset method
+            
+            // Update UI elements before calling internal reset
+            const dbRangeSlider = container.querySelector(`input[type="range"][min="-144"]`); // Example selector
+            if(dbRangeSlider) dbRangeSlider.value = defaultDBRange;
+            // Update associated span for dbRangeSlider if you have one.
 
-            // Update UI first
             pointsSlider.value = defaultPoints;
             pointsValue.value = 1 << defaultPoints;
 
-            // Then update plugin state
-            this.reset();
+            this.reset(); // This will call setDBRange and setPoints
         };
         resetButton.addEventListener('click', resetHandler);
         this.boundEventListeners.set(resetButton, resetHandler);
-        
         graphContainer.appendChild(resetButton);
-
-        // Add all elements to container
-        container.appendChild(pointsRow);
         container.appendChild(graphContainer);
-
-        // Store canvas reference
-        this.canvas = canvas;
 
         if (this.observer == null) {
             this.observer = new IntersectionObserver(this.handleIntersect.bind(this));
         }
         this.observer.observe(this.canvas);
-
         return container;
     }
 
@@ -403,7 +359,6 @@ class SpectrumAnalyzerPlugin extends PluginBase {
 
     startAnimation() {
         if (this.animationFrameId) return;
-
         const animate = () => {
             if (!this.isVisible) {
                 this.stopAnimation();
@@ -423,6 +378,18 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 
     cleanup() {
+        this.stopAnimation(); // Stop animation first
+        if (this.observer && this.canvas) { // Check if canvas exists before trying to unobserve
+            this.observer.unobserve(this.canvas);
+        }
+        // Cleanup event listeners
+        this.boundEventListeners.forEach((handler, element) => {
+            // Determine event type if not stored (assuming 'input' or 'click' primarily)
+            // A more robust way is to store {event: 'input', handler: handler}
+            element.removeEventListener('input', handler); 
+            element.removeEventListener('click', handler); 
+        });
+        this.boundEventListeners.clear();
         this.lastProcessTime = performance.now() / 1000;
     }
 
@@ -433,77 +400,97 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         const width = this.canvas.width;
         const height = this.canvas.height;
 
-        // Clear canvas with background color
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, width, height);
 
-        // Draw grid
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
 
-        // Vertical grid lines (frequency)
-        const freqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000];
-        freqs.forEach(freq => {
-            const x = width * (Math.log10(freq) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20));
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, height);
-            ctx.stroke();
+        // --- Dynamic Frequency Axis Scaling ---
+        const minDisplayFreq = 20; // Hz
+        const nyquistFreq = this.sampleRate / 2;
+        // Max display frequency is Nyquist, but ensure it's at least minDisplayFreq
+        let maxDisplayFreq = 40000; // Fixed max display frequency
 
-            // Frequency labels
-            if (freq !== 20 && freq !== 40000) {
-                ctx.fillStyle = '#666';
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(freq >= 1000 ? `${freq / 1000}k` : freq, x, height - 80);
+        if (this.sampleRate <= 0 || nyquistFreq <= minDisplayFreq) { // Not enough range or invalid sampleRate
+            ctx.fillStyle = '#fff';
+            ctx.font = '28px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Invalid Sample Rate or Range', width / 2, height / 2);
+            return;
+        }
+
+        const logMinDisplayFreq = Math.log10(minDisplayFreq);
+        const logMaxDisplayFreq = Math.log10(maxDisplayFreq);
+        const logFreqRange = logMaxDisplayFreq - logMinDisplayFreq;
+
+        if (logFreqRange <= 0) { // Avoid division by zero or negative log range
+             ctx.fillStyle = '#fff'; ctx.font = '28px Arial'; ctx.textAlign = 'center';
+             ctx.fillText('Invalid Frequency Range for Log Scale', width / 2, height / 2);
+             return;
+        }
+
+        // Vertical grid lines (frequency) - Dynamic
+        let baseGridFreqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]; // Common audio freqs
+        // Add Nyquist to the list if it's not too close to another major tick, or for the max label
+        // Filter and ensure min/max are present
+        let gridFreqsToDraw = baseGridFreqs.filter(f => f >= minDisplayFreq && f <= maxDisplayFreq);
+        if (!gridFreqsToDraw.includes(minDisplayFreq) && minDisplayFreq > 0) gridFreqsToDraw.unshift(minDisplayFreq);
+        if (!gridFreqsToDraw.includes(maxDisplayFreq)) gridFreqsToDraw.push(maxDisplayFreq);
+        gridFreqsToDraw = [...new Set(gridFreqsToDraw)].sort((a, b) => a - b); // Unique & sorted
+
+        gridFreqsToDraw.forEach(freq => {
+            const x = width * (Math.log10(freq) - logMinDisplayFreq) / logFreqRange;
+            if (x >=0 && x <= width) { // Draw only if within canvas
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+
+                if (freq !== minDisplayFreq && freq !== maxDisplayFreq && x > width*0.02 && x < width*0.98) { // Avoid clutter at edges
+                    ctx.fillStyle = '#666';
+                    ctx.font = '24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(freq >= 1000 ? `${Math.round(freq / 100)/10}k` : freq, x, height - 80);
+                }
             }
         });
 
-        // Horizontal grid lines (dB)
+        // Horizontal grid lines (dB) - No change to this logic
         const dbStep = 12;
-        const dbLines = [];
         for (let db = 0; db >= this.dr; db -= dbStep) {
-            dbLines.push(db);
-        }
-        dbLines.forEach(db => {
             const y = height * (db / this.dr);
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
             ctx.stroke();
-
-            // dB labels (hide top and bottom)
             if (db !== 0 && db !== this.dr) {
-                ctx.fillStyle = '#666';
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'right';
+                ctx.fillStyle = '#666'; ctx.font = '24px Arial'; ctx.textAlign = 'right';
                 ctx.fillText(`${db}dB`, 160, y + 12);
             }
-        });
+        }
 
         // Draw axis labels
-        ctx.fillStyle = '#fff';
-        ctx.font = '28px Arial';
-        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff'; ctx.font = '28px Arial'; ctx.textAlign = 'center';
         ctx.fillText('Frequency (Hz)', width / 2, height - 10);
         ctx.save();
-        ctx.translate(40, height / 2);
-        ctx.rotate(-Math.PI / 2);
+        ctx.translate(40, height / 2); ctx.rotate(-Math.PI / 2);
         ctx.fillText('Level (dB)', 0, 0);
         ctx.restore();
 
-        // Always draw spectrum
+        // Draw spectrum
         const fftSize = 1 << this.pt;
         const binCount = fftSize >> 1;
         const xToLevels = new Map();
         
         for (let i = 0; i < binCount; i++) {
-            const freq = (i * this.sampleRate / 2) / binCount;
-            if (freq > 40000) continue;
-            // Replace Math.max with ternary for better performance
-            const freqClamped = freq < 20 ? 20 : freq;
-            const x = Math.round(width * (Math.log10(freqClamped) - Math.log10(20)) / (Math.log10(40000) - Math.log10(20)));
-            // Replace Math.min with ternary for better performance
+            const freq = (i * this.sampleRate) / fftSize; // Correct bin frequency calculation
+
+            if (freq < minDisplayFreq || freq > maxDisplayFreq || logFreqRange <=0 ) continue;
+
+            const currentFreqClamped = Math.max(minDisplayFreq, Math.min(freq, maxDisplayFreq));
+            const x = Math.round(width * (Math.log10(currentFreqClamped) - logMinDisplayFreq) / logFreqRange);
+            
             const spectrumLevel = this.spectrum[i] > 0 ? 0 : this.spectrum[i];
             const peakLevel = this.peaks[i] > 0 ? 0 : this.peaks[i];
 
@@ -511,20 +498,21 @@ class SpectrumAnalyzerPlugin extends PluginBase {
                 xToLevels.set(x, [spectrumLevel, peakLevel]);
             } else {
                 const [currentSpectrum, currentPeak] = xToLevels.get(x);
-                // Replace Math.max with ternary for better performance
                 xToLevels.set(x, [
                     currentSpectrum > spectrumLevel ? currentSpectrum : spectrumLevel,
                     currentPeak > peakLevel ? currentPeak : peakLevel
                 ]);
             }
         }
+        
+        // Sort map entries by x-coordinate for correct line drawing
+        const sortedXToLevels = new Map([...xToLevels.entries()].sort((a, b) => a[0] - b[0]));
 
-        // Draw spectrum
+        // Draw spectrum line
         ctx.beginPath();
-        ctx.strokeStyle = '#008800';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#008800'; ctx.lineWidth = 4;
         let first = true;
-        for (const [x, [spectrumLevel]] of xToLevels) {
+        for (const [x, [spectrumLevel]] of sortedXToLevels) {
             const y = height * (spectrumLevel / this.dr);
             if (first) {
                 ctx.moveTo(x, y);
@@ -535,12 +523,11 @@ class SpectrumAnalyzerPlugin extends PluginBase {
         }
         ctx.stroke();
 
-        // Draw peak hold
+        // Draw peak hold line
         ctx.beginPath();
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2;
         first = true;
-        for (const [x, [, peakLevel]] of xToLevels) {
+        for (const [x, [, peakLevel]] of sortedXToLevels) {
             const y = height * (peakLevel / this.dr);
             if (first) {
                 ctx.moveTo(x, y);
@@ -553,7 +540,7 @@ class SpectrumAnalyzerPlugin extends PluginBase {
     }
 }
 
-// Register plugin
-if (typeof window !== 'undefined') {
+// Register plugin (assuming PluginBase and window context for browser)
+if (typeof window !== 'undefined' && typeof PluginBase !== 'undefined') {
     window.SpectrumAnalyzerPlugin = SpectrumAnalyzerPlugin;
 }

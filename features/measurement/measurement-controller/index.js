@@ -89,14 +89,36 @@ class MeasurementController {
      * Start a new measurement with the given configuration
      * @param {Object} config - Measurement configuration
      */
-    startNewMeasurement(config) {
+    async startNewMeasurement(config) {
         if (this.isRunningMeasurement) {
             this.cancelMeasurement();
         }
         
         this.measurementConfig = config;
         
-        // Create new measurement object
+        // Get preferred sample rate from config
+        const preferredSampleRate = parseInt(config.sampleRate);
+        
+        // Reinitialize audio context with preferred sample rate
+        if (audioUtils.audioContext && audioUtils.audioContext.sampleRate !== preferredSampleRate) {
+            console.log(`Reinitializing audio context with preferred sample rate: ${preferredSampleRate}Hz`);
+            try {
+                await audioUtils.reinitialize(preferredSampleRate);
+            } catch (error) {
+                console.warn(`Could not reinitialize audio context with sample rate ${preferredSampleRate}Hz:`, error);
+            }
+        } else if (!audioUtils.audioContext) {
+            try {
+                await audioUtils.initialize(preferredSampleRate);
+            } catch (error) {
+                console.warn(`Could not initialize audio context with sample rate ${preferredSampleRate}Hz:`, error);
+            }
+        }
+        
+        // Get actual sample rate that will be used
+        const actualSampleRate = audioUtils.audioContext ? audioUtils.audioContext.sampleRate : preferredSampleRate;
+        
+        // Create new measurement object with actual sample rate
         this.currentMeasurement = {
             id: dataStorage.generateId(),
             name: config.name,
@@ -105,6 +127,8 @@ class MeasurementController {
             inputChannel: config.inputChannel,
             audioOutput: config.audioOutput,
             outputChannel: config.outputChannel,
+            requestedSampleRate: preferredSampleRate, // Store the requested rate
+            sampleRate: actualSampleRate, // Store the actual rate used
             sweepLength: config.sweepLength,
             averaging: config.averaging,
             points: [],

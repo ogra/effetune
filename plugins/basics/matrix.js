@@ -340,10 +340,7 @@ class MatrixPlugin extends PluginBase {
                 const cells = row.querySelectorAll('td');
                 cells.forEach(cell => {
                     cell.classList.add('disabled');
-                    const buttons = cell.querySelectorAll('button');
-                    buttons.forEach(button => {
-                        button.disabled = true;
-                    });
+                    // Keep buttons enabled but with visual indication
                 });
             } else {
                 row.classList.remove('disabled');
@@ -357,17 +354,10 @@ class MatrixPlugin extends PluginBase {
                 if (outputCh >= channelCount) {
                     // Disable cell for unavailable output channels
                     cell.classList.add('disabled');
-                    const buttons = cell.querySelectorAll('button');
-                    buttons.forEach(button => {
-                        button.disabled = true;
-                    });
+                    // Keep buttons enabled but with visual indication
                 } else if (inputCh < channelCount) {
                     // Only enable if both input and output channels are available
                     cell.classList.remove('disabled');
-                    const buttons = cell.querySelectorAll('button');
-                    buttons.forEach(button => {
-                        button.disabled = false;
-                    });
                 }
             });
         }

@@ -25,8 +25,9 @@ class AudioUtils {
 
     /**
      * Initialize the WebAudio API context
+     * @param {number} preferredSampleRate - Optional preferred sample rate in Hz
      */
-    async initialize() {
+    async initialize(preferredSampleRate = null) {
         if (this.initialized) {
             return;
         }
@@ -41,8 +42,19 @@ class AudioUtils {
                 }
             }
             
-            // Create a new AudioContext
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Create options object if preferred sample rate is provided
+            let contextOptions = {};
+            if (preferredSampleRate) {
+                contextOptions.sampleRate = preferredSampleRate;
+            }
+            
+            // Create a new AudioContext with options
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
+            
+            // Check if the actual sample rate matches the preferred rate
+            if (preferredSampleRate && this.audioContext.sampleRate !== preferredSampleRate) {
+                console.warn(`Requested sample rate ${preferredSampleRate}Hz but got ${this.audioContext.sampleRate}Hz instead. Using actual rate for calculations.`);
+            }
             
             // Set up analyzer for level metering
             this.analyzer = this.audioContext.createAnalyser();
@@ -91,8 +103,9 @@ class AudioUtils {
     /**
      * Reinitialize audio context and resources
      * This is a more aggressive reset than just ensureAudioContextRunning
+     * @param {number} preferredSampleRate - Optional preferred sample rate in Hz
      */
-    async reinitialize() {
+    async reinitialize(preferredSampleRate = null) {
         // Stop and clean up any existing resources
         this.stopWhiteNoise();
         this.stopMicrophoneInput();
@@ -111,8 +124,8 @@ class AudioUtils {
         this.audioWorkletSupported = false;
         this.initialized = false;
         
-        // Reinitialize everything
-        await this.initialize();
+        // Reinitialize everything with preferred sample rate
+        await this.initialize(preferredSampleRate);
         
         return true;
     }

@@ -73,6 +73,21 @@ const SweepMeasurement = {
                 await audioUtils.ensureAudioContextRunning();
             }
             
+            // Check if the actual sample rate matches the requested rate
+            const requestedSampleRate = parseInt(this.measurementConfig.sampleRate);
+            const actualSampleRate = audioUtils.audioContext.sampleRate;
+            
+            if (requestedSampleRate !== actualSampleRate) {
+                // Show warning to user
+                const warningElement = document.getElementById('sampleRateWarning');
+                if (warningElement) {
+                    warningElement.textContent = `Warning: Requested sampling rate ${requestedSampleRate}Hz is not available. Using ${actualSampleRate}Hz instead.`;
+                    warningElement.style.display = 'block';
+                } else {
+                    console.warn(`Requested sample rate ${requestedSampleRate}Hz but using ${actualSampleRate}Hz instead.`);
+                }
+            }
+            
             // Check if microphone input is active
             if (!audioUtils.microphone) {
                 console.log('Microphone input not initialized, attempting to restart...');
