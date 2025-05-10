@@ -223,8 +223,7 @@ input[type="checkbox"] {
 .plugin-list-header {
     display: flex;
     align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #3d3d3d;
+    padding-bottom: 14px;
     height: 33px;
     position: relative;
 }
@@ -277,32 +276,61 @@ input[type="checkbox"] {
 }
 
 .plugin-list-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.category-row {
     display: grid;
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: 88px 1fr;
     gap: 10px;
-    padding-top: 8px;
 }
 
-.plugin-category {
-    margin: 20px 0;
-    display: contents;
-}
-
-.plugin-category:first-of-type {
-    margin-top: 0;
+.right-column-content {
+    display: flex;
+    flex-direction: column;
 }
 
 .plugin-list-content h3 {
     margin-top: 8px;
+    margin-bottom: 8px;
     color: #888;
     font-size: 14px;
     font-weight: normal;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    align-self: start; /* 上寄せ表示 */
+}
+
+.collapse-indicator {
+    color: #888;
+    margin-right: 6px;
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.plugin-list-content h3:hover {
+    color: #fff;
+}
+
+.plugin-list-content h3:hover .collapse-indicator {
+    color: #fff;
+}
+
+.category-effects-count {
+    color: #888;
+    font-size: 14px;
+    font-weight: normal;
+    align-self: start;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .plugin-category-items {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    margin-bottom: 10px;
 }
 
 .plugin-item {
@@ -310,7 +338,6 @@ input[type="checkbox"] {
     padding-bottom: 6px;
     padding-left: 10px;
     padding-right: 10px;
-    margin-top: 2px;
     margin-bottom: 2px;
     background-color: #3d3d3d;
     border-radius: 4px;
@@ -472,7 +499,6 @@ input[type="checkbox"] {
     display: flex;
     align-items: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid #3d3d3d;
 }
 
 .pipeline-header h2 {

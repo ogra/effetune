@@ -28,6 +28,10 @@ export class PluginListManager {
         // Sidebar button functionality
         this.sidebarButton = document.getElementById('sidebarButton');
         
+        // Category collapsed state
+        this.collapsedCategories = {};
+        this.loadCollapsedState();
+        
         // Setup event handlers
         this.setupSearchFunctionality();
         this.setupPullTabFunctionality();
@@ -83,6 +87,70 @@ export class PluginListManager {
         this.rafId = null;
         this.animationFrameId = null; 
         this.handleTransitionEnd = null; // Ensure it's initialized
+    }
+    
+    // Load collapsed category state from localStorage
+    loadCollapsedState() {
+        try {
+            const savedState = localStorage.getItem('collapsedCategories');
+            if (savedState) {
+                this.collapsedCategories = JSON.parse(savedState);
+            }
+        } catch (e) {
+            console.error('Error loading collapsed categories state:', e);
+            this.collapsedCategories = {};
+        }
+    }
+    
+    // Save collapsed category state to localStorage
+    saveCollapsedState() {
+        try {
+            localStorage.setItem('collapsedCategories', JSON.stringify(this.collapsedCategories));
+        } catch (e) {
+            console.error('Error saving collapsed categories state:', e);
+        }
+    }
+    
+    // Toggle category collapse
+    toggleCategoryCollapse(category) {
+        this.collapsedCategories[category] = !this.collapsedCategories[category];
+        this.saveCollapsedState();
+        this.updateCategoryVisibility(category);
+    }
+    
+    // Update the visibility of a category's plugins
+    updateCategoryVisibility(category) {
+        const categoryRow = this.pluginList.querySelector(`.category-row[data-category="${category}"]`);
+        if (!categoryRow) return;
+        
+        const rightColumn = categoryRow.querySelector('.right-column-content');
+        if (!rightColumn) return;
+        
+        const pluginItems = rightColumn.querySelector('.plugin-category-items');
+        const categoryHeader = categoryRow.querySelector('h3');
+        const indicator = categoryHeader.querySelector('.collapse-indicator');
+        const effectsCount = rightColumn.querySelector('.category-effects-count');
+        
+        if (this.collapsedCategories[category]) {
+            pluginItems.style.display = 'none';
+            indicator.textContent = '>';
+            if (effectsCount) {
+                effectsCount.style.display = 'block';
+            }
+        } else {
+            pluginItems.style.display = 'flex';
+            indicator.textContent = '⌵';
+            if (effectsCount) {
+                effectsCount.style.display = 'none';
+            }
+        }
+    }
+    
+    // Update all categories visibility
+    updateAllCategoriesVisibility() {
+        for (const category in this.collapsedCategories) {
+            this.updateCategoryVisibility(category);
+        }
     }
     
     // Toggle the collapsed state of the plugin list
@@ -687,37 +755,61 @@ export class PluginListManager {
         const contentContainer = this.pluginList.querySelector('.plugin-list-content');
         if (!contentContainer) return;
 
-        const categories = Array.from(contentContainer.children);
+        const categoryRows = contentContainer.querySelectorAll('.category-row');
         let totalVisibleEffects = 0;
-
-        for (let i = 0; i < categories.length; i += 2) {
-            const categoryTitle = categories[i];
-            const categoryItems = categories[i + 1];
+        
+        // For each category row
+        categoryRows.forEach(categoryRow => {
+            const categoryTitle = categoryRow.querySelector('h3');
+            const rightColumn = categoryRow.querySelector('.right-column-content');
+            if (!rightColumn) return;
             
-            if (!categoryTitle || !categoryItems) continue;
+            const categoryItems = rightColumn.querySelector('.plugin-category-items');
+            const effectsCount = rightColumn.querySelector('.category-effects-count');
+            const category = categoryRow.dataset.category;
+            
+            if (!categoryTitle || !categoryItems) return;
 
             let hasVisibleItems = false;
-            const items = categoryItems.getElementsByClassName('plugin-item');
+            const items = categoryItems.querySelectorAll('.plugin-item');
             
-            for (const item of items) {
+            // Check each plugin in this category
+            items.forEach(item => {
                 // Get plugin name (direct text content, excluding description)
                 const pluginName = item.childNodes[0].textContent.trim();
                 
+                // Check if matches search criteria
                 const matchesSearch = searchText === '' || 
                     categoryTitle.textContent.toLowerCase().includes(searchText.toLowerCase()) ||
                     pluginName.toLowerCase().includes(searchText.toLowerCase());
                 
+                // Show/hide this plugin
                 item.style.display = matchesSearch ? '' : 'none';
                 if (matchesSearch) {
                     hasVisibleItems = true;
                     totalVisibleEffects++;
                 }
-            }
+            });
 
-            // Show/hide category title based on whether it has visible items
-            categoryTitle.style.display = hasVisibleItems ? '' : 'none';
-            categoryItems.style.display = hasVisibleItems ? '' : 'none';
-        }
+            // Show/hide the entire category row based on matches
+            categoryRow.style.display = hasVisibleItems ? '' : 'none';
+            
+            // When searching, always show the items if there are matches
+            if (searchText && hasVisibleItems) {
+                categoryItems.style.display = 'flex';
+                if (effectsCount) effectsCount.style.display = 'none';
+                // Update indicator to "expanded" state but don't change the actual state in storage
+                const indicator = categoryTitle.querySelector('.collapse-indicator');
+                if (indicator) indicator.textContent = '⌵';
+            } else if (!searchText) {
+                // When not searching, restore the previous collapsed state
+                this.updateCategoryVisibility(category);
+            } else {
+                // Hide items when searching but no matches found
+                categoryItems.style.display = 'none';
+                if (effectsCount) effectsCount.style.display = 'none';
+            }
+        });
 
         // Update effect count text based on search state
         const effectCountDiv = this.pluginList.querySelector('#effectCount');
@@ -749,12 +841,65 @@ export class PluginListManager {
 
         // Create category sections from dynamically loaded categories
         for (const [category, {description, plugins}] of Object.entries(this.pluginManager.effectCategories)) {
+            // Initialize collapsed state if not already set
+            if (this.collapsedCategories[category] === undefined) {
+                this.collapsedCategories[category] = false; // Default to expanded
+            }
+
+            // Create explicit row for the category
+            const categoryRow = document.createElement('div');
+            categoryRow.className = 'category-row';
+            categoryRow.dataset.category = category;
+
+            // Create category title with collapse indicator
             const categoryTitle = document.createElement('h3');
-            categoryTitle.textContent = category;
+            
+            // Create collapse indicator
+            const collapseIndicator = document.createElement('span');
+            collapseIndicator.className = 'collapse-indicator';
+            collapseIndicator.textContent = this.collapsedCategories[category] ? '>' : '⌵';
+            collapseIndicator.style.marginRight = '6px';
+            collapseIndicator.style.display = 'inline-block';
+            collapseIndicator.style.width = '12px';
+            
+            // Add indicator and text to title
+            categoryTitle.appendChild(collapseIndicator);
+            categoryTitle.appendChild(document.createTextNode(category));
+            
+            // Add click event to toggle category
+            categoryTitle.addEventListener('click', () => {
+                this.toggleCategoryCollapse(category);
+            });
 
             // Create container for plugin items
             const pluginItemsContainer = document.createElement('div');
             pluginItemsContainer.className = 'plugin-category-items';
+            
+            // Create effect count display for collapsed state
+            const effectsCountDisplay = document.createElement('div');
+            effectsCountDisplay.className = 'category-effects-count';
+            effectsCountDisplay.textContent = `${plugins.length} effects`;
+            
+            // Add title and items containers to the row (in the correct order)
+            categoryRow.appendChild(categoryTitle);
+            
+            // Create a container for the right column content
+            const rightColumnContent = document.createElement('div');
+            rightColumnContent.className = 'right-column-content';
+            
+            // Add both the plugin items and effects count to the right column
+            rightColumnContent.appendChild(effectsCountDisplay);
+            rightColumnContent.appendChild(pluginItemsContainer);
+            categoryRow.appendChild(rightColumnContent);
+            
+            // Set initial visibility based on collapsed state
+            if (this.collapsedCategories[category]) {
+                pluginItemsContainer.style.display = 'none';
+                effectsCountDisplay.style.display = 'block';
+            } else {
+                pluginItemsContainer.style.display = 'flex';
+                effectsCountDisplay.style.display = 'none';
+            }
 
             // Add plugins for this category
             plugins.forEach(name => {
@@ -764,9 +909,9 @@ export class PluginListManager {
                     pluginItemsContainer.appendChild(item);
                 }
             });
-
-            contentContainer.appendChild(categoryTitle);
-            contentContainer.appendChild(pluginItemsContainer);
+            
+            // Add row to container
+            contentContainer.appendChild(categoryRow);
             totalEffects += plugins.length;
         }
 
