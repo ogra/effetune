@@ -251,18 +251,20 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 
 ## उपलब्ध प्रभाव
 
-| श्रेणी | प्रभाव | विवरण | प्रलेखन |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | पीक होल्ड के साथ ऑडियो स्तर दिखाता है | [विवरण](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | वास्तविक समय में वेवफ़ॉर्म का दृश्य प्रस्तुत करता है | [विवरण](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | समय के साथ आवृत्ति स्पेक्ट्रम में परिवर्तन दिखाता है | [विवरण](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | रीयल-टाइम स्पेक्ट्रम विश्लेषण | [विवरण](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | स्टीरियो संतुलन और ध्वनि आंदोलन को दृश्य बनाता है | [विवरण](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | डीसी ऑफसेट समायोजित करता है | [विवरण](plugins/basics.md#dc-offset) |
-| Basics    | Mute | ऑडियो सिग्नल को पूरी तरह से म्यूट करता है | [विवरण](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | सिग्नल की ध्रुवता को उलटता है | [विवरण](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | स्टीरियो चैनल संतुलन नियंत्रित करता है | [विवरण](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | बेसिक वॉल्यूम नियंत्रण | [विवरण](plugins/basics.md#volume) |
+| श्रेणी | इफेक्ट | विवरण | दस्तावेज़ीकरण |
+| ------ | ------ | ------ | -------------- |
+| Analyzer | Level Meter | पीक होल्ड के साथ ऑडियो स्तर दिखाता है | [विवरण](plugins/analyzer.md#level-meter) |
+| Analyzer | Oscilloscope | वास्तविक समय में तरंग रूप का प्रदर्शन | [विवरण](plugins/analyzer.md#oscilloscope) |
+| Analyzer | Spectrogram | समय के साथ आवृत्ति स्पेक्ट्रम में होने वाले परिवर्तन दिखाता है | [विवरण](plugins/analyzer.md#spectrogram) |
+| Analyzer | Spectrum Analyzer | वास्तविक समय में स्पेक्ट्रम विश्लेषण | [विवरण](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Stereo Meter | स्टेरियो संतुलन और ध्वनि की गति को दृश्य रूप में दिखाता है | [विवरण](plugins/analyzer.md#stereo-meter) |
+| Basics   | Channel Divider    | स्टेरियो सिग्नल को आवृत्ति बैंड में विभाजित कर अलग-अलग चैनलों में भेजता है | [विवरण](plugins/basics.md#channel-divider) |
+| Basics   | DC Offset          | डीसी ऑफ़सेट समायोजन | [विवरण](plugins/basics.md#dc-offset) |
+| Basics   | Matrix             | लचीले नियंत्रण के साथ ऑडियो चैनलों को रूट और मिलाता है | [विवरण](plugins/basics.md#matrix) |
+| Basics   | Mute               | ऑडियो सिग्नल को पूरी तरह म्यूट कर देता है | [विवरण](plugins/basics.md#mute) |
+| Basics   | Polarity Inversion | सिग्नल की ध्रुवता को उलटता है | [विवरण](plugins/basics.md#polarity-inversion) |
+| Basics   | Stereo Balance     | स्टेरियो चैनल संतुलन नियंत्रण | [विवरण](plugins/basics.md#stereo-balance) |
+| Basics   | Volume             | बुनियादी वॉल्यूम नियंत्रण | [विवरण](plugins/basics.md#volume) |
 | Delay     | Delay | मानक देरी प्रभाव | [विवरण](plugins/delay.md#delay) |
 | Delay     | Time Alignment | ऑडियो चैनलों के समय समायोजन के लिए सूक्ष्म ट्यूनिंग | [विवरण](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | LUFS माप के आधार पर सुसंगत सुनने के लिए स्वचालित वॉल्यूम समायोजन | [विवरण](plugins/dynamics.md#auto-leveler) |

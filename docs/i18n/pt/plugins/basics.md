@@ -1,110 +1,201 @@
-# Plugins de Áudio Básicos
+# Basic Audio Plugins
 
-Uma coleção de ferramentas essenciais para ajustar os aspectos fundamentais da reprodução da sua música. Esses plugins ajudam você a controlar o volume, o balanceamento e outros aspectos básicos da sua experiência auditiva.
+Uma coleção de ferramentas essenciais para ajustar os aspectos fundamentais da reprodução da sua música. Esses plugins ajudam você a controlar o volume, o equilíbrio e outros aspectos básicos da sua experiência auditiva.
 
 ## Lista de Plugins
 
-- [DC Offset](#dc-offset) - Ajuda a corrigir áudio que soa desequilibrado
-- [Mute](#mute) - Silencia a saída de áudio
-- [Polarity Inversion](#polarity-inversion) - Pode melhorar como a música estéreo soa
-- [Stereo Balance](#stereo-balance) - Ajusta o balanceamento esquerdo-direito da sua música
-- [Volume](#volume) - Controla o quão alto a música toca
+* [Channel Divider](#channel-divider) - Divide o áudio em bandas de frequência por múltiplos canais
+* [DC Offset](#dc-offset) - Ajuda a corrigir áudio que soa desequilibrado
+* [Matrix](#matrix) - Roteia e mistura canais de áudio com controle flexível
+* [Mute](#mute) - Silencia a saída de áudio
+* [Polarity Inversion](#polarity-inversion) - Pode melhorar como a música estéreo soa
+* [Stereo Balance](#stereo-balance) - Ajusta o equilíbrio esquerdo-direito da sua música
+* [Volume](#volume) - Controla o quão alto a música é reproduzida
+
+## Channel Divider
+
+Uma ferramenta especializada que divide seu sinal estéreo em bandas de frequência separadas e direciona cada banda para diferentes canais de saída. Perfeita para sistemas multicanal ou configurações de crossover personalizadas.
+
+Para usar este efeito, você precisa usar o aplicativo para desktop, definir o número de canais de saída nas configurações de áudio para 4 ou mais e definir o canal no roteamento de efeitos para "Tudo".
+
+### Quando Usar
+
+* Ao usar saídas de áudio multicanal (4, 6 ou 8 canais)
+* Para criar roteamento de canais personalizado baseado em frequência
+* Para configurações com vários amplificadores ou vários alto-falantes
+
+### Parâmetros
+
+* **Band Count** - Número de bandas de frequência a serem criadas (2-4 bandas)
+
+  * 2 bandas: divisão Graves/Agudos
+  * 3 bandas: divisão Graves/Médias/Agudos
+  * 4 bandas: divisão Graves/Graves-Médias/Médias-Agudos/Agudos
+
+* **Crossover Frequencies** - Define onde o áudio é dividido entre as bandas
+
+  * F1: Primeiro ponto de crossover
+  * F2: Segundo ponto de crossover (para 3 ou mais bandas)
+  * F3: Terceiro ponto de crossover (para 4 bandas)
+
+* **Slopes** - Controlam o quão abruptamente as bandas são separadas
+
+  * Opções: -12dB a -96dB por oitava
+  * Inclinações mais acentuadas oferecem separação mais limpa
+  * Inclinações menores oferecem transições mais naturais
+
+### Notas Técnicas
+
+* Processa apenas os dois primeiros canais de entrada
+* Os canais de saída devem ser múltiplos de 2 (4, 6 ou 8)
+* Utiliza filtros de crossover Linkwitz-Riley de alta qualidade
+* Gráfico de resposta em frequência visual para configuração fácil
 
 ## DC Offset
 
-Uma ferramenta que pode ajudar a corrigir áudio que soa desequilibrado ou estranho. A maioria dos ouvintes não precisará dela com frequência, mas é útil quando você encontra um áudio que não soa exatamente certo.
+Uma ferramenta que pode ajudar a corrigir áudio que soa desequilibrado ou estranho. A maioria dos ouvintes não precisará usar isso com frequência, mas é útil quando você encontrar áudio que não soe corretamente.
 
 ### Quando Usar
-- Se a música soar inusitadamente desequilibrada
-- Quando um canal parecer mais alto do que deveria
-- Se outros efeitos não estiverem funcionando como esperado
+
+* Se a música soar incomumente desequilibrada
+* Quando um canal parecer mais alto do que deveria
+* Se outros efeitos não estiverem funcionando como esperado
 
 ### Parâmetros
-- **Offset** - Ajusta o balanceamento de áudio (-1.0 a +1.0)
-  - 0.0: Configuração normal
-  - Ajuste se algo soar fora do lugar
-  - Pequenos ajustes geralmente funcionam melhor
+
+* **Offset** - Ajusta o equilíbrio de áudio (-1.0 a +1.0)
+
+  * 0.0: Configuração padrão
+  * Ajuste se algo soar estranho
+  * Pequenos ajustes geralmente funcionam melhor
+
+## Matrix
+
+Uma poderosa ferramenta de roteamento de canais que permite criar caminhos de sinal personalizados entre canais de entrada e saída. Oferece flexibilidade total em como os sinais de áudio são conectados e mixados.
+
+### Quando Usar
+
+* Para criar roteamentos personalizados entre canais
+* Quando precisar mixar ou dividir sinais de maneiras específicas
+* Para design de som criativo usando interações de canais
+
+### Recursos
+
+* Matriz de roteamento flexível para até 8 canais
+* Controle de conexão individual entre qualquer par entrada/saída
+* Opções de inversão de fase para cada conexão
+* Interface de matriz visual para configuração intuitiva
+
+### Como Funciona
+
+* Cada ponto de conexão representa o roteamento de uma linha de entrada para uma coluna de saída
+* Conexões ativas permitem que o sinal flua entre canais
+* A opção de inversão de fase reverte a polaridade do sinal
+* Múltiplas conexões de entrada para uma saída são mixadas juntas
+
+### Aplicações Práticas
+
+* Configurações personalizadas de downmixing ou upmixing
+* Isolamento ou combinação de canais específicos
+* Criando relações de fase entre canais
+* Resolvendo requisitos complexos de roteamento
 
 ## Mute
 
-Uma ferramenta simples que silencia toda a saída de áudio preenchendo o buffer com zeros. Útil para mutar sinais de áudio instantaneamente.
+Uma ferramenta simples que silencia toda saída de áudio preenchendo o buffer com zeros. Útil para silenciar instantaneamente sinais de áudio.
 
 ### Quando Usar
-- Para silenciar o áudio instantaneamente sem fade
-- Durante seções silenciosas ou pausas
-- Para evitar ruídos indesejados
+
+* Para silenciar o áudio instantaneamente sem fade
+* Durante seções silenciosas ou pausas
+* Para evitar saída de ruído indesejado
 
 ## Polarity Inversion
 
-Uma ferramenta que pode melhorar como a música estéreo soa em certas situações. É como "inverter" a onda de áudio para potencialmente fazê-la soar melhor.
+Uma ferramenta que pode melhorar como a música estéreo soa em certas situações. É como "inverter" a onda de áudio para potencialmente torná-la melhor.
 
-Você também pode inverter a polaridade apenas de canais específicos limitando os canais a serem processados nas configurações comuns do efeito.
+Você também pode inverter a polaridade de apenas canais específicos, limitando os canais a serem processados nas configurações comuns do efeito.
 
 ### Quando Usar
-- Quando a música estéreo soar "vazia" ou "estranha"
-- Se combinado com outros efeitos estéreo
-- Ao tentar melhorar a espacialização estéreo
+
+* Quando a música estéreo soar "vazia" ou "estranha"
+* Se combinado com outros efeitos estéreo
+* Ao tentar melhorar a espacialização estéreo
 
 ## Stereo Balance
 
-Permite ajustar como a música é distribuída entre seus alto-falantes ou fones de ouvido esquerdo e direito. Perfeito para corrigir estéreo desigual ou criar seu posicionamento de som preferido.
+Permite ajustar como a música é distribuída entre seus alto-falantes ou fones esquerdo e direito. Perfeito para corrigir estéreo desigual ou criar sua posição sonora preferida.
 
-### Guia de Melhoria de Audição
-- Balance Perfeito:
-  - Posição central para estéreo natural
-  - Volume igual em ambos os ouvidos
-  - Melhor para a maioria das músicas
-- Balance Ajustado:
-  - Compensar acústica do ambiente
-  - Ajustar para diferenças de audição
-  - Criar palco sonoro preferido
+### Guia de Aperfeiçoamento de Audição
+
+* Equilíbrio Perfeito:
+
+  * Posição central para estéreo natural
+  * Volume igual em ambas as orelhas
+  * Melhor para a maioria das músicas
+* Equilíbrio Ajustado:
+
+  * Compensar a acústica do ambiente
+  * Ajustar para diferenças auditivas
+  * Criar cenário sonoro preferido
 
 ### Parâmetros
-- **Balance** - Controla a distribuição esquerda-direita (-100% a +100%)
-  - Central (0%): Igual em ambos os lados
-  - Esquerda (-100%): Mais som no lado esquerdo
-  - Direita (+100%): Mais som no lado direito
+
+* **Balance** - Controla a distribuição esquerda-direita (-100% a +100%)
+
+  * Center (0%): Igual em ambos os lados
+  * Left (-100%): Mais som à esquerda
+  * Right (+100%): Mais som à direita
 
 ### Exibição Visual
-- Slider de fácil uso
-- Exibição clara de números
-- Indicador visual da posição estéreo
+
+* Controle deslizante fácil de usar
+* Exibição clara de números
+* Indicador visual da posição estéreo
 
 ### Usos Recomendados
 
 1. Audição Geral
-   - Mantenha o balanceamento centralizado (0%)
-   - Ajuste se o estéreo parecer desigual
-   - Use ajustes sutis
 
-2. Audição com Fones
-   - Ajuste fino para conforto
-   - Compensar diferenças de audição
-   - Criar imagem estéreo preferida
+   * Mantenha o equilíbrio centralizado (0%)
+   * Ajuste se o estéreo parecer desequilibrado
+   * Use ajustes sutis
 
-3. Audição em Caixas de Som
-   - Ajustar para a configuração do ambiente
-   - Balancear para a posição de audição
-   - Compensar a acústica da sala
+2. Audição em Fones
+
+   * Ajuste fino para conforto
+   * Compensar diferenças auditivas
+   * Criar imagem estéreo preferida
+
+3. Audição em Alto-falantes
+
+   * Ajuste para a configuração do ambiente
+   * Equilibrar para a posição de audição
+   * Compensar a acústica do ambiente
 
 ## Volume
 
-Um controle simples mas essencial que permite ajustar o quão alto sua música toca. Perfeito para encontrar o nível de audição certo para diferentes situações.
+Um controle simples, mas essencial, que permite ajustar o volume de reprodução da sua música. Perfeito para encontrar o nível de audição ideal para diferentes situações.
 
-### Guia de Melhoria de Audição
-- Ajuste para diferentes cenários de audição:
-  - Música de fundo enquanto trabalha
-  - Sessões de audição ativa
-  - Audição silenciosa tarde da noite
-- Mantenha o volume em níveis confortáveis para evitar:
-  - Fadiga auditiva
-  - Distorção de som
-  - Possível dano auditivo
+### Guia de Aperfeiçoamento de Audição
+
+* Ajuste para diferentes cenários de audição:
+
+  * Música de fundo enquanto trabalha
+  * Sessões de audição ativa
+  * Audição silenciosa à noite
+* Mantenha o volume em níveis confortáveis para evitar:
+
+  * Fadiga auditiva
+  * Distorção de som
+  * Potencial dano auditivo
 
 ### Parâmetros
-- **Volume** - Controla o volume geral (-60dB a +24dB)
-  - Valores mais baixos: Reprodução mais silenciosa
-  - Valores mais altos: Reprodução mais alta
-  - 0dB: Nível de volume original
 
-Lembre-se: Esses controles básicos são a base de um bom som. Comece com esses ajustes antes de usar efeitos mais complexos!
+* **Volume** - Controla a sonoridade geral (-60dB a +24dB)
+
+  * Valores menores: reprodução mais silenciosa
+  * Valores maiores: reprodução mais alta
+  * 0dB: nível de volume original
+
+Lembre-se: esses controles básicos são a base de um bom som. Comece com esses ajustes antes de usar efeitos mais complexos!

@@ -253,18 +253,20 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 
 ## 사용 가능한 이펙트
 
-| 카테고리 | 이펙트 | 설명 | 문서 |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | 피크 홀드를 포함한 오디오 레벨 표시 | [세부 정보](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | 실시간 파형 시각화 | [세부 정보](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | 시간 경과에 따른 주파수 스펙트럼 변화를 표시 | [세부 정보](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | 실시간 스펙트럼 분석 | [세부 정보](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | 스테레오 밸런스 및 사운드 이동 시각화 | [세부 정보](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | DC 옵셋 조정 | [세부 정보](plugins/basics.md#dc-offset) |
-| Basics    | Mute | 오디오 신호 완전 음소거 | [세부 정보](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | 신호 극성 반전 | [세부 정보](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | 스테레오 채널 밸런스 제어 | [세부 정보](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | 기본 볼륨 제어 | [세부 정보](plugins/basics.md#volume) |
+| 카테고리 | 이펙트             | 설명                                                                 | 문서                                               |
+| --- | ------------------ | -------------------------------------------------------------------- | -------------------------------------------------- |
+| Analyzer | Level Meter        | 피크 홀드를 포함한 오디오 레벨을 표시합니다                             | [세부 정보](plugins/analyzer.md#level-meter)       |
+| Analyzer | Oscilloscope       | 실시간 파형을 시각화합니다                                              | [세부 정보](plugins/analyzer.md#oscilloscope)      |
+| Analyzer | Spectrogram        | 시간에 따른 주파수 스펙트럼 변화를 표시합니다                             | [세부 정보](plugins/analyzer.md#spectrogram)       |
+| Analyzer | Spectrum Analyzer  | 실시간 스펙트럼 분석을 수행합니다                                        | [세부 정보](plugins/analyzer.md#spectrum-analyzer) |
+| Analyzer | Stereo Meter       | 스테레오 밸런스 및 사운드 이동을 시각화합니다                             | [세부 정보](plugins/analyzer.md#stereo-meter)      |
+| Basics   | Channel Divider    | 스테레오 신호를 주파수 대역으로 분할하여 개별 채널로 라우팅합니다         | [세부 정보](plugins/basics.md#channel-divider)     |
+| Basics   | DC Offset          | DC 오프셋을 조정합니다                                                  | [세부 정보](plugins/basics.md#dc-offset)           |
+| Basics   | Matrix             | 유연한 제어로 오디오 채널을 라우팅하고 믹싱합니다                         | [세부 정보](plugins/basics.md#matrix)              |
+| Basics   | Mute               | 오디오 신호를 완전히 음소거합니다                                        | [세부 정보](plugins/basics.md#mute)                |
+| Basics   | Polarity Inversion | 신호 극성을 반전합니다                                                  | [세부 정보](plugins/basics.md#polarity-inversion)  |
+| Basics   | Stereo Balance     | 스테레오 채널 밸런스를 제어합니다                                        | [세부 정보](plugins/basics.md#stereo-balance)      |
+| Basics   | Volume             | 기본 볼륨을 제어합니다                                                  | [세부 정보](plugins/basics.md#volume)              |
 | Delay     | Delay | 표준 딜레이 이펙트 | [세부 정보](plugins/delay.md#delay) |
 | Delay     | Time Alignment | 오디오 채널의 타이밍 조정을 미세 조정 | [세부 정보](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | LUFS 측정 기반 자동 볼륨 조정으로 일관된 청취 경험 제공 | [세부 정보](plugins/dynamics.md#auto-leveler) |

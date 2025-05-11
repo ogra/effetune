@@ -250,18 +250,20 @@
 
 ## التأثيرات المتاحة
 
-| الفئة | التأثير | الوصف | الوثائق |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | يعرض مستوى الصوت مع تثبيت ذروة | [تفاصيل](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | تصور شكل الموجة في الوقت الحقيقي | [تفاصيل](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | يعرض تغيرات طيف التردد بمرور الوقت | [تفاصيل](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | تحليل طيفي في الوقت الحقيقي | [تفاصيل](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | يصور توازن الستيريو وحركة الصوت | [تفاصيل](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | ضبط الانحراف المستمر | [تفاصيل](plugins/basics.md#dc-offset) |
-| Basics    | Mute | كتم الإشارة الصوتية تمامًا | [تفاصيل](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | قلب قطبية الإشارة | [تفاصيل](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | التحكم في توازن القنوات الستيريو | [تفاصيل](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | التحكم الأساسي في مستوى الصوت | [تفاصيل](plugins/basics.md#volume) |
+| الفئة   | التأثير             | الوصف                                                                    | التوثيق                                               |
+| -------- | ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Analyzer | Level Meter        | يعرض مستوى الصوت مع تثبيت القيمة القصوى                                     | [تفاصيل](plugins/analyzer.md#level-meter)            |
+| Analyzer | Oscilloscope       | تصوّر شكل الموجة في الوقت الحقيقي                                           | [تفاصيل](plugins/analyzer.md#oscilloscope)           |
+| Analyzer | Spectrogram        | يعرض تغيرات طيف التردد مع مرور الوقت                                       | [تفاصيل](plugins/analyzer.md#spectrogram)            |
+| Analyzer | Spectrum Analyzer  | تحليل الطيف في الوقت الحقيقي                                               | [تفاصيل](plugins/analyzer.md#spectrum-analyzer)      |
+| Analyzer | Stereo Meter       | يُظهر توازن الاستريو وحركة الصوت                                            | [تفاصيل](plugins/analyzer.md#stereo-meter)           |
+| Basics   | Channel Divider    | يقسم الإشارة الاستريو إلى نطاقات ترددية ويوجهها إلى قنوات منفصلة            | [تفاصيل](plugins/basics.md#channel-divider)          |
+| Basics   | DC Offset          | ضبط إزاحة التيار المستمر                                                    | [تفاصيل](plugins/basics.md#dc-offset)                |
+| Basics   | Matrix             | يوجّه ويخلط القنوات الصوتية مع التحكم المرن                                 | [تفاصيل](plugins/basics.md#matrix)                   |
+| Basics   | Mute               | يصمت الإشارة الصوتية تمامًا                                                 | [تفاصيل](plugins/basics.md#mute)                     |
+| Basics   | Polarity Inversion | عكس قطبية الإشارة                                                          | [تفاصيل](plugins/basics.md#polarity-inversion)       |
+| Basics   | Stereo Balance     | التحكم في توازن قنوات الاستريو                                             | [تفاصيل](plugins/basics.md#stereo-balance)           |
+| Basics   | Volume             | التحكم الأساسي في مستوى الصوت                                              | [تفاصيل](plugins/basics.md#volume)                   |
 | Delay     | Delay          | تأثير تأخير قياسي                                   | [تفاصيل](plugins/delay.md#delay) |
 | Delay     | Time Alignment | ضبط توقيت القنوات الصوتية بدقة | [تفاصيل](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | ضبط تلقائي لمستوى الصوت بناءً على قياس LUFS لتجربة استماع متسقة | [تفاصيل](plugins/dynamics.md#auto-leveler) |

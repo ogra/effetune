@@ -264,18 +264,20 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 
 ## Available Effects
 
-| カテゴリ | エフェクト | 説明 | ドキュメント |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | ピークホールド機能付きのオーディオレベルを表示 | [詳細](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | リアルタイム波形を可視化 | [詳細](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | 時間経過に伴う周波数スペクトルの変化を表示 | [詳細](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | リアルタイムスペクトル分析 | [詳細](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | ステレオバランスと音の動きを可視化 | [詳細](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | DCオフセットを調整 | [詳細](plugins/basics.md#dc-offset) |
-| Basics    | Mute | オーディオ信号を完全に無音化 | [詳細](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | 信号の位相を反転 | [詳細](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | ステレオチャンネルのバランスを制御 | [詳細](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | 基本的な音量を制御 | [詳細](plugins/basics.md#volume) |
+| カテゴリ    | エフェクト             | 説明                                                                  | ドキュメント                                             |
+|-----------|---------------------|---------------------------------------------------------------------|---------------------------------------------------------|
+| Analyzer  | Level Meter         | ピークホールド機能付きのオーディオレベルを表示                                     | [詳細](plugins/analyzer.md#level-meter)               |
+| Analyzer  | Oscilloscope        | リアルタイムで波形を可視化                                                   | [詳細](plugins/analyzer.md#oscilloscope)              |
+| Analyzer  | Spectrogram         | 時間経過に伴う周波数スペクトルの変化を表示                                         | [詳細](plugins/analyzer.md#spectrogram)               |
+| Analyzer  | Spectrum Analyzer   | リアルタイムスペクトル分析                                                  | [詳細](plugins/analyzer.md#spectrum-analyzer)         |
+| Analyzer  | Stereo Meter        | ステレオバランスと音の動きを可視化                                              | [詳細](plugins/analyzer.md#stereo-meter)              |
+| Basics    | Channel Divider     | ステレオ信号を周波数帯域に分割し、別々のチャンネルにルーティング                         | [詳細](plugins/basics.md#channel-divider)             |
+| Basics    | DC Offset           | DCオフセットの調整                                                        | [詳細](plugins/basics.md#dc-offset)                   |
+| Basics    | Matrix              | オーディオチャンネルを柔軟にルーティングおよびミキシング                                  | [詳細](plugins/basics.md#matrix)                      |
+| Basics    | Mute                | オーディオ信号を完全に無音化                                                   | [詳細](plugins/basics.md#mute)                        |
+| Basics    | Polarity Inversion  | 信号の極性を反転                                                          | [詳細](plugins/basics.md#polarity-inversion)          |
+| Basics    | Stereo Balance      | ステレオチャンネルのバランスを制御                                              | [詳細](plugins/basics.md#stereo-balance)              |
+| Basics    | Volume              | 基本的なボリューム制御                                                       | [詳細](plugins/basics.md#volume)                      |
 | Delay     | Delay          | 標準的なディレイエフェクト                                   | [詳細](plugins/delay.md#delay) |
 | Delay     | Time Alignment | オーディオチャンネルのタイミングを微調整 | [詳細](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | 一貫したリスニング体験のためにLUFS測定に基づいて自動的に音量を調整 | [詳細](plugins/dynamics.md#auto-leveler) |

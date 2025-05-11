@@ -258,18 +258,20 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 
 ## 可用效果
 
-| 类别 | 效果 | 描述 | 文档 |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | 显示带峰值保持的音频电平 | [详情](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | 实时波形可视化 | [详情](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | 显示频谱随时间的变化 | [详情](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | 实时频谱分析 | [详情](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | 可视化立体声平衡及声音运动 | [详情](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | 直流偏移调整 | [详情](plugins/basics.md#dc-offset) |
-| Basics    | Mute | 完全静音音频信号 | [详情](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | 信号极性反转 | [详情](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | 立体声声道平衡控制 | [详情](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | 基础音量控制 | [详情](plugins/basics.md#volume) |
+| 类别     | 效果               | 描述                                                                      | 文档                                                    |
+| -------- | ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Analyzer | Level Meter        | 显示带峰值保持的音频电平                                                   | [详细信息](plugins/analyzer.md#level-meter)             |
+| Analyzer | Oscilloscope       | 实时波形可视化                                                           | [详细信息](plugins/analyzer.md#oscilloscope)            |
+| Analyzer | Spectrogram        | 显示随时间变化的频谱                                                      | [详细信息](plugins/analyzer.md#spectrogram)             |
+| Analyzer | Spectrum Analyzer  | 实时频谱分析                                                             | [详细信息](plugins/analyzer.md#spectrum-analyzer)       |
+| Analyzer | Stereo Meter       | 可视化立体声平衡和声音移动                                                | [详细信息](plugins/analyzer.md#stereo-meter)            |
+| Basics   | Channel Divider    | 将立体声信号按频段分割并路由到独立通道                                     | [详细信息](plugins/basics.md#channel-divider)           |
+| Basics   | DC Offset          | 直流偏移调整                                                             | [详细信息](plugins/basics.md#dc-offset)                 |
+| Basics   | Matrix             | 灵活控制音频通道的路由和混合                                               | [详细信息](plugins/basics.md#matrix)                    |
+| Basics   | Mute               | 完全静音音频信号                                                         | [详细信息](plugins/basics.md#mute)                      |
+| Basics   | Polarity Inversion | 信号极性反转                                                             | [详细信息](plugins/basics.md#polarity-inversion)        |
+| Basics   | Stereo Balance     | 立体声通道平衡控制                                                       | [详细信息](plugins/basics.md#stereo-balance)            |
+| Basics   | Volume             | 基本音量控制                                                             | [详细信息](plugins/basics.md#volume)                    |
 | Delay     | Delay | 标准延迟效果 | [详情](plugins/delay.md#delay) |
 | Delay     | Time Alignment | 音频通道的时序微调 | [详情](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | 基于LUFS测量的自动音量调整，以实现一致的聆听体验 | [详情](plugins/dynamics.md#auto-leveler) |

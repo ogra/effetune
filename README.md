@@ -271,7 +271,9 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Analyzer  | Spectrogram | Shows frequency spectrum changes over time | [Details](docs/plugins/analyzer.md#spectrogram) |
 | Analyzer  | Spectrum Analyzer | Real-time spectrum analysis | [Details](docs/plugins/analyzer.md#spectrum-analyzer) |
 | Analyzer  | Stereo Meter | Visualizes stereo balance and sound movement | [Details](docs/plugins/analyzer.md#stereo-meter) |
+| Basics    | Channel Divider | Splits stereo signal into frequency bands and routes to separate channels | [Details](docs/plugins/basics.md#channel-divider) |
 | Basics    | DC Offset | DC offset adjustment | [Details](docs/plugins/basics.md#dc-offset) |
+| Basics    | Matrix | Routes and mixes audio channels with flexible control | [Details](docs/plugins/basics.md#matrix) |
 | Basics    | Mute | Completely silences the audio signal | [Details](docs/plugins/basics.md#mute) |
 | Basics    | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |

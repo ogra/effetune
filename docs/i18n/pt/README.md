@@ -258,18 +258,20 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 
 ## Efeitos Disponíveis
 
-| Categoria | Efeito | Descrição | Documentação |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | Exibe o nível de áudio com retenção de pico | [Detalhes](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | Visualização em tempo real da forma de onda | [Detalhes](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | Mostra as mudanças no espectro de frequência ao longo do tempo | [Detalhes](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | Análise de espectro em tempo real | [Detalhes](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | Visualiza o equilíbrio estéreo e movimentação do som | [Detalhes](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | Ajuste de deslocamento CC | [Detalhes](plugins/basics.md#dc-offset) |
-| Basics    | Mute | Silencia completamente o sinal de áudio | [Detalhes](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | Inversão de polaridade do sinal | [Detalhes](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | Controle de equilíbrio dos canais estéreo | [Detalhes](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | Controle básico de volume | [Detalhes](plugins/basics.md#volume) |
+| Categoria | Effect             | Descrição                                                               | Documentação                                         |
+| --------- | ------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| Analyzer  | Level Meter        | Exibe o nível de áudio com retenção de pico                             | [Detalhes](plugins/analyzer.md#level-meter)          |
+| Analyzer  | Oscilloscope       | Visualização de forma de onda em tempo real                             | [Detalhes](plugins/analyzer.md#oscilloscope)         |
+| Analyzer  | Spectrogram        | Exibe variações do espectro de frequências ao longo do tempo            | [Detalhes](plugins/analyzer.md#spectrogram)          |
+| Analyzer  | Spectrum Analyzer  | Análise de espectro em tempo real                                       | [Detalhes](plugins/analyzer.md#spectrum-analyzer)    |
+| Analyzer  | Stereo Meter       | Visualiza o equilíbrio estéreo e o movimento do som                     | [Detalhes](plugins/analyzer.md#stereo-meter)         |
+| Basics    | Channel Divider    | Divide o sinal estéreo em bandas de frequência e direciona para canais separados | [Detalhes](plugins/basics.md#channel-divider)       |
+| Basics    | DC Offset          | Ajuste de deslocamento DC                                               | [Detalhes](plugins/basics.md#dc-offset)              |
+| Basics    | Matrix             | Encaminha e mistura canais de áudio com controle flexível               | [Detalhes](plugins/basics.md#matrix)                 |
+| Basics    | Mute               | Silencia completamente o sinal de áudio                                 | [Detalhes](plugins/basics.md#mute)                   |
+| Basics    | Polarity Inversion | Inversão de polaridade do sinal                                         | [Detalhes](plugins/basics.md#polarity-inversion)     |
+| Basics    | Stereo Balance     | Controle de equilíbrio dos canais estéreo                               | [Detalhes](plugins/basics.md#stereo-balance)         |
+| Basics    | Volume             | Controle básico de volume                                               | [Detalhes](plugins/basics.md#volume)                 |
 | Delay     | Delay | Efeito de atraso padrão | [Detalhes](plugins/delay.md#delay) |
 | Delay     | Time Alignment | Ajustes finos de sincronização para canais de áudio | [Detalhes](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajuste automático de volume baseado na medição LUFS para experiência de audição consistente | [Detalhes](plugins/dynamics.md#auto-leveler) |

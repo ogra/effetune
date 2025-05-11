@@ -1,0 +1,136 @@
+/* Channel Divider plugin specific styles */
+.channel-divider-plugin-ui {
+  position: relative;
+}
+
+.channel-divider-plugin-ui canvas {
+  margin: 10px auto;
+  display: block;
+  background: #222;
+}
+
+.channel-divider-plugin-ui label {
+  min-width: 120px;
+}
+
+.channel-divider-plugin-ui .slope-select {
+  padding: 2px;
+  background: #333;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-size: 12px;
+  width: 90px;
+  cursor: pointer;
+}
+
+.channel-divider-plugin-ui .slope-select:focus {
+  outline: none;
+  border-color: #777;
+}
+
+.channel-divider-plugin-ui .slope-select option {
+  background: #333;
+  color: #ccc;
+  padding: 2px;
+}
+
+.channel-divider-plugin-ui .parameter-row {
+  display: flex;
+  align-items: center;
+}
+
+.channel-divider-plugin-ui .parameter-row input[type="range"] {
+  flex: 1;
+}
+
+.channel-divider-plugin-ui .parameter-row input[type="number"] {
+  width: 80px;
+  text-align: right;
+}
+
+/* Frequency sliders area styles based on multiband compressor */
+.channel-divider-frequency-sliders {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 10px;
+  background: #2d2d2d;
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.channel-divider-frequency-slider {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.channel-divider-frequency-slider.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.channel-divider-frequency-slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.channel-divider-slope-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 5px;
+}
+
+.channel-divider-slope-row .slope-label {
+  min-width: 50px;
+}
+
+/* Band controls */
+.band-control {
+  margin-bottom: 10px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 10px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radio-option.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Error banner */
+.error-banner {
+  background-color: #602020;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Graph container */
+.channel-divider-graph-container {
+  margin: 15px 0;
+}
+
+.channel-divider-graph-container canvas {
+  margin: 10px auto;
+  display: block;
+  background: #222;
+}

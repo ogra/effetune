@@ -260,18 +260,20 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 
 ## Efectos Disponibles
 
-| Categoría | Efecto | Descripción | Documentación |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | Muestra el nivel de audio con retención de pico | [Detalles](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | Visualización de la forma de onda en tiempo real | [Detalles](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | Muestra los cambios en el espectro de frecuencias a lo largo del tiempo | [Detalles](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | Análisis del espectro en tiempo real | [Detalles](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | Visualiza el equilibrio estéreo y el movimiento del sonido | [Detalles](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | Ajuste de desplazamiento de CC | [Detalles](plugins/basics.md#dc-offset) |
-| Basics    | Mute | Silencia completamente la señal de audio | [Detalles](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | Inversión de polaridad de la señal | [Detalles](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | Control de balance de canales estéreo | [Detalles](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | Control básico de volumen | [Detalles](plugins/basics.md#volume) |
+| Categoría | Efecto             | Descripción                                                               | Documentación                                           |
+| --------- | ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Analyzer  | Level Meter        | Muestra el nivel de audio con retención de pico                           | [Detalles](plugins/analyzer.md#level-meter)             |
+| Analyzer  | Oscilloscope       | Visualización de la forma de onda en tiempo real                          | [Detalles](plugins/analyzer.md#oscilloscope)            |
+| Analyzer  | Spectrogram        | Muestra los cambios del espectro de frecuencias a lo largo del tiempo     | [Detalles](plugins/analyzer.md#spectrogram)             |
+| Analyzer  | Spectrum Analyzer  | Análisis de espectro en tiempo real                                       | [Detalles](plugins/analyzer.md#spectrum-analyzer)       |
+| Analyzer  | Stereo Meter       | Visualiza el equilibrio estéreo y el movimiento del sonido                | [Detalles](plugins/analyzer.md#stereo-meter)            |
+| Basics    | Channel Divider    | Divide la señal estéreo en bandas de frecuencia y la enruta a canales separados | [Detalles](plugins/basics.md#channel-divider)      |
+| Basics    | DC Offset          | Ajuste de desplazamiento de corriente continua                             | [Detalles](plugins/basics.md#dc-offset)                 |
+| Basics    | Matrix             | Enruta y mezcla canales de audio con control flexible                      | [Detalles](plugins/basics.md#matrix)                    |
+| Basics    | Mute               | Silencia completamente la señal de audio                                  | [Detalles](plugins/basics.md#mute)                      |
+| Basics    | Polarity Inversion | Inversión de polaridad de la señal                                        | [Detalles](plugins/basics.md#polarity-inversion)        |
+| Basics    | Stereo Balance     | Control de balance de canales estéreo                                     | [Detalles](plugins/basics.md#stereo-balance)            |
+| Basics    | Volume             | Control básico de volumen                                                 | [Detalles](plugins/basics.md#volume)                    |
 | Delay     | Delay          | Efecto de retardo estándar | [Detalles](plugins/delay.md#delay) |
 | Delay     | Time Alignment | Ajustes de sincronización de precisión para canales de audio | [Detalles](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Ajuste automático de volumen basado en medición LUFS para una experiencia de escucha uniforme | [Detalles](plugins/dynamics.md#auto-leveler) |

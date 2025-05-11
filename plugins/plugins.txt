@@ -24,6 +24,7 @@ analyzer/oscilloscope: Oscilloscope | Analyzer | OscilloscopePlugin | css
 analyzer/spectrogram: Spectrogram | Analyzer | SpectrogramPlugin | css
 analyzer/spectrum_analyzer: Spectrum Analyzer | Analyzer | SpectrumAnalyzerPlugin | css
 analyzer/stereo_meter: Stereo Meter | Analyzer | StereoMeterPlugin | css
+basics/channel_divider: Channel Divider | Basics | ChannelDividerPlugin | css
 basics/dc_offset: DC Offset | Basics | DCOffsetPlugin
 basics/matrix: Matrix | Basics | MatrixPlugin | css
 basics/mute: Mute | Basics | MutePlugin

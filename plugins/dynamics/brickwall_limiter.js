@@ -47,10 +47,11 @@ class BrickwallLimiterPlugin extends PluginBase {
             const currentTime = parameters.time !== undefined ? parameters.time : 0;
 
             // --- Global state reinitialization ---
-            // Reset state if sampleRate or oversampling factor changes
-            if (context.sampleRate !== sampleRate || context.lastOsFactor !== osFactor) {
+            // Reset state if sampleRate or oversampling factor changes or channel count changes
+            if (context.sampleRate !== sampleRate || context.lastOsFactor !== osFactor || context.numChannels !== numChannels) {
                 context.sampleRate = sampleRate;
                 context.lastOsFactor = osFactor;
+                context.numChannels = numChannels; // Store channel count for future comparisons
                 context.initialized = false;
 
                 // Clear state variables explicitly using undefined for clarity and potential predictability
@@ -779,6 +780,7 @@ class BrickwallLimiterPlugin extends PluginBase {
         const baseParams = super.getParameters();
         return {
             ...baseParams,
+            pluginType: this.constructor.name,
             enabled: this.enabled,
             th: this.th,
             rl: this.rl,

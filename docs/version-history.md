@@ -1,5 +1,10 @@
 # Version History
 
+### Version 1.50 (Mar 11, 2025)
+- Effect categories can now be collapsed
+- Added Channel Divider effect
+- Various minor improvements
+
 ### Version 1.49 (Mar 6, 2025)
 - Supports multi-channel processing and output
 - Added Matrix effect

@@ -4,11 +4,46 @@ A collection of essential tools for adjusting the fundamental aspects of your mu
 
 ## Plugin List
 
+- [Channel Divider](#channel-divider) - Splits audio into frequency bands across multiple channels
 - [DC Offset](#dc-offset) - Helps fix audio that sounds unbalanced
+- [Matrix](#matrix) - Routes and mixes audio channels with flexible control
 - [Mute](#mute) - Silences the audio output
 - [Polarity Inversion](#polarity-inversion) - Can improve how stereo music sounds
 - [Stereo Balance](#stereo-balance) - Adjusts the left-right balance of your music
 - [Volume](#volume) - Controls how loud the music plays
+
+## Channel Divider
+
+A specialized tool that splits your stereo signal into separate frequency bands and routes each band to different output channels. Perfect for multi-channel systems or custom crossover configurations.
+
+To use this effect, you need to use the desktop app, set the number of output channels in the audio settings to 4 or more, and set the channel in the effect bus routing to "All."
+
+### When to Use
+- When using multi-channel audio outputs (4, 6, or 8 channels)
+- To create custom frequency-based channel routing
+- For multi-amplifier or multi-speaker setups
+
+### Parameters
+- **Band Count** - Number of frequency bands to create (2-4 bands)
+  - 2 bands: Low/High split
+  - 3 bands: Low/Mid/High split
+  - 4 bands: Low/Mid-Low/Mid-High/High split
+
+- **Crossover Frequencies** - Define where audio splits between bands
+  - F1: First crossover point
+  - F2: Second crossover point (for 3+ bands)
+  - F3: Third crossover point (for 4 bands)
+
+- **Slopes** - Control how sharply bands are separated
+  - Options: -12dB to -96dB per octave
+  - Steeper slopes provide cleaner separation
+  - Lower slopes offer more natural transitions
+
+### Technical Notes
+- Processes first two input channels only
+- Output channels must be a multiple of 2 (4, 6, or 8)
+- Uses high-quality Linkwitz-Riley crossover filters
+- Visual frequency response graph for easy configuration
 
 ## DC Offset
 
@@ -24,6 +59,33 @@ A utility that can help fix audio that sounds unbalanced or strange. Most listen
   - 0.0: Normal setting
   - Adjust if something sounds off
   - Small adjustments usually work best
+
+## Matrix
+
+A powerful channel routing tool that allows you to create custom signal paths between input and output channels. Offers complete flexibility in how audio signals are connected and mixed.
+
+### When to Use
+- To create custom routing between channels
+- When you need to mix or split signals in specific ways
+- For creative sound design using channel interactions
+
+### Features
+- Flexible routing matrix for up to 8 channels
+- Individual connection control between any input/output pair
+- Phase inversion options for each connection
+- Visual matrix interface for intuitive configuration
+
+### How It Works
+- Each connection point represents routing from an input row to an output column
+- Active connections allow signal to flow between channels
+- Phase inversion option reverses the signal polarity
+- Multiple input connections to one output are mixed together
+
+### Practical Applications
+- Custom downmixing or upmixing configurations
+- Isolating or combining specific channels
+- Creating phase relationships between channels
+- Solving complex routing requirements
 
 ## Mute
 

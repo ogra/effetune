@@ -257,18 +257,20 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 
 ## Effets disponibles
 
-| Catégorie | Effet | Description | Documentation |
-|-----------|--------|-------------|---------------|
-| Analyzer  | Level Meter | Affiche le niveau audio avec maintien des crêtes | [Détails](plugins/analyzer.md#level-meter) |
-| Analyzer  | Oscilloscope | Visualisation en temps réel de la forme d'onde | [Détails](plugins/analyzer.md#oscilloscope) |
-| Analyzer  | Spectrogram | Affiche l'évolution du spectre de fréquences au fil du temps | [Détails](plugins/analyzer.md#spectrogram) |
-| Analyzer  | Spectrum Analyzer | Analyse en temps réel du spectre | [Détails](plugins/analyzer.md#spectrum-analyzer) |
-| Analyzer  | Stereo Meter | Visualise l'équilibre stéréo et le mouvement du son | [Détails](plugins/analyzer.md#stereo-meter) |
-| Basics    | DC Offset | Ajustement du décalage continu | [Détails](plugins/basics.md#dc-offset) |
-| Basics    | Mute | Silence complètement le signal audio | [Détails](plugins/basics.md#mute) |
-| Basics    | Polarity Inversion | Inversion de la polarité du signal | [Détails](plugins/basics.md#polarity-inversion) |
-| Basics    | Stereo Balance | Contrôle de l'équilibre des canaux stéréo | [Détails](plugins/basics.md#stereo-balance) |
-| Basics    | Volume | Contrôle basique du volume | [Détails](plugins/basics.md#volume) |
+| Catégorie | Effet             | Description                                                              | Documentation                                           |
+| --------- | ----------------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Analyzer  | Level Meter       | Affiche le niveau audio avec maintien du pic                             | [Détails](plugins/analyzer.md#level-meter)              |
+| Analyzer  | Oscilloscope      | Visualisation en temps réel de la forme d'onde                           | [Détails](plugins/analyzer.md#oscilloscope)             |
+| Analyzer  | Spectrogram       | Montre l'évolution du spectre de fréquences au fil du temps              | [Détails](plugins/analyzer.md#spectrogram)              |
+| Analyzer  | Spectrum Analyzer | Analyse du spectre en temps réel                                         | [Détails](plugins/analyzer.md#spectrum-analyzer)        |
+| Analyzer  | Stereo Meter      | Visualise l'équilibre stéréo et le déplacement du son                    | [Détails](plugins/analyzer.md#stereo-meter)             |
+| Basics    | Channel Divider   | Divise le signal stéréo en bandes de fréquences et le dirige vers des canaux séparés | [Détails](plugins/basics.md#channel-divider)            |
+| Basics    | DC Offset         | Ajustement du décalage continu                                            | [Détails](plugins/basics.md#dc-offset)                  |
+| Basics    | Matrix            | Routage et mixage des canaux audio avec un contrôle flexible             | [Détails](plugins/basics.md#matrix)                     |
+| Basics    | Mute              | Silence complètement le signal audio                                     | [Détails](plugins/basics.md#mute)                       |
+| Basics    | Polarity Inversion| Inversion de la polarité du signal                                       | [Détails](plugins/basics.md#polarity-inversion)         |
+| Basics    | Stereo Balance    | Contrôle de l'équilibre des canaux stéréo                                | [Détails](plugins/basics.md#stereo-balance)             |
+| Basics    | Volume            | Contrôle basique du volume                                               | [Détails](plugins/basics.md#volume)                     |
 | Delay     | Delay          | Effet de retard standard | [Détails](plugins/delay.md#delay) |
 | Delay     | Time Alignment | Réglages fins de synchronisation pour les canaux audio | [Détails](plugins/delay.md#time-alignment) |
 | Dynamics  | Auto Leveler | Réglage automatique du volume basé sur la mesure LUFS pour une expérience d'écoute cohérente | [Détails](plugins/dynamics.md#auto-leveler) |

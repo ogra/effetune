@@ -396,7 +396,12 @@
                     const plugin = manager.createPlugin(name);
 
                     let note = '';
-                    if (name === 'Pitch Shifter') {
+                    let channelCount = CHANNEL_COUNT;
+                    if (name === 'Channel Divider') {
+                        plugin.setParameters({ bc: 4 });
+                        channelCount = 8;
+                        note = '8ch mode';
+                    } else if (name === 'Pitch Shifter') {
                         plugin.setParameters({ ps: 1 });
                         note = 'Pitch Shift + 1 semitone';
                     } else if (name === 'Time Alignment') {
@@ -429,7 +434,7 @@
                         note = 'Slope + 1db/oct';
                     }
 
-                    const result = await benchmarkPlugin(plugin, audioBuffer, SAMPLE_RATE, BUFFER_SIZE, CHANNEL_COUNT);
+                    const result = await benchmarkPlugin(plugin, audioBuffer, SAMPLE_RATE, BUFFER_SIZE, channelCount);
 
                     // Retrieve category from pluginDefinitions
                     const def = pluginDefinitions.get(name);
