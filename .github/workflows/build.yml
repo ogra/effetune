@@ -1,8 +1,8 @@
-name: Build Electron App
+name: Build Electron App (Fork)
 
 on:
   push:
-    branches: [ main, master, feature/* ]
+    branches: [ main, master, feature/*, doredore ]
   workflow_dispatch:
 
 # Default permissions are read-only
