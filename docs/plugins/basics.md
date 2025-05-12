@@ -7,6 +7,7 @@ A collection of essential tools for adjusting the fundamental aspects of your mu
 - [Channel Divider](#channel-divider) - Splits audio into frequency bands across multiple channels
 - [DC Offset](#dc-offset) - Helps fix audio that sounds unbalanced
 - [Matrix](#matrix) - Routes and mixes audio channels with flexible control
+- [MultiChannel Panel](#multichannel-panel) - Controls multiple audio channels with individual settings
 - [Mute](#mute) - Silences the audio output
 - [Polarity Inversion](#polarity-inversion) - Can improve how stereo music sounds
 - [Stereo Balance](#stereo-balance) - Adjusts the left-right balance of your music
@@ -86,6 +87,62 @@ A powerful channel routing tool that allows you to create custom signal paths be
 - Isolating or combining specific channels
 - Creating phase relationships between channels
 - Solving complex routing requirements
+
+## MultiChannel Panel
+
+A comprehensive control panel for managing multiple audio channels individually. This plugin provides complete control over volume, muting, soloing, and delay for up to 8 channels, with a visual level meter for each channel.
+
+### When to Use
+- When working with multi-channel audio (up to 8 channels)
+- To create custom volume balance between different channels
+- When you need to apply individual delay to specific channels
+- For monitoring levels across multiple channels simultaneously
+
+### Features
+- Individual controls for up to 8 audio channels
+- Real-time level meters with peak hold for visual monitoring
+- Channel linking capability for grouped parameter changes
+
+### Parameters
+
+#### Per Channel Controls
+- **Mute (M)** - Silences individual channels
+  - Toggle on/off for each channel
+  - Works in conjunction with solo feature
+
+- **Solo (S)** - Isolates individual channels
+  - When any channel is soloed, only soloed channels play
+  - Multiple channels can be soloed simultaneously
+
+- **Volume** - Adjusts individual channel loudness (-20dB to +10dB)
+  - Fine control with slider or direct value input
+  - Linked channels maintain the same volume
+
+- **Delay** - Adds time delay to individual channels (0-30ms)
+  - Precise delay control in milliseconds
+  - Useful for time-alignment between channels
+  - Allows phase adjustment between channels
+
+#### Channel Linking
+- **Link** - Connects adjacent channels for synchronized control
+  - Changes to one linked channel affect all connected channels
+  - Maintains consistent settings across linked channel groups
+  - Useful for stereo pairs or multi-channel groups
+
+### Visual Monitoring
+- Real-time level meters show current signal strength
+- Peak hold indicators display maximum levels
+- Clear numerical dB readout of peak levels
+- Color-coded meters for easy level recognition:
+  - Green: Safe levels
+  - Yellow: Approaching maximum
+  - Red: Near or at maximum level
+
+### Practical Applications
+- Balancing surround sound systems
+- Creating custom headphone mixes
+- Time-aligning multi-microphone setups
+- Monitoring and adjusting multi-channel audio sources
 
 ## Mute
 

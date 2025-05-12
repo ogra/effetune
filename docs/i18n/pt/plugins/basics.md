@@ -7,6 +7,7 @@ Uma coleção de ferramentas essenciais para ajustar os aspectos fundamentais da
 * [Channel Divider](#channel-divider) - Divide o áudio em bandas de frequência por múltiplos canais
 * [DC Offset](#dc-offset) - Ajuda a corrigir áudio que soa desequilibrado
 * [Matrix](#matrix) - Roteia e mistura canais de áudio com controle flexível
+* [MultiChannel Panel](#multichannel-panel) - Controla múltiplos canais de áudio com configurações individuais
 * [Mute](#mute) - Silencia a saída de áudio
 * [Polarity Inversion](#polarity-inversion) - Pode melhorar como a música estéreo soa
 * [Stereo Balance](#stereo-balance) - Ajusta o equilíbrio esquerdo-direito da sua música
@@ -99,6 +100,68 @@ Uma poderosa ferramenta de roteamento de canais que permite criar caminhos de si
 * Isolamento ou combinação de canais específicos
 * Criando relações de fase entre canais
 * Resolvendo requisitos complexos de roteamento
+
+## MultiChannel Panel
+
+Um painel de controle abrangente para gerenciar múltiplos canais de áudio individualmente. Este plugin fornece controle completo sobre volume, silenciamento, solo e atraso para até 8 canais, com um medidor de nível visual para cada canal.
+
+### Quando Usar
+
+* Ao trabalhar com áudio multicanal (até 8 canais)
+* Para criar um equilíbrio de volume personalizado entre diferentes canais
+* Quando precisar aplicar atraso individual em canais específicos
+* Para monitorar níveis em vários canais simultaneamente
+
+### Recursos
+
+* Controles individuais para até 8 canais de áudio
+* Medidores de nível em tempo real com retenção de pico para monitoramento visual
+* Capacidade de agrupamento de canais para alterações de parâmetros em grupo
+
+### Parâmetros
+
+#### Controles por Canal
+
+* **Mute (M)** - Silencia canais individuais
+  * Ativação/desativação para cada canal
+  * Funciona em conjunto com o recurso solo
+
+* **Solo (S)** - Isola canais individuais
+  * Quando qualquer canal está em solo, apenas os canais em solo são reproduzidos
+  * Múltiplos canais podem ser colocados em solo simultaneamente
+
+* **Volume** - Ajusta o volume de canais individuais (-20dB a +10dB)
+  * Controle preciso com slider ou entrada direta de valor
+  * Canais vinculados mantêm o mesmo volume
+
+* **Delay** - Adiciona atraso temporal a canais individuais (0-30ms)
+  * Controle preciso de atraso em milissegundos
+  * Útil para alinhamento temporal entre canais
+  * Permite ajuste de fase entre canais
+
+#### Vinculação de Canais
+
+* **Link** - Conecta canais adjacentes para controle sincronizado
+  * Alterações em um canal vinculado afetam todos os canais conectados
+  * Mantém configurações consistentes entre grupos de canais vinculados
+  * Útil para pares estéreo ou grupos multicanal
+
+### Monitoramento Visual
+
+* Medidores de nível em tempo real mostram a intensidade atual do sinal
+* Indicadores de retenção de pico mostram níveis máximos
+* Leitura numérica clara dos níveis de pico em dB
+* Medidores com código de cores para fácil reconhecimento de níveis:
+  * Verde: níveis seguros
+  * Amarelo: aproximando-se do máximo
+  * Vermelho: próximo ou no nível máximo
+
+### Aplicações Práticas
+
+* Balanceamento de sistemas de som surround
+* Criação de mixagens personalizadas para fones de ouvido
+* Alinhamento temporal de configurações multi-microfone
+* Monitoramento e ajuste de fontes de áudio multicanal
 
 ## Mute
 

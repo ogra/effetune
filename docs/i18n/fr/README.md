@@ -158,7 +158,7 @@ Pour traiter l'audio des services de streaming (Spotify, YouTube Music, etc.) :
 
 ### Mesure de réponse en fréquence
 
-1. Pour la version web, lancez l’[outil de mesure de la réponse en fréquence](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Pour la version application, sélectionnez « Mesure de la réponse en fréquence » dans le menu Paramètres
+1. Pour la version web, lancez l'[outil de mesure de la réponse en fréquence](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Pour la version application, sélectionnez « Mesure de la réponse en fréquence » dans le menu Paramètres
 2. Connectez votre équipement audio à l'entrée et à la sortie de votre ordinateur
 3. Configurez les paramètres de mesure (durée du balayage, plage de fréquences)
 4. Lancez la mesure pour générer un graphique de réponse en fréquence
@@ -267,6 +267,7 @@ Voici quelques combinaisons d'effets populaires pour améliorer votre expérienc
 | Basics    | Channel Divider   | Divise le signal stéréo en bandes de fréquences et le dirige vers des canaux séparés | [Détails](plugins/basics.md#channel-divider)            |
 | Basics    | DC Offset         | Ajustement du décalage continu                                            | [Détails](plugins/basics.md#dc-offset)                  |
 | Basics    | Matrix            | Routage et mixage des canaux audio avec un contrôle flexible             | [Détails](plugins/basics.md#matrix)                     |
+| Basics    | MultiChannel Panel| Panneau de contrôle pour plusieurs canaux avec volume, mute, solo et délai | [Détails](plugins/basics.md#multichannel-panel)        |
 | Basics    | Mute              | Silence complètement le signal audio                                     | [Détails](plugins/basics.md#mute)                       |
 | Basics    | Polarity Inversion| Inversion de la polarité du signal                                       | [Détails](plugins/basics.md#polarity-inversion)         |
 | Basics    | Stereo Balance    | Contrôle de l'équilibre des canaux stéréo                                | [Détails](plugins/basics.md#stereo-balance)             |

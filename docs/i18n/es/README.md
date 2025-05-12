@@ -270,6 +270,7 @@ Sí, EffeTune puede procesar cualquier audio que se reproduzca a través del dis
 | Basics    | Channel Divider    | Divide la señal estéreo en bandas de frecuencia y la enruta a canales separados | [Detalles](plugins/basics.md#channel-divider)      |
 | Basics    | DC Offset          | Ajuste de desplazamiento de corriente continua                             | [Detalles](plugins/basics.md#dc-offset)                 |
 | Basics    | Matrix             | Enruta y mezcla canales de audio con control flexible                      | [Detalles](plugins/basics.md#matrix)                    |
+| Basics    | MultiChannel Panel | Panel de control para múltiples canales con volumen, silencio, solo y retardo | [Detalles](plugins/basics.md#multichannel-panel)      |
 | Basics    | Mute               | Silencia completamente la señal de audio                                  | [Detalles](plugins/basics.md#mute)                      |
 | Basics    | Polarity Inversion | Inversión de polaridad de la señal                                        | [Detalles](plugins/basics.md#polarity-inversion)        |
 | Basics    | Stereo Balance     | Control de balance de canales estéreo                                     | [Detalles](plugins/basics.md#stereo-balance)            |

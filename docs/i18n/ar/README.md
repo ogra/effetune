@@ -260,6 +260,7 @@
 | Basics   | Channel Divider    | يقسم الإشارة الاستريو إلى نطاقات ترددية ويوجهها إلى قنوات منفصلة            | [تفاصيل](plugins/basics.md#channel-divider)          |
 | Basics   | DC Offset          | ضبط إزاحة التيار المستمر                                                    | [تفاصيل](plugins/basics.md#dc-offset)                |
 | Basics   | Matrix             | يوجّه ويخلط القنوات الصوتية مع التحكم المرن                                 | [تفاصيل](plugins/basics.md#matrix)                   |
+| Basics   | MultiChannel Panel | لوحة تحكم للقنوات المتعددة مع إعدادات فردية للصوت والكتم والعزل والتأخير    | [تفاصيل](plugins/basics.md#multichannel-panel)       |
 | Basics   | Mute               | يصمت الإشارة الصوتية تمامًا                                                 | [تفاصيل](plugins/basics.md#mute)                     |
 | Basics   | Polarity Inversion | عكس قطبية الإشارة                                                          | [تفاصيل](plugins/basics.md#polarity-inversion)       |
 | Basics   | Stereo Balance     | التحكم في توازن قنوات الاستريو                                             | [تفاصيل](plugins/basics.md#stereo-balance)           |

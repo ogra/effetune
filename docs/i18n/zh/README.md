@@ -160,7 +160,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 
 ### 频率响应测量
 
-1. 对于网页版，请启动[频率响应测量工具](https://frieve-a.github.io/effetune/features/measurement/measurement.html)。对于应用版，请在“设置”菜单中选择“频率响应测量”
+1. 对于网页版，请启动[频率响应测量工具](https://frieve-a.github.io/effetune/features/measurement/measurement.html)。对于应用版，请在"设置"菜单中选择"频率响应测量"
 2. 将您的音频设备连接到计算机的输入和输出
 3. 配置测量参数（扫频时间、频率范围）
 4. 运行测量以生成频率响应图
@@ -268,6 +268,7 @@ EffeTune 专为希望提升音乐聆听体验的音频爱好者而设计。无�
 | Basics   | Channel Divider    | 将立体声信号按频段分割并路由到独立通道                                     | [详细信息](plugins/basics.md#channel-divider)           |
 | Basics   | DC Offset          | 直流偏移调整                                                             | [详细信息](plugins/basics.md#dc-offset)                 |
 | Basics   | Matrix             | 灵活控制音频通道的路由和混合                                               | [详细信息](plugins/basics.md#matrix)                    |
+| Basics   | MultiChannel Panel | 多通道控制面板，包含音量、静音、独奏和延迟控制                            | [详细信息](plugins/basics.md#multichannel-panel)        |
 | Basics   | Mute               | 完全静音音频信号                                                         | [详细信息](plugins/basics.md#mute)                      |
 | Basics   | Polarity Inversion | 信号极性反转                                                             | [详细信息](plugins/basics.md#polarity-inversion)        |
 | Basics   | Stereo Balance     | 立体声通道平衡控制                                                       | [详细信息](plugins/basics.md#stereo-balance)            |

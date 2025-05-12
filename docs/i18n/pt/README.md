@@ -160,7 +160,7 @@ Para usar o EffeTune com players de CD, players de rede ou outras fontes física
 
 ### Medição de Resposta de Frequência
 
-1. Para a versão web, abra a [ferramenta de Medição da Resposta em Frequência](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Para a versão do aplicativo, selecione “Medição da Resposta em Frequência” no menu Configurações
+1. Para a versão web, abra a [ferramenta de Medição da Resposta em Frequência](https://frieve-a.github.io/effetune/features/measurement/measurement.html). Para a versão do aplicativo, selecione "Medição da Resposta em Frequência" no menu Configurações
 2. Conecte seu equipamento de áudio à entrada e saída do seu computador
 3. Configure os parâmetros de medição (duração da varredura, faixa de frequência)
 4. Execute a medição para gerar um gráfico de resposta de frequência
@@ -268,6 +268,7 @@ Aqui estão algumas combinações populares de efeitos para aprimorar sua experi
 | Basics    | Channel Divider    | Divide o sinal estéreo em bandas de frequência e direciona para canais separados | [Detalhes](plugins/basics.md#channel-divider)       |
 | Basics    | DC Offset          | Ajuste de deslocamento DC                                               | [Detalhes](plugins/basics.md#dc-offset)              |
 | Basics    | Matrix             | Encaminha e mistura canais de áudio com controle flexível               | [Detalhes](plugins/basics.md#matrix)                 |
+| Basics    | MultiChannel Panel | Painel de controle para múltiplos canais com volume, mudo, solo e atraso | [Detalhes](plugins/basics.md#multichannel-panel)     |
 | Basics    | Mute               | Silencia completamente o sinal de áudio                                 | [Detalhes](plugins/basics.md#mute)                   |
 | Basics    | Polarity Inversion | Inversão de polaridade do sinal                                         | [Detalhes](plugins/basics.md#polarity-inversion)     |
 | Basics    | Stereo Balance     | Controle de equilíbrio dos canais estéreo                               | [Detalhes](plugins/basics.md#stereo-balance)         |

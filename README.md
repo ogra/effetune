@@ -274,6 +274,7 @@ A. Yes, EffeTune can process any audio playing through your selected input devic
 | Basics    | Channel Divider | Splits stereo signal into frequency bands and routes to separate channels | [Details](docs/plugins/basics.md#channel-divider) |
 | Basics    | DC Offset | DC offset adjustment | [Details](docs/plugins/basics.md#dc-offset) |
 | Basics    | Matrix | Routes and mixes audio channels with flexible control | [Details](docs/plugins/basics.md#matrix) |
+| Basics    | MultiChannel Panel | Control panel for multiple channels with volume, mute, solo and delay | [Details](docs/plugins/basics.md#multichannel-panel) |
 | Basics    | Mute | Completely silences the audio signal | [Details](docs/plugins/basics.md#mute) |
 | Basics    | Polarity Inversion | Signal polarity inversion | [Details](docs/plugins/basics.md#polarity-inversion) |
 | Basics    | Stereo Balance | Stereo channel balance control | [Details](docs/plugins/basics.md#stereo-balance) |

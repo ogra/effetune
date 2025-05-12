@@ -14,9 +14,6 @@ class MatrixPlugin extends PluginBase {
                 blockSize 
             } = parameters;
             
-            // Skip processing if no routing is defined
-            if (!matrixParam || matrixParam.length === 0) return data;
-            
             // Parse the matrix routing parameter
             const routingMap = [];
             let i = 0;

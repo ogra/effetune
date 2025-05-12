@@ -150,7 +150,7 @@ CD 플레이어, 네트워크 플레이어 또는 기타 물리적 소스를 사
 
 ### 주파수 응답 측정
 
-1. 웹 버전에서는 [주파수 응답 측정 도구](https://frieve-a.github.io/effetune/features/measurement/measurement.html)를 실행하십시오. 앱 버전에서는 설정 메뉴에서 “주파수 응답 측정”을 선택하십시오
+1. 웹 버전에서는 [주파수 응답 측정 도구](https://frieve-a.github.io/effetune/features/measurement/measurement.html)를 실행하십시오. 앱 버전에서는 설정 메뉴에서 "주파수 응답 측정"을 선택하십시오
 2. 오디오 장비를 컴퓨터의 입력 및 출력에 연결합니다
 3. 측정 매개변수를 구성합니다(스윕 지속 시간, 주파수 범위)
 4. 측정을 실행하여 주파수 응답 그래프를 생성합니다
@@ -263,6 +263,7 @@ A. 예, EffeTune은 선택한 입력 장치를 통해 재생되는 스트리밍 
 | Basics   | Channel Divider    | 스테레오 신호를 주파수 대역으로 분할하여 개별 채널로 라우팅합니다         | [세부 정보](plugins/basics.md#channel-divider)     |
 | Basics   | DC Offset          | DC 오프셋을 조정합니다                                                  | [세부 정보](plugins/basics.md#dc-offset)           |
 | Basics   | Matrix             | 유연한 제어로 오디오 채널을 라우팅하고 믹싱합니다                         | [세부 정보](plugins/basics.md#matrix)              |
+| Basics   | MultiChannel Panel | 볼륨, 뮤트, 솔로 및 딜레이로 다중 채널을 제어하는 컨트롤 패널             | [세부 정보](plugins/basics.md#multichannel-panel)   |
 | Basics   | Mute               | 오디오 신호를 완전히 음소거합니다                                        | [세부 정보](plugins/basics.md#mute)                |
 | Basics   | Polarity Inversion | 신호 극성을 반전합니다                                                  | [세부 정보](plugins/basics.md#polarity-inversion)  |
 | Basics   | Stereo Balance     | 스테레오 채널 밸런스를 제어합니다                                        | [세부 정보](plugins/basics.md#stereo-balance)      |

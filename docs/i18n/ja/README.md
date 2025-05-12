@@ -274,6 +274,7 @@ A. はい、EffeTuneは、ストリーミングサービス、ローカルファ
 | Basics    | Channel Divider     | ステレオ信号を周波数帯域に分割し、別々のチャンネルにルーティング                         | [詳細](plugins/basics.md#channel-divider)             |
 | Basics    | DC Offset           | DCオフセットの調整                                                        | [詳細](plugins/basics.md#dc-offset)                   |
 | Basics    | Matrix              | オーディオチャンネルを柔軟にルーティングおよびミキシング                                  | [詳細](plugins/basics.md#matrix)                      |
+| Basics    | MultiChannel Panel  | 複数チャンネルを音量、ミュート、ソロ、遅延で個別制御するコントロールパネル                   | [詳細](plugins/basics.md#multichannel-panel)          |
 | Basics    | Mute                | オーディオ信号を完全に無音化                                                   | [詳細](plugins/basics.md#mute)                        |
 | Basics    | Polarity Inversion  | 信号の極性を反転                                                          | [詳細](plugins/basics.md#polarity-inversion)          |
 | Basics    | Stereo Balance      | ステレオチャンネルのバランスを制御                                              | [詳細](plugins/basics.md#stereo-balance)              |

@@ -1,5 +1,9 @@
 # Version History
 
+### Version 1.51 (Mar xx, 2025)
+- Added MultiChannel Panel effect
+- Various minor improvements
+
 ### Version 1.50 (Mar 11, 2025)
 - Effect categories can now be collapsed
 - Added Channel Divider effect

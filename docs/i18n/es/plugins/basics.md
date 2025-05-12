@@ -7,6 +7,7 @@ Una colección de herramientas esenciales para ajustar los aspectos fundamentale
 * [Channel Divider](#channel-divider) - Divide el audio en bandas de frecuencia a través de múltiples canales
 * [DC Offset](#dc-offset) - Ayuda a corregir audio que suena desequilibrado
 * [Matrix](#matrix) - Enruta y mezcla canales de audio con control flexible
+* [MultiChannel Panel](#multichannel-panel) - Controla múltiples canales de audio con ajustes individuales
 * [Mute](#mute) - Silencia la salida de audio
 * [Polarity Inversion](#polarity-inversion) - Puede mejorar cómo suena la música estéreo
 * [Stereo Balance](#stereo-balance) - Ajusta el balance izquierda-derecha de tu música
@@ -99,6 +100,68 @@ Una potente herramienta de enrutamiento de canales que te permite crear rutas de
 * Aislar o combinar canales específicos
 * Crear relaciones de fase entre canales
 * Resolver requisitos de enrutamiento complejos
+
+## MultiChannel Panel
+
+Un panel de control completo para gestionar múltiples canales de audio individualmente. Este complemento proporciona control total sobre volumen, silencio, solo y retardo para hasta 8 canales, con un medidor de nivel visual para cada canal.
+
+### Cuándo usarlo
+
+* Al trabajar con audio multicanal (hasta 8 canales)
+* Para crear un balance de volumen personalizado entre diferentes canales
+* Cuando necesites aplicar retardo individual a canales específicos
+* Para monitorizar niveles en múltiples canales simultáneamente
+
+### Funciones
+
+* Control individual para hasta 8 canales de audio
+* Medidores de nivel en tiempo real con retención de picos para monitorización visual
+* Capacidad de enlace entre canales para cambios de parámetros agrupados
+
+### Parámetros
+
+#### Controles por canal
+
+* **Mute (M)** - Silencia canales individuales
+  * Activación/desactivación para cada canal
+  * Funciona en conjunto con la función solo
+
+* **Solo (S)** - Aísla canales individuales
+  * Cuando cualquier canal está en solo, sólo los canales en solo se reproducen
+  * Se pueden establecer múltiples canales en solo simultáneamente
+
+* **Volume** - Ajusta el volumen de canales individuales (-20dB a +10dB)
+  * Control preciso con deslizador o entrada directa de valores
+  * Los canales enlazados mantienen el mismo volumen
+
+* **Delay** - Añade retardo temporal a canales individuales (0-30ms)
+  * Control preciso de retardo en milisegundos
+  * Útil para alineación temporal entre canales
+  * Permite ajuste de fase entre canales
+
+#### Enlace de canales
+
+* **Link** - Conecta canales adyacentes para control sincronizado
+  * Los cambios en un canal enlazado afectan a todos los canales conectados
+  * Mantiene ajustes consistentes en grupos de canales enlazados
+  * Útil para pares estéreo o grupos de múltiples canales
+
+### Monitorización visual
+
+* Los medidores de nivel en tiempo real muestran la intensidad actual de la señal
+* Los indicadores de retención de picos muestran los niveles máximos
+* Lectura numérica clara de los niveles de pico en dB
+* Medidores con código de color para fácil reconocimiento de niveles:
+  * Verde: Niveles seguros
+  * Amarillo: Aproximándose al máximo
+  * Rojo: Cerca o en el nivel máximo
+
+### Aplicaciones prácticas
+
+* Equilibrar sistemas de sonido envolvente
+* Crear mezclas personalizadas para auriculares
+* Alineación temporal de configuraciones multi-micrófono
+* Monitorización y ajuste de fuentes de audio multicanal
 
 ## Mute
 

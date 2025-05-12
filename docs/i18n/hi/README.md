@@ -153,7 +153,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 
 ### आवृत्ति प्रतिक्रिया मापन
 
-1. वेब संस्करण के लिए, [आवृत्ति प्रतिक्रिया मापन उपकरण](https://frieve-a.github.io/effetune/features/measurement/measurement.html) प्रारंभ करें। ऐप संस्करण के लिए, सेटिंग्स मेनू से “आवृत्ति प्रतिक्रिया मापन” चुनें।
+1. वेब संस्करण के लिए, [आवृत्ति प्रतिक्रिया मापन उपकरण](https://frieve-a.github.io/effetune/features/measurement/measurement.html) प्रारंभ करें। ऐप संस्करण के लिए, सेटिंग्स मेनू से "आवृत्ति प्रतिक्रिया मापन" चुनें।
 2. अपने ऑडियो उपकरण को अपने कंप्यूटर के इनपुट और आउटपुट से कनेक्ट करें
 3. मापन पैरामीटर कॉन्फ़िगर करें (स्वीप अवधि, आवृत्ति रेंज)
 4. आवृत्ति प्रतिक्रिया ग्राफ़ उत्पन्न करने के लिए मापन चलाएं
@@ -261,6 +261,7 @@ CD प्लेयर्स, नेटवर्क प्लेयर्स, य
 | Basics   | Channel Divider    | स्टेरियो सिग्नल को आवृत्ति बैंड में विभाजित कर अलग-अलग चैनलों में भेजता है | [विवरण](plugins/basics.md#channel-divider) |
 | Basics   | DC Offset          | डीसी ऑफ़सेट समायोजन | [विवरण](plugins/basics.md#dc-offset) |
 | Basics   | Matrix             | लचीले नियंत्रण के साथ ऑडियो चैनलों को रूट और मिलाता है | [विवरण](plugins/basics.md#matrix) |
+| Basics   | MultiChannel Panel | वॉल्यूम, म्यूट, सोलो और डिले के साथ कई चैनलों के लिए नियंत्रण पैनल | [विवरण](plugins/basics.md#multichannel-panel) |
 | Basics   | Mute               | ऑडियो सिग्नल को पूरी तरह म्यूट कर देता है | [विवरण](plugins/basics.md#mute) |
 | Basics   | Polarity Inversion | सिग्नल की ध्रुवता को उलटता है | [विवरण](plugins/basics.md#polarity-inversion) |
 | Basics   | Stereo Balance     | स्टेरियो चैनल संतुलन नियंत्रण | [विवरण](plugins/basics.md#stereo-balance) |
